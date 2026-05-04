@@ -36,7 +36,7 @@ Open **http://localhost:3000**
 
 1. Checks that `node`, `npm`, and `docker` are available
 2. Runs `npm install` in `api/` and `web/`
-3. Runs `docker compose up -d postgres` — starts a Postgres 16 container on port 5432
+3. Runs `docker compose up -d postgres` — starts a Postgres 16 container on port 15433
 4. Waits for the container to be healthy
 5. Applies `db/schema.sql` via `node api/scripts/migrate.js`
 6. Loads `db/seed.sql` via `node api/scripts/seed.js`
