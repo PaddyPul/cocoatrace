@@ -1,0 +1,20 @@
+{
+  "name": "cocoatrace",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "db:migrate": "cd api && node scripts/migrate.js",
+    "db:seed": "cd api && node scripts/seed.js",
+    "dev": "node scripts/dev.js",
+    "dev:api": "npm run dev --workspace=api",
+    "dev:web": "npm run dev --workspace=web"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
