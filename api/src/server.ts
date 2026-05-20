@@ -4,10 +4,10 @@ import path from 'path';
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 import app from './app';
+import logger from './logger';
 
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
-  console.log(`\n🫘 CocoaTrace API running on http://localhost:${PORT}`);
-  console.log(`   Health check: http://localhost:${PORT}/health`);
+  logger.info({ port: PORT }, `CocoaTrace API running on http://localhost:${PORT}`);
 });

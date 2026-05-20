@@ -10,7 +10,6 @@ services:
       POSTGRES_USER: cocoa
       POSTGRES_PASSWORD: cocoa_dev
     ports:
-      # Host 15433 -> Container 5432. Avoids Windows/local Postgres conflicts.
       - "15433:5432"
     volumes:
       - cocoatrace_pgdata:/var/lib/postgresql/data
@@ -19,6 +18,36 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: cocoatrace-api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://cocoa:cocoa_dev@postgres:5432/cocoatrace
+      JWT_SECRET: ${JWT_SECRET:-cocoatrace_dev_secret_change_in_production}
+      WEB_URL: http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    container_name: cocoatrace-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      WEB_PORT: 3000
+    depends_on:
+      - api
 
 volumes:
   cocoatrace_pgdata:

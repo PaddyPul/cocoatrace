@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { query } from '../db';
+import logger from '../logger';
 
 interface AuditParams {
   actorUserId: string;
@@ -28,7 +29,7 @@ async function record(params: AuditParams): Promise<void> {
        reason || null, JSON.stringify(metadata || {})]
     );
   } catch (err) {
-    console.error('Audit record failed:', (err as Error).message);
+    logger.warn({ err }, 'Audit record failed');
   }
 }
 
