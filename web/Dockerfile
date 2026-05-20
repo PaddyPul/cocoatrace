@@ -1,16 +1,15 @@
-FROM node:20-alpine
+# Stage 1: Build
+FROM node:20-alpine AS builder
 WORKDIR /app
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-
-# Copy root lockfile + web package.json for workspace resolution
 COPY package*.json ./
 COPY web/package*.json ./web/
-
 RUN npm ci --workspace=web --include-workspace-root --ignore-scripts
+COPY web/ ./web/
+RUN npm run build --workspace=web
 
-COPY web/ ./
-
-USER appuser
+# Stage 2: Serve via Nginx
+FROM nginx:stable-alpine
+COPY --from=builder /app/web/dist /usr/share/nginx/html
+COPY web/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 3000
-ENV NODE_ENV=production
-CMD ["node", "server.js"]
+CMD ["nginx", "-g", "daemon off;"]
