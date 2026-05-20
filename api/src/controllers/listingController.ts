@@ -16,6 +16,25 @@ export async function listListings(req: Request, res: Response): Promise<void> {
   res.json(rows);
 }
 
+export async function getListing(req: Request, res: Response): Promise<void> {
+  const { rows } = await query(
+    `SELECT l.*, o.name as seller_name, b.crop, b.organic_claim_status, b.grade, b.harvest_date, f.name as farm_name, f.region as farm_region,
+            h.batch_id
+     FROM listings l
+     JOIN organizations o ON o.id = l.seller_organization_id
+     JOIN batch_holdings h ON h.id = l.holding_id
+     JOIN harvest_batches b ON b.id = h.batch_id
+     JOIN farms f ON f.id = b.farm_id
+     WHERE l.id = $1`,
+    [req.params.id]
+  );
+  if (!rows[0]) {
+    res.status(404).json({ error: 'Listing not found' });
+    return;
+  }
+  res.json(rows[0]);
+}
+
 export async function createListing(req: Request, res: Response): Promise<void> {
   const { holdingId, availableQuantityKg, pricePerKg, currency, incoterm, originLocation, destinationLocation } = req.body;
   const holdingRes = await query('SELECT * FROM batch_holdings WHERE id=$1 AND holder_organization_id=$2 AND status=$3', [holdingId, req.user!.organizationId, 'available']);
