@@ -1,25 +1,20 @@
-#!/usr/bin/env node
-// api/scripts/seed.js
-const { Pool } = require('pg');
-const fs = require('fs');
-const path = require('path');
+import { Pool } from 'pg';
+import fs from 'fs';
+import path from 'path';
 
 try {
   require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 } catch (e) {}
 
-async function seed() {
-  const connectionString =
-    process.env.DATABASE_URL ||
-    'postgresql://cocoa:cocoa_dev@127.0.0.1:5432/cocoatrace';
+async function seed(): Promise<void> {
+  const connectionString: string =
+    process.env.DATABASE_URL || 'postgresql://cocoa:cocoa_dev@127.0.0.1:5432/cocoatrace';
 
   console.log('Running seed...');
 
   const pool = new Pool({ connectionString });
   try {
-    const sql = fs.readFileSync(
-      path.join(__dirname, '../../db/seed.sql'), 'utf8'
-    );
+    const sql = fs.readFileSync(path.join(__dirname, '../../db/seed.sql'), 'utf8');
     await pool.query(sql);
     console.log('✓ Seed data loaded');
     console.log('');
@@ -32,7 +27,7 @@ async function seed() {
     console.log('  ingrid@cocobod.gh     — Regulator');
     console.log('  admin@cocoatrace.io   — Admin');
   } catch (err) {
-    console.error('Seed failed:', err.message);
+    console.error('Seed failed:', (err as Error).message);
     process.exit(1);
   } finally {
     await pool.end();

@@ -1,19 +1,14 @@
-// api/src/db.js
-const path = require('path');
-const dotenv = require('dotenv');
-const { Pool } = require('pg');
+import path from 'path';
+import dotenv from 'dotenv';
+import { Pool, QueryResult, PoolClient } from 'pg';
 
-// Load env in a predictable order:
-// 1. root .env for normal repo startup
-// 2. api/.env for API-only local overrides
-// Existing process.env values are not overwritten.
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const connectionString =
+const connectionString: string =
   process.env.DATABASE_URL || 'postgresql://cocoa:cocoa_dev@localhost:15433/cocoatrace';
 
-function maskConnectionString(url) {
+function maskConnectionString(url: string): string {
   return url.replace(/:\/\/([^:]+):([^@]+)@/, '://$1:***@');
 }
 
@@ -21,11 +16,11 @@ console.log(`DB: ${maskConnectionString(connectionString)}`);
 
 const pool = new Pool({ connectionString });
 
-pool.on('error', (err) => {
+pool.on('error', (err: Error) => {
   console.error('Unexpected DB error', err);
 });
 
-async function query(text, params) {
+async function query(text: string, params?: any[]): Promise<QueryResult> {
   const start = Date.now();
   const res = await pool.query(text, params);
   const duration = Date.now() - start;
@@ -35,8 +30,8 @@ async function query(text, params) {
   return res;
 }
 
-async function getClient() {
+async function getClient(): Promise<PoolClient> {
   return pool.connect();
 }
 
-module.exports = { query, getClient, pool };
+export { query, getClient, pool };

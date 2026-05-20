@@ -1,16 +1,10 @@
-const express = require('express');
-const router = express.Router();
-const bcrypt = require('bcryptjs');
-const { query } = require('../db');
-const { requireAuth, signToken } = require('../middleware/auth');
+import { Request, Response } from 'express';
+import bcrypt from 'bcryptjs';
+import { query } from '../db';
+import { signToken, JwtPayload } from '../middleware/auth';
 
-// ============================================================
-// AUTH
-// ============================================================
-
-router.post('/auth/login', async (req, res) => {
+export async function login(req: Request, res: Response): Promise<void> {
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
   const { rows } = await query(
     `SELECT u.*, array_agg(DISTINCT r.name) as role_names, array_agg(DISTINCT p) as permissions
@@ -20,23 +14,28 @@ router.post('/auth/login', async (req, res) => {
      LEFT JOIN LATERAL unnest(r.permissions) p ON TRUE
      WHERE u.email = $1 AND u.active = TRUE
      GROUP BY u.id`,
-    [email.toLowerCase()]
+    [email]
   );
 
   const user = rows[0];
-  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+  if (!user) {
+    res.status(401).json({ error: 'Invalid credentials' });
+    return;
+  }
 
   const valid = await bcrypt.compare(password, user.password_hash);
-  if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+  if (!valid) {
+    res.status(401).json({ error: 'Invalid credentials' });
+    return;
+  }
 
-  // Fetch org name
   const orgRes = await query('SELECT name, type FROM organizations WHERE id = $1', [user.organization_id]);
   const org = orgRes.rows[0];
 
-  const permissions = [...new Set(user.permissions.filter(Boolean))];
+  const permissions = [...new Set<string>(user.permissions.filter(Boolean))];
   const roles = user.role_names.filter(Boolean);
 
-  const token = signToken({
+  const tokenPayload: JwtPayload = {
     id: user.id,
     organizationId: user.organization_id,
     email: user.email,
@@ -45,7 +44,9 @@ router.post('/auth/login', async (req, res) => {
     permissions,
     orgName: org?.name,
     orgType: org?.type,
-  });
+  };
+
+  const token = signToken(tokenPayload);
 
   res.json({
     accessToken: token,
@@ -60,9 +61,9 @@ router.post('/auth/login', async (req, res) => {
       permissions,
     },
   });
-});
+}
 
-router.get('/me', requireAuth, async (req, res) => {
+export async function me(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
     `SELECT u.id, u.email, u.name, u.organization_id, u.mfa_enabled,
             o.name as org_name, o.type as org_type,
@@ -75,11 +76,12 @@ router.get('/me', requireAuth, async (req, res) => {
      LEFT JOIN LATERAL unnest(r.permissions) p ON TRUE
      WHERE u.id = $1
      GROUP BY u.id, o.name, o.type`,
-    [req.user.id]
+    [req.user!.id]
   );
-  if (!rows[0]) return res.status(404).json({ error: 'User not found' });
+  if (!rows[0]) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
   const u = rows[0];
-  res.json({ ...u, permissions: [...new Set(u.permissions.filter(Boolean))], roles: u.roles.filter(Boolean) });
-});
-
-module.exports = router;
+  res.json({ ...u, permissions: [...new Set<string>(u.permissions.filter(Boolean))], roles: u.roles.filter(Boolean) });
+}

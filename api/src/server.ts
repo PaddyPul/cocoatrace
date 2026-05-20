@@ -1,6 +1,9 @@
-require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
+import dotenv from 'dotenv';
+import path from 'path';
 
-const app = require('./app');
+dotenv.config({ path: path.join(__dirname, '../../.env') });
+
+import app from './app';
 
 const PORT = process.env.PORT || 3001;
 
