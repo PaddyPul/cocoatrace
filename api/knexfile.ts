@@ -22,10 +22,9 @@ const config: { [key: string]: Knex.Config } = {
   },
   production: {
     client: 'pg',
-    connection: {
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
-    },
+    connection: process.env.DB_USE_SSL === 'true'
+      ? { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }
+      : process.env.DATABASE_URL,
     migrations: {
       directory: path.join(__dirname, 'dist', 'migrations'),
       extension: 'js',
