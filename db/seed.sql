@@ -15,14 +15,14 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Roles
 INSERT INTO roles (id, name, permissions) VALUES
-  ('22222222-2222-2222-2222-222222222001', 'farmer',    ARRAY['farm.read','batch.create','custody.transfer.request','payment.read']),
-  ('22222222-2222-2222-2222-222222222002', 'certifier', ARRAY['certificate.issue','batch.attest','farm.read']),
-  ('22222222-2222-2222-2222-222222222003', 'exporter',  ARRAY['holding.create','listing.create','offer.respond','shipment.request','payment.request','evidence.upload']),
-  ('22222222-2222-2222-2222-222222222004', 'importer',  ARRAY['listing.read','offer.create','contract.read','payment.confirm','evidence.upload']),
-  ('22222222-2222-2222-2222-222222222005', 'logistics', ARRAY['shipment.accept','shipment.update','evidence.upload']),
-  ('22222222-2222-2222-2222-222222222006', 'regulator', ARRAY['audit.read','farm.read','certificate.read','batch.read','audit.export']),
+  ('22222222-2222-2222-2222-222222222001', 'farmer',    ARRAY['farm.read','farm.create','batch.read','batch.create','listing.read','custody.transfer.request','payment.read']),
+  ('22222222-2222-2222-2222-222222222002', 'certifier', ARRAY['certificate.read','certificate.issue','batch.read','batch.attest','farm.read','evidence.read','evidence.upload']),
+  ('22222222-2222-2222-2222-222222222003', 'exporter',  ARRAY['batch.read','batch.create','holding.read','holding.create','listing.read','listing.create','offer.respond','contract.read','shipment.read','shipment.request','payment.read','payment.request','evidence.read','evidence.upload']),
+  ('22222222-2222-2222-2222-222222222004', 'importer',  ARRAY['listing.read','offer.create','contract.read','shipment.read','payment.read','payment.confirm','evidence.read','evidence.upload','provenance.export']),
+  ('22222222-2222-2222-2222-222222222005', 'logistics', ARRAY['shipment.read','shipment.accept','shipment.update','evidence.read','evidence.upload']),
+  ('22222222-2222-2222-2222-222222222006', 'regulator', ARRAY['audit.read','farm.read','batch.read','certificate.read','evidence.read','provenance.export','audit.export']),
   ('22222222-2222-2222-2222-222222222007', 'admin',     ARRAY['*'])
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET permissions = EXCLUDED.permissions;
 
 -- Users (password = Password123! -> bcrypt hash)
 INSERT INTO users (id, organization_id, email, password_hash, name) VALUES
@@ -81,6 +81,8 @@ ON CONFLICT (id) DO NOTHING;
 
 UPDATE harvest_batches SET attestation_id='88888888-8888-8888-8888-888888888001', provenance_hash='sha256:c7d1e4f2' WHERE id='77777777-7777-7777-7777-777777777001';
 UPDATE harvest_batches SET attestation_id='88888888-8888-8888-8888-888888888002', provenance_hash='sha256:9f2ab4c1' WHERE id='77777777-7777-7777-7777-777777777002';
+UPDATE harvest_batches SET current_holder_id='11111111-1111-1111-1111-111111111001' WHERE id='77777777-7777-7777-7777-777777777003';
+UPDATE batch_holdings SET holder_organization_id='11111111-1111-1111-1111-111111111001' WHERE id='99999999-9999-9999-9999-999999999004';
 
 -- Holdings
 INSERT INTO batch_holdings (id, batch_id, holder_organization_id, quantity_kg, warehouse_location, status) VALUES
