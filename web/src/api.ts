@@ -42,12 +42,16 @@ export const auth = {
 
 export const farms = {
   list: () => api<import('./types').Farm[]>('GET', '/farms'),
+  get: (id: string) => api<{ farm: import('./types').Farm; plots: any[]; certificates: any[] }>('GET', `/farms/${id}`),
   create: (data: { name: string; country?: string; region: string; district: string; community?: string; officialTraceabilityId?: string }) =>
     api<import('./types').Farm>('POST', '/farms', data),
+  createPlot: (farmId: string, data: { plotCode: string; areaHectares: number; crops?: string[]; gpsLat?: number; gpsLng?: number; geolocationSource?: string }) =>
+    api<any>('POST', `/farms/${farmId}/plots`, data),
 };
 
 export const batches = {
   list: () => api<import('./types').Batch[]>('GET', '/batches'),
+  get: (id: string) => api<{ batch: import('./types').Batch; evidence: import('./types').Evidence[] }>('GET', `/batches/${id}`),
   create: (data: { farmId: string; plotIds?: string[]; crop?: string; harvestDate: string; quantityKg: number; moisturePercent?: number; grade?: string }) =>
     api<import('./types').Batch>('POST', '/batches', data),
   pushToMarketplace: (id: string, data: { quantityKg: number; pricePerKg: number; currency?: string; incoterm?: string; originLocation: string; destinationLocation: string }) =>
@@ -62,6 +66,17 @@ export const listings = {
 export const contracts = {
   list: () => api<import('./types').Contract[]>('GET', '/contracts'),
   get: (id: string) => api<any>('GET', `/contracts/${id}`),
+  requestShipment: (id: string, data: { logisticsOrganizationId?: string; vesselName?: string; containerReference?: string; originPort?: string; destinationPort?: string; etaArrival?: string }) =>
+    api<any>('POST', `/contracts/${id}/shipments`, data),
+  requestPayment: (id: string, data: { amountTotal: number; currency?: string }) =>
+    api<any>('POST', `/contracts/${id}/payment-requests`, data),
+};
+
+export const payments = {
+  list: () => api<import('./types').Payment[]>('GET', '/payment-requests'),
+  get: (id: string) => api<any>('GET', `/payment-requests/${id}`),
+  pay: (id: string, data: { transactionReference: string }) =>
+    api<any>('POST', `/payment-requests/${id}/pay`, data),
 };
 
 export const shipments = {
@@ -71,11 +86,7 @@ export const shipments = {
 
 export const holdings = {
   list: () => api<import('./types').Holding[]>('GET', '/holdings'),
-};
-
-export const payments = {
-  list: () => api<import('./types').Payment[]>('GET', '/payment-requests'),
-  get: (id: string) => api<any>('GET', `/payment-requests/${id}`),
+  get: (id: string) => api<{ holding: import('./types').Holding; batch: import('./types').Batch | null }>('GET', `/holdings/${id}`),
 };
 
 export const evidence = {
@@ -90,6 +101,8 @@ export const offers = {
   list: () => api<import('./types').Offer[]>('GET', '/offers'),
   create: (listingId: string, data: { quantityKg: number; offeredPricePerKg: number; currency?: string; validUntil?: string }) =>
     api('POST', `/listings/${listingId}/offers`, data),
+  accept: (offerId: string) => api<any>('POST', `/offers/${offerId}/accept`),
+  reject: (offerId: string) => api<any>('POST', `/offers/${offerId}/reject`),
 };
 
 export const provenance = {

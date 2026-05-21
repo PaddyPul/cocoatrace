@@ -15,6 +15,7 @@ export interface Farm {
   country: string;
   region: string;
   district: string;
+  community?: string;
   farmer_organization_id: string;
   farmer_org_name?: string;
   official_traceability_id?: string;
@@ -37,6 +38,10 @@ export interface Batch {
   standard?: string;
   certifier_name?: string;
   att_hash?: string;
+  attested_at?: string;
+  att_notes?: string;
+  cert_standard?: string;
+  cert_valid_to?: string;
 }
 
 export interface Listing {
@@ -82,9 +87,15 @@ export interface Holding {
   id: string;
   batch_id: string;
   crop: string;
+  harvest_date?: string;
+  farm_name?: string;
+  grade?: string;
+  organic_claim_status?: string;
   quantity_kg: number;
   warehouse_location?: string;
   status: string;
+  holder_organization_id?: string;
+  created_at?: string;
 }
 
 export interface Payment {
@@ -111,10 +122,16 @@ export interface Offer {
   id: string;
   listing_id: string;
   buyer_name?: string;
+  buyer_organization_id?: string;
+  seller_organization_id?: string;
   quantity_kg: number;
   offered_price_per_kg: number;
+  currency?: string;
   valid_until: string;
   status: string;
+  origin_location?: string;
+  destination_location?: string;
+  created_at?: string;
 }
 
 export interface AuditEvent {

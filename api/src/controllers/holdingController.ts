@@ -2,6 +2,30 @@ import { Request, Response } from 'express';
 import { query, getClient } from '../db';
 import * as audit from '../services/audit';
 
+export async function getHolding(req: Request, res: Response): Promise<void> {
+  const { rows } = await query(
+    `SELECT h.*, b.crop, b.harvest_date, b.organic_claim_status, b.grade, b.farm_id, f.name as farm_name, b.quantity_kg as batch_quantity
+     FROM batch_holdings h
+     JOIN harvest_batches b ON b.id = h.batch_id
+     JOIN farms f ON f.id = b.farm_id
+     WHERE h.id = $1 AND h.holder_organization_id = $2`,
+    [req.params.id, req.user!.organizationId]
+  );
+  if (!rows[0]) {
+    res.status(404).json({ error: 'Holding not found' });
+    return;
+  }
+  const batchRes = await query(
+    `SELECT b.*, f.name as farm_name, o.name as holder_name
+     FROM harvest_batches b
+     JOIN farms f ON f.id = b.farm_id
+     JOIN organizations o ON o.id = b.current_holder_id
+     WHERE b.id = $1`,
+    [rows[0].batch_id]
+  );
+  res.json({ holding: rows[0], batch: batchRes.rows[0] || null });
+}
+
 export async function listHoldings(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
     `SELECT h.*, b.crop, b.harvest_date, b.organic_claim_status, b.grade, f.name as farm_name

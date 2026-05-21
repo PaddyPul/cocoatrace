@@ -9,6 +9,10 @@ import ContractDetailPage from './pages/ContractDetailPage';
 import ShipmentDetailPage from './pages/ShipmentDetailPage';
 import PaymentDetailPage from './pages/PaymentDetailPage';
 import { FarmsPage, BatchesPage, HoldingsPage, ContractsPage, ShipmentsPage, PaymentsPage, EvidencePage, AuditPage, CertsPage } from './pages/DataPages';
+import FarmDetailPage from './pages/FarmDetailPage';
+import BatchDetailPage from './pages/BatchDetailPage';
+import HoldingDetailPage from './pages/HoldingDetailPage';
+import OffersPage from './pages/OffersPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuthCtx();
@@ -38,8 +42,12 @@ export default function App() {
           <Route path="/marketplace" element={<ProtectedRoute><MarketplacePage /></ProtectedRoute>} />
           <Route path="/listing/:id" element={<ProtectedRoute><ListingDetailPage /></ProtectedRoute>} />
           <Route path="/farms" element={<ProtectedRoute><FarmsPage /></ProtectedRoute>} />
+          <Route path="/farms/:id" element={<ProtectedRoute><FarmDetailPage /></ProtectedRoute>} />
           <Route path="/batches" element={<ProtectedRoute><BatchesPage /></ProtectedRoute>} />
+          <Route path="/batches/:id" element={<ProtectedRoute><BatchDetailPage /></ProtectedRoute>} />
           <Route path="/holdings" element={<ProtectedRoute><HoldingsPage /></ProtectedRoute>} />
+          <Route path="/holdings/:id" element={<ProtectedRoute><HoldingDetailPage /></ProtectedRoute>} />
+          <Route path="/offers" element={<ProtectedRoute><OffersPage /></ProtectedRoute>} />
           <Route path="/contracts" element={<ProtectedRoute><ContractsPage /></ProtectedRoute>} />
           <Route path="/contracts/:id" element={<ProtectedRoute><ContractDetailPage /></ProtectedRoute>} />
           <Route path="/shipments" element={<ProtectedRoute><ShipmentsPage /></ProtectedRoute>} />

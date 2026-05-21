@@ -3,17 +3,24 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { payments } from '../api';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
-import { ArrowLeft, Euro, CreditCard, Building2, User } from 'lucide-react';
-import { usePermission } from '../hooks/usePermission';
+import { ArrowLeft, Euro, CreditCard, Building2, User, Check } from 'lucide-react';
+import { useAuthCtx } from '../components/auth/AuthProvider';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 
 export default function PaymentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { canDo } = usePermission();
+  const { user } = useAuthCtx();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Pay
+  const [showPay, setShowPay] = useState(false);
+  const [txRef, setTxRef] = useState('');
+  const [payLoading, setPayLoading] = useState(false);
+  const [payError, setPayError] = useState('');
+  const [payDone, setPayDone] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -22,6 +29,19 @@ export default function PaymentDetailPage() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const isBuyer = data && user && data.buyer_organization_id === user.organizationId;
+
+  const handlePay = async () => {
+    if (!id || !txRef) { setPayError('Transaction reference required'); return; }
+    setPayLoading(true); setPayError('');
+    try {
+      await payments.pay(id, { transactionReference: txRef });
+      setPayDone(true);
+      const updated = await payments.get(id);
+      setData(updated);
+    } catch (e: any) { setPayError(e.message); } finally { setPayLoading(false); }
+  };
 
   if (loading) return <Layout currentPage="payments"><SkeletonDetail /></Layout>;
   if (error || !data) return <Layout currentPage="payments"><div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{error || 'Not found'}</div></Layout>;
@@ -84,7 +104,6 @@ export default function PaymentDetailPage() {
             </div>
           </div>
 
-          {/* Contract summary */}
           {p.quantity_kg && (
             <div className="bg-surface border border-border rounded p-5">
               <h3 className="text-sm font-semibold mb-3">Contract Summary</h3>
@@ -110,12 +129,38 @@ export default function PaymentDetailPage() {
           <div className="bg-surface border border-border rounded p-5 sticky top-6">
             <h4 className="text-xs font-semibold mb-3">Quick Actions</h4>
             <div className="space-y-2">
-              <button className="btn w-full justify-center text-xs">
-                <CreditCard size={14} /> Download Receipt
-              </button>
-              {p.status === 'requested' && canDo('payment.confirm') && (
-                <button className="btn btn-primary w-full justify-center text-xs">
+              {p.status === 'requested' && isBuyer && !showPay && !payDone && (
+                <button className="btn btn-primary w-full justify-center text-xs" onClick={() => setShowPay(true)}>
                   <Euro size={14} /> Pay Now
+                </button>
+              )}
+
+              {payDone && (
+                <div className="text-center py-3">
+                  <Check size={20} className="text-green-400 mx-auto mb-1" />
+                  <div className="text-xs font-semibold text-green-400">Payment Confirmed!</div>
+                </div>
+              )}
+
+              {showPay && !payDone && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="form-label">Transaction Reference</label>
+                    <input className="form-input" placeholder="e.g. SWIFT:COCO12345" value={txRef} onChange={(e) => setTxRef(e.target.value)} />
+                  </div>
+                  {payError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{payError}</div>}
+                  <div className="flex gap-2">
+                    <button className="btn flex-1 justify-center text-xs" onClick={() => setShowPay(false)} disabled={payLoading}>Cancel</button>
+                    <button className="btn btn-primary flex-1 justify-center text-xs" onClick={handlePay} disabled={payLoading || !txRef}>
+                      {payLoading ? 'Processing…' : 'Confirm Payment'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {p.status === 'settled' && (
+                <button className="btn w-full justify-center text-xs">
+                  <CreditCard size={14} /> Download Receipt
                 </button>
               )}
             </div>
