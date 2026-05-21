@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { payments } from '../api';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
-import { ArrowLeft, Euro, CreditCard, Building2, User, Check } from 'lucide-react';
+import { ArrowLeft, Euro, CreditCard, Building2, User, Check, FileText } from 'lucide-react';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 
@@ -121,6 +121,11 @@ export default function PaymentDetailPage() {
                   <div className="text-sm font-mono">{p.incoterm || '—'}</div>
                 </div>
               </div>
+              {p.contract_id && (
+                <button className="btn btn-sm mt-3" onClick={() => navigate(`/contracts/${p.contract_id}`)}>
+                  <FileText size={14} /> View Contract
+                </button>
+              )}
             </div>
           )}
         </div>

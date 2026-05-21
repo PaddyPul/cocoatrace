@@ -4,7 +4,7 @@ import { listings, provenance as provenanceApi, offers } from '../api';
 import { Listing, ProvenancePack } from '../types';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
-import { ArrowLeft, Leaf, Shield, Package, Ship, Euro, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Leaf, Shield, Package, Ship, Euro, ChevronRight, MapPin } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 import { usePermission } from '../hooks/usePermission';
 
@@ -176,16 +176,20 @@ export default function ListingDetailPage() {
           {/* Batch provenance pack */}
           {batch && (
             <div className="bg-surface border border-border rounded p-5">
-              <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                <Shield size={16} className="text-brand-400" />
-                Provenance Pack
-                <span className={`badge ${completeness >= 95 ? 'badge-green' : 'badge-amber'} ml-auto`}>
-                  {completeness}% complete
-                </span>
-                <span className={`badge ${eudrReady ? 'badge-green' : 'badge-amber'}`}>
-                  EUDR: {eudrReady ? 'Ready' : 'Incomplete'}
-                </span>
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Shield size={16} className="text-brand-400" />
+                  Provenance Pack
+                </h3>
+                <div className="flex gap-2">
+                  <span className={`badge ${completeness >= 95 ? 'badge-green' : 'badge-amber'}`}>
+                    {completeness}% complete
+                  </span>
+                  <span className={`badge ${eudrReady ? 'badge-green' : 'badge-amber'}`}>
+                    EUDR: {eudrReady ? 'Ready' : 'Incomplete'}
+                  </span>
+                </div>
+              </div>
 
               {!eudrReady && (
                 <div className="bg-yellow-900/10 border border-yellow-500/30 rounded-sm px-3 py-2 mb-4 text-xs text-yellow-400 flex items-start gap-2">
@@ -237,6 +241,11 @@ export default function ListingDetailPage() {
                   <div className="font-mono text-[10px] text-text-muted break-all">{batch.att_hash}</div>
                 </div>
               )}
+
+              <div className="mt-4 pt-4 border-t border-border flex gap-2">
+                {batch.id && <button className="btn btn-sm text-xs" onClick={() => navigate(`/batches/${batch.id}`)}>View Batch <ChevronRight size={14} /></button>}
+                {listing.farm_name && <button className="btn btn-sm text-xs" onClick={() => navigate(`/farms/${batch.farm_id || ''}`)}><MapPin size={14} /> View Farm</button>}
+              </div>
 
               {/* Policy checks */}
               {checks.length > 0 && (

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { shipments } from '../api';
 import { StatusBadge, fmtDate } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
-import { ArrowLeft, Ship, Anchor, Calendar, MapPin, Hash, CheckCircle2, Circle } from 'lucide-react';
+import { ArrowLeft, Ship, Anchor, Calendar, MapPin, Hash, CheckCircle2, Circle, FileText } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 
 const MILESTONE_ORDER = ['requested','accepted','picked_up','warehouse_received','port_received','loaded','departed','arrived','customs_cleared','delivered'];
@@ -82,6 +82,14 @@ export default function ShipmentDetailPage() {
               <div className="mt-4 pt-4 border-t border-border">
                 <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Logistics Partner</div>
                 <div className="text-sm">{s.logistics_name}</div>
+              </div>
+            )}
+
+            {s.contract_id && (
+              <div className="mt-4 pt-4 border-t border-border flex gap-2">
+                <button className="btn btn-sm text-xs" onClick={() => navigate(`/contracts/${s.contract_id}`)}>
+                  <FileText size={14} /> View Contract
+                </button>
               </div>
             )}
           </div>

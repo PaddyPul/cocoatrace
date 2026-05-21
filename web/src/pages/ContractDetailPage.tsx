@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { contracts, shipments } from '../api';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
-import { ArrowLeft, FileText, Ship, Euro, MapPin, Hash, ChevronRight } from 'lucide-react';
+import { ArrowLeft, FileText, Ship, Euro, MapPin, Hash, ChevronRight, Tag } from 'lucide-react';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 import { X } from 'lucide-react';
@@ -123,6 +123,17 @@ export default function ContractDetailPage() {
             </div>
           </div>
 
+          {c.listing_id && (
+            <div className="bg-surface border border-border rounded p-5">
+              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                <Tag size={16} className="text-brand-400" />
+                Source Listing
+              </h3>
+              <p className="text-xs text-text-muted mb-3">Listing {c.listing_id.slice(0, 8)}…</p>
+              <button className="btn btn-sm" onClick={() => navigate(`/listing/${c.listing_id}`)}>View Listing <ChevronRight size={14} /></button>
+            </div>
+          )}
+
           {c.shipment_id && (
             <div className="bg-surface border border-border rounded p-5">
               <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
@@ -152,6 +163,8 @@ export default function ContractDetailPage() {
               </button>
             </div>
           )}
+
+
 
           {!c.shipment_id && srDone && (
             <div className="bg-surface border border-border rounded p-5 text-center">
