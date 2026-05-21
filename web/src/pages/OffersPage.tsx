@@ -5,6 +5,7 @@ import { Offer } from '../types';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
 import { SkeletonTable } from '../components/shared/Skeleton';
+import EmptyState from '../components/shared/EmptyState';
 import { Check, X } from 'lucide-react';
 
 function useFetch<T>(fetcher: () => Promise<T[]>) {
@@ -20,7 +21,6 @@ function useFetch<T>(fetcher: () => Promise<T[]>) {
 }
 
 function Err({ msg }: { msg: string }) { return <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{msg}</div>; }
-function Empty() { return <tr><td colSpan={99} className="text-center py-8 text-text-muted">No offers</td></tr>; }
 
 export default function OffersPage() {
   const navigate = useNavigate();
@@ -104,7 +104,7 @@ export default function OffersPage() {
           </>
         )}
 
-        {offers.length === 0 && <table><tbody><Empty /></tbody></table>}
+        {offers.length === 0 && <EmptyState icon="📨" title="No offers yet" description="Offers appear when buyers express interest in your marketplace listings." action={<button className="btn btn-sm" onClick={() => navigate('/marketplace')}>Browse Marketplace →</button>} />}
       </div>}
     </Layout>
   );
