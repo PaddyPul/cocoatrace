@@ -5,10 +5,13 @@ import { Listing, ProvenancePack } from '../types';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
 import { ArrowLeft, Leaf, Shield, Package, Ship, Euro, ChevronRight } from 'lucide-react';
+import { SkeletonDetail } from '../components/shared/Skeleton';
+import { usePermission } from '../hooks/usePermission';
 
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { canDo } = usePermission();
   const [listing, setListing] = useState<Listing | null>(null);
   const [provenance, setProvenance] = useState<ProvenancePack | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,14 +48,16 @@ export default function ListingDetailPage() {
 
   const handleOffer = async () => {
     if (!listing) return;
+    if (!offerQty || offerQty <= 0) { setOfferError('Quantity must be greater than 0'); return; }
+    if (!offerPrice || offerPrice <= 0) { setOfferError('Price must be greater than 0'); return; }
+    if (offerQty > (listing.available_quantity_kg || 0)) { setOfferError(`Quantity cannot exceed ${listing.available_quantity_kg} kg`); return; }
     setOfferLoading(true);
     setOfferError('');
     try {
-      await offers.create({
-        listing_id: listing.id,
-        quantity_kg: offerQty,
-        offered_price_per_kg: offerPrice,
-        notes: offerNote,
+      await offers.create(listing.id, {
+        quantityKg: Number(offerQty),
+        offeredPricePerKg: Number(offerPrice),
+        currency: 'EUR',
       });
       setOfferDone(true);
     } catch (e: any) {
@@ -63,14 +68,7 @@ export default function ListingDetailPage() {
   };
 
   if (loading) {
-    return (
-      <Layout currentPage="listing">
-        <div className="loading">
-          <div className="spinner" />
-          <div>Loading listing…</div>
-        </div>
-      </Layout>
-    );
+    return <Layout currentPage="listing"><SkeletonDetail /></Layout>;
   }
 
   if (error || !listing) {
@@ -293,7 +291,7 @@ export default function ListingDetailPage() {
               {(listing.available_quantity_kg || 0).toLocaleString()} kg available
             </div>
 
-            {!showOffer && !offerDone && (
+            {!showOffer && !offerDone && canDo('offer.create') && (
               <>
                 <button
                   className="btn btn-primary w-full justify-center mb-2"

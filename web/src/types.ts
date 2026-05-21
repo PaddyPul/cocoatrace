@@ -25,6 +25,7 @@ export interface Batch {
   id: string;
   farm_id: string;
   farm_name?: string;
+  current_holder_id: string;
   harvest_date: string;
   quantity_kg: number;
   grade?: string;

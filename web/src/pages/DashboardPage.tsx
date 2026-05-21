@@ -13,35 +13,24 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const orgType = user?.orgType;
+    const perms = user?.permissions || [];
+    const hasAny = (...ps: string[]) => ps.some((p) => perms.includes('*') || perms.includes(p));
     setLoading(true);
 
     const load = async () => {
       try {
-        if (['exporter', 'admin'].includes(orgType || '')) {
-          const [b, c, s] = await Promise.all([
-            batches.list(), contracts.list(), shipments.list(),
-          ]);
-          setData({ batches: b, contracts: c, shipments: s });
-        } else if (orgType === 'farmer') {
-          const [f, b] = await Promise.all([farms.list(), batches.list()]);
-          setData({ farms: f, batches: b });
-        } else if (orgType === 'certifier') {
-          const [b, c] = await Promise.all([batches.list(), Promise.resolve([])]);
-          setData({ batches: b, certs: c });
-        } else if (orgType === 'importer') {
-          const [l, c] = await Promise.all([listings.list(), contracts.list()]);
-          setData({ listings: l, contracts: c });
-        } else if (orgType === 'logistics') {
-          const s = await shipments.list();
-          setData({ shipments: s });
-        } else if (orgType === 'regulator') {
-          const a = await audit.list();
-          setData({ audit: a });
-        } else {
-          const [b, c] = await Promise.all([batches.list(), contracts.list()]);
-          setData({ batches: b, contracts: c });
-        }
+        const promises: Record<string, Promise<any>> = {};
+        if (hasAny('batch.read', 'batch.create', 'batch.attest')) promises.batches = batches.list();
+        if (hasAny('contract.read')) promises.contracts = contracts.list();
+        if (hasAny('shipment.read', 'shipment.request', 'shipment.update', 'shipment.accept')) promises.shipments = shipments.list();
+        if (hasAny('farm.read', 'farm.create')) promises.farms = farms.list();
+        if (hasAny('listing.read', 'listing.create')) promises.listings = listings.list();
+        if (hasAny('audit.read')) promises.audit = audit.list();
+        const results = await Promise.all(Object.values(promises));
+        const keys = Object.keys(promises);
+        const mapped: any = {};
+        keys.forEach((k, i) => { mapped[k] = results[i]; });
+        setData(mapped);
       } catch (e: any) {
         console.error(e);
       } finally {
@@ -50,9 +39,9 @@ export default function DashboardPage() {
     };
 
     load();
-  }, [user?.orgType]);
+  }, [user?.permissions]);
 
-  const orgType = user?.orgType;
+  const orgType = user?.orgType || '';
 
   if (loading) {
     return (
@@ -62,22 +51,19 @@ export default function DashboardPage() {
     );
   }
 
+  const chooseDash = () => {
+    const hasAny = (...ps: string[]) => ps.some((p) => canDo(p));
+    if (orgType === 'farmer' && hasAny('farm.read')) return <FarmerDash data={data} navigate={navigate} />;
+    if (orgType === 'certifier' && hasAny('batch.attest')) return <CertifierDash data={data} navigate={navigate} />;
+    if (orgType === 'importer' && hasAny('listing.read')) return <ImporterDash data={data} navigate={navigate} />;
+    if (orgType === 'logistics' && hasAny('shipment.read')) return <LogisticsDash data={data} navigate={navigate} />;
+    if (orgType === 'regulator' && hasAny('audit.read')) return <RegulatorDash data={data} navigate={navigate} />;
+    return <ExporterDash data={data} navigate={navigate} />;
+  };
+
   return (
     <Layout currentPage="dashboard">
-      {orgType === 'exporter' || orgType === 'admin'
-        ? <ExporterDash data={data} navigate={navigate} />
-        : orgType === 'farmer'
-        ? <FarmerDash data={data} navigate={navigate} />
-        : orgType === 'certifier'
-        ? <CertifierDash data={data} navigate={navigate} />
-        : orgType === 'importer'
-        ? <ImporterDash data={data} navigate={navigate} />
-        : orgType === 'logistics'
-        ? <LogisticsDash data={data} navigate={navigate} />
-        : orgType === 'regulator'
-        ? <RegulatorDash data={data} navigate={navigate} />
-        : <ExporterDash data={data} navigate={navigate} />
-      }
+      {chooseDash()}
     </Layout>
   );
 }
