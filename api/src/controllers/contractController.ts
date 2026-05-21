@@ -74,6 +74,18 @@ export async function acceptOffer(req: Request, res: Response): Promise<void> {
 
 export async function rejectOffer(req: Request, res: Response): Promise<void> {
   const offerId = req.params.id as string;
+  const offerRes = await query(
+    'SELECT o.id, l.seller_organization_id FROM trade_offers o JOIN listings l ON l.id=o.listing_id WHERE o.id=$1',
+    [offerId]
+  );
+  if (!offerRes.rows[0]) {
+    res.status(404).json({ error: 'Offer not found' });
+    return;
+  }
+  if (offerRes.rows[0].seller_organization_id !== req.user!.organizationId) {
+    res.status(403).json({ error: 'Access denied' });
+    return;
+  }
   const { rows } = await query("UPDATE trade_offers SET status='rejected' WHERE id=$1 RETURNING *", [offerId]);
   res.json(rows[0]);
 }

@@ -4,6 +4,13 @@ import * as audit from '../services/audit';
 
 export async function listOrganizations(req: Request, res: Response): Promise<void> {
   const { type } = req.query;
+  const perms = req.user!.permissions || [];
+  const seeAll = perms.includes('*') || perms.includes('organization.admin');
+  if (!seeAll) {
+    const { rows } = await query('SELECT * FROM organizations WHERE id = $1 ORDER BY name', [req.user!.organizationId]);
+    res.json(rows);
+    return;
+  }
   let sql = 'SELECT * FROM organizations ORDER BY name';
   let params: any[] = [];
   if (type) {
@@ -25,6 +32,10 @@ export async function createOrganization(req: Request, res: Response): Promise<v
 }
 
 export async function listOrganizationMembers(req: Request, res: Response): Promise<void> {
+  if (req.params.id !== req.user!.organizationId && !req.user!.permissions?.includes('*')) {
+    res.status(403).json({ error: 'Access denied' });
+    return;
+  }
   const { rows } = await query(
     `SELECT u.id, u.email, u.name, u.active, u.mfa_enabled, u.created_at,
             array_agg(r.name) as roles

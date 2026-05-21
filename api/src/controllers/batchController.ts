@@ -2,6 +2,63 @@ import { Request, Response } from 'express';
 import { query, getClient } from '../db';
 import * as audit from '../services/audit';
 
+export async function pushToMarketplace(req: Request, res: Response): Promise<void> {
+  const batchId = req.params.id as string;
+  const { quantityKg, pricePerKg, currency, incoterm, originLocation, destinationLocation } = req.body;
+
+  const batchRes = await query('SELECT * FROM harvest_batches WHERE id=$1 AND current_holder_id=$2', [batchId, req.user!.organizationId]);
+  if (!batchRes.rows[0]) {
+    res.status(404).json({ error: 'Batch not found or not yours' });
+    return;
+  }
+  const batch = batchRes.rows[0];
+  if (quantityKg > Number(batch.quantity_kg)) {
+    res.status(400).json({ error: `Quantity exceeds batch total of ${batch.quantity_kg} kg` });
+    return;
+  }
+
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+
+    let holdingRes = await client.query(
+      'SELECT id FROM batch_holdings WHERE batch_id=$1 AND holder_organization_id=$2 AND status=$3',
+      [batchId, req.user!.organizationId, 'available']
+    );
+    let holdingId: string;
+    if (holdingRes.rows[0]) {
+      holdingId = holdingRes.rows[0].id;
+    } else {
+      const newHolding = await client.query(
+        'INSERT INTO batch_holdings (batch_id, holder_organization_id, quantity_kg, status) VALUES ($1,$2,$3,$4) RETURNING id',
+        [batchId, req.user!.organizationId, quantityKg, 'available']
+      );
+      holdingId = newHolding.rows[0].id;
+    }
+
+    const availRes = await client.query('SELECT quantity_kg FROM batch_holdings WHERE id=$1', [holdingId]);
+    if (quantityKg > Number(availRes.rows[0].quantity_kg)) {
+      await client.query('ROLLBACK');
+      res.status(400).json({ error: `Only ${availRes.rows[0].quantity_kg} kg available in holding` });
+      return;
+    }
+
+    const listingRes = await client.query(
+      'INSERT INTO listings (seller_organization_id, holding_id, available_quantity_kg, price_per_kg, currency, incoterm, origin_location, destination_location) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
+      [req.user!.organizationId, holdingId, quantityKg, pricePerKg, currency, incoterm, originLocation, destinationLocation]
+    );
+
+    await client.query('COMMIT');
+    await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'listing.create', entityType: 'listing', entityId: listingRes.rows[0].id });
+    res.status(201).json(listingRes.rows[0]);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 export async function listBatches(req: Request, res: Response): Promise<void> {
   const perms = req.user!.permissions || [];
   const seeAll = perms.includes('*') || perms.includes('batch.read');
@@ -21,7 +78,7 @@ export async function listBatches(req: Request, res: Response): Promise<void> {
 
 export async function getBatch(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT b.*, f.name as farm_name, o.name as holder_name,
+    `SELECT b.*, f.name as farm_name, f.farmer_organization_id, o.name as holder_name,
             a.attested_at, a.provenance_hash as att_hash, a.notes as att_notes,
             c.standard as cert_standard, c.valid_to as cert_valid_to
      FROM harvest_batches b
@@ -34,6 +91,12 @@ export async function getBatch(req: Request, res: Response): Promise<void> {
   );
   if (!rows[0]) {
     res.status(404).json({ error: 'Batch not found' });
+    return;
+  }
+  const perms = req.user!.permissions || [];
+  const seeAll = perms.includes('*') || perms.includes('batch.read');
+  if (!seeAll && rows[0].current_holder_id !== req.user!.organizationId && rows[0].farmer_organization_id !== req.user!.organizationId) {
+    res.status(403).json({ error: 'Access denied' });
     return;
   }
   const evidenceRes = await query("SELECT * FROM evidence_items WHERE linked_entity_type='batch' AND linked_entity_id=$1", [req.params.id]);

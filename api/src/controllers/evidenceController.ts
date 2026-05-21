@@ -9,8 +9,8 @@ export async function listEvidence(req: Request, res: Response): Promise<void> {
   let sql = 'SELECT * FROM evidence_items WHERE uploader_organization_id=$1';
   const params: any[] = [req.user!.organizationId];
   if (entityType && entityId) {
-    sql = 'SELECT * FROM evidence_items WHERE linked_entity_type=$1 AND linked_entity_id=$2';
-    params.splice(0, 1, entityType, entityId);
+    sql += ' AND linked_entity_type=$2 AND linked_entity_id=$3';
+    params.push(entityType, entityId);
   }
   const { rows } = await query(sql + ' ORDER BY created_at DESC', params);
   res.json(rows);

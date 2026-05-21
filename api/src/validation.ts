@@ -123,3 +123,12 @@ export const uploadEvidenceSchema = z.object({
   linkedEntityId: z.string(),
   claimDescription: z.string().optional(),
 });
+
+export const pushToMarketplaceSchema = z.object({
+  quantityKg: z.number().positive('Quantity must be positive'),
+  pricePerKg: z.number().positive('Price must be positive'),
+  currency: z.string().length(3).default('EUR'),
+  incoterm: z.string().default('CIF'),
+  originLocation: z.string().min(1, 'Origin location required'),
+  destinationLocation: z.string().min(1, 'Destination location required'),
+});

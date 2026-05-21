@@ -6,8 +6,8 @@ import * as listingController from '../controllers/listingController';
 
 const router = Router();
 
-router.get('/listings', requireAuth, listingController.listListings);
-router.get('/listings/:id', requireAuth, listingController.getListing);
+router.get('/listings', requireAuth, requirePermission('listing.read'), listingController.listListings);
+router.get('/listings/:id', requireAuth, requirePermission('listing.read'), listingController.getListing);
 router.post('/listings', requireAuth, requirePermission('listing.create'), validate(createListingSchema), listingController.createListing);
 
 export = router;

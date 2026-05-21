@@ -22,6 +22,11 @@ export async function getFarm(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: 'Farm not found' });
     return;
   }
+  const canSeeAll = req.user!.permissions?.includes('*') || req.user!.permissions?.includes('farm.read');
+  if (!canSeeAll && farmRes.rows[0].farmer_organization_id !== req.user!.organizationId) {
+    res.status(403).json({ error: 'Access denied' });
+    return;
+  }
   const plotRes = await query('SELECT * FROM farm_plots WHERE farm_id = $1 ORDER BY plot_code', [req.params.id]);
   const certRes = await query('SELECT * FROM organic_certificates WHERE farm_id = $1 ORDER BY valid_to DESC', [req.params.id]);
   res.json({ farm: farmRes.rows[0], plots: plotRes.rows, certificates: certRes.rows });
@@ -39,6 +44,11 @@ export async function createFarm(req: Request, res: Response): Promise<void> {
 
 export async function createPlot(req: Request, res: Response): Promise<void> {
   const { plotCode, areaHectares, crops, gpsLat, gpsLng, geolocationSource } = req.body;
+  const farmRes = await query('SELECT id FROM farms WHERE id=$1 AND farmer_organization_id=$2', [req.params.id, req.user!.organizationId]);
+  if (!farmRes.rows[0]) {
+    res.status(404).json({ error: 'Farm not found' });
+    return;
+  }
   const { rows } = await query(
     'INSERT INTO farm_plots (farm_id, plot_code, area_hectares, crops, gps_lat, gps_lng, geolocation_source) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
     [req.params.id, plotCode, areaHectares, crops, gpsLat || null, gpsLng || null, geolocationSource]

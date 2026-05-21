@@ -18,9 +18,21 @@ export async function listShipments(req: Request, res: Response): Promise<void> 
 }
 
 export async function getShipment(req: Request, res: Response): Promise<void> {
-  const shipRes = await query('SELECT sh.*, o.name as logistics_name FROM shipments sh LEFT JOIN organizations o ON o.id=sh.logistics_organization_id WHERE sh.id=$1', [req.params.id]);
+  const shipRes = await query(
+    `SELECT sh.*, c.seller_organization_id, c.buyer_organization_id, o.name as logistics_name
+     FROM shipments sh
+     JOIN sales_contracts c ON c.id = sh.contract_id
+     LEFT JOIN organizations o ON o.id=sh.logistics_organization_id
+     WHERE sh.id=$1`,
+    [req.params.id]
+  );
   if (!shipRes.rows[0]) {
     res.status(404).json({ error: 'Shipment not found' });
+    return;
+  }
+  const s = shipRes.rows[0];
+  if (s.logistics_organization_id !== req.user!.organizationId && s.seller_organization_id !== req.user!.organizationId && s.buyer_organization_id !== req.user!.organizationId) {
+    res.status(403).json({ error: 'Access denied' });
     return;
   }
   const milestoneRes = await query('SELECT * FROM shipment_milestones WHERE shipment_id=$1 ORDER BY recorded_at ASC', [req.params.id]);
@@ -47,10 +59,20 @@ export async function requestShipment(req: Request, res: Response): Promise<void
 export async function recordMilestone(req: Request, res: Response): Promise<void> {
   const id = req.params.id as string;
   const { milestone, location, notes } = req.body;
-  const shipRes = await query('SELECT * FROM shipments WHERE id=$1', [id]);
+  const shipRes = await query(
+    `SELECT sh.*, c.seller_organization_id, c.buyer_organization_id
+     FROM shipments sh
+     JOIN sales_contracts c ON c.id = sh.contract_id
+     WHERE sh.id=$1`,
+    [id]
+  );
   const ship = shipRes.rows[0];
   if (!ship) {
     res.status(404).json({ error: 'Shipment not found' });
+    return;
+  }
+  if (ship.logistics_organization_id !== req.user!.organizationId && ship.seller_organization_id !== req.user!.organizationId && ship.buyer_organization_id !== req.user!.organizationId) {
+    res.status(403).json({ error: 'Access denied' });
     return;
   }
 

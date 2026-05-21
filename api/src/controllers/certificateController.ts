@@ -4,12 +4,20 @@ import * as audit from '../services/audit';
 
 export async function listCertificates(req: Request, res: Response): Promise<void> {
   const { farmId } = req.query;
+  const perms = req.user!.permissions || [];
+  const seeAll = perms.includes('*') || perms.includes('certificate.read');
   let sql = `SELECT c.*, o.name as certifier_name FROM organic_certificates c JOIN organizations o ON o.id = c.certifier_organization_id`;
   const params: any[] = [];
+  const conditions: string[] = [];
+  if (!seeAll) {
+    conditions.push('(c.certifier_organization_id = $1 OR c.farmer_organization_id = $1)');
+    params.push(req.user!.organizationId);
+  }
   if (farmId) {
-    sql += ' WHERE c.farm_id = $1';
+    conditions.push(`c.farm_id = $${params.length + 1}`);
     params.push(farmId);
   }
+  if (conditions.length) sql += ' WHERE ' + conditions.join(' AND ');
   sql += ' ORDER BY c.valid_to DESC';
   const { rows } = await query(sql, params);
   res.json(rows);
@@ -22,6 +30,12 @@ export async function getCertificate(req: Request, res: Response): Promise<void>
   );
   if (!rows[0]) {
     res.status(404).json({ error: 'Certificate not found' });
+    return;
+  }
+  const perms = req.user!.permissions || [];
+  const seeAll = perms.includes('*') || perms.includes('certificate.read');
+  if (!seeAll && rows[0].certifier_organization_id !== req.user!.organizationId && rows[0].farmer_organization_id !== req.user!.organizationId) {
+    res.status(403).json({ error: 'Access denied' });
     return;
   }
   res.json(rows[0]);

@@ -6,10 +6,10 @@ import * as holdingController from '../controllers/holdingController';
 
 const router = Router();
 
-router.get('/holdings', requireAuth, holdingController.listHoldings);
+router.get('/holdings', requireAuth, requirePermission('holding.read'), holdingController.listHoldings);
 router.post('/holdings', requireAuth, requirePermission('holding.create'), validate(createHoldingSchema), holdingController.createHolding);
-router.post('/holdings/:id/transfer', requireAuth, validate(transferHoldingSchema), holdingController.transferHolding);
-router.post('/transfers/:id/accept', requireAuth, holdingController.acceptTransfer);
-router.post('/holdings/:id/split', requireAuth, validate(splitHoldingSchema), holdingController.splitHolding);
+router.post('/holdings/:id/transfer', requireAuth, requirePermission('custody.transfer.request'), validate(transferHoldingSchema), holdingController.transferHolding);
+router.post('/transfers/:id/accept', requireAuth, requirePermission('custody.transfer.request'), holdingController.acceptTransfer);
+router.post('/holdings/:id/split', requireAuth, requirePermission('holding.create'), validate(splitHoldingSchema), holdingController.splitHolding);
 
 export = router;

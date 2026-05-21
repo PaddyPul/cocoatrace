@@ -7,7 +7,7 @@ export async function getProvenancePack(req: Request, res: Response): Promise<vo
   const { contractId } = req.query;
 
   const [batchRes, farmRes] = await Promise.all([
-    query(`SELECT b.*, f.name as farm_name, f.region, f.country, f.official_traceability_id,
+    query(`SELECT b.*, f.name as farm_name, f.farmer_organization_id, f.region, f.country, f.official_traceability_id,
                   a.attested_at, a.provenance_hash as att_hash,
                   c.standard, c.valid_from, c.valid_to, cert_org.name as certifier_name
            FROM harvest_batches b
@@ -22,6 +22,12 @@ export async function getProvenancePack(req: Request, res: Response): Promise<vo
   const batch = batchRes.rows[0];
   if (!batch) {
     res.status(404).json({ error: 'Batch not found' });
+    return;
+  }
+  const perms = req.user!.permissions || [];
+  const seeAll = perms.includes('*') || perms.includes('provenance.read');
+  if (!seeAll && batch.current_holder_id !== req.user!.organizationId && batch.farmer_organization_id !== req.user!.organizationId) {
+    res.status(403).json({ error: 'Access denied' });
     return;
   }
 
@@ -78,7 +84,7 @@ export async function exportProvenancePack(req: Request, res: Response): Promise
   const { contractId, format = 'json' } = req.query;
 
   const [batchRes, farmRes] = await Promise.all([
-    query(`SELECT b.*, f.name as farm_name, f.region, f.country, f.official_traceability_id,
+    query(`SELECT b.*, f.name as farm_name, f.farmer_organization_id, f.region, f.country, f.official_traceability_id,
                   a.attested_at, a.provenance_hash as att_hash,
                   c.standard, c.valid_from, c.valid_to, cert_org.name as certifier_name
            FROM harvest_batches b
@@ -93,6 +99,12 @@ export async function exportProvenancePack(req: Request, res: Response): Promise
   const batch = batchRes.rows[0];
   if (!batch) {
     res.status(404).json({ error: 'Batch not found' });
+    return;
+  }
+  const perms = req.user!.permissions || [];
+  const seeAll = perms.includes('*') || perms.includes('provenance.read');
+  if (!seeAll && batch.current_holder_id !== req.user!.organizationId && batch.farmer_organization_id !== req.user!.organizationId) {
+    res.status(403).json({ error: 'Access denied' });
     return;
   }
 

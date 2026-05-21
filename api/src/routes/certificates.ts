@@ -6,8 +6,8 @@ import * as certController from '../controllers/certificateController';
 
 const router = Router();
 
-router.get('/certificates', requireAuth, certController.listCertificates);
-router.get('/certificates/:id', requireAuth, certController.getCertificate);
+router.get('/certificates', requireAuth, requirePermission('certificate.read'), certController.listCertificates);
+router.get('/certificates/:id', requireAuth, requirePermission('certificate.read'), certController.getCertificate);
 router.post('/certificates', requireAuth, requirePermission('certificate.issue'), validate(createCertificateSchema), certController.issueCertificate);
 router.post('/certificates/:id/:action', requireAuth, requirePermission('certificate.issue'), certController.updateCertificateStatus);
 
