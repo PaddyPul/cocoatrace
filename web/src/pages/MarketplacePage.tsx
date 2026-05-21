@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { listings } from '../api';
 import { Listing } from '../types';
 import { StatusBadge, fmtMoney } from '../components/shared/helpers';
+import { useAuthCtx } from '../components/auth/AuthProvider';
 import Layout from '../components/layout/Layout';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 
@@ -12,9 +13,11 @@ const REGIONS = ['Ashanti', 'Brong-Ahafo', 'Western', 'Eastern', 'Central', 'Vol
 
 export default function MarketplacePage() {
   const navigate = useNavigate();
+  const { user } = useAuthCtx();
   const [all, setAll] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [myListingsOnly, setMyListingsOnly] = useState(false);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -39,6 +42,7 @@ export default function MarketplacePage() {
 
   const filtered = all
     .filter((l) => {
+      if (myListingsOnly && l.seller_organization_id !== user?.organizationId) return false;
       if (search && !l.seller_name?.toLowerCase().includes(search.toLowerCase()) && !l.farm_region?.toLowerCase().includes(search.toLowerCase()))
         return false;
       if (region && l.farm_region !== region) return false;
@@ -76,6 +80,7 @@ export default function MarketplacePage() {
                     setGrade('');
                     setIncoterm('');
                     setOrganicOnly(false);
+                    setMyListingsOnly(false);
                     setMinPrice('');
                     setMaxPrice('');
                   }}
@@ -142,6 +147,16 @@ export default function MarketplacePage() {
                   onChange={(e) => setOrganicOnly(e.target.checked)}
                 />
                 Organic certified only
+              </label>
+
+              <label className="flex items-center gap-2 text-xs cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="accent-brand-500"
+                  checked={myListingsOnly}
+                  onChange={(e) => setMyListingsOnly(e.target.checked)}
+                />
+                My listings only
               </label>
             </div>
           </aside>
