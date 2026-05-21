@@ -185,6 +185,7 @@ export function BatchesPage() {
             </select>
             <input type="date" className="form-input" value={cbHarvestDate} onChange={(e) => setCbHarvestDate(e.target.value)} />
             <input type="number" className="form-input" placeholder="Quantity (kg) *" value={cbQty || ''} onChange={(e) => setCbQty(Number(e.target.value))} />
+            <input className="form-input" placeholder="Crop (default: cocoa)" value={cbCrop} onChange={(e) => setCbCrop(e.target.value)} />
             <input type="number" step="0.1" className="form-input" placeholder="Moisture %" value={cbMoisture} onChange={(e) => setCbMoisture(e.target.value)} />
             <input className="form-input" placeholder="Grade (e.g. Grade A)" value={cbGrade} onChange={(e) => setCbGrade(e.target.value)} />
             {cbError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{cbError}</div>}

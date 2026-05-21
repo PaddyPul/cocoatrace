@@ -44,11 +44,14 @@ export interface Listing {
   seller_name?: string;
   seller_organization_id: string;
   batch_id: string;
+  farm_name?: string;
   farm_region?: string;
   origin_location?: string;
   available_quantity_kg: number;
   price_per_kg: number;
   incoterm: string;
+  crop?: string;
+  harvest_date?: string;
   grade?: string;
   organic_claim_status: string;
 }

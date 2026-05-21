@@ -265,15 +265,14 @@ export default function MarketplacePage() {
                 >
                   {/* Card image area */}
                   <div className="h-36 bg-surface-darker flex items-center justify-center text-4xl relative overflow-hidden">
-                    <span>🫘</span>
+                    <span title={l.crop || 'cocoa'}>{l.crop === 'hibiscus' ? '🌺' : l.crop === 'coffee' ? '☕' : '🫘'}</span>
                     <div className="absolute top-2 right-2">
                       <StatusBadge status={l.organic_claim_status === 'attested' ? 'organic' : l.organic_claim_status} />
                     </div>
-                    {l.grade && (
-                      <div className="absolute top-2 left-2">
-                        <span className="badge badge-blue">{l.grade}</span>
-                      </div>
-                    )}
+                    <div className="absolute bottom-2 left-2 right-2 flex gap-1">
+                      {l.crop && <span className="badge badge-white text-[10px]">{l.crop}</span>}
+                      {l.grade && <span className="badge badge-blue text-[10px]">{l.grade}</span>}
+                    </div>
                   </div>
 
                   {/* Card body */}
@@ -284,7 +283,8 @@ export default function MarketplacePage() {
                           {l.seller_name || 'Unknown Seller'}
                         </h3>
                         <p className="text-[11px] text-text-muted truncate">
-                          {l.farm_region || 'Unknown region'}
+                          <span className="text-[10px] text-text-muted">Farm: </span>{l.farm_name || '—'}
+                          {l.farm_region ? ` · ${l.farm_region}` : ''}
                           {l.origin_location ? ` · ${l.origin_location}` : ''}
                         </p>
                       </div>
