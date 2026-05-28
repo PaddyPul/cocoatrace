@@ -7,11 +7,13 @@ import Layout from '../components/layout/Layout';
 import { ArrowLeft, Leaf, Shield, Package, Ship, Euro, ChevronRight, MapPin } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 import { usePermission } from '../hooks/usePermission';
+import { useToast } from '../components/shared/ToastProvider';
 
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { canDo } = usePermission();
+  const { toast } = useToast();
   const [listing, setListing] = useState<Listing | null>(null);
   const [provenance, setProvenance] = useState<ProvenancePack | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,6 +62,7 @@ export default function ListingDetailPage() {
         currency: 'EUR',
       });
       setOfferDone(true);
+      toast('success', 'Offer submitted to seller');
     } catch (e: any) {
       setOfferError(e.message);
     } finally {

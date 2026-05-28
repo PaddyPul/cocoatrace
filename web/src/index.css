@@ -33,7 +33,7 @@
   .form-input:focus { @apply border-brand-500; }
   .form-select { @apply form-input appearance-none cursor-pointer; }
 
-  .table-wrap { @apply bg-surface border border-border rounded overflow-hidden mb-5; }
+  .table-wrap { @apply bg-surface border border-border rounded overflow-x-auto mb-5; }
   table { @apply w-full border-collapse; }
   th { @apply text-left px-3.5 py-2.5 text-[10px] text-text-muted uppercase tracking-widest border-b border-border font-medium whitespace-nowrap; }
   td { @apply px-3.5 py-2.5 border-b border-border text-xs text-text-secondary; }
@@ -51,6 +51,9 @@
   .modal { @apply bg-surface-dark border border-border rounded-xl p-7 w-full max-w-lg max-h-[90vh] overflow-y-auto; }
   .modal-title { @apply text-base font-semibold mb-1; }
   .modal-sub { @apply text-xs text-text-secondary mb-5; }
+
+  .toast-enter { animation: slideUp 0.3s ease-out; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
   .tab-row { @apply flex gap-0.5 bg-surface-darker rounded-sm p-0.5 mb-5; }
   .tab { @apply px-3.5 py-1.5 rounded text-xs cursor-pointer text-text-secondary transition-all; }

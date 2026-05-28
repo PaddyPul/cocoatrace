@@ -4,6 +4,7 @@ import { farms as farmsApi, batches as batchesApi, contracts as contractsApi, sh
 import { Farm, Batch, Contract, Shipment, Holding, Payment, Evidence, AuditEvent } from '../types';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
+import { useToast } from '../components/shared/ToastProvider';
 import Layout from '../components/layout/Layout';
 import { SkeletonTable } from '../components/shared/Skeleton';
 import EmptyState from '../components/shared/EmptyState';
@@ -27,6 +28,7 @@ function Err({ msg }: { msg: string }) { return <div className="bg-red-900/10 bo
 export function FarmsPage() {
   const navigate = useNavigate();
   const { canDo } = useAuthCtx();
+  const { toast } = useToast();
   const { data, loading, error, refetch } = useFetch(() => farmsApi.list());
   const [showCreate, setShowCreate] = useState(false);
   const [cfName, setCfName] = useState('');
@@ -54,6 +56,7 @@ export function FarmsPage() {
       setShowCreate(false); setCfName(''); setCfRegion(''); setCfDistrict(''); setCfCommunity(''); setCfTraceId('');
       setCreatedFarmId(farm.id);
       refetch();
+      toast('success', 'Farm created successfully');
     } catch (e: any) { setCfError(e.message); } finally { setCfLoading(false); }
   };
 
@@ -64,6 +67,7 @@ export function FarmsPage() {
       await farmsApi.createPlot(createdFarmId, { plotCode, areaHectares: Number(plotArea), crops: plotCrops.split(',').map((s) => s.trim()) });
       setShowPlot(false); setPlotCode(''); setPlotArea(0); setPlotCrops('cocoa');
       setCreatedFarmId(null);
+      toast('success', 'Plot added to farm');
     } catch (e: any) { setPlotError(e.message); } finally { setPlotLoading(false); }
   };
 
@@ -145,6 +149,7 @@ export function FarmsPage() {
 export function BatchesPage() {
   const navigate = useNavigate();
   const { user, canDo } = useAuthCtx();
+  const { toast } = useToast();
   const { data, loading, error, refetch } = useFetch(() => batchesApi.list());
   const batches = data as Batch[];
   const farmsFetch = useFetch(() => farmsApi.list());
@@ -174,6 +179,7 @@ export function BatchesPage() {
       setShowCreate(false); setCbFarmId(''); setCbHarvestDate(''); setCbQty(0); setCbMoisture(''); setCbGrade('');
       setCreatedBatchId(batch.id);
       refetch();
+      toast('success', 'Batch created successfully');
     } catch (e: any) { setCbError(e.message); } finally { setCbLoading(false); }
   };
 

@@ -4,6 +4,7 @@ import { batches as batchesApi } from '../api';
 import { Batch, Evidence } from '../types';
 import { StatusBadge, fmtDate } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
+import { useToast } from '../components/shared/ToastProvider';
 import Layout from '../components/layout/Layout';
 import { ArrowLeft, Shield, FileText, ChevronRight } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
@@ -12,6 +13,7 @@ export default function BatchDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, canDo } = useAuthCtx();
+  const { toast } = useToast();
   const [batch, setBatch] = useState<Batch | null>(null);
   const [evidence, setEvidence] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +56,7 @@ export default function BatchDetailPage() {
         originLocation: porigin, destinationLocation: pdest,
       });
       setPushDone(true);
+      toast('success', 'Batch listed on marketplace');
     } catch (e: any) { setPushErr(e.message); } finally { setPushing(false); }
   };
 

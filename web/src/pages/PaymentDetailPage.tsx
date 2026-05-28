@@ -5,12 +5,14 @@ import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
 import { ArrowLeft, Euro, CreditCard, Building2, User, Check, FileText } from 'lucide-react';
 import { useAuthCtx } from '../components/auth/AuthProvider';
+import { useToast } from '../components/shared/ToastProvider';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 
 export default function PaymentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuthCtx();
+  const { toast } = useToast();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -40,6 +42,7 @@ export default function PaymentDetailPage() {
       setPayDone(true);
       const updated = await payments.get(id);
       setData(updated);
+      toast('success', 'Payment confirmed successfully');
     } catch (e: any) { setPayError(e.message); } finally { setPayLoading(false); }
   };
 

@@ -5,6 +5,7 @@ import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
 import { ArrowLeft, FileText, Ship, Euro, MapPin, Hash, ChevronRight, Tag } from 'lucide-react';
 import { useAuthCtx } from '../components/auth/AuthProvider';
+import { useToast } from '../components/shared/ToastProvider';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 import { X } from 'lucide-react';
 
@@ -12,6 +13,7 @@ export default function ContractDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, canDo } = useAuthCtx();
+  const { toast } = useToast();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -55,6 +57,7 @@ export default function ContractDetailPage() {
     try {
       await contracts.requestShipment(id, { vesselName: srVessel || undefined, containerReference: srContainer || undefined, originPort: srOrigin, destinationPort: srDest, etaArrival: srEta || undefined });
       setSrDone(true);
+      toast('success', 'Shipment requested');
     } catch (e: any) { setSrError(e.message); } finally { setSrLoading(false); }
   };
 
@@ -64,6 +67,7 @@ export default function ContractDetailPage() {
     try {
       await contracts.requestPayment(id, { amountTotal: Number(prAmount), currency: prCurrency });
       setPrDone(true);
+      toast('success', 'Payment request sent to buyer');
     } catch (e: any) { setPrError(e.message); } finally { setPrLoading(false); }
   };
 

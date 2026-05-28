@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuthCtx } from './components/auth/AuthProvider';
 import ErrorBoundary from './components/shared/ErrorBoundary';
+import { ToastProvider } from './components/shared/ToastProvider';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import MarketplacePage from './pages/MarketplacePage';
@@ -35,6 +36,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ToastProvider>
         <Routes>
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
@@ -59,6 +61,7 @@ export default function App() {
           <Route path="/certs" element={<ProtectedRoute><CertsPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

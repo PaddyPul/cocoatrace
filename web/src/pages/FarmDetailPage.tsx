@@ -4,6 +4,7 @@ import { farms as farmsApi, batches as batchesApi } from '../api';
 import { Farm } from '../types';
 import { StatusBadge, fmtDate } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
+import { useToast } from '../components/shared/ToastProvider';
 import Layout from '../components/layout/Layout';
 import { ArrowLeft, MapPin, FileText } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
@@ -13,6 +14,7 @@ export default function FarmDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { canDo } = useAuthCtx();
+  const { toast } = useToast();
   const [farm, setFarm] = useState<Farm | null>(null);
   const [plots, setPlots] = useState<any[]>([]);
   const [certificates, setCertificates] = useState<any[]>([]);
@@ -53,6 +55,7 @@ export default function FarmDetailPage() {
       setShowPlot(false); setPlotCode(''); setPlotArea(0); setPlotCrops('cocoa');
       const farmData = await farmsApi.get(id);
       setPlots(farmData.plots || []);
+      toast('success', 'Plot added successfully');
     } catch (e: any) { setPlotError(e.message); } finally { setPlotLoading(false); }
   };
 
