@@ -71,6 +71,19 @@ export async function transferHolding(req: Request, res: Response): Promise<void
   res.status(201).json(rows[0]);
 }
 
+export async function listTransfers(req: Request, res: Response): Promise<void> {
+  const { rows } = await query(
+    `SELECT ct.*, o.name as from_org_name, h.warehouse_location
+     FROM custody_transfers ct
+     JOIN organizations o ON o.id = ct.from_organization_id
+     JOIN batch_holdings h ON h.id = ct.holding_id
+     WHERE ct.to_organization_id=$1
+     ORDER BY ct.created_at DESC`,
+    [req.user!.organizationId]
+  );
+  res.json(rows);
+}
+
 export async function acceptTransfer(req: Request, res: Response): Promise<void> {
   const id = req.params.id as string;
   const client = await getClient();

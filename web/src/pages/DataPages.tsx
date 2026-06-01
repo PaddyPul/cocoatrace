@@ -267,6 +267,31 @@ export function HoldingsPage() {
   const [search, setSearch] = useState('');
   const holdings = data as Holding[];
 
+  // Incoming transfers
+  const [transfers, setTransfers] = useState<any[]>([]);
+  const [transfersLoading, setTransfersLoading] = useState(false);
+  const [acceptingTransferId, setAcceptingTransferId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (canDo('custody.transfer.request')) {
+      setTransfersLoading(true);
+      holdingsApi.listTransfers()
+        .then((t) => setTransfers(t.filter((x: any) => x.status === 'requested')))
+        .catch(() => {})
+        .finally(() => setTransfersLoading(false));
+    }
+  }, [canDo]);
+
+  const handleAcceptTransfer = async (transferId: string) => {
+    setAcceptingTransferId(transferId);
+    try {
+      await holdingsApi.acceptTransfer(transferId);
+      setTransfers((prev) => prev.filter((t) => t.id !== transferId));
+      refetch();
+      toast('success', 'Transfer accepted — holding added to your inventory');
+    } catch (e: any) { toast('error', e.message); } finally { setAcceptingTransferId(null); }
+  };
+
   // Create holding
   const [showCreate, setShowCreate] = useState(false);
   const [chBatchId, setChBatchId] = useState('');
@@ -295,6 +320,27 @@ export function HoldingsPage() {
     </div>
     <table><thead><tr><th>ID</th><th>Farm</th><th>Crop</th><th>Qty (kg)</th><th>Warehouse</th><th>Status</th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((h) => <tr key={h.id} className="cursor-pointer hover:bg-brand-500/5" onClick={() => navigate(`/holdings/${h.id}`)}><td className="font-mono text-[11px]">{h.id.slice(0, 13)}…</td><td className="text-text-primary font-medium">{h.farm_name || '—'}</td><td>{h.crop || 'cocoa'}</td><td>{(h.quantity_kg || 0).toLocaleString()}</td><td className="text-[11px]">{h.warehouse_location || '—'}</td><td><StatusBadge status={h.status} /></td></tr>) : holdings.length === 0 ? <tr><td colSpan={99}><EmptyState icon="🏪" title="No holdings yet" description="Holdings represent batch inventory in your custody. They appear when batches are created or transferred to your organization." action={canDo('holding.create') ? <button className="btn btn-sm btn-primary" onClick={() => setShowCreate(true)}>+ Create Holding</button> : undefined} /></td></tr> : <tr><td colSpan={99}><EmptyState icon="🔍" title="No holdings match" description="Try adjusting your search." /></td></tr>}</tbody></table>
   </div>}
+
+  {transfers.length > 0 && (
+    <div className="bg-surface border border-border rounded mt-4">
+      <div className="px-4 py-3 border-b border-border">
+        <h3 className="text-sm font-semibold">Incoming Transfers ({transfers.length})</h3>
+      </div>
+      <div className="divide-y divide-border">
+        {transfers.map((t) => (
+          <div key={t.id} className="px-4 py-3 flex items-center justify-between text-xs">
+            <div>
+              <div className="font-medium">{t.from_org_name}</div>
+              <div className="text-text-muted">{t.quantity_kg} kg{t.warehouse_location ? ` · ${t.warehouse_location}` : ''}</div>
+            </div>
+            <button className="btn btn-sm btn-primary" onClick={() => handleAcceptTransfer(t.id)} disabled={acceptingTransferId === t.id}>
+              {acceptingTransferId === t.id ? 'Accepting…' : 'Accept'}
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
 
   {showCreate && (
     <div className="modal-overlay" onClick={() => !chLoading && setShowCreate(false)}>

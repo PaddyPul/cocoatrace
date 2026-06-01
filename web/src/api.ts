@@ -98,6 +98,8 @@ export const holdings = {
     api<import('./types').Holding>('POST', '/holdings', data),
   transfer: (id: string, data: { toOrganizationId: string; quantityKg: number; reason?: string }) =>
     api<any>('POST', `/holdings/${id}/transfer`, data),
+  listTransfers: () => api<any[]>('GET', '/transfers'),
+  acceptTransfer: (id: string) => api<any>('POST', `/transfers/${id}/accept`),
 };
 
 export const evidence = {
