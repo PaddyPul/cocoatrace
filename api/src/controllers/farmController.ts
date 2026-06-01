@@ -33,10 +33,10 @@ export async function getFarm(req: Request, res: Response): Promise<void> {
 }
 
 export async function createFarm(req: Request, res: Response): Promise<void> {
-  const { name, country, region, district, community, officialTraceabilityId } = req.body;
+  const { name, country, region, district, community, officialTraceabilityId, cooperativeOrganizationId } = req.body;
   const { rows } = await query(
-    'INSERT INTO farms (farmer_organization_id, name, country, region, district, community, official_traceability_id) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
-    [req.user!.organizationId, name, country, region, district, community || null, officialTraceabilityId || null]
+    'INSERT INTO farms (farmer_organization_id, name, country, region, district, community, official_traceability_id, cooperative_organization_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
+    [req.user!.organizationId, name, country, region, district, community || null, officialTraceabilityId || null, cooperativeOrganizationId || null]
   );
   await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'farm.create', entityType: 'farm', entityId: rows[0].id });
   res.status(201).json(rows[0]);

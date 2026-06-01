@@ -12,6 +12,7 @@ export const createFarmSchema = z.object({
   district: z.string().min(1),
   community: z.string().optional(),
   officialTraceabilityId: z.string().optional(),
+  cooperativeOrganizationId: z.string().optional(),
 });
 
 export const createPlotSchema = z.object({

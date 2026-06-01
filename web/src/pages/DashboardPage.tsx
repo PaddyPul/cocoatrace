@@ -5,6 +5,7 @@ import { Batch, Contract, Shipment, Farm, AuditEvent, Listing, Offer } from '../
 import Layout from '../components/layout/Layout';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { ArrowRight } from 'lucide-react';
+import { SkeletonDetail } from '../components/shared/Skeleton';
 
 export default function DashboardPage() {
   const { user, canDo } = useAuthCtx();
@@ -48,9 +49,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <Layout currentPage="dashboard">
-        <div className="loading"><div className="spinner" /><div>Loading dashboard…</div></div>
-      </Layout>
+      <Layout currentPage="dashboard"><SkeletonDetail /></Layout>
     );
   }
 
