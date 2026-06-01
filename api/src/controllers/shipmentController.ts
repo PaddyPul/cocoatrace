@@ -56,6 +56,36 @@ export async function requestShipment(req: Request, res: Response): Promise<void
   res.status(201).json(rows[0]);
 }
 
+export async function acceptShipment(req: Request, res: Response): Promise<void> {
+  const id = req.params.id as string;
+  const shipRes = await query(
+    `SELECT sh.*, c.seller_organization_id, c.buyer_organization_id
+     FROM shipments sh
+     JOIN sales_contracts c ON c.id = sh.contract_id
+     WHERE sh.id=$1`,
+    [id]
+  );
+  const ship = shipRes.rows[0];
+  if (!ship) {
+    res.status(404).json({ error: 'Shipment not found' });
+    return;
+  }
+  if (ship.logistics_organization_id !== req.user!.organizationId) {
+    res.status(403).json({ error: 'This shipment is not assigned to your organization' });
+    return;
+  }
+  if (ship.current_milestone !== 'requested') {
+    res.status(400).json({ error: 'Can only accept shipments in requested status' });
+    return;
+  }
+
+  await query("INSERT INTO shipment_milestones (shipment_id, milestone, recorded_by_user_id) VALUES ($1,'accepted',$2)", [id, req.user!.id]);
+  await query("UPDATE sales_contracts SET status='awaiting_shipment' WHERE id=$1", [ship.contract_id]);
+  const { rows } = await query("UPDATE shipments SET current_milestone='accepted' WHERE id=$1 RETURNING *", [id]);
+  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'shipment.accept', entityType: 'shipment', entityId: id });
+  res.json(rows[0]);
+}
+
 export async function recordMilestone(req: Request, res: Response): Promise<void> {
   const id = req.params.id as string;
   const { milestone, location, notes } = req.body;

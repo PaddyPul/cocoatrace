@@ -47,6 +47,21 @@ export default function ShipmentDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  const [accepting, setAccepting] = useState(false);
+  const [acceptDone, setAcceptDone] = useState(false);
+
+  const handleAccept = async () => {
+    if (!id) return;
+    setAccepting(true);
+    try {
+      await shipments.accept(id);
+      const fresh = await shipments.get(id);
+      setData(fresh);
+      setAcceptDone(true);
+      toast('success', 'Shipment accepted');
+    } catch (e: any) { toast('error', e.message); } finally { setAccepting(false); }
+  };
+
   const handleRecordMilestone = async () => {
     if (!id || !msMilestone) { setMsError('Milestone required'); return; }
     setMsLoading(true); setMsError('');
@@ -182,15 +197,25 @@ export default function ShipmentDetailPage() {
           <div className="bg-surface border border-border rounded p-5 sticky top-6">
             <h4 className="text-xs font-semibold mb-3">Quick Actions</h4>
             <div className="space-y-2">
+              {canDo('shipment.accept') && s.current_milestone === 'requested' && !acceptDone && (
+                <button className="btn btn-primary w-full justify-center text-xs" onClick={handleAccept} disabled={accepting}>
+                  {accepting ? 'Accepting…' : 'Accept Shipment'}
+                </button>
+              )}
+              {acceptDone && (
+                <div className="text-center py-2 text-xs text-green-400 font-semibold">
+                  <CheckCircle2 size={16} className="inline mr-1" />Accepted
+                </div>
+              )}
               {canRecord && (
                 <button className="btn btn-primary w-full justify-center text-xs" onClick={() => setShowMilestone(true)}>
                   <Plus size={14} /> Record Milestone
                 </button>
               )}
-              <button className="btn w-full justify-center text-xs">
+              <button className="btn w-full justify-center text-xs" onClick={() => toast('info', 'Live tracking integration coming soon')}>
                 <MapPin size={14} /> Track Live
               </button>
-              <button className="btn w-full justify-center text-xs">
+              <button className="btn w-full justify-center text-xs" onClick={() => toast('info', 'B/L document viewer coming soon')}>
                 <Hash size={14} /> View B/L Document
               </button>
             </div>

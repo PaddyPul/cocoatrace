@@ -84,6 +84,7 @@ export const payments = {
 export const shipments = {
   list: () => api<import('./types').Shipment[]>('GET', '/shipments'),
   get: (id: string) => api<{ shipment: import('./types').Shipment; milestones: any[] }>('GET', `/shipments/${id}`),
+  accept: (id: string) => api<any>('POST', `/shipments/${id}/accept`),
   recordMilestone: (id: string, data: { milestone: string; location?: string; notes?: string }) =>
     api<any>('POST', `/shipments/${id}/milestones`, data),
 };
