@@ -19,7 +19,7 @@ INSERT INTO roles (id, name, permissions) VALUES
   ('22222222-2222-2222-2222-222222222002', 'certifier', ARRAY['certificate.read','certificate.issue','batch.read','batch.attest','farm.read','evidence.read','evidence.upload']),
   ('22222222-2222-2222-2222-222222222003', 'exporter',  ARRAY['batch.read','batch.create','holding.read','holding.create','listing.read','listing.create','offer.respond','contract.read','shipment.read','shipment.request','payment.read','payment.request','evidence.read','evidence.upload']),
   ('22222222-2222-2222-2222-222222222004', 'importer',  ARRAY['listing.read','offer.create','contract.read','shipment.read','payment.read','payment.confirm','evidence.read','evidence.upload','provenance.export']),
-  ('22222222-2222-2222-2222-222222222005', 'logistics', ARRAY['shipment.read','shipment.accept','shipment.update','evidence.read','evidence.upload']),
+  ('22222222-2222-2222-2222-222222222005', 'logistics', ARRAY['shipment.read','shipment.accept','shipment.update','evidence.read','evidence.upload','batch.read','contract.read','farm.read']),
   ('22222222-2222-2222-2222-222222222006', 'regulator', ARRAY['audit.read','farm.read','batch.read','certificate.read','evidence.read','provenance.export','audit.export']),
   ('22222222-2222-2222-2222-222222222007', 'admin',     ARRAY['*'])
 ON CONFLICT (id) DO UPDATE SET permissions = EXCLUDED.permissions;

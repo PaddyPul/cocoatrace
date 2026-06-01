@@ -498,6 +498,7 @@ const AUDIT_ENTITY_ROUTES: Record<string, string> = {
 
 export function AuditPage() {
   const navigate = useNavigate();
+  const { canDo } = useAuthCtx();
   const { data, loading, error } = useFetch(() => auditApi.list());
   const [search, setSearch] = useState('');
   const events = data as AuditEvent[];
@@ -506,6 +507,7 @@ export function AuditPage() {
     <div className="flex flex-wrap items-center gap-3 mb-3">
       <div className="relative flex-1 min-w-[180px]"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input type="text" placeholder="Search audit log…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
       <div className="text-xs text-text-muted">{filtered.length} event{filtered.length !== 1 ? 's' : ''}</div>
+      {canDo('audit.export') && <button className="btn btn-sm" onClick={() => window.open(auditApi.export(), '_blank')}>Export</button>}
     </div>
     <table><thead><tr><th>Time</th><th>Action</th><th>Entity</th><th>Actor</th><th>Hash</th><th></th></tr></thead><tbody>{filtered.map((a) => {
     const route = AUDIT_ENTITY_ROUTES[a.entity_type];

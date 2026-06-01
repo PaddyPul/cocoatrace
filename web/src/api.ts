@@ -117,6 +117,7 @@ export const evidence = {
 
 export const audit = {
   list: () => api<import('./types').AuditEvent[]>('GET', '/audit/events'),
+  export: () => `${API_BASE}/audit/export`,
 };
 
 export const offers = {
