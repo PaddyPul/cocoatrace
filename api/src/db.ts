@@ -6,8 +6,8 @@ import logger from './logger';
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const connectionString: string =
-  process.env.DATABASE_URL || 'postgresql://cocoa:cocoa_dev@localhost:15433/cocoatrace';
+const connectionString: string = process.env.DATABASE_URL!;
+if (!connectionString) { console.error('FATAL: DATABASE_URL environment variable is not set'); process.exit(1); }
 
 const pool = new Pool({ connectionString });
 

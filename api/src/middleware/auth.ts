@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 
-const JWT_SECRET: string = process.env.JWT_SECRET || 'dev_secret_change_in_production';
+const JWT_SECRET: string = process.env.JWT_SECRET;
+if (!JWT_SECRET) { console.error('FATAL: JWT_SECRET environment variable is not set'); process.exit(1); }
 
 export interface JwtPayload {
   id: string;

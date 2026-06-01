@@ -14,16 +14,17 @@ const QUICK_USERS = [
 export default function LoginPage() {
   const { login, loading } = useAuthCtx();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('Password123!');
-  const [error, setError] = useState('');
+  const [password, setPassword] = useState('');
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async () => {
     setError('');
+    setLoading(true);
     try {
       await login(email, password);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (e: any) {
+      setError(e.message || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 

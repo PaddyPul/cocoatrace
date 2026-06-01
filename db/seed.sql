@@ -82,7 +82,6 @@ ON CONFLICT (id) DO NOTHING;
 UPDATE harvest_batches SET attestation_id='88888888-8888-8888-8888-888888888001', provenance_hash='sha256:c7d1e4f2' WHERE id='77777777-7777-7777-7777-777777777001';
 UPDATE harvest_batches SET attestation_id='88888888-8888-8888-8888-888888888002', provenance_hash='sha256:9f2ab4c1' WHERE id='77777777-7777-7777-7777-777777777002';
 UPDATE harvest_batches SET current_holder_id='11111111-1111-1111-1111-111111111001' WHERE id='77777777-7777-7777-7777-777777777003';
-UPDATE batch_holdings SET holder_organization_id='11111111-1111-1111-1111-111111111001' WHERE id='99999999-9999-9999-9999-999999999004';
 
 -- Holdings
 INSERT INTO batch_holdings (id, batch_id, holder_organization_id, quantity_kg, warehouse_location, status) VALUES
@@ -91,6 +90,8 @@ INSERT INTO batch_holdings (id, batch_id, holder_organization_id, quantity_kg, w
   ('99999999-9999-9999-9999-999999999003', '77777777-7777-7777-7777-777777777002', '11111111-1111-1111-1111-111111111004', 14600.000, 'AGC-WH1, Accra', 'available'),
   ('99999999-9999-9999-9999-999999999004', '77777777-7777-7777-7777-777777777003', '11111111-1111-1111-1111-111111111004', 10000.000, 'AGC-WH3, Accra', 'available')
 ON CONFLICT (id) DO NOTHING;
+
+UPDATE batch_holdings SET holder_organization_id='11111111-1111-1111-1111-111111111001' WHERE id='99999999-9999-9999-9999-999999999004';
 
 -- Listing
 INSERT INTO listings (id, seller_organization_id, holding_id, available_quantity_kg, price_per_kg, currency, incoterm, origin_location, destination_location, active) VALUES

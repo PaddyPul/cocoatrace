@@ -117,6 +117,10 @@ export const payPaymentSchema = z.object({
   transactionReference: z.string().min(1),
 });
 
+export const certificateActionSchema = z.object({
+  reason: z.string().optional(),
+});
+
 export const uploadEvidenceSchema = z.object({
   type: z.string().optional(),
   linkedEntityType: z.string(),
