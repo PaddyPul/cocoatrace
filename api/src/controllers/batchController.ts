@@ -106,7 +106,7 @@ export async function getBatch(req: Request, res: Response): Promise<void> {
 export async function createBatch(req: Request, res: Response): Promise<void> {
   const { farmId, plotIds, crop, harvestDate, quantityKg, moisturePercent, grade } = req.body;
   const { rows } = await query(
-    'INSERT INTO harvest_batches (farm_id, plot_ids, crop, harvest_date, quantity_kg, moisture_percent, grade, current_holder_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
+    "INSERT INTO harvest_batches (farm_id, plot_ids, crop, harvest_date, quantity_kg, moisture_percent, grade, current_holder_id, organic_claim_status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'pending_attestation') RETURNING *",
     [farmId, plotIds, crop, harvestDate, quantityKg, moisturePercent || null, grade || null, req.user!.organizationId]
   );
   await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'batch.create', entityType: 'harvest_batch', entityId: rows[0].id });
