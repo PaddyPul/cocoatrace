@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { farms as farmsApi, batches as batchesApi, contracts as contractsApi, shipments as shipmentsApi, holdings as holdingsApi, payments as paymentsApi, evidence as evidenceApi, audit as auditApi, certificates as certApi, farms as farmsApi2 } from '../api';
+import { farms as farmsApi, batches as batchesApi, contracts as contractsApi, shipments as shipmentsApi, holdings as holdingsApi, payments as paymentsApi, evidence as evidenceApi, audit as auditApi, certificates as certApi, farms as farmsApi2, organizations as organizationsApi } from '../api';
 import { Farm, Batch, Contract, Shipment, Holding, Payment, Evidence, AuditEvent, Certificate } from '../types';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
@@ -644,6 +644,53 @@ export function CertsPage() {
               <button className="btn btn-primary flex-1 justify-center" onClick={handleIssue} disabled={iLoading}>{iLoading ? 'Issuing…' : 'Issue Certificate'}</button>
             </div>
           </div>
+        </div>
+      </div>
+    )}
+  </Layout>;
+}
+
+export function OrganizationsPage() {
+  const navigate = useNavigate();
+  const { data: orgs, loading, error } = useFetch(() => organizationsApi.list());
+  const [selectedOrg, setSelectedOrg] = useState<any>(null);
+  const [members, setMembers] = useState<any[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+
+  const handleViewMembers = async (org: any) => {
+    setSelectedOrg(org);
+    setMembersLoading(true);
+    try {
+      const m = await organizationsApi.members(org.id);
+      setMembers(m);
+    } catch { setMembers([]); } finally { setMembersLoading(false); }
+  };
+
+  return <Layout currentPage="organizations">
+    {loading ? <SkeletonTable rows={5} cols={3} /> : error ? <Err msg={error} /> : <div className="table-wrap">
+      <div className="mb-3"><h2 className="text-lg font-semibold">Organizations</h2></div>
+      <table><thead><tr><th>Name</th><th>Type</th><th>Country</th><th></th></tr></thead><tbody>{orgs.length > 0 ? orgs.map((o: any) => <tr key={o.id} className="hover:bg-brand-500/5">
+        <td className="text-text-primary font-medium">{o.name}</td>
+        <td><span className="badge badge-blue">{o.type}</span></td>
+        <td>{o.country || '—'}</td>
+        <td><button className="btn btn-sm" onClick={() => handleViewMembers(o)}>Members →</button></td>
+      </tr>) : <tr><td colSpan={99}><EmptyState icon="🏢" title="No organizations" description="Organizations represent all entities on the platform." /></td></tr>}</tbody></table>
+    </div>}
+
+    {selectedOrg && (
+      <div className="modal-overlay" onClick={() => { setSelectedOrg(null); setMembers([]); }}>
+        <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-start justify-between mb-2">
+            <div><div className="modal-title">{selectedOrg.name} — Members</div></div>
+            <button className="btn btn-sm" onClick={() => { setSelectedOrg(null); setMembers([]); }}><X size={14} /></button>
+          </div>
+          {membersLoading ? <div className="py-4 text-center text-sm text-text-muted">Loading…</div> : members.length === 0 ? <div className="py-4 text-center text-sm text-text-muted">No members</div> : (
+            <table className="w-full"><thead><tr><th>Email</th><th>Name</th><th>Role</th></tr></thead><tbody>{members.map((m: any) => <tr key={m.id}>
+              <td className="font-mono text-[11px]">{m.email}</td>
+              <td>{m.name || '—'}</td>
+              <td><span className="badge badge-blue">{m.role_name || m.role}</span></td>
+            </tr>)}</tbody></table>
+          )}
         </div>
       </div>
     )}

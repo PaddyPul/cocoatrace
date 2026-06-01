@@ -115,6 +115,11 @@ export const evidence = {
   },
 };
 
+export const organizations = {
+  list: () => api<any[]>('GET', '/organizations'),
+  members: (id: string) => api<any[]>('GET', `/organizations/${id}/members`),
+};
+
 export const audit = {
   list: () => api<import('./types').AuditEvent[]>('GET', '/audit/events'),
   export: () => `${API_BASE}/audit/export`,

@@ -9,7 +9,7 @@ import ListingDetailPage from './pages/ListingDetailPage';
 import ContractDetailPage from './pages/ContractDetailPage';
 import ShipmentDetailPage from './pages/ShipmentDetailPage';
 import PaymentDetailPage from './pages/PaymentDetailPage';
-import { FarmsPage, BatchesPage, HoldingsPage, ContractsPage, ShipmentsPage, PaymentsPage, EvidencePage, AuditPage, CertsPage } from './pages/DataPages';
+import { FarmsPage, BatchesPage, HoldingsPage, ContractsPage, ShipmentsPage, PaymentsPage, EvidencePage, AuditPage, CertsPage, OrganizationsPage } from './pages/DataPages';
 import FarmDetailPage from './pages/FarmDetailPage';
 import BatchDetailPage from './pages/BatchDetailPage';
 import HoldingDetailPage from './pages/HoldingDetailPage';
@@ -61,6 +61,7 @@ export default function App() {
           <Route path="/audit" element={<ProtectedRoute><AuditPage /></ProtectedRoute>} />
           <Route path="/certs" element={<ProtectedRoute><CertsPage /></ProtectedRoute>} />
           <Route path="/my-listings" element={<ProtectedRoute><MyListingsPage /></ProtectedRoute>} />
+          <Route path="/organizations" element={<ProtectedRoute><OrganizationsPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
         </ToastProvider>

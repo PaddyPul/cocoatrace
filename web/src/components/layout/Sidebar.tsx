@@ -24,6 +24,7 @@ const NAV_ITEMS: NavItem[] = [
   { icon: '📋', label: 'Certificates', page: 'certs', orPermissions: ['certificate.read', 'certificate.issue'] },
   { icon: '🗂', label: 'Evidence', page: 'evidence', orPermissions: ['evidence.read', 'evidence.upload'] },
   { icon: '🔗', label: 'Audit Log', page: 'audit', orPermissions: ['audit.read'] },
+  { icon: '🏢', label: 'Organizations', page: 'organizations', orPermissions: ['organization.admin'] },
 ];
 
 export default function Sidebar({
