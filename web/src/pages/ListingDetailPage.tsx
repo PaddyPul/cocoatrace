@@ -4,7 +4,7 @@ import { listings, provenance as provenanceApi, offers } from '../api';
 import { Listing, ProvenancePack } from '../types';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
-import { ArrowLeft, Leaf, Shield, Package, Ship, Euro, ChevronRight, MapPin } from 'lucide-react';
+import { ArrowLeft, Leaf, Shield, Package, Ship, Euro, ChevronRight, MapPin, FileText } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 import { usePermission } from '../hooks/usePermission';
 import { useToast } from '../components/shared/ToastProvider';
@@ -248,6 +248,7 @@ export default function ListingDetailPage() {
               <div className="mt-4 pt-4 border-t border-border flex gap-2">
                 {batch.id && <button className="btn btn-sm text-xs" onClick={() => navigate(`/batches/${batch.id}`)}>View Batch <ChevronRight size={14} /></button>}
                 {listing.farm_name && <button className="btn btn-sm text-xs" onClick={() => navigate(`/farms/${batch.farm_id || ''}`)}><MapPin size={14} /> View Farm</button>}
+                {batch.id && canDo('provenance.export') && <button className="btn btn-sm text-xs" onClick={() => { toast('info', 'Provenance export via email — coming soon'); }}><FileText size={14} /> Export</button>}
               </div>
 
               {/* Policy checks */}

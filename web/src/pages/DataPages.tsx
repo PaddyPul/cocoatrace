@@ -367,17 +367,73 @@ export function PaymentsPage() {
 }
 
 export function EvidencePage() {
-  const { data, loading, error } = useFetch(() => evidenceApi.list());
+  const { canDo } = useAuthCtx();
+  const { toast } = useToast();
+  const { data, loading, error, refetch } = useFetch(() => evidenceApi.list());
   const [search, setSearch] = useState('');
   const evs = data as Evidence[];
+
+  // Upload
+  const [showUpload, setShowUpload] = useState(false);
+  const [upFile, setUpFile] = useState<File | null>(null);
+  const [upType, setUpType] = useState('');
+  const [upLinkedType, setUpLinkedType] = useState('batch');
+  const [upLinkedId, setUpLinkedId] = useState('');
+  const [upDesc, setUpDesc] = useState('');
+  const [upLoading, setUpLoading] = useState(false);
+  const [upError, setUpError] = useState('');
+
+  const handleUpload = async () => {
+    if (!upFile || !upLinkedId) { setUpError('File and linked entity ID required'); return; }
+    setUpLoading(true); setUpError('');
+    try {
+      await evidenceApi.upload(upFile, { type: upType || undefined, linkedEntityType: upLinkedType, linkedEntityId: upLinkedId, claimDescription: upDesc || undefined });
+      setShowUpload(false); setUpFile(null); setUpType(''); setUpLinkedId(''); setUpDesc('');
+      refetch();
+      toast('success', 'Evidence uploaded');
+    } catch (e: any) { setUpError(e.message); } finally { setUpLoading(false); }
+  };
+
   const filtered = evs.filter((e) => !search || e.file_name.toLowerCase().includes(search.toLowerCase()) || (e.type || '').toLowerCase().includes(search.toLowerCase()) || e.linked_entity_type.toLowerCase().includes(search.toLowerCase()) || (e.review_status || '').toLowerCase().includes(search.toLowerCase()));
   return <Layout currentPage="evidence">{loading ? <SkeletonTable rows={5} cols={6} /> : error ? <Err msg={error} /> : <div className="table-wrap">
     <div className="flex flex-wrap items-center gap-3 mb-3">
       <div className="relative flex-1 min-w-[180px]"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input type="text" placeholder="Search evidence…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
       <div className="text-xs text-text-muted">{filtered.length} file{filtered.length !== 1 ? 's' : ''}</div>
+      {canDo('evidence.upload') && <button className="btn btn-sm btn-primary" onClick={() => setShowUpload(true)}>+ Upload</button>}
     </div>
-    <table><thead><tr><th>File</th><th>Type</th><th>SHA-256</th><th>Linked Entity</th><th>Status</th><th>Uploaded</th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((e) => <tr key={e.id} className="hover:bg-brand-500/5"><td className="text-text-primary font-medium">{e.file_name}</td><td>{(e.type || '').replace(/_/g, ' ')}</td><td className="font-mono text-[10px] max-w-[200px] truncate">{e.sha256_hash}</td><td className="font-mono text-[10px]">{e.linked_entity_type}/{e.linked_entity_id.slice(0, 8)}…</td><td><StatusBadge status={e.review_status} /></td><td className="text-[11px]">{fmtDate(e.created_at)}</td></tr>) : evs.length === 0 ? <tr><td colSpan={99}><EmptyState icon="🗂" title="No evidence uploaded" description="Evidence documents support traceability claims and certification audits." /></td></tr> : <tr><td colSpan={99}><EmptyState icon="🔍" title="No evidence match" description="Try adjusting your search." /></td></tr>}</tbody></table>
-  </div>}</Layout>;
+    <table><thead><tr><th>File</th><th>Type</th><th>SHA-256</th><th>Linked Entity</th><th>Status</th><th>Uploaded</th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((e) => <tr key={e.id} className="hover:bg-brand-500/5"><td className="text-text-primary font-medium">{e.file_name}</td><td>{(e.type || '').replace(/_/g, ' ')}</td><td className="font-mono text-[10px] max-w-[200px] truncate">{e.sha256_hash}</td><td className="font-mono text-[10px]">{e.linked_entity_type}/{e.linked_entity_id.slice(0, 8)}…</td><td><StatusBadge status={e.review_status} /></td><td className="text-[11px]">{fmtDate(e.created_at)}</td></tr>) : evs.length === 0 ? <tr><td colSpan={99}><EmptyState icon="🗂" title="No evidence uploaded" description="Evidence documents support traceability claims and certification audits." action={canDo('evidence.upload') ? <button className="btn btn-sm btn-primary" onClick={() => setShowUpload(true)}>+ Upload Evidence</button> : undefined} /></td></tr> : <tr><td colSpan={99}><EmptyState icon="🔍" title="No evidence match" description="Try adjusting your search." /></td></tr>}</tbody></table>
+  </div>}
+
+  {showUpload && (
+    <div className="modal-overlay" onClick={() => !upLoading && setShowUpload(false)}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-2">
+          <div><div className="modal-title">Upload Evidence</div></div>
+          <button className="btn btn-sm" onClick={() => setShowUpload(false)}><X size={14} /></button>
+        </div>
+        <div className="space-y-3">
+          <div>
+            <label className="form-label">File *</label>
+            <input type="file" className="form-input" onChange={(e) => setUpFile(e.target.files?.[0] || null)} />
+          </div>
+          <input className="form-input" placeholder="Type (e.g. certificate_pdf, weighing_ticket)" value={upType} onChange={(e) => setUpType(e.target.value)} />
+          <select className="form-select" value={upLinkedType} onChange={(e) => setUpLinkedType(e.target.value)}>
+            <option value="batch">Batch</option><option value="shipment">Shipment</option><option value="farm">Farm</option><option value="certificate">Certificate</option>
+          </select>
+          <input className="form-input" placeholder="Linked Entity ID *" value={upLinkedId} onChange={(e) => setUpLinkedId(e.target.value)} />
+          <textarea className="form-input" rows={2} placeholder="Description (optional)" value={upDesc} onChange={(e) => setUpDesc(e.target.value)} />
+          {upError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{upError}</div>}
+          <div className="flex gap-2 pt-1">
+            <button className="btn flex-1 justify-center" onClick={() => setShowUpload(false)} disabled={upLoading}>Cancel</button>
+            <button className="btn btn-primary flex-1 justify-center" onClick={handleUpload} disabled={upLoading || !upFile || !upLinkedId}>
+              {upLoading ? 'Uploading…' : 'Upload'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )}
+  </Layout>;
 }
 
 const AUDIT_ENTITY_ROUTES: Record<string, string> = {

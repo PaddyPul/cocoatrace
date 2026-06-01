@@ -167,7 +167,7 @@ export default function PaymentDetailPage() {
               )}
 
               {p.status === 'settled' && (
-                <button className="btn w-full justify-center text-xs">
+                <button className="btn w-full justify-center text-xs" onClick={() => toast('info', 'Receipt download coming soon')}>
                   <CreditCard size={14} /> Download Receipt
                 </button>
               )}

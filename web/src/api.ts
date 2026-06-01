@@ -102,6 +102,15 @@ export const holdings = {
 
 export const evidence = {
   list: () => api<import('./types').Evidence[]>('GET', '/evidence'),
+  upload: (file: File, data: { type?: string; linkedEntityType: string; linkedEntityId: string; claimDescription?: string }) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    if (data.type) fd.append('type', data.type);
+    fd.append('linkedEntityType', data.linkedEntityType);
+    fd.append('linkedEntityId', data.linkedEntityId);
+    if (data.claimDescription) fd.append('claimDescription', data.claimDescription);
+    return api<any>('POST', '/evidence', fd, true);
+  },
 };
 
 export const audit = {

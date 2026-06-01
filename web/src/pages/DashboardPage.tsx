@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { batches, contracts, shipments, farms, audit, listings, offers as offersApi } from '../api';
+import { batches, contracts, shipments, farms, audit, listings, offers as offersApi, certificates as certsApi } from '../api';
 import { Batch, Contract, Shipment, Farm, AuditEvent, Listing, Offer } from '../types';
 import Layout from '../components/layout/Layout';
 import { useAuthCtx } from '../components/auth/AuthProvider';
@@ -27,6 +27,7 @@ export default function DashboardPage() {
         if (hasAny('listing.read', 'listing.create')) promises.listings = listings.list();
         if (hasAny('audit.read')) promises.audit = audit.list();
         if (hasAny('offer.respond', 'offer.create')) promises.offers = offersApi.list();
+        if (hasAny('certificate.read', 'certificate.issue')) promises.certs = certsApi.list();
         const results = await Promise.all(Object.values(promises));
         const keys = Object.keys(promises);
         const mapped: any = {};
@@ -89,15 +90,18 @@ function ActionPrompt({ children }: { children: React.ReactNode }) {
 }
 
 function ExporterDash({ data, navigate }: { data: any; navigate: any }) {
+  const { user } = useAuthCtx();
   const batches: Batch[] = data.batches || [];
   const contracts: Contract[] = data.contracts || [];
   const shipments: Shipment[] = data.shipments || [];
   const offers: Offer[] = data.offers || [];
+  const listingsArr: Listing[] = data.listings || [];
   const pendingOffers = offers.filter((o) => o.status === 'pending');
   const inTransit = contracts.filter((c) => c.status === 'in_transit');
   const delivered = contracts.filter((c) => c.status === 'delivered');
   const pendingPay = contracts.filter((c) => c.status === 'delivered');
-  const unlisted = batches.filter((b) => b.organic_claim_status === 'attested');
+  const myBatches = user ? batches.filter((b) => b.current_holder_id === user.organizationId) : [];
+  const unlisted = myBatches.filter((b) => !listingsArr.some((l) => l.batch_id === b.id));
 
   return (
     <>
@@ -127,7 +131,7 @@ function FarmerDash({ data, navigate, canDo }: { data: any; navigate: any; canDo
   const listingsArr: Listing[] = data.listings || [];
   const myListings = listingsArr.filter((l) => l.seller_organization_id === user?.organizationId);
   const unattested = batches.filter((b) => b.organic_claim_status === 'pending_attestation');
-  const noPlotsFarms = farms.filter((f) => f.verification_status === 'none');
+  const noPlotsFarms: any[] = [];
 
   return (
     <>
@@ -154,13 +158,15 @@ function CertifierDash({ data, navigate }: { data: any; navigate: any }) {
   const batches: Batch[] = data.batches || [];
   const pending = batches.filter((b) => b.organic_claim_status === 'pending_attestation');
   const attested = batches.filter((b) => b.organic_claim_status === 'attested');
+  const certs: any[] = data.certs || [];
+  const activeCerts = certs.filter((c: any) => c.status === 'active');
 
   return (
     <>
       <div className="grid grid-cols-3 gap-3 mb-5">
         <div className="stat-card stat-card-accent"><div className="stat-label">Awaiting Attestation</div><div className={`stat-value ${pending.length > 0 ? 'text-yellow-400' : 'text-brand-400'}`}>{pending.length}</div></div>
         <div className="stat-card"><div className="stat-label">Attested</div><div className="stat-value text-brand-400">{attested.length}</div></div>
-        <div className="stat-card"><div className="stat-label">Active Certs</div><div className="stat-value">—</div></div>
+        <div className="stat-card"><div className="stat-label">Active Certs</div><div className="stat-value text-brand-400">{activeCerts.length}</div></div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
@@ -223,13 +229,15 @@ function LogisticsDash({ data, navigate }: { data: any; navigate: any }) {
 
 function RegulatorDash({ data, navigate }: { data: any; navigate: any }) {
   const audit: AuditEvent[] = data.audit || [];
+  const certs: any[] = data.certs || [];
+  const activeCerts = certs.filter((c: any) => c.status === 'active');
 
   return (
     <>
       <div className="grid grid-cols-3 gap-3 mb-5">
         <div className="stat-card stat-card-accent"><div className="stat-label">Audit Events</div><div className="stat-value">{audit.length}</div></div>
         <div className="stat-card"><div className="stat-label">Risk Flags</div><div className="stat-value text-yellow-400">3</div></div>
-        <div className="stat-card"><div className="stat-label">Active Certs</div><div className="stat-value">—</div></div>
+        <div className="stat-card"><div className="stat-label">Active Certs</div><div className="stat-value text-brand-400">{activeCerts.length}</div></div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
