@@ -32,8 +32,15 @@ app.use(cors({ origin: process.env.WEB_URL || 'http://localhost:3000', credentia
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok' });
+import { query } from './db';
+
+app.get('/health', async (_req, res) => {
+  try {
+    await query('SELECT 1');
+    res.json({ status: 'ok', db: 'connected' });
+  } catch {
+    res.status(503).json({ status: 'error', db: 'disconnected' });
+  }
 });
 
 app.use(authRoutes);
