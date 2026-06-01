@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { contracts, shipments } from '../api';
+import { contracts } from '../api';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
 import { ArrowLeft, FileText, Ship, Euro, MapPin, Hash, ChevronRight, Tag } from 'lucide-react';
@@ -37,6 +37,13 @@ export default function ContractDetailPage() {
   const [prError, setPrError] = useState('');
   const [prDone, setPrDone] = useState(false);
 
+  // EUDR reference
+  const [showEudr, setShowEudr] = useState(false);
+  const [eudrRef, setEudrRef] = useState('');
+  const [eudrLoading, setEudrLoading] = useState(false);
+  const [eudrError, setEudrError] = useState('');
+  const [eudrDone, setEudrDone] = useState(false);
+
   useEffect(() => {
     if (!id) return;
     contracts.get(id)
@@ -69,6 +76,17 @@ export default function ContractDetailPage() {
       setPrDone(true);
       toast('success', 'Payment request sent to buyer');
     } catch (e: any) { setPrError(e.message); } finally { setPrLoading(false); }
+  };
+
+  const handleEudrUpdate = async () => {
+    if (!id || !eudrRef) { setEudrError('EUDR reference required'); return; }
+    setEudrLoading(true); setEudrError('');
+    try {
+      await contracts.updateEudr(id, { eudrDueDiligenceReference: eudrRef });
+      setShowEudr(false);
+      setEudrDone(true);
+      toast('success', 'EUDR reference updated');
+    } catch (e: any) { setEudrError(e.message); } finally { setEudrLoading(false); }
   };
 
   if (loading) return <Layout currentPage="contracts"><SkeletonDetail /></Layout>;
@@ -192,9 +210,18 @@ export default function ContractDetailPage() {
             <h4 className="text-xs font-semibold mb-3">Quick Actions</h4>
             <div className="space-y-2">
               {canDo('contract.read') && (
-                <button className="btn w-full justify-center text-xs">
+                <button className="btn w-full justify-center text-xs" onClick={() => toast('info', 'Contract PDF download coming soon')}>
                   <FileText size={14} /> Download Contract
                 </button>
+              )}
+
+              {isBuyer && !eudrDone && !showEudr && (
+                <button className="btn w-full justify-center text-xs" onClick={() => setShowEudr(true)}>
+                  <FileText size={14} /> Add EUDR Reference
+                </button>
+              )}
+              {eudrDone && (
+                <div className="text-xs text-green-400 text-center py-2 font-semibold">EUDR reference saved</div>
               )}
 
               {isSeller && !c.shipment_id && !srDone && (
@@ -286,6 +313,30 @@ export default function ContractDetailPage() {
                 <button className="btn flex-1 justify-center" onClick={() => setShowPayReq(false)} disabled={prLoading}>Cancel</button>
                 <button className="btn btn-primary flex-1 justify-center" onClick={handlePayRequest} disabled={prLoading || !prAmount}>
                   {prLoading ? 'Requesting…' : 'Request Payment'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEudr && (
+        <div className="modal-overlay" onClick={() => !eudrLoading && setShowEudr(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-2">
+              <div><div className="modal-title">EUDR Due Diligence Reference</div></div>
+              <button className="btn btn-sm" onClick={() => setShowEudr(false)}><X size={14} /></button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="form-label">Reference</label>
+                <input className="form-input" placeholder="e.g. EUDR-2024-COCOA-001" value={eudrRef} onChange={(e) => setEudrRef(e.target.value)} />
+              </div>
+              {eudrError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{eudrError}</div>}
+              <div className="flex gap-2 pt-1">
+                <button className="btn flex-1 justify-center" onClick={() => setShowEudr(false)} disabled={eudrLoading}>Cancel</button>
+                <button className="btn btn-primary flex-1 justify-center" onClick={handleEudrUpdate} disabled={eudrLoading || !eudrRef}>
+                  {eudrLoading ? 'Saving…' : 'Save Reference'}
                 </button>
               </div>
             </div>

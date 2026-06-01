@@ -27,6 +27,8 @@ export default function FarmDetailPage() {
   const [plotCode, setPlotCode] = useState('');
   const [plotArea, setPlotArea] = useState(0);
   const [plotCrops, setPlotCrops] = useState('cocoa');
+  const [plotGpsLat, setPlotGpsLat] = useState('');
+  const [plotGpsLng, setPlotGpsLng] = useState('');
   const [plotLoading, setPlotLoading] = useState(false);
   const [plotError, setPlotError] = useState('');
 
@@ -51,8 +53,8 @@ export default function FarmDetailPage() {
     if (!id || !plotCode || !plotArea) { setPlotError('Plot code and area required'); return; }
     setPlotLoading(true); setPlotError('');
     try {
-      await farmsApi.createPlot(id, { plotCode, areaHectares: Number(plotArea), crops: plotCrops.split(',').map((s) => s.trim()) });
-      setShowPlot(false); setPlotCode(''); setPlotArea(0); setPlotCrops('cocoa');
+      await farmsApi.createPlot(id, { plotCode, areaHectares: Number(plotArea), crops: plotCrops.split(',').map((s) => s.trim()), gpsLat: plotGpsLat ? Number(plotGpsLat) : undefined, gpsLng: plotGpsLng ? Number(plotGpsLng) : undefined });
+      setShowPlot(false); setPlotCode(''); setPlotArea(0); setPlotCrops('cocoa'); setPlotGpsLat(''); setPlotGpsLng('');
       const farmData = await farmsApi.get(id);
       setPlots(farmData.plots || []);
       toast('success', 'Plot added successfully');
@@ -179,6 +181,10 @@ export default function FarmDetailPage() {
               <input className="form-input" placeholder="Plot code * (e.g. PLOT-A-01)" value={plotCode} onChange={(e) => setPlotCode(e.target.value)} />
               <input type="number" step="0.01" className="form-input" placeholder="Area (hectares) *" value={plotArea || ''} onChange={(e) => setPlotArea(Number(e.target.value))} />
               <input className="form-input" placeholder="Crops (comma-separated, default: cocoa)" value={plotCrops} onChange={(e) => setPlotCrops(e.target.value)} />
+              <div className="grid grid-cols-2 gap-2">
+                <input type="number" step="any" className="form-input" placeholder="GPS Lat" value={plotGpsLat} onChange={(e) => setPlotGpsLat(e.target.value)} />
+                <input type="number" step="any" className="form-input" placeholder="GPS Lng" value={plotGpsLng} onChange={(e) => setPlotGpsLng(e.target.value)} />
+              </div>
               {plotError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{plotError}</div>}
               <div className="flex gap-2 pt-1">
                 <button className="btn flex-1 justify-center" onClick={() => setShowPlot(false)} disabled={plotLoading}>Cancel</button>

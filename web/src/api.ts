@@ -72,6 +72,8 @@ export const contracts = {
     api<any>('POST', `/contracts/${id}/shipments`, data),
   requestPayment: (id: string, data: { amountTotal: number; currency?: string }) =>
     api<any>('POST', `/contracts/${id}/payment-requests`, data),
+  updateEudr: (id: string, data: { eudrDueDiligenceReference: string }) =>
+    api<any>('PATCH', `/contracts/${id}/eudr`, data),
 };
 
 export const payments = {
@@ -92,6 +94,10 @@ export const shipments = {
 export const holdings = {
   list: () => api<import('./types').Holding[]>('GET', '/holdings'),
   get: (id: string) => api<{ holding: import('./types').Holding; batch: import('./types').Batch | null }>('GET', `/holdings/${id}`),
+  create: (data: { batchId: string; quantityKg: number; warehouseLocation?: string }) =>
+    api<import('./types').Holding>('POST', '/holdings', data),
+  transfer: (id: string, data: { toOrganizationId: string; quantityKg: number; reason?: string }) =>
+    api<any>('POST', `/holdings/${id}/transfer`, data),
 };
 
 export const evidence = {

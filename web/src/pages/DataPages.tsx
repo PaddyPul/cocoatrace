@@ -47,6 +47,8 @@ export function FarmsPage() {
   const [plotCode, setPlotCode] = useState('');
   const [plotArea, setPlotArea] = useState(0);
   const [plotCrops, setPlotCrops] = useState('cocoa');
+  const [plotGpsLat, setPlotGpsLat] = useState('');
+  const [plotGpsLng, setPlotGpsLng] = useState('');
   const [plotLoading, setPlotLoading] = useState(false);
   const [plotError, setPlotError] = useState('');
 
@@ -66,8 +68,8 @@ export function FarmsPage() {
     if (!createdFarmId || !plotCode || !plotArea) { setPlotError('Plot code and area required'); return; }
     setPlotLoading(true); setPlotError('');
     try {
-      await farmsApi.createPlot(createdFarmId, { plotCode, areaHectares: Number(plotArea), crops: plotCrops.split(',').map((s) => s.trim()) });
-      setShowPlot(false); setPlotCode(''); setPlotArea(0); setPlotCrops('cocoa');
+      await farmsApi.createPlot(createdFarmId, { plotCode, areaHectares: Number(plotArea), crops: plotCrops.split(',').map((s) => s.trim()), gpsLat: plotGpsLat ? Number(plotGpsLat) : undefined, gpsLng: plotGpsLng ? Number(plotGpsLng) : undefined });
+      setShowPlot(false); setPlotCode(''); setPlotArea(0); setPlotCrops('cocoa'); setPlotGpsLat(''); setPlotGpsLng('');
       setCreatedFarmId(null);
       toast('success', 'Plot added to farm');
     } catch (e: any) { setPlotError(e.message); } finally { setPlotLoading(false); }
@@ -138,6 +140,10 @@ export function FarmsPage() {
             <input className="form-input" placeholder="Plot code * (e.g. PLOT-A-01)" value={plotCode} onChange={(e) => setPlotCode(e.target.value)} />
             <input type="number" step="0.01" className="form-input" placeholder="Area (hectares) *" value={plotArea || ''} onChange={(e) => setPlotArea(Number(e.target.value))} />
             <input className="form-input" placeholder="Crops (comma-separated, default: cocoa)" value={plotCrops} onChange={(e) => setPlotCrops(e.target.value)} />
+            <div className="grid grid-cols-2 gap-2">
+              <input type="number" step="any" className="form-input" placeholder="GPS Lat" value={plotGpsLat} onChange={(e) => setPlotGpsLat(e.target.value)} />
+              <input type="number" step="any" className="form-input" placeholder="GPS Lng" value={plotGpsLng} onChange={(e) => setPlotGpsLng(e.target.value)} />
+            </div>
             {plotError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{plotError}</div>}
             <div className="flex gap-2 pt-1">
               <button className="btn flex-1 justify-center" onClick={() => { setShowPlot(false); setCreatedFarmId(null); }} disabled={plotLoading}>Skip</button>
@@ -255,17 +261,64 @@ export function BatchesPage() {
 
 export function HoldingsPage() {
   const navigate = useNavigate();
-  const { data, loading, error } = useFetch(() => holdingsApi.list());
+  const { user, canDo } = useAuthCtx();
+  const { toast } = useToast();
+  const { data, loading, error, refetch } = useFetch(() => holdingsApi.list());
   const [search, setSearch] = useState('');
   const holdings = data as Holding[];
+
+  // Create holding
+  const [showCreate, setShowCreate] = useState(false);
+  const [chBatchId, setChBatchId] = useState('');
+  const [chQty, setChQty] = useState(0);
+  const [chWarehouse, setChWarehouse] = useState('');
+  const [chLoading, setChLoading] = useState(false);
+  const [chError, setChError] = useState('');
+
+  const handleCreateHolding = async () => {
+    if (!chBatchId || !chQty) { setChError('Batch ID and quantity required'); return; }
+    setChLoading(true); setChError('');
+    try {
+      await holdingsApi.create({ batchId: chBatchId, quantityKg: Number(chQty), warehouseLocation: chWarehouse || undefined });
+      setShowCreate(false); setChBatchId(''); setChQty(0); setChWarehouse('');
+      refetch();
+      toast('success', 'Holding created');
+    } catch (e: any) { setChError(e.message); } finally { setChLoading(false); }
+  };
+
   const filtered = holdings.filter((h) => !search || h.farm_name?.toLowerCase().includes(search.toLowerCase()) || h.crop?.toLowerCase().includes(search.toLowerCase()) || (h.warehouse_location || '').toLowerCase().includes(search.toLowerCase()) || h.status.toLowerCase().includes(search.toLowerCase()));
   return <Layout currentPage="holdings">{loading ? <SkeletonTable rows={5} cols={6} /> : error ? <Err msg={error} /> : <div className="table-wrap">
     <div className="flex flex-wrap items-center gap-3 mb-3">
       <div className="relative flex-1 min-w-[180px]"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input type="text" placeholder="Search holdings…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
       <div className="text-xs text-text-muted">{filtered.length} holding{filtered.length !== 1 ? 's' : ''}</div>
+      {canDo('holding.create') && <button className="btn btn-sm btn-primary" onClick={() => setShowCreate(true)}>+ Create Holding</button>}
     </div>
-    <table><thead><tr><th>ID</th><th>Farm</th><th>Crop</th><th>Qty (kg)</th><th>Warehouse</th><th>Status</th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((h) => <tr key={h.id} className="cursor-pointer hover:bg-brand-500/5" onClick={() => navigate(`/holdings/${h.id}`)}><td className="font-mono text-[11px]">{h.id.slice(0, 13)}…</td><td className="text-text-primary font-medium">{h.farm_name || '—'}</td><td>{h.crop || 'cocoa'}</td><td>{(h.quantity_kg || 0).toLocaleString()}</td><td className="text-[11px]">{h.warehouse_location || '—'}</td><td><StatusBadge status={h.status} /></td></tr>) : holdings.length === 0 ? <tr><td colSpan={99}><EmptyState icon="🏪" title="No holdings yet" description="Holdings represent batch inventory in your custody. They appear when batches are created or transferred to your organization." /></td></tr> : <tr><td colSpan={99}><EmptyState icon="🔍" title="No holdings match" description="Try adjusting your search." /></td></tr>}</tbody></table>
-  </div>}</Layout>;
+    <table><thead><tr><th>ID</th><th>Farm</th><th>Crop</th><th>Qty (kg)</th><th>Warehouse</th><th>Status</th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((h) => <tr key={h.id} className="cursor-pointer hover:bg-brand-500/5" onClick={() => navigate(`/holdings/${h.id}`)}><td className="font-mono text-[11px]">{h.id.slice(0, 13)}…</td><td className="text-text-primary font-medium">{h.farm_name || '—'}</td><td>{h.crop || 'cocoa'}</td><td>{(h.quantity_kg || 0).toLocaleString()}</td><td className="text-[11px]">{h.warehouse_location || '—'}</td><td><StatusBadge status={h.status} /></td></tr>) : holdings.length === 0 ? <tr><td colSpan={99}><EmptyState icon="🏪" title="No holdings yet" description="Holdings represent batch inventory in your custody. They appear when batches are created or transferred to your organization." action={canDo('holding.create') ? <button className="btn btn-sm btn-primary" onClick={() => setShowCreate(true)}>+ Create Holding</button> : undefined} /></td></tr> : <tr><td colSpan={99}><EmptyState icon="🔍" title="No holdings match" description="Try adjusting your search." /></td></tr>}</tbody></table>
+  </div>}
+
+  {showCreate && (
+    <div className="modal-overlay" onClick={() => !chLoading && setShowCreate(false)}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-2">
+          <div><div className="modal-title">Create Holding</div></div>
+          <button className="btn btn-sm" onClick={() => setShowCreate(false)}><X size={14} /></button>
+        </div>
+        <div className="space-y-3">
+          <input className="form-input" placeholder="Batch ID *" value={chBatchId} onChange={(e) => setChBatchId(e.target.value)} />
+          <input type="number" className="form-input" placeholder="Quantity (kg) *" value={chQty || ''} onChange={(e) => setChQty(Number(e.target.value))} />
+          <input className="form-input" placeholder="Warehouse location" value={chWarehouse} onChange={(e) => setChWarehouse(e.target.value)} />
+          {chError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{chError}</div>}
+          <div className="flex gap-2 pt-1">
+            <button className="btn flex-1 justify-center" onClick={() => setShowCreate(false)} disabled={chLoading}>Cancel</button>
+            <button className="btn btn-primary flex-1 justify-center" onClick={handleCreateHolding} disabled={chLoading || !chBatchId || !chQty}>
+              {chLoading ? 'Creating…' : 'Create Holding'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )}
+  </Layout>;
 }
 
 export function ContractsPage() {
