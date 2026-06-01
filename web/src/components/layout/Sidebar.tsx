@@ -74,20 +74,22 @@ export default function Sidebar({
         <div className="text-[10px] text-text-muted uppercase tracking-wider px-4 mb-1">
           Navigation
         </div>
-        {navItems.map((n) => (
-          <div
-            key={n.page}
-            onClick={() => go(n.page)}
-            className={`flex items-center gap-2 px-4 py-1.5 cursor-pointer text-xs text-text-secondary border-l-2 border-transparent transition-all hover:bg-brand-500/10 hover:text-text-primary ${
-              currentPage === n.page
-                ? 'bg-brand-500/10 text-brand-400 border-l-brand-400'
-                : ''
-            }`}
+            {navItems.map((n) => {
+              const normalize = (s: string) => s.endsWith('s') ? s : s + 's';
+              const isActive = normalize(currentPage) === normalize(n.page);
+              return <div
+                key={n.page}
+                onClick={() => go(n.page)}
+                className={`flex items-center gap-2 px-4 py-1.5 cursor-pointer text-xs text-text-secondary border-l-2 border-transparent transition-all hover:bg-brand-500/10 hover:text-text-primary ${
+                  isActive
+                    ? 'bg-brand-500/10 text-brand-400 border-l-brand-400'
+                    : ''
+                }`}
           >
             <span className="w-4 text-center text-sm">{n.icon}</span>
             {n.label}
           </div>
-        ))}
+          })}
       </div>
 
       <div className="mt-auto px-4 py-3 border-t border-border">

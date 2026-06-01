@@ -210,7 +210,14 @@ export default function ContractDetailPage() {
             <h4 className="text-xs font-semibold mb-3">Quick Actions</h4>
             <div className="space-y-2">
               {canDo('contract.read') && (
-                <button className="btn w-full justify-center text-xs" onClick={() => toast('info', 'Contract PDF download coming soon')}>
+                <button className="btn w-full justify-center text-xs" onClick={() => {
+                  const data = { contractId: c.id, seller: c.seller_name, buyer: c.buyer_name, quantityKg: c.quantity_kg, pricePerKg: c.price_per_kg, totalValue: c.quantity_kg * c.price_per_kg, incoterm: c.incoterm, status: c.status, eudrReference: c.eudr_due_diligence_reference, listingId: c.listing_id, shipmentId: c.shipment_id, exportedAt: new Date().toISOString() };
+                  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a'); a.href = url; a.download = `contract-${c.id.slice(0, 8)}.json`; a.click();
+                  URL.revokeObjectURL(url);
+                  toast('success', 'Contract downloaded');
+                }}>
                   <FileText size={14} /> Download Contract
                 </button>
               )}

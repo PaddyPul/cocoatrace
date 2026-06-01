@@ -11,6 +11,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [data, setData] = useState<any>({});
   const [loading, setLoading] = useState(true);
+  const [dashError, setDashError] = useState('');
 
   useEffect(() => {
     const perms = user?.permissions || [];
@@ -34,7 +35,7 @@ export default function DashboardPage() {
         keys.forEach((k, i) => { mapped[k] = results[i]; });
         setData(mapped);
       } catch (e: any) {
-        console.error(e);
+        setDashError(e.message || 'Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
@@ -49,6 +50,14 @@ export default function DashboardPage() {
     return (
       <Layout currentPage="dashboard">
         <div className="loading"><div className="spinner" /><div>Loading dashboard…</div></div>
+      </Layout>
+    );
+  }
+
+  if (dashError) {
+    return (
+      <Layout currentPage="dashboard">
+        <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-4 py-3 text-xs text-red-400">{dashError}</div>
       </Layout>
     );
   }
@@ -70,7 +79,7 @@ export default function DashboardPage() {
   );
 }
 
-function ActionWidget({ icon, title, count, label, onClick, urgent }: { icon: string; title: string; count: number; label: string; onClick: () => void; urgent?: boolean }) {
+function ActionWidget({ icon, title, count = 0, label, onClick, urgent }: { icon: string; title: string; count?: number; label: string; onClick: () => void; urgent?: boolean }) {
   return (
     <div className={`bg-surface border ${urgent ? 'border-yellow-500/30' : 'border-border'} rounded p-4 flex items-start gap-3 cursor-pointer hover:border-brand-500/30 transition-all group`} onClick={onClick}>
       <div className="text-2xl shrink-0">{icon}</div>
@@ -131,7 +140,6 @@ function FarmerDash({ data, navigate, canDo }: { data: any; navigate: any; canDo
   const listingsArr: Listing[] = data.listings || [];
   const myListings = listingsArr.filter((l) => l.seller_organization_id === user?.organizationId);
   const unattested = batches.filter((b) => b.organic_claim_status === 'pending_attestation');
-  const noPlotsFarms: any[] = [];
 
   return (
     <>
@@ -149,7 +157,6 @@ function FarmerDash({ data, navigate, canDo }: { data: any; navigate: any; canDo
       </div>
 
       {unattested.length > 0 && <ActionPrompt>{unattested.length} batch{unattested.length > 1 ? 'es' : ''} pending certifier attestation — track on Batches page →</ActionPrompt>}
-      {noPlotsFarms.length > 0 && <ActionPrompt>{noPlotsFarms.length} farm{noPlotsFarms.length > 1 ? 's' : ''} without plots — add growing areas on the Farm detail page →</ActionPrompt>}
     </>
   );
 }
@@ -171,8 +178,8 @@ function CertifierDash({ data, navigate }: { data: any; navigate: any }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         <ActionWidget icon="📋" title="Pending Batches" count={pending.length} label={pending.length > 0 ? 'Review batches' : 'No pending'} onClick={() => navigate('/batches')} urgent={pending.length > 0} />
-        <ActionWidget icon="📜" title="Issue Certificate" count={0} label="Issue new certificate" onClick={() => navigate('/certs')} />
-        <ActionWidget icon="🔗" title="Audit Events" count={0} label="View audit log" onClick={() => navigate('/audit')} />
+        <ActionWidget icon="📜" title="Certificates" count={certs.length} label={certs.length > 0 ? 'Manage certificates' : 'Issue first certificate'} onClick={() => navigate('/certs')} />
+        <ActionWidget icon="🔗" title="Audit Events" label="View audit log" onClick={() => navigate('/audit')} />
       </div>
     </>
   );
@@ -206,6 +213,7 @@ function LogisticsDash({ data, navigate }: { data: any; navigate: any }) {
   const shipments: Shipment[] = data.shipments || [];
   const active = shipments.filter((s) => s.current_milestone !== 'delivered');
   const delivered = shipments.filter((s) => s.current_milestone === 'delivered');
+  const requested = shipments.filter((s) => s.current_milestone === 'requested');
   const accepted = shipments.filter((s) => s.current_milestone === 'accepted');
   const atPort = shipments.filter((s) => ['port_received', 'loaded'].includes(s.current_milestone));
 
@@ -221,7 +229,7 @@ function LogisticsDash({ data, navigate }: { data: any; navigate: any }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         <ActionWidget icon="🚢" title="Ready to Pick Up" count={accepted.length} label="Record pickup" onClick={() => navigate('/shipments')} urgent={accepted.length > 0} />
         <ActionWidget icon="⚓" title="At Port / Loading" count={atPort.length} label="Update milestones" onClick={() => navigate('/shipments')} urgent={atPort.length > 0} />
-        <ActionWidget icon="✅" title="New Requests" count={0} label="View shipments" onClick={() => navigate('/shipments')} />
+        <ActionWidget icon="✅" title="New Requests" count={requested.length} label="View shipments" onClick={() => navigate('/shipments')} urgent={requested.length > 0} />
       </div>
     </>
   );
@@ -230,24 +238,28 @@ function LogisticsDash({ data, navigate }: { data: any; navigate: any }) {
 function RegulatorDash({ data, navigate }: { data: any; navigate: any }) {
   const audit: AuditEvent[] = data.audit || [];
   const certs: any[] = data.certs || [];
+  const farmsReg: Farm[] = data.farms || [];
   const activeCerts = certs.filter((c: any) => c.status === 'active');
+  const farmsCount = farmsReg.length;
+  const now = new Date();
+  const expiringSoon = certs.filter((c: any) => c.status === 'active' && c.valid_to && new Date(c.valid_to) < new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000));
+  const riskFlags = expiringSoon.length;
 
   return (
     <>
       <div className="grid grid-cols-3 gap-3 mb-5">
         <div className="stat-card stat-card-accent"><div className="stat-label">Audit Events</div><div className="stat-value">{audit.length}</div></div>
-        <div className="stat-card"><div className="stat-label">Risk Flags</div><div className="stat-value text-yellow-400">3</div></div>
+        <div className="stat-card"><div className="stat-label">Risk Flags</div><div className={`stat-value ${riskFlags > 0 ? 'text-yellow-400' : 'text-brand-400'}`}>{riskFlags}</div></div>
         <div className="stat-card"><div className="stat-label">Active Certs</div><div className="stat-value text-brand-400">{activeCerts.length}</div></div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         <ActionWidget icon="🔗" title="Full Audit Log" count={audit.length} label="Review events" onClick={() => navigate('/audit')} />
-        <ActionWidget icon="📋" title="Certificates" count={0} label="Browse certificates" onClick={() => navigate('/certs')} />
-        <ActionWidget icon="🏡" title="Farm Registry" count={0} label="View farms" onClick={() => navigate('/farms')} />
+        <ActionWidget icon="📋" title="Certificates" count={activeCerts.length} label="Browse certificates" onClick={() => navigate('/certs')} />
+        <ActionWidget icon="🏡" title="Farm Registry" count={farmsCount} label="View farms" onClick={() => navigate('/farms')} />
       </div>
 
-      <div className="bg-yellow-900/10 border border-yellow-500/30 rounded-sm px-3 py-2 mb-3 text-xs text-yellow-400">⚠ 3 farms in Brong-Ahafo region have no COCOBOD traceability ID</div>
-      <div className="bg-yellow-900/10 border border-yellow-500/30 rounded-sm px-3 py-2 text-xs text-yellow-400">⚠ Certificate OC-GH-2248 expires in 12 days</div>
+      {expiringSoon.length > 0 && <div className="bg-yellow-900/10 border border-yellow-500/30 rounded-sm px-3 py-2 text-xs text-yellow-400">⚠ {expiringSoon.length} certificate{expiringSoon.length > 1 ? 's' : ''} expiring within 30 days — review on Certificates page →</div>}
     </>
   );
 }

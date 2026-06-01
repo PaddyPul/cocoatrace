@@ -5,7 +5,7 @@ import { StatusBadge, fmtDate } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
 import Layout from '../components/layout/Layout';
-import { ArrowLeft, Ship, Anchor, Calendar, MapPin, Hash, CheckCircle2, Circle, FileText, Plus, X } from 'lucide-react';
+import { ArrowLeft, Ship, Anchor, Calendar, MapPin, Hash, CheckCircle2, Circle, FileText, Plus, X, Copy, ClipboardList } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 
 const MILESTONE_ORDER = ['requested','accepted','picked_up','warehouse_received','port_received','loaded','departed','arrived','customs_cleared','delivered'];
@@ -32,6 +32,7 @@ export default function ShipmentDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const [showBl, setShowBl] = useState(false);
   const [showMilestone, setShowMilestone] = useState(false);
   const [msMilestone, setMsMilestone] = useState('');
   const [msLocation, setMsLocation] = useState('');
@@ -212,16 +213,58 @@ export default function ShipmentDetailPage() {
                   <Plus size={14} /> Record Milestone
                 </button>
               )}
-              <button className="btn w-full justify-center text-xs" onClick={() => toast('info', 'Live tracking integration coming soon')}>
-                <MapPin size={14} /> Track Live
+              <button className="btn w-full justify-center text-xs" onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                toast('success', 'Tracking link copied to clipboard');
+              }}>
+                <Copy size={14} /> Share Tracking Link
               </button>
-              <button className="btn w-full justify-center text-xs" onClick={() => toast('info', 'B/L document viewer coming soon')}>
-                <Hash size={14} /> View B/L Document
+              <button className="btn w-full justify-center text-xs" onClick={() => setShowBl(true)}>
+                <ClipboardList size={14} /> B/L Details
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {showBl && (
+        <div className="modal-overlay" onClick={() => setShowBl(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-2">
+              <div><div className="modal-title">Bill of Lading Details</div></div>
+              <button className="btn btn-sm" onClick={() => setShowBl(false)}><X size={14} /></button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="form-label">B/L Number</label>
+                <div className="font-mono text-sm">{s.bill_of_lading_number || 'Not assigned'}</div>
+              </div>
+              <div>
+                <label className="form-label">Vessel</label>
+                <div className="text-sm">{s.vessel_name || '—'}</div>
+              </div>
+              <div>
+                <label className="form-label">Container</label>
+                <div className="font-mono text-sm">{s.container_reference || '—'}</div>
+              </div>
+              <div>
+                <label className="form-label">Route</label>
+                <div className="text-sm">{s.origin_port} → {s.destination_port}</div>
+              </div>
+              <div>
+                <label className="form-label">Current Status</label>
+                <StatusBadge status={s.current_milestone} />
+              </div>
+              {s.logistics_name && (
+                <div>
+                  <label className="form-label">Carrier</label>
+                  <div className="text-sm">{s.logistics_name}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showMilestone && (
         <div className="modal-overlay" onClick={() => !msLoading && setShowMilestone(false)}>

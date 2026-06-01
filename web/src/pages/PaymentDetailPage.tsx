@@ -167,7 +167,13 @@ export default function PaymentDetailPage() {
               )}
 
               {p.status === 'settled' && (
-                <button className="btn w-full justify-center text-xs" onClick={() => toast('info', 'Receipt download coming soon')}>
+                <button className="btn w-full justify-center text-xs" onClick={() => {
+                  const blob = new Blob([JSON.stringify({ receiptId: p.id, amount: p.amount_total, currency: p.currency, seller: p.seller_name, buyer: p.buyer_name, status: p.status, settledAt: new Date().toISOString(), transactionReference: p.payment_reference_external }, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a'); a.href = url; a.download = `receipt-${p.id.slice(0, 8)}.json`; a.click();
+                  URL.revokeObjectURL(url);
+                  toast('success', 'Receipt downloaded');
+                }}>
                   <CreditCard size={14} /> Download Receipt
                 </button>
               )}

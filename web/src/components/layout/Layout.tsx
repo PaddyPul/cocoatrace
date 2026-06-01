@@ -7,15 +7,21 @@ const PAGE_TITLES: Record<string, string> = {
   dashboard: 'Dashboard',
   marketplace: 'Marketplace',
   listing: 'Listing Details',
+  farm: 'Farm Details',
   farms: 'Farms',
+  batch: 'Batch Details',
   batches: 'Harvest Batches',
+  holding: 'Holding Details',
   holdings: 'Inventory Holdings',
+  offers: 'Offers',
   contracts: 'Sales Contracts',
   shipments: 'Shipments',
   payments: 'Payments',
   evidence: 'Evidence Documents',
   audit: 'Audit Log',
   certs: 'Certificates',
+  'my-listings': 'My Listings',
+  organizations: 'Organizations',
 };
 
 export default function Layout({

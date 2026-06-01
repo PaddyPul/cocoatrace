@@ -121,9 +121,10 @@ export interface Evidence {
 export interface Offer {
   id: string;
   listing_id: string;
+  seller_name?: string;
+  seller_organization_id?: string;
   buyer_name?: string;
   buyer_organization_id?: string;
-  seller_organization_id?: string;
   quantity_kg: number;
   offered_price_per_kg: number;
   currency?: string;
