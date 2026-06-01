@@ -15,6 +15,7 @@ const NAV_ITEMS: NavItem[] = [
   { icon: '🏡', label: 'Farms', page: 'farms', orPermissions: ['farm.read', 'farm.create'] },
   { icon: '📦', label: 'Batches', page: 'batches', orPermissions: ['batch.read', 'batch.create', 'batch.attest'] },
   { icon: '🏪', label: 'Marketplace', page: 'marketplace', orPermissions: ['listing.read', 'offer.create'] },
+  { icon: '🏷', label: 'My Listings', page: 'my-listings', orPermissions: ['listing.create'] },
   { icon: '📦', label: 'Holdings', page: 'holdings', orPermissions: ['holding.read', 'holding.create', 'listing.create'] },
   { icon: '📨', label: 'Offers', page: 'offers', orPermissions: ['offer.respond', 'offer.create'] },
   { icon: '📄', label: 'Contracts', page: 'contracts', orPermissions: ['contract.read', 'offer.respond', 'offer.create'] },

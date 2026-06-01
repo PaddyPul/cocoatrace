@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { batches as batchesApi } from '../api';
-import { Batch, Evidence } from '../types';
+import { batches as batchesApi, certificates as certificatesApi } from '../api';
+import { Batch, Evidence, Certificate } from '../types';
 import { StatusBadge, fmtDate } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
@@ -29,6 +29,15 @@ export default function BatchDetailPage() {
   const [pushDone, setPushDone] = useState(false);
   const [pushErr, setPushErr] = useState('');
 
+  const [showAttest, setShowAttest] = useState(false);
+  const [certs, setCerts] = useState<Certificate[]>([]);
+  const [attCertId, setAttCertId] = useState('');
+  const [attNotes, setAttNotes] = useState('');
+  const [attesting, setAttesting] = useState(false);
+  const [attErr, setAttErr] = useState('');
+
+  const canAttest = batch ? (batch.organic_claim_status === 'pending_attestation' && canDo('batch.attest')) : false;
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
@@ -43,6 +52,25 @@ export default function BatchDetailPage() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (showAttest && batch) {
+      certificatesApi.list(batch.farm_id).then(setCerts).catch(() => {});
+    }
+  }, [showAttest, batch]);
+
+  const handleAttest = async () => {
+    if (!batch || !attCertId) { setAttErr('Select a certificate'); return; }
+    setAttesting(true); setAttErr('');
+    try {
+      await batchesApi.attest(batch.id, { certificateId: attCertId, notes: attNotes || undefined });
+      setShowAttest(false);
+      toast('success', 'Batch attested successfully');
+      const d = await batchesApi.get(batch.id);
+      setBatch(d.batch);
+      setEvidence(d.evidence || []);
+    } catch (e: any) { setAttErr(e.message); } finally { setAttesting(false); }
+  };
 
   const canPush = batch ? (batch.current_holder_id === user?.organizationId && canDo('batch.create')) : false;
 
@@ -204,6 +232,38 @@ export default function BatchDetailPage() {
               <p className="text-xs text-text-muted text-center py-3">
                 {batch.current_holder_id === user?.organizationId ? 'You hold this batch' : `Holder: ${batch.holder_name || 'Other organization'}`}
               </p>
+            )}
+
+            {canAttest && !showAttest && (
+              <button className="btn btn-primary w-full justify-center mb-2" onClick={() => setShowAttest(true)}>
+                <Shield size={14} /> Attest Batch
+              </button>
+            )}
+
+            {showAttest && (
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold">Attest Batch</h4>
+                <div>
+                  <label className="form-label">Certificate</label>
+                  <select className="form-select" value={attCertId} onChange={(e) => setAttCertId(e.target.value)}>
+                    <option value="">Select certificate…</option>
+                    {certs.filter((c) => c.status === 'active').map((c) => (
+                      <option key={c.id} value={c.id}>{c.standard} — {fmtDate(c.valid_from)} to {fmtDate(c.valid_to)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="form-label">Notes (optional)</label>
+                  <input className="form-input" value={attNotes} onChange={(e) => setAttNotes(e.target.value)} placeholder="e.g. Visual inspection passed" />
+                </div>
+                {attErr && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{attErr}</div>}
+                <div className="flex gap-2">
+                  <button className="btn flex-1 justify-center" onClick={() => { setShowAttest(false); setAttErr(''); }} disabled={attesting}>Cancel</button>
+                  <button className="btn btn-primary flex-1 justify-center" onClick={handleAttest} disabled={attesting || !attCertId}>
+                    {attesting ? 'Attesting…' : 'Confirm Attestation'}
+                  </button>
+                </div>
+              </div>
             )}
 
             <button className="btn w-full justify-center mt-3 text-xs" onClick={() => navigate(`/farms/${batch.farm_id}`)}>View Farm →</button>

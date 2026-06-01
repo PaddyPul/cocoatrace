@@ -56,6 +56,8 @@ export const batches = {
     api<import('./types').Batch>('POST', '/batches', data),
   pushToMarketplace: (id: string, data: { quantityKg: number; pricePerKg: number; currency?: string; incoterm?: string; originLocation: string; destinationLocation: string }) =>
     api<import('./types').Listing>('POST', `/batches/${id}/push-to-marketplace`, data),
+  attest: (id: string, data: { certificateId: string; notes?: string }) =>
+    api<{ attestation: any; policyChecks: any[] }>('POST', `/batches/${id}/attest`, data),
 };
 
 export const listings = {
@@ -82,6 +84,8 @@ export const payments = {
 export const shipments = {
   list: () => api<import('./types').Shipment[]>('GET', '/shipments'),
   get: (id: string) => api<{ shipment: import('./types').Shipment; milestones: any[] }>('GET', `/shipments/${id}`),
+  recordMilestone: (id: string, data: { milestone: string; location?: string; notes?: string }) =>
+    api<any>('POST', `/shipments/${id}/milestones`, data),
 };
 
 export const holdings = {
@@ -103,6 +107,15 @@ export const offers = {
     api('POST', `/listings/${listingId}/offers`, data),
   accept: (offerId: string) => api<any>('POST', `/offers/${offerId}/accept`),
   reject: (offerId: string) => api<any>('POST', `/offers/${offerId}/reject`),
+};
+
+export const certificates = {
+  list: (farmId?: string) => api<import('./types').Certificate[]>('GET', `/certificates${farmId ? `?farmId=${farmId}` : ''}`),
+  get: (id: string) => api<import('./types').Certificate>('GET', `/certificates/${id}`),
+  issue: (data: { farmerOrganizationId: string; farmId: string; standard: string; cropScope: string[]; validFrom: string; validTo: string; issuingAuthority: string; accreditationReference: string }) =>
+    api<import('./types').Certificate>('POST', '/certificates', data),
+  updateStatus: (id: string, action: string, data?: { reason?: string }) =>
+    api<any>('POST', `/certificates/${id}/${action}`, data),
 };
 
 export const provenance = {

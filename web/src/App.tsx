@@ -14,6 +14,7 @@ import FarmDetailPage from './pages/FarmDetailPage';
 import BatchDetailPage from './pages/BatchDetailPage';
 import HoldingDetailPage from './pages/HoldingDetailPage';
 import OffersPage from './pages/OffersPage';
+import MyListingsPage from './pages/MyListingsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuthCtx();
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/evidence" element={<ProtectedRoute><EvidencePage /></ProtectedRoute>} />
           <Route path="/audit" element={<ProtectedRoute><AuditPage /></ProtectedRoute>} />
           <Route path="/certs" element={<ProtectedRoute><CertsPage /></ProtectedRoute>} />
+          <Route path="/my-listings" element={<ProtectedRoute><MyListingsPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
         </ToastProvider>

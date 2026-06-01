@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { shipments } from '../api';
 import { StatusBadge, fmtDate } from '../components/shared/helpers';
+import { useAuthCtx } from '../components/auth/AuthProvider';
+import { useToast } from '../components/shared/ToastProvider';
 import Layout from '../components/layout/Layout';
-import { ArrowLeft, Ship, Anchor, Calendar, MapPin, Hash, CheckCircle2, Circle, FileText } from 'lucide-react';
+import { ArrowLeft, Ship, Anchor, Calendar, MapPin, Hash, CheckCircle2, Circle, FileText, Plus, X } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 
 const MILESTONE_ORDER = ['requested','accepted','picked_up','warehouse_received','port_received','loaded','departed','arrived','customs_cleared','delivered'];
@@ -24,9 +26,18 @@ const MILESTONE_LABELS: Record<string, string> = {
 export default function ShipmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user, canDo } = useAuthCtx();
+  const { toast } = useToast();
   const [data, setData] = useState<{ shipment: any; milestones: any[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const [showMilestone, setShowMilestone] = useState(false);
+  const [msMilestone, setMsMilestone] = useState('');
+  const [msLocation, setMsLocation] = useState('');
+  const [msNotes, setMsNotes] = useState('');
+  const [msLoading, setMsLoading] = useState(false);
+  const [msError, setMsError] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -36,11 +47,24 @@ export default function ShipmentDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  const handleRecordMilestone = async () => {
+    if (!id || !msMilestone) { setMsError('Milestone required'); return; }
+    setMsLoading(true); setMsError('');
+    try {
+      await shipments.recordMilestone(id, { milestone: msMilestone, location: msLocation || undefined, notes: msNotes || undefined });
+      const fresh = await shipments.get(id);
+      setData(fresh);
+      setShowMilestone(false); setMsMilestone(''); setMsLocation(''); setMsNotes('');
+      toast('success', `Milestone '${msMilestone}' recorded`);
+    } catch (e: any) { setMsError(e.message); } finally { setMsLoading(false); }
+  };
+
   if (loading) return <Layout currentPage="shipments"><SkeletonDetail /></Layout>;
   if (error || !data) return <Layout currentPage="shipments"><div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{error || 'Not found'}</div></Layout>;
 
   const { shipment: s, milestones } = data;
   const currentIdx = MILESTONE_ORDER.indexOf(s.current_milestone);
+  const canRecord = canDo('shipment.update') && s?.current_milestone && s.current_milestone !== 'delivered';
 
   return (
     <Layout
@@ -158,6 +182,11 @@ export default function ShipmentDetailPage() {
           <div className="bg-surface border border-border rounded p-5 sticky top-6">
             <h4 className="text-xs font-semibold mb-3">Quick Actions</h4>
             <div className="space-y-2">
+              {canRecord && (
+                <button className="btn btn-primary w-full justify-center text-xs" onClick={() => setShowMilestone(true)}>
+                  <Plus size={14} /> Record Milestone
+                </button>
+              )}
               <button className="btn w-full justify-center text-xs">
                 <MapPin size={14} /> Track Live
               </button>
@@ -168,6 +197,46 @@ export default function ShipmentDetailPage() {
           </div>
         </div>
       </div>
+
+      {showMilestone && (
+        <div className="modal-overlay" onClick={() => !msLoading && setShowMilestone(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-2">
+              <div><div className="modal-title">Record Milestone</div></div>
+              <button className="btn btn-sm" onClick={() => setShowMilestone(false)}><X size={14} /></button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="form-label">Milestone *</label>
+                <select className="form-select" value={msMilestone} onChange={(e) => setMsMilestone(e.target.value)}>
+                  <option value="">Select milestone…</option>
+                  {MILESTONE_ORDER.filter((m) => {
+                    const idx = MILESTONE_ORDER.indexOf(m);
+                    return idx > currentIdx;
+                  }).map((m) => (
+                    <option key={m} value={m}>{MILESTONE_LABELS[m]}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="form-label">Location (optional)</label>
+                <input className="form-input" placeholder="e.g. Tema Port, Ghana" value={msLocation} onChange={(e) => setMsLocation(e.target.value)} />
+              </div>
+              <div>
+                <label className="form-label">Notes (optional)</label>
+                <textarea className="form-input" rows={2} placeholder="Container sealed, all docs verified…" value={msNotes} onChange={(e) => setMsNotes(e.target.value)} />
+              </div>
+              {msError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{msError}</div>}
+              <div className="flex gap-2 pt-1">
+                <button className="btn flex-1 justify-center" onClick={() => setShowMilestone(false)} disabled={msLoading}>Cancel</button>
+                <button className="btn btn-primary flex-1 justify-center" onClick={handleRecordMilestone} disabled={msLoading || !msMilestone}>
+                  {msLoading ? 'Recording…' : 'Record'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
