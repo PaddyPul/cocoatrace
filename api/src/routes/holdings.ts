@@ -11,7 +11,7 @@ router.get('/holdings', requireAuth, requirePermission('holding.read'), holdingC
 router.get('/holdings/:id', requireAuth, requirePermission('holding.read'), holdingController.getHolding);
 router.post('/holdings', requireAuth, requirePermission('holding.create'), validate(createHoldingSchema), holdingController.createHolding);
 router.post('/holdings/:id/transfer', requireAuth, requirePermission('custody.transfer.request'), validate(transferHoldingSchema), holdingController.transferHolding);
-router.post('/transfers/:id/accept', requireAuth, requirePermission('custody.transfer.request'), holdingController.acceptTransfer);
+router.post('/transfers/:id/accept', requireAuth, requirePermission('custody.transfer.accept'), holdingController.acceptTransfer);
 router.post('/holdings/:id/split', requireAuth, requirePermission('holding.create'), validate(splitHoldingSchema), holdingController.splitHolding);
 
 export = router;

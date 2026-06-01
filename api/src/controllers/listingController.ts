@@ -53,3 +53,23 @@ export async function createListing(req: Request, res: Response): Promise<void> 
   await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'listing.create', entityType: 'listing', entityId: rows[0].id });
   res.status(201).json(rows[0]);
 }
+
+export async function updateListing(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  const { pricePerKg, availableQuantityKg, active } = req.body;
+  const { rows } = await query(
+    'UPDATE listings SET price_per_kg=COALESCE($1,price_per_kg), available_quantity_kg=COALESCE($2,available_quantity_kg), active=COALESCE($3,active) WHERE id=$4 AND seller_organization_id=$5 RETURNING *',
+    [pricePerKg, availableQuantityKg, active, id, req.user!.organizationId]
+  );
+  if (!rows[0]) { res.status(404).json({ error: 'Listing not found or not yours' }); return; }
+  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'listing.update', entityType: 'listing', entityId: id });
+  res.json(rows[0]);
+}
+
+export async function deleteListing(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  const { rows } = await query('DELETE FROM listings WHERE id=$1 AND seller_organization_id=$2 AND active=TRUE RETURNING id', [id, req.user!.organizationId]);
+  if (!rows[0]) { res.status(404).json({ error: 'Listing not found or not yours' }); return; }
+  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'listing.delete', entityType: 'listing', entityId: id });
+  res.json({ deleted: true });
+}
