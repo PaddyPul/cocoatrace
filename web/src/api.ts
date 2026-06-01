@@ -136,4 +136,8 @@ export const certificates = {
 
 export const provenance = {
   get: (batchId: string) => api<import('./types').ProvenancePack>('GET', `/provenance/batches/${batchId}`),
+  exportBatch: (batchId: string) => {
+    const url = `${API_BASE}/provenance/batches/${batchId}/export?format=json`;
+    window.open(url, '_blank');
+  },
 };

@@ -248,7 +248,7 @@ export default function ListingDetailPage() {
               <div className="mt-4 pt-4 border-t border-border flex gap-2">
                 {batch.id && <button className="btn btn-sm text-xs" onClick={() => navigate(`/batches/${batch.id}`)}>View Batch <ChevronRight size={14} /></button>}
                 {listing.farm_name && <button className="btn btn-sm text-xs" onClick={() => navigate(`/farms/${batch.farm_id || ''}`)}><MapPin size={14} /> View Farm</button>}
-                {batch.id && canDo('provenance.export') && <button className="btn btn-sm text-xs" onClick={() => { toast('info', 'Provenance export via email — coming soon'); }}><FileText size={14} /> Export</button>}
+                {batch.id && canDo('provenance.export') && <button className="btn btn-sm text-xs" onClick={() => provenanceApi.exportBatch(batch.id)}><FileText size={14} /> Export</button>}
               </div>
 
               {/* Policy checks */}
