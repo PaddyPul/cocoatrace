@@ -97,8 +97,8 @@ export const createShipmentSchema = z.object({
   logisticsOrganizationId: z.string().uuid().optional(),
   vesselName: z.string().optional(),
   containerReference: z.string().optional(),
-  originPort: z.string().default('Tema Port, Ghana'),
-  destinationPort: z.string().default('Port of Rotterdam, Netherlands'),
+  originPort: z.string().min(1),
+  destinationPort: z.string().min(1),
   etaArrival: z.string().optional(),
 });
 

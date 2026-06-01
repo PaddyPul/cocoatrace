@@ -49,7 +49,7 @@ export async function requestShipment(req: Request, res: Response): Promise<void
   }
   const { rows } = await query(
     'INSERT INTO shipments (contract_id, logistics_organization_id, vessel_name, container_reference, origin_port, destination_port, eta_arrival, current_milestone) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
-    [id, logisticsOrganizationId || null, vesselName || null, containerReference || null, originPort || 'Tema Port, Ghana', destinationPort || 'Port of Rotterdam, Netherlands', etaArrival || null, 'requested']
+    [id, logisticsOrganizationId || null, vesselName || null, containerReference || null, originPort, destinationPort, etaArrival || null, 'requested']
   );
   await query("UPDATE sales_contracts SET status='awaiting_shipment' WHERE id=$1", [id]);
   await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'shipment.request', entityType: 'shipment', entityId: rows[0].id });

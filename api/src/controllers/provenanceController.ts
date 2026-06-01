@@ -50,7 +50,7 @@ export async function getProvenancePack(req: Request, res: Response): Promise<vo
     { rule: 'Certificate active on harvest date', passed: batch.attestation_id && new Date(batch.harvest_date) >= new Date(batch.valid_from) && new Date(batch.harvest_date) <= new Date(batch.valid_to), warning: false },
     { rule: 'Plot geolocation present', passed: plots.some((p: any) => p.gps_lat), warning: !plots.some((p: any) => p.gps_lat) },
     { rule: 'EUDR cutoff checked', passed: plots.every((p: any) => p.eudr_cutoff_checked), warning: !plots.every((p: any) => p.eudr_cutoff_checked) },
-    { rule: 'Route GH → NL permitted', passed: true, warning: false },
+    { rule: 'Route permitted', passed: !shipment || !!shipment.origin_port, warning: !shipment },
     { rule: 'EUDR due-diligence reference', passed: !!(contract?.eudr_due_diligence_reference), warning: !(contract?.eudr_due_diligence_reference) },
   ];
 
@@ -143,7 +143,7 @@ export async function exportProvenancePack(req: Request, res: Response): Promise
     { rule: 'Certificate active on harvest date', passed: !!batch.attestation_id && new Date(batch.harvest_date) >= new Date(batch.valid_from) && new Date(batch.harvest_date) <= new Date(batch.valid_to), warning: false },
     { rule: 'Plot geolocation present', passed: plots.some((p: any) => p.gps_lat), warning: !plots.some((p: any) => p.gps_lat) },
     { rule: 'EUDR cutoff checked', passed: plots.every((p: any) => p.eudr_cutoff_checked), warning: !plots.every((p: any) => p.eudr_cutoff_checked) },
-    { rule: 'Route GH → NL permitted', passed: true, warning: false },
+    { rule: 'Route permitted', passed: !shipment || !!shipment.origin_port, warning: !shipment },
     { rule: 'EUDR due-diligence reference', passed: !!contract?.eudr_due_diligence_reference, warning: !contract?.eudr_due_diligence_reference },
   ];
 
