@@ -9,7 +9,7 @@ import { SkeletonTable } from '../components/shared/Skeleton';
 import EmptyState from '../components/shared/EmptyState';
 import ConfirmDialog from '../components/shared/ConfirmDialog';
 import { useToast } from '../components/shared/ToastProvider';
-import { Check, X } from 'lucide-react';
+import { Search, Check, X } from 'lucide-react';
 
 function useFetch<T>(fetcher: () => Promise<T[]>) {
   const [data, setData] = useState<T[]>([]);
@@ -29,6 +29,7 @@ export default function OffersPage() {
   const { toast } = useToast();
   const { data, loading, error, refetch } = useFetch(() => offersApi.list());
   const [tab, setTab] = useState<'received' | 'sent'>('received');
+  const [search, setSearch] = useState('');
   const [confirmReject, setConfirmReject] = useState<string | null>(null);
   const [processing, setProcessing] = useState('');
 
@@ -54,18 +55,19 @@ export default function OffersPage() {
   const offers = data as Offer[];
   const received = offers.filter((o) => o.seller_organization_id === user?.organizationId);
   const sent = offers.filter((o) => o.buyer_organization_id === user?.organizationId);
-  const visible = tab === 'received' ? received : sent;
+  const visible = (tab === 'received' ? received : sent).filter((o) => !search || o.listing_id.toLowerCase().includes(search.toLowerCase()) || (o.buyer_name || '').toLowerCase().includes(search.toLowerCase()) || (o.seller_name || '').toLowerCase().includes(search.toLowerCase()) || o.status.toLowerCase().includes(search.toLowerCase()));
   const pending = visible.filter((o) => o.status === 'pending');
   const history = visible.filter((o) => o.status !== 'pending');
 
   return (
     <Layout currentPage="offers">
       {loading ? <SkeletonTable rows={5} cols={6} /> : error ? <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{error}</div> : <div className="table-wrap">
-        <div className="flex items-center gap-3 mb-3">
+        <div className="flex flex-wrap items-center gap-3 mb-3">
           <div className="flex gap-1 bg-surface-darker rounded p-0.5">
             <button className={`btn btn-sm ${tab === 'received' ? 'btn-primary' : ''}`} onClick={() => setTab('received')}>Received ({received.length})</button>
             <button className={`btn btn-sm ${tab === 'sent' ? 'btn-primary' : ''}`} onClick={() => setTab('sent')}>Sent ({sent.length})</button>
           </div>
+          <div className="relative flex-1 min-w-[160px]"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input type="text" placeholder="Search offers…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
           <div className="text-xs text-text-muted">{visible.length} offer{visible.length !== 1 ? 's' : ''}</div>
         </div>
 

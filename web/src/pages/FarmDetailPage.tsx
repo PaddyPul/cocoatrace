@@ -6,7 +6,8 @@ import { StatusBadge, fmtDate } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
 import Layout from '../components/layout/Layout';
-import { ArrowLeft, MapPin, FileText } from 'lucide-react';
+import EmptyState from '../components/shared/EmptyState';
+import { ArrowLeft, MapPin, FileText, Sprout } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 import { X } from 'lucide-react';
 
@@ -112,12 +113,8 @@ export default function FarmDetailPage() {
               </div>
             </div>
           )}
-          {plots.length === 0 && canDo('farm.create') && (
-            <div className="bg-surface border border-border rounded p-5 text-center">
-              <div className="text-2xl mb-2">🗺️</div>
-              <p className="text-sm text-text-muted mb-3">No plots registered yet</p>
-              <button className="btn btn-sm btn-primary" onClick={() => setShowPlot(true)}>+ Add Plot</button>
-            </div>
+          {plots.length === 0 && (
+            <EmptyState icon="🗺️" title="No plots registered" description="Growing areas (plots) help track provenance at the sub-farm level." action={canDo('farm.create') ? <button className="btn btn-sm btn-primary" onClick={() => setShowPlot(true)}><Sprout size={14} /> Add Plot</button> : undefined} />
           )}
 
           {certificates.length > 0 && (

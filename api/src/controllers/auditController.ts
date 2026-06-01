@@ -5,7 +5,7 @@ import * as audit from '../services/audit';
 export async function listAuditEvents(req: Request, res: Response): Promise<void> {
   const { entityType, entityId, limit = 50, offset = 0 } = req.query;
   const perms = req.user!.permissions || [];
-  const seeAll = perms.includes('*') || perms.includes('audit.view');
+  const seeAll = perms.includes('*') || perms.includes('audit.read');
   let sql = 'SELECT * FROM audit_events';
   const params: any[] = [];
   const conditions: string[] = [];
@@ -27,7 +27,7 @@ export async function listAuditEvents(req: Request, res: Response): Promise<void
 export async function exportAuditLog(req: Request, res: Response): Promise<void> {
   const { entityType, entityId } = req.query;
   const perms = req.user!.permissions || [];
-  const seeAll = perms.includes('*') || perms.includes('audit.view');
+  const seeAll = perms.includes('*') || perms.includes('audit.read');
   let sql = 'SELECT * FROM audit_events';
   const params: any[] = [];
   const conditions: string[] = [];

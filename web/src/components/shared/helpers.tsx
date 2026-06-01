@@ -7,33 +7,6 @@ export function fmtDate(d?: string | null) {
   });
 }
 
-export function statusBadge(s?: string) {
-  const map: Record<string, string> = {
-    attested: 'green',
-    active: 'green',
-    verified: 'green',
-    approved: 'green',
-    delivered: 'green',
-    settled: 'green',
-    accepted: 'green',
-    pending: 'amber',
-    pending_attestation: 'amber',
-    in_transit: 'amber',
-    awaiting_shipment: 'amber',
-    requested: 'amber',
-    departed: 'amber',
-    none: 'gray',
-    suspended: 'amber',
-    expired: 'amber',
-    disputed: 'red',
-    revoked: 'red',
-    rejected: 'red',
-    cancelled: 'red',
-  };
-  const cls = map[s || ''] || 'gray';
-  return `<span class="badge badge-${cls}">${(s || '').replace(/_/g, ' ')}</span>`;
-}
-
 export function StatusBadge({ status }: { status?: string }) {
   const map: Record<string, string> = {
     attested: 'green',

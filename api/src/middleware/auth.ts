@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 
-const JWT_SECRET: string = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) { console.error('FATAL: JWT_SECRET environment variable is not set'); process.exit(1); }
+const jwtSecret: string = JWT_SECRET;
 
 export interface JwtPayload {
   id: string;
@@ -32,7 +33,7 @@ function requireAuth(req: Request, res: Response, next: NextFunction): void {
 
   const token = header.slice(7);
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const payload = jwt.verify(token, jwtSecret) as JwtPayload;
     req.user = payload;
     next();
   } catch {
@@ -52,7 +53,7 @@ function requirePermission(permission: string) {
 }
 
 function signToken(payload: object): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
+  return jwt.sign(payload, jwtSecret, { expiresIn: '24h' });
 }
 
 export { requireAuth, requirePermission, signToken };

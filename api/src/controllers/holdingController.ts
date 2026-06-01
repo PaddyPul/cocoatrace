@@ -73,11 +73,12 @@ export async function transferHolding(req: Request, res: Response): Promise<void
 
 export async function listTransfers(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT ct.*, o.name as from_org_name, h.warehouse_location
+    `SELECT ct.*, o.name as from_org_name, dest.name as to_org_name, h.warehouse_location
      FROM custody_transfers ct
      JOIN organizations o ON o.id = ct.from_organization_id
+     JOIN organizations dest ON dest.id = ct.to_organization_id
      JOIN batch_holdings h ON h.id = ct.holding_id
-     WHERE ct.to_organization_id=$1
+     WHERE ct.to_organization_id=$1 OR ct.from_organization_id=$1
      ORDER BY ct.created_at DESC`,
     [req.user!.organizationId]
   );
@@ -106,7 +107,9 @@ export async function acceptTransfer(req: Request, res: Response): Promise<void>
     );
     await client.query('UPDATE batch_holdings SET quantity_kg = quantity_kg - $1 WHERE id=$2', [transfer.quantity_kg, src.id]);
     await client.query("UPDATE custody_transfers SET status='accepted', responded_at=NOW() WHERE id=$1", [id]);
-    await client.query('UPDATE harvest_batches SET current_holder_id=$1 WHERE id=$2', [req.user!.organizationId, src.batch_id]);
+    if (Number(transfer.quantity_kg) >= Number(src.quantity_kg)) {
+      await client.query('UPDATE harvest_batches SET current_holder_id=$1 WHERE id=$2', [req.user!.organizationId, src.batch_id]);
+    }
     await client.query('COMMIT');
     await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'custody.transfer.accept', entityType: 'custody_transfer', entityId: id });
     res.json({ transfer, newHolding: newHolding.rows[0] });

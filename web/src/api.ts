@@ -27,6 +27,13 @@ export async function api<T = any>(
     opts.body = body;
   }
   const res = await fetch(API_BASE + path, opts);
+  if (res.status === 401) {
+    token = null;
+    localStorage.removeItem('ct_token');
+    localStorage.removeItem('ct_user');
+    window.location.href = '/login';
+    throw new Error('Session expired');
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg = data.details ? `${data.error}: ${data.details.map((d: any) => d.message).join('; ')}` : (data.error || `HTTP ${res.status}`);
@@ -38,6 +45,7 @@ export async function api<T = any>(
 export const auth = {
   login: (email: string, password: string) =>
     api<{ accessToken: string; user: any }>('POST', '/auth/login', { email, password }),
+  me: () => api<any>('GET', '/me'),
 };
 
 export const farms = {
@@ -63,6 +71,8 @@ export const batches = {
 export const listings = {
   list: () => api<import('./types').Listing[]>('GET', '/listings'),
   get: (id: string) => api<import('./types').Listing>('GET', `/listings/${id}`),
+  create: (data: { holdingId: string; availableQuantityKg: number; pricePerKg: number; currency?: string; incoterm?: string; originLocation: string; destinationLocation: string }) =>
+    api<import('./types').Listing>('POST', '/listings', data),
 };
 
 export const contracts = {
@@ -100,6 +110,8 @@ export const holdings = {
     api<any>('POST', `/holdings/${id}/transfer`, data),
   listTransfers: () => api<any[]>('GET', '/transfers'),
   acceptTransfer: (id: string) => api<any>('POST', `/transfers/${id}/accept`),
+  split: (id: string, data: { quantities: number[] }) =>
+    api<any>('POST', `/holdings/${id}/split`, data),
 };
 
 export const evidence = {
@@ -117,6 +129,9 @@ export const evidence = {
 
 export const organizations = {
   list: () => api<any[]>('GET', '/organizations'),
+  get: (id: string) => api<any>('GET', `/organizations/${id}`),
+  create: (data: { name: string; type: string; country?: string; verificationStatus?: string }) =>
+    api<any>('POST', '/organizations', data),
   members: (id: string) => api<any[]>('GET', `/organizations/${id}/members`),
 };
 

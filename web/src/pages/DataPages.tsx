@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { farms as farmsApi, batches as batchesApi, contracts as contractsApi, shipments as shipmentsApi, holdings as holdingsApi, payments as paymentsApi, evidence as evidenceApi, audit as auditApi, certificates as certApi, farms as farmsApi2, organizations as organizationsApi } from '../api';
+import { farms as farmsApi, batches as batchesApi, contracts as contractsApi, shipments as shipmentsApi, holdings as holdingsApi, payments as paymentsApi, evidence as evidenceApi, audit as auditApi, certificates as certApi, organizations as organizationsApi } from '../api';
 import { Farm, Batch, Contract, Shipment, Holding, Payment, Evidence, AuditEvent, Certificate } from '../types';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
@@ -528,7 +528,7 @@ export function CertsPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { data, loading, error, refetch } = useFetch(() => certApi.list());
-  const farms = useFetch(() => farmsApi2.list());
+  const farms = useFetch(() => farmsApi.list());
   const [search, setSearch] = useState('');
   const certs = data as Certificate[];
   const filtered = certs.filter((c) => !search || c.standard.toLowerCase().includes(search.toLowerCase()) || c.status.toLowerCase().includes(search.toLowerCase()) || (c.certifier_name || '').toLowerCase().includes(search.toLowerCase()));
@@ -653,6 +653,7 @@ export function CertsPage() {
 export function OrganizationsPage() {
   const navigate = useNavigate();
   const { data: orgs, loading, error } = useFetch(() => organizationsApi.list());
+  const [search, setSearch] = useState('');
   const [selectedOrg, setSelectedOrg] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -666,15 +667,20 @@ export function OrganizationsPage() {
     } catch { setMembers([]); } finally { setMembersLoading(false); }
   };
 
+  const filtered = orgs.filter((o: any) => !search || o.name?.toLowerCase().includes(search.toLowerCase()) || o.type?.toLowerCase().includes(search.toLowerCase()) || (o.country || '').toLowerCase().includes(search.toLowerCase()));
+
   return <Layout currentPage="organizations">
     {loading ? <SkeletonTable rows={5} cols={3} /> : error ? <Err msg={error} /> : <div className="table-wrap">
-      <div className="mb-3"><h2 className="text-lg font-semibold">Organizations</h2></div>
-      <table><thead><tr><th>Name</th><th>Type</th><th>Country</th><th></th></tr></thead><tbody>{orgs.length > 0 ? orgs.map((o: any) => <tr key={o.id} className="hover:bg-brand-500/5">
+      <div className="flex flex-wrap items-center gap-3 mb-3">
+        <div className="relative flex-1 min-w-[180px]"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input type="text" placeholder="Search organizations…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+        <div className="text-xs text-text-muted">{filtered.length} organization{filtered.length !== 1 ? 's' : ''}</div>
+      </div>
+      <table><thead><tr><th>Name</th><th>Type</th><th>Country</th><th></th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((o: any) => <tr key={o.id} className="hover:bg-brand-500/5">
         <td className="text-text-primary font-medium">{o.name}</td>
         <td><span className="badge badge-blue">{o.type}</span></td>
         <td>{o.country || '—'}</td>
         <td><button className="btn btn-sm" onClick={() => handleViewMembers(o)}>Members →</button></td>
-      </tr>) : <tr><td colSpan={99}><EmptyState icon="🏢" title="No organizations" description="Organizations represent all entities on the platform." /></td></tr>}</tbody></table>
+      </tr>) : orgs.length === 0 ? <tr><td colSpan={99}><EmptyState icon="🏢" title="No organizations" description="Organizations represent all entities on the platform." /></td></tr> : <tr><td colSpan={99}><EmptyState icon="🔍" title="No organizations match" description="Try adjusting your search." /></td></tr>}</tbody></table>
     </div>}
 
     {selectedOrg && (

@@ -75,8 +75,7 @@ export default function Sidebar({
           Navigation
         </div>
             {navItems.map((n) => {
-              const normalize = (s: string) => s.endsWith('s') ? s : s + 's';
-              const isActive = normalize(currentPage) === normalize(n.page);
+              const isActive = currentPage === n.page || currentPage + 's' === n.page;
               return <div
                 key={n.page}
                 onClick={() => go(n.page)}

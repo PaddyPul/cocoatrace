@@ -25,7 +25,7 @@ export async function getProvenancePack(req: Request, res: Response): Promise<vo
     return;
   }
   const perms = req.user!.permissions || [];
-  const seeAll = perms.includes('*') || perms.includes('provenance.read');
+  const seeAll = perms.includes('*') || perms.includes('batch.read');
   if (!seeAll && batch.current_holder_id !== req.user!.organizationId && batch.farmer_organization_id !== req.user!.organizationId) {
     res.status(403).json({ error: 'Access denied' });
     return;
@@ -102,7 +102,7 @@ export async function exportProvenancePack(req: Request, res: Response): Promise
     return;
   }
   const perms = req.user!.permissions || [];
-  const seeAll = perms.includes('*') || perms.includes('provenance.read');
+  const seeAll = perms.includes('*') || perms.includes('batch.read');
   if (!seeAll && batch.current_holder_id !== req.user!.organizationId && batch.farmer_organization_id !== req.user!.organizationId) {
     res.status(403).json({ error: 'Access denied' });
     return;

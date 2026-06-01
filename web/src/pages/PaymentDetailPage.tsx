@@ -11,7 +11,7 @@ import { SkeletonDetail } from '../components/shared/Skeleton';
 export default function PaymentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuthCtx();
+  const { user, canDo } = useAuthCtx();
   const { toast } = useToast();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -137,7 +137,7 @@ export default function PaymentDetailPage() {
           <div className="bg-surface border border-border rounded p-5 sticky top-6">
             <h4 className="text-xs font-semibold mb-3">Quick Actions</h4>
             <div className="space-y-2">
-              {p.status === 'requested' && isBuyer && !showPay && !payDone && (
+              {p.status === 'requested' && isBuyer && canDo('payment.confirm') && !showPay && !payDone && (
                 <button className="btn btn-primary w-full justify-center text-xs" onClick={() => setShowPay(true)}>
                   <Euro size={14} /> Pay Now
                 </button>
