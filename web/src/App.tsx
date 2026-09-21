@@ -17,6 +17,7 @@ import OffersPage from './pages/OffersPage';
 import MyListingsPage from './pages/MyListingsPage';
 import PublicProductPage from './pages/PublicProductPage';
 import RecallCenterPage from './pages/RecallCenterPage';
+import InvestorDemoPage from './pages/InvestorDemoPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuthCtx();
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/p/:slug" element={<ErrorBoundary><PublicProductPage /></ErrorBoundary>} />
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/demo" element={<ProtectedRoute><InvestorDemoPage /></ProtectedRoute>} />
           <Route path="/marketplace" element={<ProtectedRoute><MarketplacePage /></ProtectedRoute>} />
           <Route path="/listing/:id" element={<ProtectedRoute><ListingDetailPage /></ProtectedRoute>} />
           <Route path="/farms" element={<ProtectedRoute><FarmsPage /></ProtectedRoute>} />
