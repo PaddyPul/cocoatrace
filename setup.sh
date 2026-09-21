@@ -43,7 +43,6 @@ echo "✓ Local environment configured"
 
 echo ""
 echo "🐳 Starting PostgreSQL in Docker..."
-docker compose down -v --remove-orphans 2>/dev/null || true
 docker compose up -d postgres
 
 echo -n "   Waiting for Postgres initialization"
@@ -67,12 +66,12 @@ done
 
 echo ""
 echo "⚙️  Applying schema..."
-docker compose exec -T postgres psql -U cocoa -d cocoatrace < "$ROOT/db/schema.sql"
+npm run db:migrate
 echo "✓ Schema applied"
 
 echo ""
 echo "🌱 Loading seed data..."
-docker compose exec -T postgres psql -U cocoa -d cocoatrace < "$ROOT/db/seed.sql"
+npm run db:seed
 
 echo ""
 echo "✅ Setup complete!"
@@ -86,5 +85,6 @@ echo ""
 echo "Database commands:"
 echo "  docker compose stop       stop postgres (keeps data)"
 echo "  docker compose start      restart postgres"
-echo "  docker compose down -v    wipe all data and start fresh"
+echo "  docker compose down       stop services and keep data"
+echo "  docker compose down -v    RESET all local data (destructive)"
 echo ""

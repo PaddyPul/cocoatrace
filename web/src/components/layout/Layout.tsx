@@ -3,6 +3,7 @@ import { useAuthCtx } from '../auth/AuthProvider';
 import Sidebar from './Sidebar';
 import { useNavigate } from 'react-router-dom';
 import { Boxes, FileText, GitBranch, LayoutDashboard, Menu, QrCode, Search, Ship, Sparkles, Trees, X } from 'lucide-react';
+import PilotFeedback from '../shared/PilotFeedback';
 
 const PAGE_TITLES: Record<string, string> = {
   demo: 'Investor Demo',
@@ -26,6 +27,7 @@ const PAGE_TITLES: Record<string, string> = {
   certs: 'Certificates',
   'my-listings': 'My Listings',
   organizations: 'Organizations',
+  pilot: 'Pilot Team',
 };
 
 const PAGE_DESCRIPTIONS: Record<string, string> = {
@@ -50,6 +52,7 @@ const PAGE_DESCRIPTIONS: Record<string, string> = {
   certs: 'Manage certification coverage, validity and status.',
   'my-listings': 'Manage inventory currently offered to buyers.',
   organizations: 'Manage supply-chain participants and platform access.',
+  pilot: 'Invite named design partners and track pilot participation.',
 };
 
 export default function Layout({
@@ -139,6 +142,7 @@ export default function Layout({
         <div className="max-h-[52vh] overflow-y-auto p-2">{commandItems.length ? commandItems.map((item) => { const Icon = item.icon; return <button key={item.path} onClick={() => chooseCommand(item.path)} className="group flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-white/[.05]"><span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-400/10 text-brand-400"><Icon size={17} /></span><span className="flex-1"><span className="block text-sm font-semibold">{item.label}</span><span className="mt-0.5 block text-[10px] text-text-muted">{item.hint}</span></span><span className="text-xs text-text-muted opacity-0 group-hover:opacity-100">Open →</span></button>; }) : <div className="p-10 text-center text-xs text-text-muted">No matching workflows</div>}</div>
         <div className="border-t border-border px-5 py-3 text-[9px] text-text-muted">Search is permission-aware · Press Esc to close</div>
       </div></div>}
+      <PilotFeedback currentPage={currentPage} />
     </div>
   );
 }

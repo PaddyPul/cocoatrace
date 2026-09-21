@@ -10,7 +10,8 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-  const tables = [
+    const tables = [
+      'user_invitations', 'pilot_feedback', 'user_onboarding',
     'product_profile_scans', 'recall_affected_lots', 'recall_affected_batches', 'recall_notices',
     'product_profiles', 'audit_events', 'evidence_items', 'payment_requests', 'shipment_milestones',
     'lot_distributions', 'lot_genealogy_edges', 'transformation_events', 'material_lots',

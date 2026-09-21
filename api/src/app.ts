@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import pinoHttp from 'pino-http';
 import logger from './logger';
 import { AppError } from './errors';
+import { verifyBrowserOrigin } from './middleware/security';
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
@@ -25,6 +26,9 @@ import provenanceRoutes from './routes/provenance';
 import auditRoutes from './routes/audit';
 import publicProductRoutes from './routes/publicProducts';
 import traceabilityRoutes from './routes/traceability';
+import workspaceRoutes from './routes/workspace';
+import readinessRoutes from './routes/readiness';
+import invitationRoutes from './routes/invitations';
 
 const app = express();
 
@@ -32,6 +36,7 @@ app.use(pinoHttp({ logger }));
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: process.env.WEB_URL || 'http://localhost:3000', credentials: true }));
 app.use(express.json());
+app.use(verifyBrowserOrigin);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 import { query } from './db';
@@ -42,6 +47,15 @@ app.get('/health', async (_req, res) => {
     res.json({ status: 'ok', db: 'connected' });
   } catch {
     res.status(503).json({ status: 'error', db: 'disconnected' });
+  }
+});
+app.get('/health/live', (_req, res) => res.json({ status: 'ok', version: process.env.APP_VERSION || 'development' }));
+app.get('/health/ready', async (_req, res) => {
+  try {
+    await query('SELECT 1');
+    res.json({ status: 'ready', database: 'connected', aiNarrative: Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL) });
+  } catch {
+    res.status(503).json({ status: 'not_ready', database: 'disconnected' });
   }
 });
 
@@ -60,6 +74,9 @@ app.use(provenanceRoutes);
 app.use(auditRoutes);
 app.use(publicProductRoutes);
 app.use(traceabilityRoutes);
+app.use(workspaceRoutes);
+app.use(readinessRoutes);
+app.use(invitationRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });

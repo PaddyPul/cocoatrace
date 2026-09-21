@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 
 const QUICK_USERS = [
+  { label: 'New pilot', email: 'pilot@cocoatrace.io' },
   { label: 'Admin', email: 'admin@cocoatrace.io' },
   { label: 'Farmer', email: 'kwame@farm.gh' },
   { label: 'Certifier', email: 'akosua@organiccert.gh' },

@@ -5,6 +5,20 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password required'),
 });
 
+export const createInvitationSchema = z.object({
+  email: z.string().email().transform(v => v.toLowerCase()),
+  organizationId: z.string().uuid().optional(),
+  role: z.enum(['farmer', 'certifier', 'exporter', 'importer', 'logistics', 'regulator', 'admin']).optional(),
+});
+
+export const acceptInvitationSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  password: z.string().min(12).max(128)
+    .regex(/[a-z]/, 'Include a lowercase letter')
+    .regex(/[A-Z]/, 'Include an uppercase letter')
+    .regex(/[0-9]/, 'Include a number'),
+});
+
 export const createFarmSchema = z.object({
   name: z.string().min(1),
   country: z.string().length(2).default('GH'),
@@ -175,4 +189,18 @@ export const recallImpactSchema = z.object({
 
 export const traceQuantityQuerySchema = z.object({
   quantityKg: z.coerce.number().positive().optional(),
+});
+
+export const onboardingSchema = z.object({
+  status: z.enum(['not_started', 'in_progress', 'completed']),
+  currentStep: z.number().int().min(0).max(4),
+  primaryGoal: z.string().min(2).max(120).optional(),
+  pilotMode: z.boolean().default(false),
+});
+
+export const pilotFeedbackSchema = z.object({
+  page: z.string().min(1).max(160),
+  task: z.string().min(1).max(160),
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().max(2000).default(''),
 });

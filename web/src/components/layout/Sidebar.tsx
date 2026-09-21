@@ -3,6 +3,7 @@ import {
   BadgeCheck, Boxes, Building2, FileCheck2, FileClock, Handshake,
   LayoutDashboard, Leaf, LogOut, LucideIcon, PackageCheck, Sparkles,
   QrCode, ScrollText, ShieldAlert, Ship, ShoppingBag, Store, Trees, WalletCards, X,
+  UserPlus,
 } from 'lucide-react';
 import { useAuthCtx } from '../auth/AuthProvider';
 import { usePermission } from '../../hooks/usePermission';
@@ -26,6 +27,7 @@ const PRIMARY_NAV: NavGroup[] = [
     items: [
       { icon: Sparkles, label: 'Investor demo', page: 'demo', orPermissions: [] },
       { icon: LayoutDashboard, label: 'Control tower', page: 'dashboard', orPermissions: [] },
+      { icon: UserPlus, label: 'Pilot team', page: 'pilot', orPermissions: ['member.invite'] },
     ],
   },
   {

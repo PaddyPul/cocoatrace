@@ -17,8 +17,8 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO roles (id, name, permissions) VALUES
   ('22222222-2222-2222-2222-222222222001', 'farmer',    ARRAY['farm.read','farm.create','batch.read','batch.create','holding.read','listing.read','listing.create','offer.respond','custody.transfer.request','custody.transfer.accept','payment.read','contract.read']),
   ('22222222-2222-2222-2222-222222222002', 'certifier', ARRAY['certificate.read','certificate.issue','batch.read','batch.attest','farm.read','evidence.read','evidence.upload']),
-  ('22222222-2222-2222-2222-222222222003', 'exporter',  ARRAY['batch.read','batch.create','holding.read','holding.create','listing.read','listing.create','offer.respond','contract.read','shipment.read','shipment.request','payment.read','payment.request','evidence.read','evidence.upload','recall.manage']),
-  ('22222222-2222-2222-2222-222222222004', 'importer',  ARRAY['listing.read','offer.create','contract.read','shipment.read','payment.read','payment.confirm','evidence.read','evidence.upload','provenance.export']),
+  ('22222222-2222-2222-2222-222222222003', 'exporter',  ARRAY['batch.read','batch.create','holding.read','holding.create','listing.read','listing.create','offer.respond','contract.read','shipment.read','shipment.request','payment.read','payment.request','evidence.read','evidence.upload','recall.manage','member.invite']),
+  ('22222222-2222-2222-2222-222222222004', 'importer',  ARRAY['listing.read','offer.create','contract.read','shipment.read','payment.read','payment.confirm','evidence.read','evidence.upload','provenance.export','batch.read','farm.read','certificate.read']),
   ('22222222-2222-2222-2222-222222222005', 'logistics', ARRAY['shipment.read','shipment.accept','shipment.update','evidence.read','evidence.upload','batch.read','contract.read','farm.read']),
   ('22222222-2222-2222-2222-222222222006', 'regulator', ARRAY['audit.read','farm.read','batch.read','certificate.read','evidence.read','provenance.export','audit.export','recall.manage','recall.manage.all']),
   ('22222222-2222-2222-2222-222222222007', 'admin',     ARRAY['*'])
@@ -32,7 +32,8 @@ INSERT INTO users (id, organization_id, email, password_hash, name) VALUES
   ('33333333-3333-3333-3333-333333333004', '11111111-1111-1111-1111-111111111005', 'pieter@dutchcacao.nl','$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Pieter van Dam'),
   ('33333333-3333-3333-3333-333333333005', '11111111-1111-1111-1111-111111111006', 'kofi@marecargo.gh',   '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Kofi Osei'),
   ('33333333-3333-3333-3333-333333333006', '11111111-1111-1111-1111-111111111007', 'ingrid@cocobod.gh',   '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Ingrid Boateng'),
-  ('33333333-3333-3333-3333-333333333007', '11111111-1111-1111-1111-111111111008', 'admin@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Platform Admin')
+  ('33333333-3333-3333-3333-333333333007', '11111111-1111-1111-1111-111111111008', 'admin@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Platform Admin'),
+  ('33333333-3333-3333-3333-333333333008', '11111111-1111-1111-1111-111111111004', 'pilot@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Pilot User')
 ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash;
 
 -- User roles
@@ -43,8 +44,20 @@ INSERT INTO user_roles (user_id, role_id) VALUES
   ('33333333-3333-3333-3333-333333333004', '22222222-2222-2222-2222-222222222004'),
   ('33333333-3333-3333-3333-333333333005', '22222222-2222-2222-2222-222222222005'),
   ('33333333-3333-3333-3333-333333333006', '22222222-2222-2222-2222-222222222006'),
-  ('33333333-3333-3333-3333-333333333007', '22222222-2222-2222-2222-222222222007')
+  ('33333333-3333-3333-3333-333333333007', '22222222-2222-2222-2222-222222222007'),
+  ('33333333-3333-3333-3333-333333333008', '22222222-2222-2222-2222-222222222003')
 ON CONFLICT DO NOTHING;
+
+-- Existing demo accounts skip first-run onboarding. The dedicated pilot user
+-- intentionally starts fresh so the complete onboarding can be tested.
+INSERT INTO user_onboarding (user_id, status, current_step, primary_goal, pilot_mode, completed_at)
+SELECT id, 'completed', 4, 'demo_workspace', TRUE, NOW()
+FROM users WHERE id IN (
+  '33333333-3333-3333-3333-333333333001','33333333-3333-3333-3333-333333333002',
+  '33333333-3333-3333-3333-333333333003','33333333-3333-3333-3333-333333333004',
+  '33333333-3333-3333-3333-333333333005','33333333-3333-3333-3333-333333333006',
+  '33333333-3333-3333-3333-333333333007'
+) ON CONFLICT (user_id) DO NOTHING;
 
 -- Farms
 INSERT INTO farms (id, farmer_organization_id, cooperative_organization_id, name, country, region, district, community, official_traceability_id, verification_status) VALUES
