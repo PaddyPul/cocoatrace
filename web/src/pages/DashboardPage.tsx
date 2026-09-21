@@ -4,7 +4,7 @@ import { batches, contracts, shipments, farms, audit, listings, offers as offers
 import { Batch, Contract, Shipment, Farm, AuditEvent, Listing, Offer } from '../types';
 import Layout from '../components/layout/Layout';
 import { useAuthCtx } from '../components/auth/AuthProvider';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Route, ShieldCheck } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 
 export default function DashboardPage() {
@@ -73,6 +73,13 @@ export default function DashboardPage() {
 
   return (
     <Layout currentPage="dashboard">
+      <section className="relative mb-6 overflow-hidden rounded-3xl border border-brand-400/20 bg-gradient-to-br from-[#173326] via-[#14281f] to-[#101b16] p-6 shadow-xl shadow-black/10 sm:p-8">
+        <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-brand-400/10 blur-3xl" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div><div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.18em] text-brand-300"><span className="h-1.5 w-1.5 rounded-full bg-brand-300" />Live operational workspace</div><h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Welcome back, {user?.name?.split(' ')[0]}.</h2><p className="mt-2 max-w-2xl text-sm text-text-secondary">See what needs attention across {user?.orgName}, then move directly into the next operational step.</p></div>
+          <div className="flex flex-wrap gap-2"><span className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-[11px] text-text-secondary"><ShieldCheck size={14} className="text-brand-300" />{user?.orgType} access</span><span className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-[11px] text-text-secondary"><Route size={14} className="text-brand-300" />Ghana → Netherlands</span></div>
+        </div>
+      </section>
       {chooseDash()}
     </Layout>
   );
@@ -80,8 +87,8 @@ export default function DashboardPage() {
 
 function ActionWidget({ icon, title, count = 0, label, onClick, urgent }: { icon: string; title: string; count?: number; label: string; onClick: () => void; urgent?: boolean }) {
   return (
-    <div className={`bg-surface border ${urgent ? 'border-yellow-500/30' : 'border-border'} rounded p-4 flex items-start gap-3 cursor-pointer hover:border-brand-500/30 transition-all group`} onClick={onClick}>
-      <div className="text-2xl shrink-0">{icon}</div>
+    <div className={`bg-surface border ${urgent ? 'border-yellow-500/30' : 'border-border'} rounded-2xl p-5 flex items-start gap-4 cursor-pointer hover:-translate-y-0.5 hover:border-brand-500/40 hover:shadow-lg hover:shadow-black/10 transition-all group`} onClick={onClick}>
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface-darker text-xl">{icon}</div>
       <div className="flex-1 min-w-0">
         <div className="text-xs text-text-muted uppercase tracking-wider">{title}</div>
         {count > 0 ? <div className="text-2xl font-bold font-mono text-text-primary mt-0.5">{count}</div> : <div className="text-sm font-medium text-text-muted mt-1">None</div>}
