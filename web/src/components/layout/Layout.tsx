@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 import { Menu } from 'lucide-react';
 
 const PAGE_TITLES: Record<string, string> = {
+  demo: 'Investor Demo',
   dashboard: 'Dashboard',
   marketplace: 'Marketplace',
   listing: 'Listing Details',
@@ -26,6 +27,7 @@ const PAGE_TITLES: Record<string, string> = {
 };
 
 const PAGE_DESCRIPTIONS: Record<string, string> = {
+  demo: 'The scan, verification and recall story in one guided flow.',
   dashboard: 'Your operational priorities across provenance, trade and compliance.',
   marketplace: 'Discover verified cocoa inventory available for trade.',
   listing: 'Review commercial terms and provenance before making a decision.',
