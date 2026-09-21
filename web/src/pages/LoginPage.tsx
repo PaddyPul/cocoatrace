@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { ArrowRight, CheckCircle2, Leaf, QrCode, Route, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 
 const QUICK_USERS = [
@@ -20,6 +21,7 @@ const VALUE_POINTS = [
 
 export default function LoginPage() {
   const { login } = useAuthCtx();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -42,6 +44,19 @@ export default function LoginPage() {
     setEmail(nextEmail);
     setPassword('Password123!');
     setError('');
+  };
+
+  const launchDemo = async () => {
+    setError('');
+    setSubmitting(true);
+    try {
+      await login('admin@cocoatrace.io', 'Password123!');
+      navigate('/demo');
+    } catch (err: any) {
+      setError(err.message || 'Demo login failed');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -75,6 +90,8 @@ export default function LoginPage() {
           </form>
 
           <div className="my-7 flex items-center gap-3"><div className="h-px flex-1 bg-white/10" /><span className="text-[9px] font-bold uppercase tracking-[.16em] text-white/25">Demo access</span><div className="h-px flex-1 bg-white/10" /></div>
+          <button type="button" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-4 text-sm font-bold text-emerald-200 transition hover:bg-emerald-300/15" onClick={launchDemo} disabled={submitting}><QrCode size={17} />{submitting ? 'Opening demo…' : 'Launch investor demo'}<ArrowRight size={15} /></button>
+          <a href="/p/asante-cocoa-2024-0847" target="_blank" rel="noreferrer" className="mt-2 flex min-h-10 w-full items-center justify-center text-xs font-semibold text-white/45 transition hover:text-white">View public product profile without signing in</a>
           <p className="mb-3 text-xs text-white/40">Choose a role to prefill the seeded demonstration account.</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{QUICK_USERS.map((user) => <button key={user.email} type="button" className={`rounded-xl border px-3 py-2.5 text-left text-[11px] font-semibold transition ${email === user.email ? 'border-brand-400 bg-brand-400/15 text-brand-200' : 'border-white/10 bg-white/[.03] text-white/55 hover:border-white/25 hover:bg-white/[.06] hover:text-white'}`} onClick={() => quickLogin(user.email)}>{user.label}</button>)}</div>
           <p className="mt-5 text-center text-[10px] text-white/25">Demo password: Password123!</p>
