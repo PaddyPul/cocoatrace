@@ -12,6 +12,11 @@ discoverable.
 **Release theme:** From records to decisions  
 **Non-negotiable:** no business-rule, permission or API regressions
 
+The follow-on investor simplification is documented in
+[`INVESTOR_DEMO_PRODUCT_AUDIT.md`](INVESTOR_DEMO_PRODUCT_AUDIT.md). It reduces
+the primary experience to Scan → Verify → Respond while retaining this sprint's
+role and permission behavior.
+
 ## Problems observed
 
 1. Navigation is a flat list of 15 destinations with no workflow grouping.
