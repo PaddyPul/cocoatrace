@@ -1,11 +1,10 @@
 const API_BASE = '/api';
 
-let token: string | null = localStorage.getItem('ct_token');
+let token: string | null = null;
 
 export function setAuthToken(t: string | null) {
   token = t;
-  if (t) localStorage.setItem('ct_token', t);
-  else localStorage.removeItem('ct_token');
+  localStorage.removeItem('ct_token');
 }
 
 export function getToken() { return token; }
@@ -18,6 +17,7 @@ export async function api<T = any>(
 ): Promise<T> {
   const opts: RequestInit = {
     method,
+    credentials: 'include',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   };
   if (body && !isForm) {
@@ -47,6 +47,27 @@ export const auth = {
   login: (email: string, password: string) =>
     api<{ accessToken: string; user: any }>('POST', '/auth/login', { email, password }),
   me: () => api<any>('GET', '/me'),
+  logout: () => api<void>('POST', '/auth/logout'),
+  invitation: (token: string) => api<any>('GET', `/auth/invitations/${token}`),
+  acceptInvitation: (token: string, data: { name: string; password: string }) => api<any>('POST', `/auth/invitations/${token}/accept`, data),
+};
+
+export const invitations = {
+  list: () => api<any[]>('GET', '/invitations'),
+  create: (data: { email: string; organizationId?: string; role?: string }) => api<any>('POST', '/invitations', data),
+};
+
+export const workspace = {
+  getOnboarding: () => api<import('./types').OnboardingState>('GET', '/onboarding'),
+  updateOnboarding: (data: { status: 'not_started' | 'in_progress' | 'completed'; currentStep: number; primaryGoal?: string; pilotMode: boolean }) =>
+    api<import('./types').OnboardingState>('PUT', '/onboarding', data),
+  sendFeedback: (data: { page: string; task: string; rating: number; comment: string }) =>
+    api<any>('POST', '/pilot-feedback', data),
+  listFeedback: () => api<any[]>('GET', '/pilot-feedback'),
+};
+
+export const readiness = {
+  get: () => api<any>('GET', '/readiness'),
 };
 
 export const farms = {

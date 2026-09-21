@@ -8,11 +8,12 @@
   ],
   "scripts": {
     "install:all": "npm install",
-    "db:migrate": "cd api && node scripts/migrate.js",
-    "db:seed": "cd api && node scripts/seed.js",
+    "db:migrate": "npm run db:migrate --workspace=api",
+    "db:seed": "npm run db:seed --workspace=api",
     "dev": "node scripts/dev.js",
     "dev:api": "npm run dev --workspace=api",
-    "dev:web": "npm run dev --workspace=web"
+    "dev:web": "npm run dev --workspace=web",
+    "check:production": "node scripts/check-production-env.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

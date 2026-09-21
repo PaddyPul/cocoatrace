@@ -1,5 +1,7 @@
 # CocoaTrace — Organic Cocoa Provenance Platform
 
+> CocoaTrace is a product identity and safety network for trusted food trade, beginning with Ghana-to-EU cocoa. See the [pilot operating model](docs/PILOT_OPERATING_MODEL.md) and [production release gate](docs/PRODUCTION_READINESS.md).
+
 Web2 provenance platform for the Ghana → Netherlands organic cocoa corridor.
 
 The MVP now also gives traceable lots a public, QR-linked product profile with a
@@ -63,8 +65,10 @@ Two public scan demonstrations are seeded:
 2. Runs `npm install` in `api/` and `web/`
 3. Runs `docker compose up -d postgres` — starts a Postgres 16 container on port 15433
 4. Waits for the container to be healthy
-5. Applies `db/schema.sql` via `node api/scripts/migrate.js`
-6. Loads `db/seed.sql` via `node api/scripts/seed.js`
+5. Applies versioned Knex migrations with `npm run db:migrate`
+6. Loads the repeatable demo seed with `npm run db:seed`
+
+`setup.sh` preserves the existing PostgreSQL volume. It does not erase pilot data.
 
 ---
 
@@ -76,13 +80,12 @@ If you prefer to run steps individually:
 # Start postgres
 docker compose up -d postgres
 
-# Install deps
-cd api && npm install && cd ..
-cd web && npm install && cd ..
+# Install dependencies
+npm install
 
 # Apply schema + seed
-node api/scripts/migrate.js
-node api/scripts/seed.js
+npm run db:migrate
+npm run db:seed
 
 # Start app
 npm run dev
@@ -286,20 +289,19 @@ bash setup.sh
 cocoatrace/
 ├── api/
 │   ├── src/
-│   │   ├── index.js          ← Express API — all routes (~800 lines)
-│   │   ├── db.js             ← PostgreSQL connection pool
+│   │   ├── app.ts            ← Express application and route composition
+│   │   ├── db.ts             ← PostgreSQL connection pool
 │   │   ├── middleware/
-│   │   │   └── auth.js       ← JWT verify + permission guard
+│   │   │   └── auth.ts       ← Session/bearer verification + permission guard
 │   │   └── services/
-│   │       └── audit.js      ← Audit log writer + SHA-256 helper
+│   │       └── audit.ts      ← Audit log writer + SHA-256 helper
 │   ├── scripts/
-│   │   ├── migrate.js        ← Apply db/schema.sql
-│   │   └── seed.js           ← Load db/seed.sql
+│   │   ├── migrate.ts        ← Apply versioned migrations
+│   │   └── seed.ts           ← Load db/seed.sql
 │   └── package.json
 ├── web/
-│   ├── public/
-│   │   └── index.html        ← Complete frontend, single file, no build step
-│   ├── server.js             ← Express static file server
+│   ├── src/                  ← React + TypeScript application
+│   ├── vite.config.ts        ← Development server and API proxy
 │   └── package.json
 ├── db/
 │   ├── schema.sql            ← Full PostgreSQL schema (25 tables)
@@ -341,7 +343,7 @@ sudo service postgresql stop    # Linux
 **"Invalid credentials" on login**
 ```bash
 # Re-run the seed to reset passwords
-node api/scripts/seed.js
+npm run db:seed
 ```
 
 **Want to reset all data**

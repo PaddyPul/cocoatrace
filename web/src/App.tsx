@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuthCtx } from './components/auth/AuthProvider';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import { ToastProvider } from './components/shared/ToastProvider';
@@ -19,21 +19,30 @@ import PublicProductPage from './pages/PublicProductPage';
 import RecallCenterPage from './pages/RecallCenterPage';
 import InvestorDemoPage from './pages/InvestorDemoPage';
 import ProductsPage from './pages/ProductsPage';
+import OnboardingPage from './pages/OnboardingPage';
+import PilotTeamPage from './pages/PilotTeamPage';
+import AcceptInvitationPage from './pages/AcceptInvitationPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuthCtx();
+  const { user, loading, onboarding, onboardingLoading } = useAuthCtx();
+  const location = useLocation();
+  if (loading) return <main className="grid min-h-screen place-items-center bg-surface-darker"><div className="spinner" /></main>;
   if (!user) return <Navigate to="/login" replace />;
+  if (onboardingLoading) return <main className="grid min-h-screen place-items-center bg-surface-darker"><div className="spinner" /></main>;
+  if (onboarding && onboarding.status !== 'completed' && location.pathname !== '/onboarding') return <Navigate to="/onboarding" replace />;
   return <ErrorBoundary>{children}</ErrorBoundary>;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuthCtx();
+  const { user, loading } = useAuthCtx();
+  if (loading) return <main className="grid min-h-screen place-items-center bg-surface-darker"><div className="spinner" /></main>;
   if (user) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
 
 function RootRedirect() {
-  const { user } = useAuthCtx();
+  const { user, loading } = useAuthCtx();
+  if (loading) return <main className="grid min-h-screen place-items-center bg-surface-darker"><div className="spinner" /></main>;
   return <Navigate to={user ? '/dashboard' : '/login'} replace />;
 }
 
@@ -46,9 +55,12 @@ export default function App() {
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/p/:slug" element={<ErrorBoundary><PublicProductPage /></ErrorBoundary>} />
+          <Route path="/accept-invite/:token" element={<ErrorBoundary><AcceptInvitationPage /></ErrorBoundary>} />
           <Route path="/dashboard" element={<ProtectedRoute><ControlTowerPage /></ProtectedRoute>} />
           <Route path="/demo" element={<ProtectedRoute><InvestorDemoPage /></ProtectedRoute>} />
           <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
+          <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
+          <Route path="/pilot" element={<ProtectedRoute><PilotTeamPage /></ProtectedRoute>} />
           <Route path="/marketplace" element={<ProtectedRoute><MarketplacePage /></ProtectedRoute>} />
           <Route path="/listing/:id" element={<ProtectedRoute><ListingDetailPage /></ProtectedRoute>} />
           <Route path="/farms" element={<ProtectedRoute><FarmsPage /></ProtectedRoute>} />

@@ -9,6 +9,15 @@ export interface User {
   permissions: string[];
 }
 
+export interface OnboardingState {
+  user_id: string;
+  status: 'not_started' | 'in_progress' | 'completed';
+  current_step: number;
+  primary_goal?: string | null;
+  pilot_mode: boolean;
+  completed_at?: string | null;
+}
+
 export interface Farm {
   id: string;
   name: string;

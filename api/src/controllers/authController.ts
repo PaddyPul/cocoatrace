@@ -48,6 +48,14 @@ export async function login(req: Request, res: Response): Promise<void> {
 
   const token = signToken(tokenPayload);
 
+  res.cookie('ct_session', token, {
+    httpOnly: true,
+    secure: process.env.COOKIE_SECURE === 'true' || (process.env.NODE_ENV === 'production' && process.env.COOKIE_SECURE !== 'false'),
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+
   res.json({
     accessToken: token,
     user: {
@@ -61,6 +69,11 @@ export async function login(req: Request, res: Response): Promise<void> {
       permissions,
     },
   });
+}
+
+export async function logout(_req: Request, res: Response): Promise<void> {
+  res.clearCookie('ct_session', { path: '/' });
+  res.status(204).send();
 }
 
 export async function me(req: Request, res: Response): Promise<void> {

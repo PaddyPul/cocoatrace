@@ -26,6 +26,7 @@ async function seed(): Promise<void> {
     console.log('  kofi@marecargo.gh     — Logistics');
     console.log('  ingrid@cocobod.gh     — Regulator');
     console.log('  admin@cocoatrace.io   — Admin');
+    console.log('  pilot@cocoatrace.io   — New-user onboarding');
   } catch (err) {
     console.error('Seed failed:', (err as Error).message);
     process.exit(1);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { loginSchema, createFarmSchema, createBatchSchema, createCertificateSchema, createRecallSchema } from './validation';
+import { loginSchema, createFarmSchema, createBatchSchema, createCertificateSchema, createRecallSchema, createInvitationSchema, acceptInvitationSchema } from './validation';
 
 describe('loginSchema', () => {
   it('accepts valid credentials', () => {
@@ -35,6 +35,17 @@ describe('createFarmSchema', () => {
 
   it('rejects missing required fields', () => {
     expect(() => createFarmSchema.parse({ name: 'Test' })).toThrow();
+  });
+});
+
+describe('pilot invitation schemas', () => {
+  it('normalizes an invited email address', () => {
+    expect(createInvitationSchema.parse({ email: 'PILOT@Example.COM' }).email).toBe('pilot@example.com');
+  });
+
+  it('requires a strong activation password', () => {
+    expect(() => acceptInvitationSchema.parse({ name: 'Pilot User', password: 'weakpassword' })).toThrow();
+    expect(acceptInvitationSchema.parse({ name: 'Pilot User', password: 'LongEnough123' }).name).toBe('Pilot User');
   });
 });
 

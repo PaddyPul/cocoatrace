@@ -9,6 +9,7 @@ import { batches, evidence, productProfiles, recalls, shipments, traceability } 
 import { Batch, Evidence, MaterialLot, ProductProfileSummary, RecallNotice, Shipment } from '../types';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { SkeletonDetail } from '../components/shared/Skeleton';
+import ReadinessAssistant from '../components/dashboard/ReadinessAssistant';
 
 type TowerData = {
   batches: Batch[];
@@ -92,6 +93,8 @@ export default function ControlTowerPage() {
       <Kpi icon={FileCheck2} label="Approved evidence" value={data.evidence.length.toLocaleString()} note="claims with receipts" />
       <Kpi icon={ShieldCheck} label="Products at risk" value={metrics.unsafe.toLocaleString()} note={metrics.unsafe ? 'action required' : 'no active warnings'} warn={metrics.unsafe > 0} />
     </section>
+
+    <ReadinessAssistant />
 
     <section className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]">
       <div className="rounded-3xl border border-border bg-surface p-5 sm:p-6">

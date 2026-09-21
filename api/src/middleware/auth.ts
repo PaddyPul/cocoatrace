@@ -26,14 +26,14 @@ declare global {
 
 function requireAuth(req: Request, res: Response, next: NextFunction): void {
   const header = req.headers.authorization;
-  if (!header || !header.startsWith('Bearer ')) {
+  const cookieToken = req.headers.cookie?.split(';').map((item) => item.trim()).find((item) => item.startsWith('ct_session='))?.slice('ct_session='.length);
+  const token = header?.startsWith('Bearer ') ? header.slice(7) : cookieToken;
+  if (!token) {
     res.status(401).json({ error: 'Authentication required' });
     return;
   }
-
-  const token = header.slice(7);
   try {
-    const payload = jwt.verify(token, jwtSecret) as JwtPayload;
+    const payload = jwt.verify(decodeURIComponent(token), jwtSecret) as JwtPayload;
     req.user = payload;
     next();
   } catch {

@@ -48,6 +48,51 @@ CREATE TABLE IF NOT EXISTS sessions (
   revoked_at TIMESTAMPTZ
 );
 
+-- Persistent first-run state. Onboarding is user-specific because people in
+-- the same organization can have different jobs and first missions.
+CREATE TABLE IF NOT EXISTS user_onboarding (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'not_started' CHECK (status IN ('not_started','in_progress','completed')),
+  current_step INTEGER NOT NULL DEFAULT 0 CHECK (current_step BETWEEN 0 AND 4),
+  primary_goal TEXT,
+  pilot_mode BOOLEAN NOT NULL DEFAULT FALSE,
+  completed_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Deliberately small, explicit feedback capture for design-partner pilots.
+-- No clickstream, device fingerprint, or hidden behavioral tracking.
+CREATE TABLE IF NOT EXISTS pilot_feedback (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  organization_id UUID NOT NULL REFERENCES organizations(id),
+  page TEXT NOT NULL,
+  task TEXT NOT NULL,
+  rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Single-use account invitations make pilots testable with real, attributable
+-- users without sharing demo passwords or exposing account creation publicly.
+CREATE TABLE IF NOT EXISTS user_invitations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id UUID NOT NULL REFERENCES organizations(id),
+  email TEXT NOT NULL,
+  role_id UUID NOT NULL REFERENCES roles(id),
+  token_hash TEXT NOT NULL UNIQUE,
+  invited_by_user_id UUID NOT NULL REFERENCES users(id),
+  expires_at TIMESTAMPTZ NOT NULL,
+  accepted_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_invitations_org_created
+  ON user_invitations (organization_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_pilot_feedback_org_created
+  ON pilot_feedback (organization_id, created_at DESC);
+
 -- Farms
 CREATE TABLE IF NOT EXISTS farms (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -165,8 +210,12 @@ CREATE TABLE IF NOT EXISTS batch_attestations (
   notes TEXT
 );
 
-ALTER TABLE harvest_batches ADD CONSTRAINT fk_attestation
-  FOREIGN KEY (attestation_id) REFERENCES batch_attestations(id) DEFERRABLE INITIALLY DEFERRED;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_attestation') THEN
+    ALTER TABLE harvest_batches ADD CONSTRAINT fk_attestation
+      FOREIGN KEY (attestation_id) REFERENCES batch_attestations(id) DEFERRABLE INITIALLY DEFERRED;
+  END IF;
+END $$;
 
 -- Batch holdings
 CREATE TABLE IF NOT EXISTS batch_holdings (
