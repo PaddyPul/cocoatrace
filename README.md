@@ -39,6 +39,12 @@ npm run dev
 
 Open **http://localhost:3000**
 
+For the shortest investor walkthrough, click **Launch investor demo** on the
+login page. This opens a guided Scan → Verify → Respond story and a live,
+non-destructive recall calculation using the seeded lot genealogy. The product
+requirements audit and talk track are in
+[`docs/INVESTOR_DEMO_PRODUCT_AUDIT.md`](docs/INVESTOR_DEMO_PRODUCT_AUDIT.md).
+
 Two public scan demonstrations are seeded:
 
 - `http://localhost:3000/p/asante-cocoa-2024-0847` — clear safety status

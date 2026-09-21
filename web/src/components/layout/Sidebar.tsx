@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
   BadgeCheck, Boxes, Building2, FileCheck2, FileClock, Handshake,
-  LayoutDashboard, Leaf, LogOut, LucideIcon, PackageCheck,
+  LayoutDashboard, Leaf, LogOut, LucideIcon, PackageCheck, Sparkles,
   ScrollText, ShieldAlert, Ship, ShoppingBag, Store, Trees, WalletCards, X,
 } from 'lucide-react';
 import { useAuthCtx } from '../auth/AuthProvider';
@@ -20,23 +20,34 @@ interface NavGroup {
   items: NavItem[];
 }
 
-const NAV_GROUPS: NavGroup[] = [
+const PRIMARY_NAV: NavGroup[] = [
   {
-    label: 'Overview',
-    items: [{ icon: LayoutDashboard, label: 'Dashboard', page: 'dashboard', orPermissions: [] }],
+    label: 'Start here',
+    items: [
+      { icon: Sparkles, label: 'Investor demo', page: 'demo', orPermissions: [] },
+      { icon: LayoutDashboard, label: 'Workspace', page: 'dashboard', orPermissions: [] },
+    ],
   },
   {
     label: 'Traceability',
     items: [
-      { icon: Trees, label: 'Farms', page: 'farms', orPermissions: ['farm.read', 'farm.create'] },
       { icon: Boxes, label: 'Harvest batches', page: 'batches', orPermissions: ['batch.read', 'batch.create', 'batch.attest'] },
-      { icon: ShieldAlert, label: 'Traceability & recalls', page: 'recalls', orPermissions: ['batch.read', 'recall.manage'], emphasis: 'safety' },
+      { icon: ShieldAlert, label: 'Trace & recall', page: 'recalls', orPermissions: ['batch.read', 'recall.manage'], emphasis: 'safety' },
+    ],
+  },
+];
+
+const TOOL_NAV: NavGroup[] = [
+  {
+    label: 'Origin & proof',
+    items: [
+      { icon: Trees, label: 'Farms', page: 'farms', orPermissions: ['farm.read', 'farm.create'] },
       { icon: BadgeCheck, label: 'Certificates', page: 'certs', orPermissions: ['certificate.read', 'certificate.issue'] },
       { icon: FileCheck2, label: 'Evidence', page: 'evidence', orPermissions: ['evidence.read', 'evidence.upload'] },
     ],
   },
   {
-    label: 'Trade operations',
+    label: 'Trade',
     items: [
       { icon: Store, label: 'Marketplace', page: 'marketplace', orPermissions: ['listing.read', 'offer.create'] },
       { icon: ShoppingBag, label: 'My listings', page: 'my-listings', orPermissions: ['listing.create'] },
@@ -81,7 +92,7 @@ export default function Sidebar({ currentPage, onNavigate, className = '' }: {
       </div>
 
       <nav className="flex-1 space-y-5 px-3 py-5">
-        {NAV_GROUPS.map((group) => {
+        {PRIMARY_NAV.map((group) => {
           const items = group.items.filter((item) => item.orPermissions.length === 0 || canAny(...item.orPermissions));
           if (!items.length) return null;
           return <section key={group.label}>
@@ -97,6 +108,26 @@ export default function Sidebar({ currentPage, onNavigate, className = '' }: {
             })}</div>
           </section>;
         })}
+        <details className="group rounded-xl border border-white/10 bg-white/[.025] p-2">
+          <summary className="cursor-pointer list-none rounded-lg px-2 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-white/40 transition hover:bg-white/[.05] hover:text-white/70">More tools <span className="float-right text-white/25 transition group-open:rotate-45">+</span></summary>
+          <div className="mt-3 space-y-5 border-t border-white/10 pt-3">
+            {TOOL_NAV.map((group) => {
+              const items = group.items.filter((item) => item.orPermissions.length === 0 || canAny(...item.orPermissions));
+              if (!items.length) return null;
+              return <section key={group.label}>
+                <div className="mb-1.5 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-white/25">{group.label}</div>
+                <div className="space-y-1">{items.map((item) => {
+                  const Icon = item.icon;
+                  const active = currentPage === item.page || currentPage + 's' === item.page;
+                  return <button key={item.page} onClick={() => go(item.page)} className={`group/item flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[12px] font-medium transition-all ${active ? 'bg-white text-emerald-950' : 'text-white/60 hover:bg-white/[0.07] hover:text-white'}`}>
+                    <Icon size={16} className={active ? 'text-brand-600' : 'text-white/35 group-hover/item:text-brand-300'} />
+                    <span>{item.label}</span>
+                  </button>;
+                })}</div>
+              </section>;
+            })}
+          </div>
+        </details>
       </nav>
 
       <div className="m-3 rounded-2xl border border-white/10 bg-white/[0.05] p-3.5">
