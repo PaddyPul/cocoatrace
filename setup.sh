@@ -35,14 +35,24 @@ echo "📦 Installing dependencies..."
 npm install --silent
 echo "✓ Dependencies installed"
 
+# Keep local startup deterministic without requiring users to export variables
+# in every terminal session.
+[ -f "$ROOT/.env" ] || cp "$ROOT/.env.example" "$ROOT/.env"
+[ -f "$ROOT/api/.env" ] || cp "$ROOT/api/.env.example" "$ROOT/api/.env"
+echo "✓ Local environment configured"
+
 echo ""
 echo "🐳 Starting PostgreSQL in Docker..."
 docker compose down -v --remove-orphans 2>/dev/null || true
 docker compose up -d postgres
 
-echo -n "   Waiting for Postgres"
+echo -n "   Waiting for Postgres initialization"
 for i in $(seq 1 40); do
-  if docker compose exec -T postgres pg_isready -U cocoa -d cocoatrace -q 2>/dev/null; then
+  # A fresh Postgres container briefly starts a temporary server and then shuts
+  # it down before the final server starts. Wait for init completion as well as
+  # readiness so schema loading cannot hit that shutdown window.
+  if docker compose logs postgres 2>&1 | grep -q "PostgreSQL init process complete" && \
+     docker compose exec -T postgres pg_isready -U cocoa -d cocoatrace -q 2>/dev/null; then
     echo " ✓"
     break
   fi

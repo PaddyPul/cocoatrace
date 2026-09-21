@@ -7,6 +7,10 @@ farm-to-fork event feed and live recall status. See
 [`docs/FOOD_PROVENANCE_RESEARCH.md`](docs/FOOD_PROVENANCE_RESEARCH.md) for the
 research, product audit and recommended roadmap.
 
+The application shell, role navigation and priority workflows follow the
+[`UI/UX redesign sprint`](docs/UI_UX_REDESIGN_SPRINT.md), which also tracks the
+remaining responsive and accessibility work.
+
 ---
 
 ## Prerequisites
