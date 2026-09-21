@@ -155,5 +155,24 @@ export const createRecallSchema = z.object({
   reason: z.string().min(3).max(1000),
   instructions: z.string().min(3).max(1000),
   severity: z.enum(['advisory', 'warning', 'critical']),
-  batchIds: z.array(z.string().uuid()).min(1),
+  batchIds: z.array(z.string().uuid()).default([]),
+  lots: z.array(z.object({
+    lotId: z.string().uuid(),
+    quantityKg: z.number().positive().optional(),
+  })).max(100).default([]),
+}).refine((value) => value.batchIds.length > 0 || value.lots.length > 0, {
+  message: 'At least one affected batch or suspect lot is required',
+});
+
+const traceLotSchema = z.object({
+  lotId: z.string().uuid(),
+  quantityKg: z.number().positive().optional(),
+});
+
+export const recallImpactSchema = z.object({
+  lots: z.array(traceLotSchema).min(1).max(100),
+});
+
+export const traceQuantityQuerySchema = z.object({
+  quantityKg: z.coerce.number().positive().optional(),
 });

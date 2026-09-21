@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import QRCode from 'qrcode';
-import { query } from '../db';
+import { getClient, query } from '../db';
 import * as audit from '../services/audit';
 import { buildJourney, deriveSafetyStatus, JourneyEvent } from '../services/publicProduct';
+import { calculateTraceForward } from '../services/recallTrace';
+import { loadTraceGraph } from '../services/traceGraphRepository';
 
 function publicProductUrl(slug: string): string {
   const base = (process.env.PUBLIC_WEB_URL || process.env.WEB_URL || 'http://localhost:3000').replace(/\/$/, '');
@@ -271,43 +273,80 @@ export async function publishProfile(req: Request, res: Response): Promise<void>
 export async function listRecalls(req: Request, res: Response): Promise<void> {
   const canManageAll = (req.user!.permissions || []).some((permission) => permission === '*' || permission === 'recall.manage.all');
   const result = await query(
-    `SELECT r.*, o.name AS issued_by, array_agg(ab.batch_id) AS batch_ids
+    `SELECT r.*, o.name AS issued_by,
+            COALESCE((SELECT array_agg(ab.batch_id) FROM recall_affected_batches ab WHERE ab.recall_id=r.id), '{}') AS batch_ids,
+            COALESCE((SELECT json_agg(json_build_object(
+              'lotId', al.lot_id, 'lotCode', ml.lot_code,
+              'sourceEquivalentKg', al.source_equivalent_kg,
+              'recallQuantityKg', al.recall_quantity_kg,
+              'relationshipDepth', al.relationship_depth
+            ) ORDER BY al.relationship_depth, ml.lot_code)
+            FROM recall_affected_lots al JOIN material_lots ml ON ml.id=al.lot_id
+            WHERE al.recall_id=r.id), '[]'::json) AS affected_lots
      FROM recall_notices r
      JOIN organizations o ON o.id=r.initiated_by_organization_id
-     JOIN recall_affected_batches ab ON ab.recall_id=r.id
      WHERE ($1::boolean OR r.initiated_by_organization_id=$2)
-     GROUP BY r.id, o.name ORDER BY r.initiated_at DESC`,
+     ORDER BY r.initiated_at DESC`,
     [canManageAll, req.user!.organizationId]
   );
   res.json(result.rows);
 }
 
 export async function createRecall(req: Request, res: Response): Promise<void> {
-  const { referenceCode, title, reason, instructions, severity, batchIds } = req.body;
+  const { referenceCode, title, reason, instructions, severity, batchIds, lots: requestedLots } = req.body;
   const canManageAll = (req.user!.permissions || []).some((permission) => permission === '*' || permission === 'recall.manage.all');
+  const graph = await loadTraceGraph();
+  const seeds = [...requestedLots];
+  for (const batchId of batchIds) {
+    const sourceLot = graph.lots.find((lot) => lot.batchId === batchId);
+    if (!sourceLot) {
+      res.status(400).json({ error: `Batch ${batchId} has no source material lot and cannot be quantity-traced` });
+      return;
+    }
+    if (!seeds.some((seed: any) => seed.lotId === sourceLot.id)) seeds.push({ lotId: sourceLot.id });
+  }
   if (!canManageAll) {
-    const owned = await query(
-      'SELECT COUNT(*)::int AS count FROM harvest_batches WHERE id=ANY($1::uuid[]) AND current_holder_id=$2',
-      [batchIds, req.user!.organizationId]
-    );
-    if (owned.rows[0].count !== batchIds.length) {
-      res.status(403).json({ error: 'You can only recall batches currently held by your organization' });
+    const unauthorized = seeds.find((seed: any) => graph.lots.find((lot) => lot.id === seed.lotId)?.ownerOrganizationId !== req.user!.organizationId);
+    if (unauthorized) {
+      res.status(403).json({ error: 'You can only initiate recalls from lots owned by your organization' });
       return;
     }
   }
-  const result = await query(
-    `WITH inserted AS (
-       INSERT INTO recall_notices (reference_code,title,reason,instructions,severity,status,initiated_by_user_id,initiated_by_organization_id)
-       VALUES ($1,$2,$3,$4,$5,'active',$6,$7) RETURNING *
-     ), affected AS (
-       INSERT INTO recall_affected_batches (recall_id,batch_id)
-       SELECT inserted.id, batch_id FROM inserted, unnest($8::uuid[]) AS batch_id
-     ) SELECT * FROM inserted`,
-    [referenceCode, title, reason, instructions, severity, req.user!.id, req.user!.organizationId, batchIds]
-  );
-  const recall = result.rows[0];
+  const impact = calculateTraceForward(graph, seeds);
+  const affectedBatchIds = [...new Set(impact.impactedLots.map((lot) => lot.batchId).filter(Boolean))] as string[];
+  const client = await getClient();
+  let recall: any;
+  try {
+    await client.query('BEGIN');
+    const result = await client.query(
+      `INSERT INTO recall_notices (reference_code,title,reason,instructions,severity,status,initiated_by_user_id,initiated_by_organization_id)
+       VALUES ($1,$2,$3,$4,$5,'active',$6,$7) RETURNING *`,
+      [referenceCode, title, reason, instructions, severity, req.user!.id, req.user!.organizationId]
+    );
+    recall = result.rows[0];
+    if (affectedBatchIds.length) {
+      await client.query(
+        'INSERT INTO recall_affected_batches (recall_id,batch_id) SELECT $1, unnest($2::uuid[])',
+        [recall.id, affectedBatchIds]
+      );
+    }
+    for (const lot of impact.impactedLots) {
+      await client.query(
+        `INSERT INTO recall_affected_lots
+           (recall_id,lot_id,source_equivalent_kg,recall_quantity_kg,relationship_depth)
+         VALUES ($1,$2,$3,$4,$5)`,
+        [recall.id, lot.id, lot.sourceEquivalentKg, lot.recallQuantityKg, lot.relationshipDepth]
+      );
+    }
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
   await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'recall.activate', entityType: 'recall_notice', entityId: recall.id, reason });
-  res.status(201).json(recall);
+  res.status(201).json({ ...recall, batch_ids: affectedBatchIds, affected_lots: impact.impactedLots, impact: impact.totals });
 }
 
 export async function resolveRecall(req: Request, res: Response): Promise<void> {

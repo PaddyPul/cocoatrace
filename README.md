@@ -227,8 +227,12 @@ curl http://localhost:3001/batches -H "Authorization: Bearer $TOKEN"
 | GET | `/public/products/:slug/qr.svg` | — | Stable QR code for a published profile |
 | POST | `/product-profiles` | batch creator | Create or update a lot profile |
 | POST | `/product-profiles/:id/publish` | batch creator | Publish a product profile |
-| GET | `/recalls` | recall manager | Recall notices and affected batches |
-| POST | `/recalls` | recall manager | Activate a recall across one or more batches |
+| GET | `/traceability/lots` | batch reader | Source, production and packaging lots |
+| GET | `/traceability/lots/:id/trace-back` | batch reader | Required sources for a lot or quantity |
+| GET | `/traceability/lots/:id/trace-forward` | batch reader | Descendants, distributions and recipients |
+| POST | `/traceability/recall-impact` | recall manager | Multi-lot recall impact preview |
+| GET | `/recalls` | recall manager | Recall notices with calculated lot scope |
+| POST | `/recalls` | recall manager | Calculate, persist and activate a lot recall |
 | POST | `/recalls/:id/resolve` | recall manager | Resolve an active recall |
 
 ---

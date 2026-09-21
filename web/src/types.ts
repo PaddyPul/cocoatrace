@@ -278,4 +278,66 @@ export interface RecallNotice {
   resolved_at?: string;
   issued_by: string;
   batch_ids: string[];
+  affected_lots?: Array<{
+    lotId: string;
+    lotCode: string;
+    sourceEquivalentKg: number;
+    recallQuantityKg: number;
+    relationshipDepth: number;
+  }>;
+}
+
+export interface MaterialLot {
+  id: string;
+  lotCode: string;
+  lotType: 'source' | 'production' | 'packaging';
+  productName: string;
+  quantityKg: number;
+  batchId?: string;
+  ownerName?: string;
+}
+
+export interface TraceLotResult extends MaterialLot {
+  relationshipDepth: number;
+  allocationConfidence: 'declared' | 'estimated';
+  quantityRequiredKg?: number;
+  percentOfLot?: number;
+  sourceEquivalentKg?: number;
+  sourceEquivalentPercent?: number;
+  recallQuantityKg?: number;
+}
+
+export interface TraceBackResult {
+  direction: 'trace-back';
+  targetLot: MaterialLot;
+  queryQuantityKg: number;
+  tracedLots: TraceLotResult[];
+  sourceLots: TraceLotResult[];
+  exactness: 'declared' | 'estimated';
+  warnings: string[];
+  assumptions: string[];
+}
+
+export interface RecallImpactResult {
+  direction: 'trace-forward';
+  impactedLots: TraceLotResult[];
+  leafLots: TraceLotResult[];
+  impactedDistributions: Array<{
+    id: string;
+    lotId: string;
+    recipientName: string;
+    quantityKg: number;
+    recallQuantityKg: number;
+    distributionReference: string;
+  }>;
+  recipients: Array<{ organizationId: string; name: string; recallQuantityKg: number; distributionCount: number }>;
+  totals: {
+    impactedLotCount: number;
+    leafRecallQuantityKg: number;
+    distributedRecallQuantityKg: number;
+    recipientCount: number;
+  };
+  exactness: 'declared' | 'estimated';
+  warnings: string[];
+  assumptions: string[];
 }
