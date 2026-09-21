@@ -172,6 +172,7 @@ export const publicProducts = {
 };
 
 export const productProfiles = {
+  list: () => api<import('./types').ProductProfileSummary[]>('GET', '/product-profiles'),
   getForBatch: (batchId: string) => api<import('./types').ProductProfile>('GET', `/product-profiles/batch/${batchId}`),
   save: (data: { batchId: string; slug: string; displayName: string; brandName?: string; description?: string; gtin?: string; lotCode: string; heroImageUrl?: string }) =>
     api<import('./types').ProductProfile>('POST', '/product-profiles', data),
