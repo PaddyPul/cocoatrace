@@ -10,6 +10,7 @@ router.get('/public/products/:slug', controller.getPublicProduct);
 router.get('/public/products/:slug/qr.svg', controller.getProductQr);
 router.post('/public/products/:slug/scans', controller.recordScan);
 
+router.get('/product-profiles', requireAuth, requirePermission('batch.read'), controller.listProductProfiles);
 router.get('/product-profiles/batch/:batchId', requireAuth, requirePermission('batch.read'), controller.getProfileForBatch);
 router.post('/product-profiles', requireAuth, requirePermission('batch.create'), validate(productProfileSchema), controller.upsertProfile);
 router.post('/product-profiles/:id/publish', requireAuth, requirePermission('batch.create'), controller.publishProfile);
