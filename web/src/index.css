@@ -41,7 +41,7 @@
   th { @apply bg-black/10 text-left px-4 py-3 text-[9px] text-text-muted uppercase tracking-[0.14em] border-b border-border font-bold whitespace-nowrap; }
   td { @apply px-4 py-3.5 border-b border-border text-xs text-text-secondary; }
   tr:last-child td { @apply border-b-0; }
-  tbody tr { @apply transition-colors; }
+  tbody tr { @apply transition-colors hover:bg-white/[0.025]; }
 
   .stat-card { @apply bg-surface border border-border rounded-2xl p-5 shadow-sm shadow-black/10; }
   .stat-card-accent { @apply border-brand-500/30; }
