@@ -218,6 +218,41 @@ export async function recordScan(req: Request, res: Response): Promise<void> {
   res.status(204).send();
 }
 
+export async function listProductProfiles(_req: Request, res: Response): Promise<void> {
+  const result = await query(
+    `SELECT pp.*, b.crop, b.harvest_date, b.quantity_kg, b.organic_claim_status,
+            f.name AS farm_name, f.region, f.country, holder.name AS current_holder_name,
+            COALESCE(sc.scan_count, 0)::int AS scan_count,
+            COALESCE(ev.evidence_count, 0)::int AS evidence_count,
+            active_recall.severity AS safety_status
+     FROM product_profiles pp
+     JOIN harvest_batches b ON b.id = pp.batch_id
+     JOIN farms f ON f.id = b.farm_id
+     JOIN organizations holder ON holder.id = b.current_holder_id
+     LEFT JOIN LATERAL (
+       SELECT COUNT(*) AS scan_count FROM product_profile_scans s WHERE s.product_profile_id = pp.id
+     ) sc ON TRUE
+     LEFT JOIN LATERAL (
+       SELECT COUNT(*) AS evidence_count FROM evidence_items e
+       WHERE e.linked_entity_type='batch' AND e.linked_entity_id=pp.batch_id AND e.review_status='approved'
+     ) ev ON TRUE
+     LEFT JOIN LATERAL (
+       SELECT r.severity FROM recall_notices r
+       JOIN recall_affected_batches ab ON ab.recall_id=r.id
+       WHERE ab.batch_id=pp.batch_id AND r.status='active'
+       ORDER BY CASE r.severity WHEN 'critical' THEN 3 WHEN 'warning' THEN 2 ELSE 1 END DESC
+       LIMIT 1
+     ) active_recall ON TRUE
+     ORDER BY pp.updated_at DESC`
+  );
+  res.json(result.rows.map((profile: any) => ({
+    ...profile,
+    safety_status: profile.safety_status || 'clear',
+    profileUrl: publicProductUrl(profile.slug),
+    qrSvgUrl: `/public/products/${profile.slug}/qr.svg`,
+  })));
+}
+
 export async function getProfileForBatch(req: Request, res: Response): Promise<void> {
   const result = await query('SELECT * FROM product_profiles WHERE batch_id=$1', [req.params.batchId]);
   if (!result.rows[0]) {
