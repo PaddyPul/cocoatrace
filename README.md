@@ -11,6 +11,11 @@ The application shell, role navigation and priority workflows follow the
 [`UI/UX redesign sprint`](docs/UI_UX_REDESIGN_SPRINT.md), which also tracks the
 remaining responsive and accessibility work.
 
+The product strategy and system-wide experience now follow the
+[`venture-scale product blueprint`](docs/VENTURE_SCALE_PRODUCT_BLUEPRINT.md):
+Control Tower → Products → Trace & Recall, with operational records available
+as supporting tools.
+
 ---
 
 ## Prerequisites
