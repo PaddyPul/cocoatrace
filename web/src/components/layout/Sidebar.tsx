@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   BadgeCheck, Boxes, Building2, FileCheck2, FileClock, Handshake,
   LayoutDashboard, Leaf, LogOut, LucideIcon, PackageCheck, Sparkles,
-  ScrollText, ShieldAlert, Ship, ShoppingBag, Store, Trees, WalletCards, X,
+  QrCode, ScrollText, ShieldAlert, Ship, ShoppingBag, Store, Trees, WalletCards, X,
 } from 'lucide-react';
 import { useAuthCtx } from '../auth/AuthProvider';
 import { usePermission } from '../../hooks/usePermission';
@@ -25,13 +25,13 @@ const PRIMARY_NAV: NavGroup[] = [
     label: 'Start here',
     items: [
       { icon: Sparkles, label: 'Investor demo', page: 'demo', orPermissions: [] },
-      { icon: LayoutDashboard, label: 'Workspace', page: 'dashboard', orPermissions: [] },
+      { icon: LayoutDashboard, label: 'Control tower', page: 'dashboard', orPermissions: [] },
     ],
   },
   {
     label: 'Traceability',
     items: [
-      { icon: Boxes, label: 'Harvest batches', page: 'batches', orPermissions: ['batch.read', 'batch.create', 'batch.attest'] },
+      { icon: QrCode, label: 'Products', page: 'products', orPermissions: ['batch.read'] },
       { icon: ShieldAlert, label: 'Trace & recall', page: 'recalls', orPermissions: ['batch.read', 'recall.manage'], emphasis: 'safety' },
     ],
   },
@@ -42,6 +42,7 @@ const TOOL_NAV: NavGroup[] = [
     label: 'Origin & proof',
     items: [
       { icon: Trees, label: 'Farms', page: 'farms', orPermissions: ['farm.read', 'farm.create'] },
+      { icon: Boxes, label: 'Harvest batches', page: 'batches', orPermissions: ['batch.read', 'batch.create', 'batch.attest'] },
       { icon: BadgeCheck, label: 'Certificates', page: 'certs', orPermissions: ['certificate.read', 'certificate.issue'] },
       { icon: FileCheck2, label: 'Evidence', page: 'evidence', orPermissions: ['evidence.read', 'evidence.upload'] },
     ],
@@ -108,7 +109,7 @@ export default function Sidebar({ currentPage, onNavigate, className = '' }: {
             })}</div>
           </section>;
         })}
-        <details className="group rounded-xl border border-white/10 bg-white/[.025] p-2">
+        <details open={TOOL_NAV.some((group) => group.items.some((item) => item.page === currentPage || currentPage + 's' === item.page)) || undefined} className="group rounded-xl border border-white/10 bg-white/[.025] p-2">
           <summary className="cursor-pointer list-none rounded-lg px-2 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-white/40 transition hover:bg-white/[.05] hover:text-white/70">More tools <span className="float-right text-white/25 transition group-open:rotate-45">+</span></summary>
           <div className="mt-3 space-y-5 border-t border-white/10 pt-3">
             {TOOL_NAV.map((group) => {

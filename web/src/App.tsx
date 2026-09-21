@@ -3,7 +3,7 @@ import { AuthProvider, useAuthCtx } from './components/auth/AuthProvider';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import { ToastProvider } from './components/shared/ToastProvider';
 import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage';
+import ControlTowerPage from './pages/ControlTowerPage';
 import MarketplacePage from './pages/MarketplacePage';
 import ListingDetailPage from './pages/ListingDetailPage';
 import ContractDetailPage from './pages/ContractDetailPage';
@@ -18,6 +18,7 @@ import MyListingsPage from './pages/MyListingsPage';
 import PublicProductPage from './pages/PublicProductPage';
 import RecallCenterPage from './pages/RecallCenterPage';
 import InvestorDemoPage from './pages/InvestorDemoPage';
+import ProductsPage from './pages/ProductsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuthCtx();
@@ -45,8 +46,9 @@ export default function App() {
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/p/:slug" element={<ErrorBoundary><PublicProductPage /></ErrorBoundary>} />
-          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><ControlTowerPage /></ProtectedRoute>} />
           <Route path="/demo" element={<ProtectedRoute><InvestorDemoPage /></ProtectedRoute>} />
+          <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
           <Route path="/marketplace" element={<ProtectedRoute><MarketplacePage /></ProtectedRoute>} />
           <Route path="/listing/:id" element={<ProtectedRoute><ListingDetailPage /></ProtectedRoute>} />
           <Route path="/farms" element={<ProtectedRoute><FarmsPage /></ProtectedRoute>} />
