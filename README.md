@@ -2,6 +2,11 @@
 
 Web2 provenance platform for the Ghana → Netherlands organic cocoa corridor.
 
+The MVP now also gives traceable lots a public, QR-linked product profile with a
+farm-to-fork event feed and live recall status. See
+[`docs/FOOD_PROVENANCE_RESEARCH.md`](docs/FOOD_PROVENANCE_RESEARCH.md) for the
+research, product audit and recommended roadmap.
+
 ---
 
 ## Prerequisites
@@ -29,6 +34,11 @@ npm run dev
 ```
 
 Open **http://localhost:3000**
+
+Two public scan demonstrations are seeded:
+
+- `http://localhost:3000/p/asante-cocoa-2024-0847` — clear safety status
+- `http://localhost:3000/p/mensah-cocoa-2024-0831` — explicitly labelled demo quality hold
 
 ---
 
@@ -213,6 +223,13 @@ curl http://localhost:3001/batches -H "Authorization: Bearer $TOKEN"
 | GET | `/evidence` | ✓ | List evidence |
 | GET | `/provenance/batches/:id` | ✓ | Live provenance pack |
 | GET | `/audit/events` | regulator | Audit log |
+| GET | `/public/products/:slug` | — | Public product profile, journey and safety status |
+| GET | `/public/products/:slug/qr.svg` | — | Stable QR code for a published profile |
+| POST | `/product-profiles` | batch creator | Create or update a lot profile |
+| POST | `/product-profiles/:id/publish` | batch creator | Publish a product profile |
+| GET | `/recalls` | recall manager | Recall notices and affected batches |
+| POST | `/recalls` | recall manager | Activate a recall across one or more batches |
+| POST | `/recalls/:id/resolve` | recall manager | Resolve an active recall |
 
 ---
 

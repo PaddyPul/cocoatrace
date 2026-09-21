@@ -254,6 +254,55 @@ CREATE TABLE IF NOT EXISTS evidence_items (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Public product identities. A stable slug is encoded in the QR code so the
+-- destination can change over time without reprinting packaging.
+CREATE TABLE IF NOT EXISTS product_profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  batch_id UUID NOT NULL UNIQUE REFERENCES harvest_batches(id),
+  slug TEXT NOT NULL UNIQUE CHECK (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
+  display_name TEXT NOT NULL,
+  brand_name TEXT,
+  description TEXT NOT NULL DEFAULT '',
+  gtin TEXT,
+  lot_code TEXT NOT NULL UNIQUE,
+  hero_image_url TEXT,
+  visibility TEXT NOT NULL DEFAULT 'draft' CHECK (visibility IN ('draft','published','archived')),
+  published_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- A recall is intentionally separate from a profile: one notice can affect
+-- several source batches/lots and a batch can be involved in multiple notices.
+CREATE TABLE IF NOT EXISTS recall_notices (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reference_code TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  instructions TEXT NOT NULL,
+  severity TEXT NOT NULL CHECK (severity IN ('advisory','warning','critical')),
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('draft','active','resolved')),
+  initiated_by_user_id UUID NOT NULL REFERENCES users(id),
+  initiated_by_organization_id UUID NOT NULL REFERENCES organizations(id),
+  initiated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  resolved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS recall_affected_batches (
+  recall_id UUID NOT NULL REFERENCES recall_notices(id) ON DELETE CASCADE,
+  batch_id UUID NOT NULL REFERENCES harvest_batches(id),
+  PRIMARY KEY (recall_id, batch_id)
+);
+
+-- Privacy-minimal scan telemetry. No IP address or device fingerprint is kept.
+CREATE TABLE IF NOT EXISTS product_profile_scans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_profile_id UUID NOT NULL REFERENCES product_profiles(id) ON DELETE CASCADE,
+  scanned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  referrer_host TEXT
+);
+
 -- Audit events
 CREATE TABLE IF NOT EXISTS audit_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -281,3 +330,7 @@ CREATE INDEX IF NOT EXISTS idx_contracts_buyer ON sales_contracts(buyer_organiza
 CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_events(entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_events(actor_user_id);
 CREATE INDEX IF NOT EXISTS idx_evidence_entity ON evidence_items(linked_entity_type, linked_entity_id);
+CREATE INDEX IF NOT EXISTS idx_product_profiles_slug ON product_profiles(slug);
+CREATE INDEX IF NOT EXISTS idx_recall_status ON recall_notices(status);
+CREATE INDEX IF NOT EXISTS idx_recall_batches_batch ON recall_affected_batches(batch_id);
+CREATE INDEX IF NOT EXISTS idx_profile_scans_profile_time ON product_profile_scans(product_profile_id, scanned_at DESC);

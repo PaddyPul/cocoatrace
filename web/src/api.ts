@@ -165,3 +165,22 @@ export const provenance = {
     window.open(url, '_blank');
   },
 };
+
+export const publicProducts = {
+  get: (slug: string) => api<import('./types').PublicProduct>('GET', `/public/products/${slug}`),
+  recordScan: (slug: string) => api<void>('POST', `/public/products/${slug}/scans`),
+};
+
+export const productProfiles = {
+  getForBatch: (batchId: string) => api<import('./types').ProductProfile>('GET', `/product-profiles/batch/${batchId}`),
+  save: (data: { batchId: string; slug: string; displayName: string; brandName?: string; description?: string; gtin?: string; lotCode: string; heroImageUrl?: string }) =>
+    api<import('./types').ProductProfile>('POST', '/product-profiles', data),
+  publish: (id: string) => api<import('./types').ProductProfile>('POST', `/product-profiles/${id}/publish`),
+};
+
+export const recalls = {
+  list: () => api<import('./types').RecallNotice[]>('GET', '/recalls'),
+  create: (data: { referenceCode: string; title: string; reason: string; instructions: string; severity: 'advisory' | 'warning' | 'critical'; batchIds: string[] }) =>
+    api<import('./types').RecallNotice>('POST', '/recalls', data),
+  resolve: (id: string) => api<import('./types').RecallNotice>('POST', `/recalls/${id}/resolve`),
+};

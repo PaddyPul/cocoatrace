@@ -17,10 +17,10 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO roles (id, name, permissions) VALUES
   ('22222222-2222-2222-2222-222222222001', 'farmer',    ARRAY['farm.read','farm.create','batch.read','batch.create','holding.read','listing.read','listing.create','offer.respond','custody.transfer.request','custody.transfer.accept','payment.read','contract.read']),
   ('22222222-2222-2222-2222-222222222002', 'certifier', ARRAY['certificate.read','certificate.issue','batch.read','batch.attest','farm.read','evidence.read','evidence.upload']),
-  ('22222222-2222-2222-2222-222222222003', 'exporter',  ARRAY['batch.read','batch.create','holding.read','holding.create','listing.read','listing.create','offer.respond','contract.read','shipment.read','shipment.request','payment.read','payment.request','evidence.read','evidence.upload']),
+  ('22222222-2222-2222-2222-222222222003', 'exporter',  ARRAY['batch.read','batch.create','holding.read','holding.create','listing.read','listing.create','offer.respond','contract.read','shipment.read','shipment.request','payment.read','payment.request','evidence.read','evidence.upload','recall.manage']),
   ('22222222-2222-2222-2222-222222222004', 'importer',  ARRAY['listing.read','offer.create','contract.read','shipment.read','payment.read','payment.confirm','evidence.read','evidence.upload','provenance.export']),
   ('22222222-2222-2222-2222-222222222005', 'logistics', ARRAY['shipment.read','shipment.accept','shipment.update','evidence.read','evidence.upload','batch.read','contract.read','farm.read']),
-  ('22222222-2222-2222-2222-222222222006', 'regulator', ARRAY['audit.read','farm.read','batch.read','certificate.read','evidence.read','provenance.export','audit.export']),
+  ('22222222-2222-2222-2222-222222222006', 'regulator', ARRAY['audit.read','farm.read','batch.read','certificate.read','evidence.read','provenance.export','audit.export','recall.manage','recall.manage.all']),
   ('22222222-2222-2222-2222-222222222007', 'admin',     ARRAY['*'])
 ON CONFLICT (id) DO UPDATE SET permissions = EXCLUDED.permissions;
 
@@ -142,3 +142,29 @@ INSERT INTO audit_events (actor_user_id, actor_organization_id, action, entity_t
   ('33333333-3333-3333-3333-333333333004', '11111111-1111-1111-1111-111111111005', 'offer.create', 'trade_offer', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbb001', 'sha256:offer_001', '2024-10-21 14:30:00+00'),
   ('33333333-3333-3333-3333-333333333003', '11111111-1111-1111-1111-111111111004', 'contract.create', 'sales_contract', 'cccccccc-cccc-cccc-cccc-ccccccccc001', 'sha256:contract_001', '2024-10-22 10:00:00+00'),
   ('33333333-3333-3333-3333-333333333005', '11111111-1111-1111-1111-111111111006', 'shipment.accept', 'shipment', 'dddddddd-dddd-dddd-dddd-ddddddddd001', 'sha256:shipment_001', '2024-10-28 08:00:00+00');
+
+-- Public QR product profiles
+INSERT INTO product_profiles (id, batch_id, slug, display_name, brand_name, description, lot_code, visibility, published_at) VALUES
+  ('12121212-1212-1212-1212-121212121201', '77777777-7777-7777-7777-777777777001', 'asante-cocoa-2024-0847', 'Asante Cocoa · 2024 Harvest', 'Accra Gold Exports', 'Trace this cocoa from the Asante Family Farm through certification, custody and export.', 'GH-2024-0847', 'published', '2024-11-04 06:00:00+00'),
+  ('12121212-1212-1212-1212-121212121202', '77777777-7777-7777-7777-777777777002', 'mensah-cocoa-2024-0831', 'Mensah Cocoa · 2024 Harvest', 'Accra Gold Exports', 'A demonstration lot profile showing how an active safety notice appears immediately after a scan.', 'GH-2024-0831', 'published', '2024-10-20 09:00:00+00')
+ON CONFLICT (id) DO UPDATE SET
+  display_name = EXCLUDED.display_name,
+  description = EXCLUDED.description,
+  visibility = EXCLUDED.visibility,
+  published_at = EXCLUDED.published_at,
+  updated_at = NOW();
+
+-- Deliberately marked as demo data. This makes the recall experience testable
+-- without implying that any real product or organization has a safety issue.
+INSERT INTO recall_notices (id, reference_code, title, reason, instructions, severity, status, initiated_by_user_id, initiated_by_organization_id, initiated_at) VALUES
+  ('13131313-1313-1313-1313-131313131301', 'DEMO-RECALL-2024-001', 'Demonstration quality hold', 'Demo only: a warehouse inspection recorded moisture outside the agreed quality range.', 'Do not release this demo lot. Contact the listed supplier and keep the package or lot code available.', 'warning', 'active', '33333333-3333-3333-3333-333333333006', '11111111-1111-1111-1111-111111111007', '2024-11-06 10:00:00+00')
+ON CONFLICT (id) DO UPDATE SET
+  title = EXCLUDED.title,
+  reason = EXCLUDED.reason,
+  instructions = EXCLUDED.instructions,
+  severity = EXCLUDED.severity,
+  status = EXCLUDED.status;
+
+INSERT INTO recall_affected_batches (recall_id, batch_id) VALUES
+  ('13131313-1313-1313-1313-131313131301', '77777777-7777-7777-7777-777777777002')
+ON CONFLICT DO NOTHING;

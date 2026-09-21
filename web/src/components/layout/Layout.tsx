@@ -18,6 +18,7 @@ const PAGE_TITLES: Record<string, string> = {
   shipments: 'Shipments',
   payments: 'Payments',
   evidence: 'Evidence Documents',
+  recalls: 'Recall Center',
   audit: 'Audit Log',
   certs: 'Certificates',
   'my-listings': 'My Listings',

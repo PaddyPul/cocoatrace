@@ -15,6 +15,8 @@ import BatchDetailPage from './pages/BatchDetailPage';
 import HoldingDetailPage from './pages/HoldingDetailPage';
 import OffersPage from './pages/OffersPage';
 import MyListingsPage from './pages/MyListingsPage';
+import PublicProductPage from './pages/PublicProductPage';
+import RecallCenterPage from './pages/RecallCenterPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuthCtx();
@@ -41,6 +43,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/p/:slug" element={<ErrorBoundary><PublicProductPage /></ErrorBoundary>} />
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/marketplace" element={<ProtectedRoute><MarketplacePage /></ProtectedRoute>} />
           <Route path="/listing/:id" element={<ProtectedRoute><ListingDetailPage /></ProtectedRoute>} />
@@ -58,6 +61,7 @@ export default function App() {
           <Route path="/payments" element={<ProtectedRoute><PaymentsPage /></ProtectedRoute>} />
           <Route path="/payments/:id" element={<ProtectedRoute><PaymentDetailPage /></ProtectedRoute>} />
           <Route path="/evidence" element={<ProtectedRoute><EvidencePage /></ProtectedRoute>} />
+          <Route path="/recalls" element={<ProtectedRoute><RecallCenterPage /></ProtectedRoute>} />
           <Route path="/audit" element={<ProtectedRoute><AuditPage /></ProtectedRoute>} />
           <Route path="/certs" element={<ProtectedRoute><CertsPage /></ProtectedRoute>} />
           <Route path="/my-listings" element={<ProtectedRoute><MyListingsPage /></ProtectedRoute>} />

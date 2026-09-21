@@ -11,7 +11,8 @@ export async function up(knex: Knex): Promise<void> {
 
 export async function down(knex: Knex): Promise<void> {
   const tables = [
-    'audit_events', 'evidence_items', 'payment_requests', 'shipment_milestones',
+    'product_profile_scans', 'recall_affected_batches', 'recall_notices',
+    'product_profiles', 'audit_events', 'evidence_items', 'payment_requests', 'shipment_milestones',
     'shipments', 'sales_contracts', 'trade_offers', 'listings',
     'custody_transfers', 'batch_holdings', 'batch_attestations', 'harvest_batches',
     'organic_certificates', 'farm_plots', 'farms', 'sessions', 'user_roles',

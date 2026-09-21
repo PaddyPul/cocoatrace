@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { batches as batchesApi, certificates as certificatesApi } from '../api';
-import { Batch, Evidence, Certificate } from '../types';
+import { batches as batchesApi, certificates as certificatesApi, productProfiles as productProfilesApi } from '../api';
+import { Batch, Evidence, Certificate, ProductProfile } from '../types';
 import { StatusBadge, fmtDate } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
 import Layout from '../components/layout/Layout';
-import { ArrowLeft, Shield, FileText, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Shield, FileText, ChevronRight, QrCode, ExternalLink } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 
 export default function BatchDetailPage() {
@@ -18,6 +18,8 @@ export default function BatchDetailPage() {
   const [evidence, setEvidence] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [productProfile, setProductProfile] = useState<ProductProfile | null>(null);
+  const [profileBusy, setProfileBusy] = useState(false);
 
   const [showPush, setShowPush] = useState(false);
   const [pqty, setPqty] = useState(0);
@@ -48,6 +50,7 @@ export default function BatchDetailPage() {
         setPqty(d.batch.quantity_kg || 0);
         setPorigin(d.batch.region ? `${d.batch.region}, Ghana` : 'Tema, Ghana');
         setPdest('Rotterdam, Netherlands');
+        productProfilesApi.getForBatch(d.batch.id).then(setProductProfile).catch(() => undefined);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -73,6 +76,35 @@ export default function BatchDetailPage() {
   };
 
   const canPush = batch ? (batch.current_holder_id === user?.organizationId && canDo('batch.create')) : false;
+
+  const handleCreateProfile = async () => {
+    if (!batch) return;
+    setProfileBusy(true);
+    try {
+      const farmPart = (batch.farm_name || 'origin').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const profile = await productProfilesApi.save({
+        batchId: batch.id,
+        slug: `${farmPart}-${batch.crop || 'product'}-${batch.id.slice(0, 8)}`,
+        displayName: `${batch.farm_name || 'Origin'} ${batch.crop || 'product'} · ${new Date(batch.harvest_date).getFullYear()} harvest`,
+        brandName: batch.holder_name,
+        description: `Trace this ${batch.crop || 'product'} from farm origin through verification, custody and delivery.`,
+        lotCode: `CT-${batch.id.slice(0, 8).toUpperCase()}`,
+      });
+      setProductProfile(profile);
+      toast('success', 'Draft product page created');
+    } catch (e: any) { toast('error', e.message); } finally { setProfileBusy(false); }
+  };
+
+  const handlePublishProfile = async () => {
+    if (!productProfile) return;
+    setProfileBusy(true);
+    try {
+      await productProfilesApi.publish(productProfile.id);
+      const refreshed = await productProfilesApi.getForBatch(productProfile.batch_id);
+      setProductProfile(refreshed);
+      toast('success', 'Product page published — QR is live');
+    } catch (e: any) { toast('error', e.message); } finally { setProfileBusy(false); }
+  };
 
   const handlePush = async () => {
     if (!batch || !pqty || pqty <= 0 || !pprice || pprice <= 0) { setPushErr('Quantity and price required'); return; }
@@ -170,6 +202,30 @@ export default function BatchDetailPage() {
         </div>
 
         <div className="space-y-4">
+          <div className="bg-surface border border-border rounded p-5">
+            <div className="flex items-center gap-2 text-sm font-semibold"><QrCode size={16} className="text-brand-400" /> Public product page</div>
+            {productProfile ? (
+              <div className="mt-4">
+                {productProfile.visibility === 'published' ? (
+                  <>
+                    <div className="rounded bg-white p-3 mx-auto w-fit">
+                      <img className="h-36 w-36" src={`/api${productProfile.qrSvgUrl}`} alt={`QR code for ${productProfile.display_name}`} />
+                    </div>
+                    <div className="mt-3 text-center"><span className="badge badge-green">Live</span><p className="mt-2 text-xs text-text-muted font-mono">{productProfile.lot_code}</p></div>
+                    <button className="btn w-full justify-center mt-3" onClick={() => window.open(productProfile.profileUrl, '_blank')}><ExternalLink size={13} /> View scanned experience</button>
+                  </>
+                ) : (
+                  <>
+                    <p className="mt-3 text-xs text-text-muted">Draft ready for review. Publishing activates the permanent QR destination.</p>
+                    <button className="btn btn-primary w-full justify-center mt-3" onClick={handlePublishProfile} disabled={profileBusy}>{profileBusy ? 'Publishing…' : 'Publish & activate QR'}</button>
+                  </>
+                )}
+              </div>
+            ) : canPush ? (
+              <><p className="mt-3 text-xs text-text-muted">Create a stable, public identity for this lot. The QR will always open its latest journey and safety status.</p><button className="btn btn-primary w-full justify-center mt-3" onClick={handleCreateProfile} disabled={profileBusy}>{profileBusy ? 'Creating…' : 'Create product page'}</button></>
+            ) : <p className="mt-3 text-xs text-text-muted">No public product page has been published for this batch.</p>}
+          </div>
+
           <div className="bg-surface border border-border rounded p-5 sticky top-6">
             <div className="text-xs text-text-muted uppercase tracking-wider mb-3">Actions</div>
 
