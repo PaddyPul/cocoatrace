@@ -23,6 +23,8 @@ import paymentRoutes from './routes/payments';
 import evidenceRoutes from './routes/evidence';
 import provenanceRoutes from './routes/provenance';
 import auditRoutes from './routes/audit';
+import publicProductRoutes from './routes/publicProducts';
+import traceabilityRoutes from './routes/traceability';
 
 const app = express();
 
@@ -56,6 +58,8 @@ app.use(paymentRoutes);
 app.use(evidenceRoutes);
 app.use(provenanceRoutes);
 app.use(auditRoutes);
+app.use(publicProductRoutes);
+app.use(traceabilityRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });

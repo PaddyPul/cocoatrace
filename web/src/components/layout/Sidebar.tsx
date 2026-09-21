@@ -23,6 +23,7 @@ const NAV_ITEMS: NavItem[] = [
   { icon: '💰', label: 'Payments', page: 'payments', orPermissions: ['payment.read', 'payment.request', 'payment.confirm'] },
   { icon: '📋', label: 'Certificates', page: 'certs', orPermissions: ['certificate.read', 'certificate.issue'] },
   { icon: '🗂', label: 'Evidence', page: 'evidence', orPermissions: ['evidence.read', 'evidence.upload'] },
+  { icon: '⚠', label: 'Recall Center', page: 'recalls', orPermissions: ['recall.manage'] },
   { icon: '🔗', label: 'Audit Log', page: 'audit', orPermissions: ['audit.read'] },
   { icon: '🏢', label: 'Organizations', page: 'organizations', orPermissions: ['organization.admin'] },
 ];

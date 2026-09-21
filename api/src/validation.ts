@@ -137,3 +137,42 @@ export const pushToMarketplaceSchema = z.object({
   originLocation: z.string().min(1, 'Origin location required'),
   destinationLocation: z.string().min(1, 'Destination location required'),
 });
+
+export const productProfileSchema = z.object({
+  batchId: z.string().uuid(),
+  slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use lowercase letters, numbers and hyphens'),
+  displayName: z.string().min(2).max(120),
+  brandName: z.string().max(120).optional(),
+  description: z.string().max(600).optional(),
+  gtin: z.string().regex(/^\d{8,14}$/).optional(),
+  lotCode: z.string().min(2).max(80),
+  heroImageUrl: z.string().url().optional(),
+});
+
+export const createRecallSchema = z.object({
+  referenceCode: z.string().min(3).max(80),
+  title: z.string().min(3).max(160),
+  reason: z.string().min(3).max(1000),
+  instructions: z.string().min(3).max(1000),
+  severity: z.enum(['advisory', 'warning', 'critical']),
+  batchIds: z.array(z.string().uuid()).default([]),
+  lots: z.array(z.object({
+    lotId: z.string().uuid(),
+    quantityKg: z.number().positive().optional(),
+  })).max(100).default([]),
+}).refine((value) => value.batchIds.length > 0 || value.lots.length > 0, {
+  message: 'At least one affected batch or suspect lot is required',
+});
+
+const traceLotSchema = z.object({
+  lotId: z.string().uuid(),
+  quantityKg: z.number().positive().optional(),
+});
+
+export const recallImpactSchema = z.object({
+  lots: z.array(traceLotSchema).min(1).max(100),
+});
+
+export const traceQuantityQuerySchema = z.object({
+  quantityKg: z.coerce.number().positive().optional(),
+});

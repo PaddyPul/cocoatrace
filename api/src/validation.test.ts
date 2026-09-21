@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { loginSchema, createFarmSchema, createBatchSchema, createCertificateSchema } from './validation';
+import { loginSchema, createFarmSchema, createBatchSchema, createCertificateSchema, createRecallSchema } from './validation';
 
 describe('loginSchema', () => {
   it('accepts valid credentials', () => {
@@ -69,5 +69,28 @@ describe('createCertificateSchema', () => {
       accreditationReference: 'EU-2024-001',
     });
     expect(result.standard).toBe('EU_ORGANIC');
+  });
+});
+
+describe('createRecallSchema', () => {
+  const notice = {
+    referenceCode: 'REC-2026-001',
+    title: 'Test recall',
+    reason: 'Test hazard',
+    instructions: 'Hold the affected lot',
+    severity: 'warning' as const,
+  };
+
+  it('accepts a quantity-aware suspect lot', () => {
+    const result = createRecallSchema.parse({
+      ...notice,
+      lots: [{ lotId: '550e8400-e29b-41d4-a716-446655440000', quantityKg: 125.5 }],
+    });
+    expect(result.lots[0].quantityKg).toBe(125.5);
+    expect(result.batchIds).toEqual([]);
+  });
+
+  it('rejects a recall with no batch or lot scope', () => {
+    expect(() => createRecallSchema.parse(notice)).toThrow(/At least one affected batch or suspect lot/);
   });
 });

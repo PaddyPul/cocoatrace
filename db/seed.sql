@@ -17,10 +17,10 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO roles (id, name, permissions) VALUES
   ('22222222-2222-2222-2222-222222222001', 'farmer',    ARRAY['farm.read','farm.create','batch.read','batch.create','holding.read','listing.read','listing.create','offer.respond','custody.transfer.request','custody.transfer.accept','payment.read','contract.read']),
   ('22222222-2222-2222-2222-222222222002', 'certifier', ARRAY['certificate.read','certificate.issue','batch.read','batch.attest','farm.read','evidence.read','evidence.upload']),
-  ('22222222-2222-2222-2222-222222222003', 'exporter',  ARRAY['batch.read','batch.create','holding.read','holding.create','listing.read','listing.create','offer.respond','contract.read','shipment.read','shipment.request','payment.read','payment.request','evidence.read','evidence.upload']),
+  ('22222222-2222-2222-2222-222222222003', 'exporter',  ARRAY['batch.read','batch.create','holding.read','holding.create','listing.read','listing.create','offer.respond','contract.read','shipment.read','shipment.request','payment.read','payment.request','evidence.read','evidence.upload','recall.manage']),
   ('22222222-2222-2222-2222-222222222004', 'importer',  ARRAY['listing.read','offer.create','contract.read','shipment.read','payment.read','payment.confirm','evidence.read','evidence.upload','provenance.export']),
   ('22222222-2222-2222-2222-222222222005', 'logistics', ARRAY['shipment.read','shipment.accept','shipment.update','evidence.read','evidence.upload','batch.read','contract.read','farm.read']),
-  ('22222222-2222-2222-2222-222222222006', 'regulator', ARRAY['audit.read','farm.read','batch.read','certificate.read','evidence.read','provenance.export','audit.export']),
+  ('22222222-2222-2222-2222-222222222006', 'regulator', ARRAY['audit.read','farm.read','batch.read','certificate.read','evidence.read','provenance.export','audit.export','recall.manage','recall.manage.all']),
   ('22222222-2222-2222-2222-222222222007', 'admin',     ARRAY['*'])
 ON CONFLICT (id) DO UPDATE SET permissions = EXCLUDED.permissions;
 
@@ -142,3 +142,63 @@ INSERT INTO audit_events (actor_user_id, actor_organization_id, action, entity_t
   ('33333333-3333-3333-3333-333333333004', '11111111-1111-1111-1111-111111111005', 'offer.create', 'trade_offer', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbb001', 'sha256:offer_001', '2024-10-21 14:30:00+00'),
   ('33333333-3333-3333-3333-333333333003', '11111111-1111-1111-1111-111111111004', 'contract.create', 'sales_contract', 'cccccccc-cccc-cccc-cccc-ccccccccc001', 'sha256:contract_001', '2024-10-22 10:00:00+00'),
   ('33333333-3333-3333-3333-333333333005', '11111111-1111-1111-1111-111111111006', 'shipment.accept', 'shipment', 'dddddddd-dddd-dddd-dddd-ddddddddd001', 'sha256:shipment_001', '2024-10-28 08:00:00+00');
+
+-- Public QR product profiles
+INSERT INTO product_profiles (id, batch_id, slug, display_name, brand_name, description, lot_code, visibility, published_at) VALUES
+  ('12121212-1212-1212-1212-121212121201', '77777777-7777-7777-7777-777777777001', 'asante-cocoa-2024-0847', 'Asante Cocoa · 2024 Harvest', 'Accra Gold Exports', 'Trace this cocoa from the Asante Family Farm through certification, custody and export.', 'GH-2024-0847', 'published', '2024-11-04 06:00:00+00'),
+  ('12121212-1212-1212-1212-121212121202', '77777777-7777-7777-7777-777777777002', 'mensah-cocoa-2024-0831', 'Mensah Cocoa · 2024 Harvest', 'Accra Gold Exports', 'A demonstration lot profile showing how an active safety notice appears immediately after a scan.', 'GH-2024-0831', 'published', '2024-10-20 09:00:00+00')
+ON CONFLICT (id) DO UPDATE SET
+  display_name = EXCLUDED.display_name,
+  description = EXCLUDED.description,
+  visibility = EXCLUDED.visibility,
+  published_at = EXCLUDED.published_at,
+  updated_at = NOW();
+
+-- Deliberately marked as demo data. This makes the recall experience testable
+-- without implying that any real product or organization has a safety issue.
+INSERT INTO recall_notices (id, reference_code, title, reason, instructions, severity, status, initiated_by_user_id, initiated_by_organization_id, initiated_at) VALUES
+  ('13131313-1313-1313-1313-131313131301', 'DEMO-RECALL-2024-001', 'Demonstration quality hold', 'Demo only: a warehouse inspection recorded moisture outside the agreed quality range.', 'Do not release this demo lot. Contact the listed supplier and keep the package or lot code available.', 'warning', 'active', '33333333-3333-3333-3333-333333333006', '11111111-1111-1111-1111-111111111007', '2024-11-06 10:00:00+00')
+ON CONFLICT (id) DO UPDATE SET
+  title = EXCLUDED.title,
+  reason = EXCLUDED.reason,
+  instructions = EXCLUDED.instructions,
+  severity = EXCLUDED.severity,
+  status = EXCLUDED.status;
+
+INSERT INTO recall_affected_batches (recall_id, batch_id) VALUES
+  ('13131313-1313-1313-1313-131313131301', '77777777-7777-7777-7777-777777777002')
+ON CONFLICT DO NOTHING;
+
+-- Quantity-aware genealogy demonstration. The declared edge quantity is the
+-- exact source input assigned to a particular output lot.
+INSERT INTO material_lots (id, lot_code, lot_type, batch_id, product_name, quantity_kg, owner_organization_id, status, produced_at) VALUES
+  ('14141414-1414-1414-1414-141414141401', 'GH-2024-0847', 'source', '77777777-7777-7777-7777-777777777001', 'Cocoa beans', 18200, '11111111-1111-1111-1111-111111111004', 'available', '2024-10-12 08:00:00+00'),
+  ('14141414-1414-1414-1414-141414141402', 'GH-2024-0831', 'source', '77777777-7777-7777-7777-777777777002', 'Cocoa beans', 14600, '11111111-1111-1111-1111-111111111004', 'available', '2024-09-28 08:00:00+00'),
+  ('14141414-1414-1414-1414-141414141403', 'NL-LIQUOR-2024-1101', 'production', NULL, 'Cocoa liquor', 9000, '11111111-1111-1111-1111-111111111005', 'consumed', '2024-12-02 09:00:00+00'),
+  ('14141414-1414-1414-1414-141414141404', 'NL-BUTTER-2024-1102', 'production', NULL, 'Cocoa butter', 2000, '11111111-1111-1111-1111-111111111005', 'available', '2024-12-03 09:00:00+00'),
+  ('14141414-1414-1414-1414-141414141405', 'NL-CHOCO-2024-A', 'packaging', NULL, 'Dark chocolate 70%', 4000, '11111111-1111-1111-1111-111111111005', 'distributed', '2024-12-06 11:00:00+00'),
+  ('14141414-1414-1414-1414-141414141406', 'NL-CHOCO-2024-B', 'packaging', NULL, 'Dark chocolate 70%', 3800, '11111111-1111-1111-1111-111111111005', 'distributed', '2024-12-06 14:00:00+00')
+ON CONFLICT (id) DO UPDATE SET quantity_kg=EXCLUDED.quantity_kg, status=EXCLUDED.status;
+
+INSERT INTO transformation_events (id, event_code, event_type, facility_organization_id, occurred_at, notes) VALUES
+  ('15151515-1515-1515-1515-151515151501', 'BLEND-RTM-2024-001', 'blend', '11111111-1111-1111-1111-111111111005', '2024-12-02 09:00:00+00', 'Declared blend allocation for cocoa liquor'),
+  ('15151515-1515-1515-1515-151515151502', 'PRESS-RTM-2024-002', 'process', '11111111-1111-1111-1111-111111111005', '2024-12-03 09:00:00+00', 'Cocoa butter press run'),
+  ('15151515-1515-1515-1515-151515151503', 'PACK-RTM-2024-003', 'package', '11111111-1111-1111-1111-111111111005', '2024-12-06 11:00:00+00', 'Two finished packaging lots')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO lot_genealogy_edges (id, transformation_event_id, source_lot_id, destination_lot_id, allocated_input_kg, allocation_method) VALUES
+  ('16161616-1616-1616-1616-161616161601', '15151515-1515-1515-1515-151515151501', '14141414-1414-1414-1414-141414141401', '14141414-1414-1414-1414-141414141403', 6000, 'declared'),
+  ('16161616-1616-1616-1616-161616161602', '15151515-1515-1515-1515-151515151501', '14141414-1414-1414-1414-141414141402', '14141414-1414-1414-1414-141414141403', 4000, 'declared'),
+  ('16161616-1616-1616-1616-161616161603', '15151515-1515-1515-1515-151515151502', '14141414-1414-1414-1414-141414141401', '14141414-1414-1414-1414-141414141404', 2500, 'declared'),
+  ('16161616-1616-1616-1616-161616161604', '15151515-1515-1515-1515-151515151503', '14141414-1414-1414-1414-141414141403', '14141414-1414-1414-1414-141414141405', 4200, 'declared'),
+  ('16161616-1616-1616-1616-161616161605', '15151515-1515-1515-1515-151515151503', '14141414-1414-1414-1414-141414141403', '14141414-1414-1414-1414-141414141406', 4000, 'declared')
+ON CONFLICT (id) DO UPDATE SET allocated_input_kg=EXCLUDED.allocated_input_kg, allocation_method=EXCLUDED.allocation_method;
+
+INSERT INTO lot_distributions (id, lot_id, shipment_id, recipient_organization_id, quantity_kg, distribution_reference, dispatched_at) VALUES
+  ('17171717-1717-1717-1717-171717171701', '14141414-1414-1414-1414-141414141405', NULL, '11111111-1111-1111-1111-111111111005', 2500, 'DIST-NL-2024-001', '2024-12-08 10:00:00+00'),
+  ('17171717-1717-1717-1717-171717171702', '14141414-1414-1414-1414-141414141406', NULL, '11111111-1111-1111-1111-111111111005', 1800, 'DIST-NL-2024-002', '2024-12-09 10:00:00+00')
+ON CONFLICT (id) DO UPDATE SET quantity_kg=EXCLUDED.quantity_kg;
+
+INSERT INTO recall_affected_lots (recall_id, lot_id, source_equivalent_kg, recall_quantity_kg, relationship_depth) VALUES
+  ('13131313-1313-1313-1313-131313131301', '14141414-1414-1414-1414-141414141402', 14600, 14600, 0)
+ON CONFLICT (recall_id, lot_id) DO NOTHING;
