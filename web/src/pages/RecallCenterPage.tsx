@@ -5,9 +5,12 @@ import { recalls as recallsApi, traceability } from '../api';
 import { MaterialLot, RecallImpactResult, RecallNotice, TraceBackResult } from '../types';
 import { fmtDate, StatusBadge } from '../components/shared/helpers';
 import { useToast } from '../components/shared/ToastProvider';
+import { useAuthCtx } from '../components/auth/AuthProvider';
 
 export default function RecallCenterPage() {
   const { toast } = useToast();
+  const { canDo } = useAuthCtx();
+  const canManageRecalls = canDo('recall.manage');
   const [items, setItems] = useState<RecallNotice[]>([]);
   const [lots, setLots] = useState<MaterialLot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +30,7 @@ export default function RecallCenterPage() {
   const [traceBusy, setTraceBusy] = useState(false);
   const [traceResult, setTraceResult] = useState<TraceBackResult | RecallImpactResult | null>(null);
 
-  const refresh = () => Promise.all([recallsApi.list(), traceability.listLots()])
+  const refresh = () => Promise.all([canManageRecalls ? recallsApi.list() : Promise.resolve([]), traceability.listLots()])
     .then(([recalls, allLots]) => {
       setItems(recalls); setLots(allLots);
       setSelectedLotId((current) => current || allLots[0]?.id || '');
@@ -36,7 +39,7 @@ export default function RecallCenterPage() {
     .catch((err) => setError(err.message))
     .finally(() => setLoading(false));
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { refresh(); }, [canManageRecalls]);
 
   const calculateTrace = async () => {
     if (!selectedLotId) return;
@@ -81,9 +84,9 @@ export default function RecallCenterPage() {
     } catch (err: any) { setError(err.message); } finally { setBusy(false); }
   };
 
-  return <Layout currentPage="recalls" actions={<button className="btn btn-sm btn-danger" onClick={() => { setError(''); setShowCreate(true); }}><Plus size={13} /> Activate recall</button>}>
+  return <Layout currentPage="recalls" actions={canManageRecalls ? <button className="btn btn-sm btn-danger" onClick={() => { setError(''); setShowCreate(true); }}><Plus size={13} /> Activate recall</button> : <span className="badge badge-blue">Investigation access</span>}>
     <div className="mb-5 rounded border border-yellow-500/20 bg-yellow-500/5 p-4 text-xs text-yellow-200">
-      <div className="flex items-start gap-3"><AlertTriangle size={18} className="shrink-0 text-yellow-400" /><div><strong className="block text-sm text-yellow-300">Safety notices override product storytelling</strong><p className="mt-1 text-text-secondary">Activating a recall calculates every descendant from the suspect lot and immediately pins the instructions to affected published profiles. Verify the scope and wording before activation.</p></div></div>
+      <div className="flex items-start gap-3"><AlertTriangle size={18} className="shrink-0 text-yellow-400" /><div><strong className="block text-sm text-yellow-300">Investigate first. Activate with confidence.</strong><p className="mt-1 text-text-secondary">Trace any lot backward to its sources or forward to every descendant and recipient. {canManageRecalls ? 'When the scope is verified, activate a notice that immediately updates affected product profiles.' : 'Your role has investigation access; an authorized recall manager controls public notices.'}</p></div></div>
     </div>
     <section className="mb-5 rounded border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex items-center gap-2 text-sm font-semibold"><GitBranch size={16} className="text-brand-400" /> Lot genealogy calculator</div><p className="mt-1 text-xs text-text-secondary">Calculate exact declared mass flow backward to source lots or forward to every descendant and recipient.</p></div><span className="badge badge-blue">quantity-aware</span></div>
@@ -112,7 +115,7 @@ export default function RecallCenterPage() {
       </div>}
     </section>
     {error && !showCreate && <div className="mb-4 rounded-sm border border-red-500/30 bg-red-900/10 px-3 py-2 text-xs text-red-400">{error}</div>}
-    {loading ? <div className="loading"><div className="spinner" /><div>Loading recalls…</div></div> : items.length === 0 ? <div className="empty-state"><div className="empty-icon">✓</div><div className="empty-title">No recall notices</div><p>No active or resolved recalls are recorded.</p></div> : <div className="space-y-3">
+    {!canManageRecalls ? <div className="rounded-2xl border border-border bg-surface p-5 text-xs text-text-secondary"><strong className="block text-sm text-text-primary">Recall notices are managed by authorized roles</strong><p className="mt-1">You can use all genealogy investigation tools above. Contact a regulator, administrator or your organization’s recall manager to activate or resolve a public notice.</p></div> : loading ? <div className="loading"><div className="spinner" /><div>Loading recalls…</div></div> : items.length === 0 ? <div className="empty-state"><div className="empty-icon">✓</div><div className="empty-title">No recall notices</div><p>No active or resolved recalls are recorded.</p></div> : <div className="space-y-3">
       {items.map((recall) => <article key={recall.id} className={`rounded border p-5 ${recall.status === 'active' ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-border bg-surface'}`}>
         <div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex items-center gap-2"><StatusBadge status={recall.status} /><span className={`badge ${recall.severity === 'critical' ? 'badge-red' : recall.severity === 'warning' ? 'badge-amber' : 'badge-blue'}`}>{recall.severity}</span><span className="font-mono text-[10px] text-text-muted">{recall.reference_code}</span></div><h2 className="mt-3 text-base font-semibold">{recall.title}</h2><p className="mt-1 text-xs text-text-secondary">{recall.reason}</p></div>{recall.status === 'active' && <button className="btn btn-sm" disabled={busy} onClick={() => resolve(recall.id)}><CheckCircle2 size={13} /> Resolve</button>}</div>
         <div className="mt-4 rounded-sm bg-surface-darker p-3 text-xs"><span className="font-semibold">Instructions: </span>{recall.instructions}</div>
