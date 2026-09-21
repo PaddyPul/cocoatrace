@@ -181,6 +181,20 @@ export interface ProductProfile {
   qrSvgUrl: string;
 }
 
+export interface ProductProfileSummary extends ProductProfile {
+  crop: string;
+  harvest_date: string;
+  quantity_kg: number;
+  organic_claim_status: string;
+  farm_name: string;
+  region: string;
+  country: string;
+  current_holder_name: string;
+  scan_count: number;
+  evidence_count: number;
+  safety_status: 'clear' | 'advisory' | 'warning' | 'critical';
+}
+
 export interface JourneyEvent {
   type: 'harvest' | 'verification' | 'custody' | 'shipment' | 'recall';
   title: string;
