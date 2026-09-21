@@ -17,6 +17,9 @@ The follow-on investor simplification is documented in
 the primary experience to Scan → Verify → Respond while retaining this sprint's
 role and permission behavior.
 
+The subsequent system-wide product architecture is documented in
+[`VENTURE_SCALE_PRODUCT_BLUEPRINT.md`](VENTURE_SCALE_PRODUCT_BLUEPRINT.md).
+
 ## Problems observed
 
 1. Navigation is a flat list of 15 destinations with no workflow grouping.
