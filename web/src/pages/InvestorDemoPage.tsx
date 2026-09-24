@@ -8,8 +8,8 @@ import Layout from '../components/layout/Layout';
 import { traceability } from '../api';
 import { MaterialLot, RecallImpactResult } from '../types';
 
-const CLEAR_PROFILE = '/p/asante-cocoa-2024-0847';
-const WARNING_PROFILE = '/p/mensah-cocoa-2024-0831';
+const CLEAR_PROFILE = '/p/akwaaba-cocoa-2026-ready';
+const WARNING_PROFILE = '/p/cocoatrace-demo-incident-2026';
 const DEMO_SUSPECT_KG = 500;
 
 export default function InvestorDemoPage() {
@@ -28,7 +28,7 @@ export default function InvestorDemoPage() {
   }, []);
 
   const suspectLot = useMemo(
-    () => lots.find((lot) => lot.lotCode === 'GH-2024-0831') || lots.find((lot) => lot.lotType === 'source'),
+    () => lots.find((lot) => lot.lotCode === 'GH-2026-0917') || lots.find((lot) => lot.lotType === 'source'),
     [lots],
   );
 
@@ -75,14 +75,14 @@ export default function InvestorDemoPage() {
           <div className="flex items-center justify-between gap-3"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">Product identities</div><h3 className="mt-1 text-lg font-bold">See the QR experience</h3></div><QrCode className="text-brand-400" /></div>
           <p className="mt-2 text-xs leading-5 text-text-secondary">The same product page can move from clear to warning as the underlying safety record changes.</p>
           <div className="mt-5 space-y-3">
-            <ProfileLink href={CLEAR_PROFILE} status="Clear" title="Asante Cocoa · 2024 Harvest" lot="GH-2024-0847" tone="green" />
-            <ProfileLink href={WARNING_PROFILE} status="Demo warning" title="Mensah Cocoa · 2024 Harvest" lot="GH-2024-0831" tone="amber" />
+            <ProfileLink href={CLEAR_PROFILE} status="Clear" title="Akwaaba Cocoa · Export Lot 042" lot="GH-2026-0042" tone="green" />
+            <ProfileLink href={WARNING_PROFILE} status="Demo warning" title="Demonstration Incident · Lot 0917" lot="GH-2026-0917" tone="amber" />
           </div>
           <div className="mt-5 rounded-2xl bg-surface-darker p-4 text-xs leading-5 text-text-secondary"><strong className="text-text-primary">What this proves:</strong> the QR is a durable pointer, not a static label. Provenance and safety can update without reprinting packaging.</div>
         </div>
 
         <div id="recall-demo" className="scroll-mt-6 rounded-3xl border border-amber-300/20 bg-[linear-gradient(145deg,rgba(120,76,20,.18),rgba(24,37,30,1)_52%)] p-5 sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-amber-300">Live recall calculation</div><h3 className="mt-1 text-lg font-bold">What if 500 kg is suspect?</h3><p className="mt-2 max-w-xl text-xs leading-5 text-text-secondary">Start with source lot GH-2024-0831. CocoaTrace follows declared allocations through blending and packaging, without changing any records.</p></div><span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-[10px] font-semibold text-amber-200">Safe simulation</span></div>
+          <div className="flex flex-wrap items-start justify-between gap-4"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-amber-300">Isolated incident calculation</div><h3 className="mt-1 text-lg font-bold">What if 500 kg is suspect?</h3><p className="mt-2 max-w-xl text-xs leading-5 text-text-secondary">Start with the separately seeded source lot GH-2026-0917. CocoaTrace follows material distributed before the 20 September incident; the lot never appears in the live marketplace.</p></div><span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-[10px] font-semibold text-amber-200">Safe simulation</span></div>
 
           {!impact ? (
             <div className="mt-6 rounded-2xl border border-dashed border-amber-200/20 bg-black/10 p-5 text-center">

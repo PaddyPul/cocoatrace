@@ -1,17 +1,20 @@
--- CocoaTrace Seed Data - Ghana to Netherlands Corridor
+-- CocoaTrace coherent demo data - Ghana to Netherlands Corridor, 2026
 -- Passwords are all: Password123!
 
 -- Organizations
 INSERT INTO organizations (id, name, type, jurisdiction, verification_status) VALUES
   ('11111111-1111-1111-1111-111111111001', 'Asante Family Farm',   'farmer',     'GH', 'verified'),
-  ('11111111-1111-1111-1111-111111111002', 'Mensah Cooperative',   'cooperative','GH', 'verified'),
-  ('11111111-1111-1111-1111-111111111003', 'OrganicCert GH',       'certifier',  'GH', 'verified'),
-  ('11111111-1111-1111-1111-111111111004', 'Accra Gold Exports',   'exporter',   'GH', 'verified'),
-  ('11111111-1111-1111-1111-111111111005', 'DutchCacao B.V.',      'importer',   'NL', 'verified'),
-  ('11111111-1111-1111-1111-111111111006', 'MareCargo Ltd',        'logistics',  'GH', 'verified'),
-  ('11111111-1111-1111-1111-111111111007', 'COCOBOD Regulatory',   'regulator',  'GH', 'verified'),
-  ('11111111-1111-1111-1111-111111111008', 'Platform Admin',       'admin',      'GH', 'verified')
-ON CONFLICT (id) DO NOTHING;
+  ('11111111-1111-1111-1111-111111111002', 'Ashanti Growers Cooperative','cooperative','GH', 'verified'),
+  ('11111111-1111-1111-1111-111111111003', 'OrganicCert Ghana',    'certifier',  'GH', 'verified'),
+  ('11111111-1111-1111-1111-111111111004', 'Akwaaba Cocoa Exports','exporter',   'GH', 'verified'),
+  ('11111111-1111-1111-1111-111111111005', 'Northstar Foods B.V.', 'importer',   'NL', 'verified'),
+  ('11111111-1111-1111-1111-111111111006', 'MareCargo Logistics',  'logistics',  'GH', 'verified'),
+  ('11111111-1111-1111-1111-111111111007', 'Ghana Cocoa Oversight','regulator',  'GH', 'verified'),
+  ('11111111-1111-1111-1111-111111111008', 'Platform Admin',       'admin',      'GH', 'verified'),
+  ('11111111-1111-1111-1111-111111111009', 'New Buyer Workspace',  'importer',   'NL', 'verified'),
+  ('11111111-1111-1111-1111-111111111010', 'New Supplier Workspace','exporter',  'GH', 'verified')
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, type=EXCLUDED.type,
+  jurisdiction=EXCLUDED.jurisdiction, verification_status=EXCLUDED.verification_status;
 
 -- Roles
 INSERT INTO roles (id, name, permissions) VALUES
@@ -33,10 +36,11 @@ INSERT INTO users (id, organization_id, email, password_hash, name) VALUES
   ('33333333-3333-3333-3333-333333333005', '11111111-1111-1111-1111-111111111006', 'kofi@marecargo.gh',   '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Kofi Osei'),
   ('33333333-3333-3333-3333-333333333006', '11111111-1111-1111-1111-111111111007', 'ingrid@cocobod.gh',   '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Ingrid Boateng'),
   ('33333333-3333-3333-3333-333333333007', '11111111-1111-1111-1111-111111111008', 'admin@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Platform Admin'),
-  ('33333333-3333-3333-3333-333333333008', '11111111-1111-1111-1111-111111111004', 'pilot@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Pilot User'),
-  ('33333333-3333-3333-3333-333333333009', '11111111-1111-1111-1111-111111111005', 'newbuyer@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'New Buyer'),
-  ('33333333-3333-3333-3333-333333333010', '11111111-1111-1111-1111-111111111004', 'newsupplier@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'New Supplier')
-ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash;
+  ('33333333-3333-3333-3333-333333333008', '11111111-1111-1111-1111-111111111004', 'pilot@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Pilot Manager'),
+  ('33333333-3333-3333-3333-333333333009', '11111111-1111-1111-1111-111111111009', 'newbuyer@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'New Buyer'),
+  ('33333333-3333-3333-3333-333333333010', '11111111-1111-1111-1111-111111111010', 'newsupplier@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'New Supplier')
+ON CONFLICT (id) DO UPDATE SET organization_id=EXCLUDED.organization_id,
+  email=EXCLUDED.email, password_hash=EXCLUDED.password_hash, name=EXCLUDED.name;
 
 -- User roles
 INSERT INTO user_roles (user_id, role_id) VALUES
@@ -52,16 +56,22 @@ INSERT INTO user_roles (user_id, role_id) VALUES
   ('33333333-3333-3333-3333-333333333010', '22222222-2222-2222-2222-222222222003')
 ON CONFLICT DO NOTHING;
 
--- Existing demo accounts skip first-run onboarding. The dedicated pilot user
--- intentionally starts fresh so the complete onboarding can be tested.
+-- Existing demo accounts skip first-run onboarding. The isolated buyer and
+-- supplier workspaces intentionally start fresh and contain no inherited data.
 INSERT INTO user_onboarding (user_id, status, current_step, primary_goal, pilot_mode, completed_at)
 SELECT id, 'completed', 4, 'demo_workspace', TRUE, NOW()
 FROM users WHERE id IN (
   '33333333-3333-3333-3333-333333333001','33333333-3333-3333-3333-333333333002',
   '33333333-3333-3333-3333-333333333003','33333333-3333-3333-3333-333333333004',
   '33333333-3333-3333-3333-333333333005','33333333-3333-3333-3333-333333333006',
-  '33333333-3333-3333-3333-333333333007'
-) ON CONFLICT (user_id) DO NOTHING;
+  '33333333-3333-3333-3333-333333333007','33333333-3333-3333-3333-333333333008'
+) ON CONFLICT (user_id) DO UPDATE SET status='completed',current_step=4,
+  primary_goal='demo_workspace',pilot_mode=TRUE,completed_at=NOW(),updated_at=NOW();
+
+DELETE FROM user_onboarding WHERE user_id IN (
+  '33333333-3333-3333-3333-333333333009',
+  '33333333-3333-3333-3333-333333333010'
+);
 
 -- The two new-customer accounts intentionally have no onboarding row. Signing
 -- in shows the complete first-run buyer or supplier experience.
@@ -74,7 +84,7 @@ INSERT INTO sourcing_requests (
   '18181818-1818-1818-1818-181818181801',
   '11111111-1111-1111-1111-111111111005',
   '33333333-3333-3333-3333-333333333004',
-  'Organic cocoa for Rotterdam · November 2026','cocoa',20000,
+  'Organic cocoa for Rotterdam · Q4 2026','cocoa',20000,
   ARRAY['GH'],
   '{"fermentation":"fully fermented","moistureMax":7.5,"cropYear":2026}'::jsonb,
   '{"euOrganic":true,"plotGeolocation":true,"eudrDataPack":true}'::jsonb,
@@ -84,107 +94,168 @@ INSERT INTO sourcing_requests (
 -- Farms
 INSERT INTO farms (id, farmer_organization_id, cooperative_organization_id, name, country, region, district, community, official_traceability_id, verification_status) VALUES
   ('44444444-4444-4444-4444-444444444001', '11111111-1111-1111-1111-111111111001', '11111111-1111-1111-1111-111111111002', 'Asante Family Farm', 'GH', 'Ashanti', 'Amansie West', 'Kwabre', 'COCOBOD-0423-A', 'verified'),
-  ('44444444-4444-4444-4444-444444444002', '11111111-1111-1111-1111-111111111002', NULL, 'Mensah North Plot', 'GH', 'Ashanti', 'Kwabre East', 'Adansi', 'COCOBOD-0831-B', 'verified')
-ON CONFLICT (id) DO NOTHING;
+  ('44444444-4444-4444-4444-444444444002', '11111111-1111-1111-1111-111111111002', NULL, 'Adansi Cooperative Plot', 'GH', 'Ashanti', 'Kwabre East', 'Adansi', 'GCTS-2026-0831-B', 'verified'),
+  ('44444444-4444-4444-4444-444444444003', '11111111-1111-1111-1111-111111111002', NULL, 'Beposo Demonstration Plot', 'GH', 'Ashanti', 'Bekwai', 'Beposo', 'GCTS-2026-0917-C', 'verified')
+ON CONFLICT (id) DO UPDATE SET farmer_organization_id=EXCLUDED.farmer_organization_id,
+  cooperative_organization_id=EXCLUDED.cooperative_organization_id,name=EXCLUDED.name,
+  country=EXCLUDED.country,region=EXCLUDED.region,district=EXCLUDED.district,
+  community=EXCLUDED.community,official_traceability_id=EXCLUDED.official_traceability_id,
+  verification_status=EXCLUDED.verification_status;
 
 -- Farm plots
 INSERT INTO farm_plots (id, farm_id, plot_code, area_hectares, crops, gps_lat, gps_lng, geolocation_source, verification_status, deforestation_risk_status, eudr_cutoff_checked) VALUES
-  ('55555555-5555-5555-5555-555555555001', '44444444-4444-4444-4444-444444444001', 'P1', 1.82, '{cocoa}', 6.7341, -1.6122, 'field_agent', 'verified', 'clear', TRUE),
-  ('55555555-5555-5555-5555-555555555002', '44444444-4444-4444-4444-444444444001', 'P2', 1.40, '{cocoa}', 6.7289, -1.6088, 'field_agent', 'verified', 'clear', TRUE),
-  ('55555555-5555-5555-5555-555555555003', '44444444-4444-4444-4444-444444444001', 'P3', 1.00, '{cocoa}', NULL, NULL, 'farmer_submitted', 'pending', NULL, FALSE),
-  ('55555555-5555-5555-5555-555555555004', '44444444-4444-4444-4444-444444444002', 'P1', 2.80, '{cocoa}', 6.8012, -1.5901, 'field_agent', 'verified', 'clear', TRUE)
-ON CONFLICT (id) DO NOTHING;
+  ('55555555-5555-5555-5555-555555555001', '44444444-4444-4444-4444-444444444001', 'A1', 2.40, '{cocoa}', 6.7341, -1.6122, 'field_agent', 'verified', 'clear', TRUE),
+  ('55555555-5555-5555-5555-555555555002', '44444444-4444-4444-4444-444444444001', 'A2', 1.85, '{cocoa}', 6.7289, -1.6088, 'field_agent', 'verified', 'clear', TRUE),
+  ('55555555-5555-5555-5555-555555555003', '44444444-4444-4444-4444-444444444002', 'C1', 2.10, '{cocoa}', NULL, NULL, 'supplier_submitted', 'pending', NULL, FALSE),
+  ('55555555-5555-5555-5555-555555555004', '44444444-4444-4444-4444-444444444003', 'I1', 2.80, '{cocoa}', 6.8012, -1.5901, 'field_agent', 'verified', 'clear', TRUE)
+ON CONFLICT (id) DO UPDATE SET farm_id=EXCLUDED.farm_id,plot_code=EXCLUDED.plot_code,
+  area_hectares=EXCLUDED.area_hectares,crops=EXCLUDED.crops,gps_lat=EXCLUDED.gps_lat,
+  gps_lng=EXCLUDED.gps_lng,geolocation_source=EXCLUDED.geolocation_source,
+  verification_status=EXCLUDED.verification_status,
+  deforestation_risk_status=EXCLUDED.deforestation_risk_status,
+  eudr_cutoff_checked=EXCLUDED.eudr_cutoff_checked;
 
 -- Organic certificates
 INSERT INTO organic_certificates (id, certifier_organization_id, farmer_organization_id, farm_id, standard, crop_scope, valid_from, valid_to, issuing_authority, accreditation_reference, status) VALUES
-  ('66666666-6666-6666-6666-666666666001', '11111111-1111-1111-1111-111111111003', '11111111-1111-1111-1111-111111111001', '44444444-4444-4444-4444-444444444001', 'EU_ORGANIC', '{cocoa}', '2024-03-01', '2025-02-28', 'Accredited Certifiers International', 'ACI-2024-GH-0007', 'active'),
-  ('66666666-6666-6666-6666-666666666002', '11111111-1111-1111-1111-111111111003', '11111111-1111-1111-1111-111111111002', '44444444-4444-4444-4444-444444444002', 'EU_ORGANIC', '{cocoa}', '2024-01-15', '2025-01-14', 'Accredited Certifiers International', 'ACI-2024-GH-0007', 'active')
-ON CONFLICT (id) DO NOTHING;
+  ('66666666-6666-6666-6666-666666666001', '11111111-1111-1111-1111-111111111003', '11111111-1111-1111-1111-111111111001', '44444444-4444-4444-4444-444444444001', 'EU_ORGANIC', '{cocoa}', '2026-01-01', '2027-12-31', 'OrganicCert Ghana', 'OCG-2026-GH-0042', 'active'),
+  ('66666666-6666-6666-6666-666666666002', '11111111-1111-1111-1111-111111111003', '11111111-1111-1111-1111-111111111002', '44444444-4444-4444-4444-444444444002', 'EU_ORGANIC', '{cocoa}', '2026-01-01', '2027-12-31', 'OrganicCert Ghana', 'OCG-2026-GH-0083', 'active')
+ON CONFLICT (id) DO UPDATE SET farmer_organization_id=EXCLUDED.farmer_organization_id,
+  farm_id=EXCLUDED.farm_id,valid_from=EXCLUDED.valid_from,valid_to=EXCLUDED.valid_to,
+  issuing_authority=EXCLUDED.issuing_authority,
+  accreditation_reference=EXCLUDED.accreditation_reference,status=EXCLUDED.status;
 
 -- Harvest batches
 INSERT INTO harvest_batches (id, farm_id, plot_ids, crop, harvest_date, quantity_kg, moisture_percent, grade, organic_claim_status, current_holder_id) VALUES
-  ('77777777-7777-7777-7777-777777777001', '44444444-4444-4444-4444-444444444001', ARRAY['55555555-5555-5555-5555-555555555002']::UUID[], 'cocoa', '2024-10-12', 18200.000, 7.2, 'Grade A', 'attested', '11111111-1111-1111-1111-111111111004'),
-  ('77777777-7777-7777-7777-777777777002', '44444444-4444-4444-4444-444444444002', ARRAY['55555555-5555-5555-5555-555555555004']::UUID[], 'cocoa', '2024-09-28', 14600.000, 6.8, 'Grade A', 'attested', '11111111-1111-1111-1111-111111111004'),
-  ('77777777-7777-7777-7777-777777777003', '44444444-4444-4444-4444-444444444001', ARRAY['55555555-5555-5555-5555-555555555001','55555555-5555-5555-5555-555555555003']::UUID[], 'cocoa', '2024-09-15', 10000.000, 8.1, 'Grade B', 'pending_attestation', '11111111-1111-1111-1111-111111111004')
-ON CONFLICT (id) DO NOTHING;
+  ('77777777-7777-7777-7777-777777777001', '44444444-4444-4444-4444-444444444001', ARRAY['55555555-5555-5555-5555-555555555001','55555555-5555-5555-5555-555555555002']::UUID[], 'cocoa', '2026-07-18', 12000.000, 7.1, 'Grade A', 'attested', '11111111-1111-1111-1111-111111111004'),
+  ('77777777-7777-7777-7777-777777777002', '44444444-4444-4444-4444-444444444002', ARRAY['55555555-5555-5555-5555-555555555003']::UUID[], 'cocoa', '2026-08-03', 9000.000, 7.3, 'Grade A', 'attested', '11111111-1111-1111-1111-111111111004'),
+  ('77777777-7777-7777-7777-777777777003', '44444444-4444-4444-4444-444444444003', ARRAY['55555555-5555-5555-5555-555555555004']::UUID[], 'cocoa', '2026-06-12', 6000.000, 6.9, 'Grade A', 'none', '11111111-1111-1111-1111-111111111005')
+ON CONFLICT (id) DO UPDATE SET farm_id=EXCLUDED.farm_id,plot_ids=EXCLUDED.plot_ids,
+  harvest_date=EXCLUDED.harvest_date,quantity_kg=EXCLUDED.quantity_kg,
+  moisture_percent=EXCLUDED.moisture_percent,grade=EXCLUDED.grade,
+  organic_claim_status=EXCLUDED.organic_claim_status,current_holder_id=EXCLUDED.current_holder_id;
 
 -- Attestations
 INSERT INTO batch_attestations (id, batch_id, certificate_id, certifier_user_id, certifier_organization_id, attested_at, provenance_hash, notes) VALUES
-  ('88888888-8888-8888-8888-888888888001', '77777777-7777-7777-7777-777777777001', '66666666-6666-6666-6666-666666666001', '33333333-3333-3333-3333-333333333002', '11111111-1111-1111-1111-111111111003', '2024-10-14 10:23:00+00', 'sha256:c7d1e4f2a8b19d3c7e5f0a2b4d6e8f0a2b4d6e8f0a2b4d6e8f0a2b4d6e8f0a2', 'EU Organic GH-2024-0847'),
-  ('88888888-8888-8888-8888-888888888002', '77777777-7777-7777-7777-777777777002', '66666666-6666-6666-6666-666666666002', '33333333-3333-3333-3333-333333333002', '11111111-1111-1111-1111-111111111003', '2024-10-02 09:15:00+00', 'sha256:9f2ab4c1e3d7f8a0b2c4e6f8a0b2c4e6f8a0b2c4e6f8a0b2c4e6f8a0b2c4e6f', 'EU Organic GH-2024-0831')
-ON CONFLICT (id) DO NOTHING;
+  ('88888888-8888-8888-8888-888888888001', '77777777-7777-7777-7777-777777777001', '66666666-6666-6666-6666-666666666001', '33333333-3333-3333-3333-333333333002', '11111111-1111-1111-1111-111111111003', '2026-07-21 10:00:00+00', 'sha256:ready2026', 'EU Organic scope and harvest record reviewed'),
+  ('88888888-8888-8888-8888-888888888002', '77777777-7777-7777-7777-777777777002', '66666666-6666-6666-6666-666666666002', '33333333-3333-3333-3333-333333333002', '11111111-1111-1111-1111-111111111003', '2026-08-06 09:00:00+00', 'sha256:action2026', 'Organic scope verified; plot geolocation remains incomplete')
+ON CONFLICT (id) DO UPDATE SET batch_id=EXCLUDED.batch_id,certificate_id=EXCLUDED.certificate_id,
+  attested_at=EXCLUDED.attested_at,provenance_hash=EXCLUDED.provenance_hash,notes=EXCLUDED.notes;
 
-UPDATE harvest_batches SET attestation_id='88888888-8888-8888-8888-888888888001', provenance_hash='sha256:c7d1e4f2' WHERE id='77777777-7777-7777-7777-777777777001';
-UPDATE harvest_batches SET attestation_id='88888888-8888-8888-8888-888888888002', provenance_hash='sha256:9f2ab4c1' WHERE id='77777777-7777-7777-7777-777777777002';
-UPDATE harvest_batches SET current_holder_id='11111111-1111-1111-1111-111111111001' WHERE id='77777777-7777-7777-7777-777777777003';
+UPDATE harvest_batches SET attestation_id='88888888-8888-8888-8888-888888888001', provenance_hash='sha256:ready2026' WHERE id='77777777-7777-7777-7777-777777777001';
+UPDATE harvest_batches SET attestation_id='88888888-8888-8888-8888-888888888002', provenance_hash='sha256:action2026' WHERE id='77777777-7777-7777-7777-777777777002';
+UPDATE harvest_batches SET attestation_id=NULL, provenance_hash='sha256:incident2026' WHERE id='77777777-7777-7777-7777-777777777003';
 
 -- Holdings
 INSERT INTO batch_holdings (id, batch_id, holder_organization_id, quantity_kg, warehouse_location, status) VALUES
-  ('99999999-9999-9999-9999-999999999001', '77777777-7777-7777-7777-777777777001', '11111111-1111-1111-1111-111111111004', 10200.000, 'AGC-WH2, Accra', 'available'),
-  ('99999999-9999-9999-9999-999999999002', '77777777-7777-7777-7777-777777777001', '11111111-1111-1111-1111-111111111004', 8000.000,  'AGC-WH2, Accra', 'committed'),
-  ('99999999-9999-9999-9999-999999999003', '77777777-7777-7777-7777-777777777002', '11111111-1111-1111-1111-111111111004', 14600.000, 'AGC-WH1, Accra', 'available'),
-  ('99999999-9999-9999-9999-999999999004', '77777777-7777-7777-7777-777777777003', '11111111-1111-1111-1111-111111111004', 10000.000, 'AGC-WH3, Accra', 'available')
-ON CONFLICT (id) DO NOTHING;
-
-UPDATE batch_holdings SET holder_organization_id='11111111-1111-1111-1111-111111111001' WHERE id='99999999-9999-9999-9999-999999999004';
+  ('99999999-9999-9999-9999-999999999001', '77777777-7777-7777-7777-777777777001', '11111111-1111-1111-1111-111111111004', 4000.000, 'AKC-WH1, Tema', 'available'),
+  ('99999999-9999-9999-9999-999999999002', '77777777-7777-7777-7777-777777777001', '11111111-1111-1111-1111-111111111004', 8000.000, 'AKC-WH1, Tema', 'committed'),
+  ('99999999-9999-9999-9999-999999999003', '77777777-7777-7777-7777-777777777002', '11111111-1111-1111-1111-111111111004', 9000.000, 'AKC-WH2, Tema', 'available'),
+  ('99999999-9999-9999-9999-999999999004', '77777777-7777-7777-7777-777777777003', '11111111-1111-1111-1111-111111111005', 6000.000, 'NSF-PROC1, Rotterdam', 'consumed')
+ON CONFLICT (id) DO UPDATE SET batch_id=EXCLUDED.batch_id,
+  holder_organization_id=EXCLUDED.holder_organization_id,quantity_kg=EXCLUDED.quantity_kg,
+  warehouse_location=EXCLUDED.warehouse_location,status=EXCLUDED.status;
 
 -- Listing
 INSERT INTO listings (id, seller_organization_id, holding_id, available_quantity_kg, price_per_kg, currency, incoterm, origin_location, destination_location, active) VALUES
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001', '11111111-1111-1111-1111-111111111004', '99999999-9999-9999-9999-999999999001', 10200.000, 12.30, 'EUR', 'CIF', 'Tema, Ghana', 'Rotterdam, Netherlands', TRUE),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa002', '11111111-1111-1111-1111-111111111004', '99999999-9999-9999-9999-999999999003', 14600.000, 12.00, 'EUR', 'FOB', 'Tema, Ghana', 'Rotterdam, Netherlands', TRUE)
-ON CONFLICT (id) DO NOTHING;
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001', '11111111-1111-1111-1111-111111111004', '99999999-9999-9999-9999-999999999002', 8000.000, 8.40, 'EUR', 'CIF', 'Tema, Ghana', 'Rotterdam, Netherlands', FALSE),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa002', '11111111-1111-1111-1111-111111111004', '99999999-9999-9999-9999-999999999001', 4000.000, 8.55, 'EUR', 'CIF', 'Tema, Ghana', 'Rotterdam, Netherlands', TRUE),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa003', '11111111-1111-1111-1111-111111111004', '99999999-9999-9999-9999-999999999003', 9000.000, 8.20, 'EUR', 'FOB', 'Tema, Ghana', 'Rotterdam, Netherlands', TRUE)
+ON CONFLICT (id) DO UPDATE SET holding_id=EXCLUDED.holding_id,
+  available_quantity_kg=EXCLUDED.available_quantity_kg,price_per_kg=EXCLUDED.price_per_kg,
+  currency=EXCLUDED.currency,incoterm=EXCLUDED.incoterm,
+  origin_location=EXCLUDED.origin_location,destination_location=EXCLUDED.destination_location,
+  active=EXCLUDED.active;
 
 -- Offer
 INSERT INTO trade_offers (id, listing_id, buyer_organization_id, quantity_kg, offered_price_per_kg, currency, valid_until, status) VALUES
-  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbb001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001', '11111111-1111-1111-1111-111111111005', 8000.000, 12.30, 'EUR', '2024-10-25 00:00:00+00', 'accepted')
-ON CONFLICT (id) DO NOTHING;
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbb001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001', '11111111-1111-1111-1111-111111111005', 8000.000, 8.40, 'EUR', '2026-09-30 17:00:00+00', 'accepted')
+ON CONFLICT (id) DO UPDATE SET listing_id=EXCLUDED.listing_id,
+  buyer_organization_id=EXCLUDED.buyer_organization_id,quantity_kg=EXCLUDED.quantity_kg,
+  offered_price_per_kg=EXCLUDED.offered_price_per_kg,currency=EXCLUDED.currency,
+  valid_until=EXCLUDED.valid_until,status=EXCLUDED.status;
 
 -- Contract
 INSERT INTO sales_contracts (id, listing_id, offer_id, seller_organization_id, buyer_organization_id, holding_id, quantity_kg, price_per_kg, currency, incoterm, status) VALUES
-  ('cccccccc-cccc-cccc-cccc-ccccccccc001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbb001', '11111111-1111-1111-1111-111111111004', '11111111-1111-1111-1111-111111111005', '99999999-9999-9999-9999-999999999002', 8000.000, 12.30, 'EUR', 'CIF', 'in_transit')
-ON CONFLICT (id) DO NOTHING;
+  ('cccccccc-cccc-cccc-cccc-ccccccccc001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbb001', '11111111-1111-1111-1111-111111111004', '11111111-1111-1111-1111-111111111005', '99999999-9999-9999-9999-999999999002', 8000.000, 8.40, 'EUR', 'CIF', 'in_transit')
+ON CONFLICT (id) DO UPDATE SET holding_id=EXCLUDED.holding_id,quantity_kg=EXCLUDED.quantity_kg,
+  price_per_kg=EXCLUDED.price_per_kg,currency=EXCLUDED.currency,
+  incoterm=EXCLUDED.incoterm,status=EXCLUDED.status;
 
 -- Shipment
 INSERT INTO shipments (id, contract_id, logistics_organization_id, container_reference, vessel_name, bill_of_lading_number, origin_port, destination_port, eta_arrival, current_milestone) VALUES
-  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'cccccccc-cccc-cccc-cccc-ccccccccc001', '11111111-1111-1111-1111-111111111006', 'MSKU8234512', 'MV Cape Harmony', 'MCL-2024-8234', 'Tema Port, Ghana', 'Port of Rotterdam, Netherlands', '2024-11-28', 'departed')
-ON CONFLICT (id) DO NOTHING;
+  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'cccccccc-cccc-cccc-cccc-ccccccccc001', '11111111-1111-1111-1111-111111111006', 'MSKU2609421', 'MV Atlantic Bridge', 'MCL-2026-0942', 'Tema Port, Ghana', 'Port of Rotterdam, Netherlands', '2026-10-02', 'departed')
+ON CONFLICT (id) DO UPDATE SET logistics_organization_id=EXCLUDED.logistics_organization_id,
+  container_reference=EXCLUDED.container_reference,vessel_name=EXCLUDED.vessel_name,
+  bill_of_lading_number=EXCLUDED.bill_of_lading_number,origin_port=EXCLUDED.origin_port,
+  destination_port=EXCLUDED.destination_port,eta_arrival=EXCLUDED.eta_arrival,
+  current_milestone=EXCLUDED.current_milestone,delivered_at=NULL;
 
 -- Milestones
+DELETE FROM shipment_milestones WHERE shipment_id='dddddddd-dddd-dddd-dddd-ddddddddd001';
 INSERT INTO shipment_milestones (shipment_id, milestone, recorded_by_user_id, recorded_at, location, notes) VALUES
-  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'accepted',      '33333333-3333-3333-3333-333333333005', '2024-10-28 08:00:00+00', 'Accra, Ghana',   'Shipment accepted'),
-  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'picked_up',     '33333333-3333-3333-3333-333333333005', '2024-10-30 07:30:00+00', 'AGC-WH2, Accra', 'Cargo collected'),
-  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'port_received', '33333333-3333-3333-3333-333333333005', '2024-11-01 14:00:00+00', 'Tema Port',      'At terminal'),
-  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'loaded',        '33333333-3333-3333-3333-333333333005', '2024-11-03 16:00:00+00', 'Tema Port',      'Container loaded'),
-  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'departed',      '33333333-3333-3333-3333-333333333005', '2024-11-04 06:00:00+00', 'Tema Port',      'Vessel departed');
+  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'accepted',      '33333333-3333-3333-3333-333333333005', '2026-09-12 09:00:00+00', 'Tema, Ghana',   'Carrier accepted the shipment'),
+  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'picked_up',     '33333333-3333-3333-3333-333333333005', '2026-09-14 07:30:00+00', 'AKC-WH1, Tema', 'Sealed cargo collected'),
+  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'port_received', '33333333-3333-3333-3333-333333333005', '2026-09-16 14:00:00+00', 'Tema Port',      'Container received at terminal'),
+  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'departed',      '33333333-3333-3333-3333-333333333005', '2026-09-18 06:00:00+00', 'Tema Port',      'Vessel departed for Rotterdam');
 
 -- Payment request
 INSERT INTO payment_requests (id, contract_id, requested_by_organization_id, amount_total, currency, status) VALUES
-  ('eeeeeeee-eeee-eeee-eeee-eeeeeeeee001', 'cccccccc-cccc-cccc-cccc-ccccccccc001', '11111111-1111-1111-1111-111111111004', 98400.00, 'EUR', 'requested')
-ON CONFLICT (id) DO NOTHING;
+  ('eeeeeeee-eeee-eeee-eeee-eeeeeeeee001', 'cccccccc-cccc-cccc-cccc-ccccccccc001', '11111111-1111-1111-1111-111111111004', 67200.00, 'EUR', 'requested')
+ON CONFLICT (id) DO UPDATE SET amount_total=EXCLUDED.amount_total,currency=EXCLUDED.currency,
+  status=EXCLUDED.status,payment_reference_external=NULL,settled_at=NULL;
+
+-- Stable chronology keeps the demo believable even after a later reset.
+UPDATE sourcing_requests SET created_at='2026-09-04 09:00:00+00',updated_at='2026-09-04 09:00:00+00'
+  WHERE id='18181818-1818-1818-1818-181818181801';
+UPDATE listings SET created_at=CASE id
+  WHEN 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001' THEN '2026-08-25 09:00:00+00'::timestamptz
+  WHEN 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa002' THEN '2026-09-05 09:00:00+00'::timestamptz
+  ELSE '2026-09-06 09:00:00+00'::timestamptz END
+  WHERE id IN ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa002','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa003');
+UPDATE trade_offers SET created_at='2026-09-08 14:30:00+00'
+  WHERE id='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbb001';
+UPDATE sales_contracts SET created_at='2026-09-10 10:00:00+00'
+  WHERE id='cccccccc-cccc-cccc-cccc-ccccccccc001';
+UPDATE shipments SET created_at='2026-09-12 08:00:00+00'
+  WHERE id='dddddddd-dddd-dddd-dddd-ddddddddd001';
+UPDATE payment_requests SET created_at='2026-09-10 11:00:00+00'
+  WHERE id='eeeeeeee-eeee-eeee-eeee-eeeeeeeee001';
 
 -- Sample evidence
 INSERT INTO evidence_items (id, uploader_user_id, uploader_organization_id, type, file_name, sha256_hash, storage_path, review_status, linked_entity_type, linked_entity_id, claim_description) VALUES
-  ('ffffffff-ffff-ffff-ffff-fffffffffff1', '33333333-3333-3333-3333-333333333002', '11111111-1111-1111-1111-111111111003', 'certificate_pdf', 'OC-GH-2248.pdf', 'sha256:c7d1e4f2a8b1', 'evidence/cert-001.pdf', 'approved', 'batch', '77777777-7777-7777-7777-777777777001', 'EU Organic certificate'),
-  ('ffffffff-ffff-ffff-ffff-fffffffffff2', '33333333-3333-3333-3333-333333333003', '11111111-1111-1111-1111-111111111004', 'weighing_ticket', 'AGC-WT-20241012.pdf', 'sha256:4b1c7e3d9a2f', 'evidence/wt-001.pdf', 'approved', 'batch', '77777777-7777-7777-7777-777777777001', 'Weighing ticket on harvest'),
-  ('ffffffff-ffff-ffff-ffff-fffffffffff3', '33333333-3333-3333-3333-333333333005', '11111111-1111-1111-1111-111111111006', 'bill_of_lading', 'MCL-2024-8234.pdf', 'sha256:2f9ab4c1e3d7', 'evidence/bol-001.pdf', 'approved', 'shipment', 'dddddddd-dddd-dddd-dddd-ddddddddd001', 'Bill of lading')
-ON CONFLICT (id) DO NOTHING;
+  ('ffffffff-ffff-ffff-ffff-fffffffffff1', '33333333-3333-3333-3333-333333333002', '11111111-1111-1111-1111-111111111003', 'certificate_pdf', 'OCG-2026-GH-0042.pdf', 'sha256:certready2026', 'evidence/2026/cert-ready.pdf', 'approved', 'batch', '77777777-7777-7777-7777-777777777001', 'Valid EU Organic certificate'),
+  ('ffffffff-ffff-ffff-ffff-fffffffffff2', '33333333-3333-3333-3333-333333333003', '11111111-1111-1111-1111-111111111004', 'weighing_ticket', 'AKC-WT-20260718.pdf', 'sha256:weightready2026', 'evidence/2026/weight-ready.pdf', 'approved', 'batch', '77777777-7777-7777-7777-777777777001', 'Warehouse intake and weighing ticket'),
+  ('ffffffff-ffff-ffff-ffff-fffffffffff3', '33333333-3333-3333-3333-333333333005', '11111111-1111-1111-1111-111111111006', 'bill_of_lading', 'MCL-2026-0942.pdf', 'sha256:bol2026', 'evidence/2026/bol-0942.pdf', 'approved', 'shipment', 'dddddddd-dddd-dddd-dddd-ddddddddd001', 'Bill of lading for the contracted lot')
+ON CONFLICT (id) DO UPDATE SET file_name=EXCLUDED.file_name,sha256_hash=EXCLUDED.sha256_hash,
+  storage_path=EXCLUDED.storage_path,review_status=EXCLUDED.review_status,
+  linked_entity_type=EXCLUDED.linked_entity_type,linked_entity_id=EXCLUDED.linked_entity_id,
+  claim_description=EXCLUDED.claim_description;
 
 -- Audit events
+DELETE FROM audit_events WHERE entity_id IN (
+  '77777777-7777-7777-7777-777777777001','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001',
+  'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbb001','cccccccc-cccc-cccc-cccc-ccccccccc001',
+  'dddddddd-dddd-dddd-dddd-ddddddddd001'
+);
 INSERT INTO audit_events (actor_user_id, actor_organization_id, action, entity_type, entity_id, new_state_hash, occurred_at) VALUES
-  ('33333333-3333-3333-3333-333333333001', '11111111-1111-1111-1111-111111111001', 'batch.create', 'harvest_batch', '77777777-7777-7777-7777-777777777001', 'sha256:batch_create_001', '2024-10-12 08:00:00+00'),
-  ('33333333-3333-3333-3333-333333333002', '11111111-1111-1111-1111-111111111003', 'batch.attest', 'harvest_batch', '77777777-7777-7777-7777-777777777001', 'sha256:c7d1e4f2a8b1', '2024-10-14 10:23:00+00'),
-  ('33333333-3333-3333-3333-333333333003', '11111111-1111-1111-1111-111111111004', 'listing.create', 'listing', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001', 'sha256:listing_001', '2024-10-20 09:00:00+00'),
-  ('33333333-3333-3333-3333-333333333004', '11111111-1111-1111-1111-111111111005', 'offer.create', 'trade_offer', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbb001', 'sha256:offer_001', '2024-10-21 14:30:00+00'),
-  ('33333333-3333-3333-3333-333333333003', '11111111-1111-1111-1111-111111111004', 'contract.create', 'sales_contract', 'cccccccc-cccc-cccc-cccc-ccccccccc001', 'sha256:contract_001', '2024-10-22 10:00:00+00'),
-  ('33333333-3333-3333-3333-333333333005', '11111111-1111-1111-1111-111111111006', 'shipment.accept', 'shipment', 'dddddddd-dddd-dddd-dddd-ddddddddd001', 'sha256:shipment_001', '2024-10-28 08:00:00+00');
+  ('33333333-3333-3333-3333-333333333001', '11111111-1111-1111-1111-111111111001', 'batch.create', 'harvest_batch', '77777777-7777-7777-7777-777777777001', 'sha256:batch-ready-2026', '2026-07-18 08:00:00+00'),
+  ('33333333-3333-3333-3333-333333333002', '11111111-1111-1111-1111-111111111003', 'batch.attest', 'harvest_batch', '77777777-7777-7777-7777-777777777001', 'sha256:ready2026', '2026-07-21 10:00:00+00'),
+  ('33333333-3333-3333-3333-333333333003', '11111111-1111-1111-1111-111111111004', 'listing.create', 'listing', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001', 'sha256:listing-ready-2026', '2026-08-25 09:00:00+00'),
+  ('33333333-3333-3333-3333-333333333004', '11111111-1111-1111-1111-111111111005', 'offer.create', 'trade_offer', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbb001', 'sha256:offer-ready-2026', '2026-09-08 14:30:00+00'),
+  ('33333333-3333-3333-3333-333333333003', '11111111-1111-1111-1111-111111111004', 'contract.create', 'sales_contract', 'cccccccc-cccc-cccc-cccc-ccccccccc001', 'sha256:contract-ready-2026', '2026-09-10 10:00:00+00'),
+  ('33333333-3333-3333-3333-333333333005', '11111111-1111-1111-1111-111111111006', 'shipment.departed', 'shipment', 'dddddddd-dddd-dddd-dddd-ddddddddd001', 'sha256:shipment-ready-2026', '2026-09-18 06:00:00+00');
 
 -- Public QR product profiles
 INSERT INTO product_profiles (id, batch_id, slug, display_name, brand_name, description, lot_code, visibility, published_at) VALUES
-  ('12121212-1212-1212-1212-121212121201', '77777777-7777-7777-7777-777777777001', 'asante-cocoa-2024-0847', 'Asante Cocoa · 2024 Harvest', 'Accra Gold Exports', 'Trace this cocoa from the Asante Family Farm through certification, custody and export.', 'GH-2024-0847', 'published', '2024-11-04 06:00:00+00'),
-  ('12121212-1212-1212-1212-121212121202', '77777777-7777-7777-7777-777777777002', 'mensah-cocoa-2024-0831', 'Mensah Cocoa · 2024 Harvest', 'Accra Gold Exports', 'A demonstration lot profile showing how an active safety notice appears immediately after a scan.', 'GH-2024-0831', 'published', '2024-10-20 09:00:00+00')
+  ('12121212-1212-1212-1212-121212121201', '77777777-7777-7777-7777-777777777001', 'akwaaba-cocoa-2026-ready', 'Akwaaba Cocoa · Export Lot 042', 'Akwaaba Cocoa Exports', 'A buyer-facing export lot connecting verified origin, current organic evidence, custody and shipment status.', 'GH-2026-0042', 'published', '2026-09-12 09:00:00+00'),
+  ('12121212-1212-1212-1212-121212121202', '77777777-7777-7777-7777-777777777003', 'cocoatrace-demo-incident-2026', 'Demonstration Incident · Lot 0917', 'Northstar Foods B.V.', 'An isolated demonstration record showing how an already-distributed lot changes to a warning after a quality incident. It is not available for trade.', 'GH-2026-0917', 'published', '2026-09-02 09:00:00+00')
 ON CONFLICT (id) DO UPDATE SET
+  batch_id = EXCLUDED.batch_id,
+  slug = EXCLUDED.slug,
   display_name = EXCLUDED.display_name,
+  brand_name = EXCLUDED.brand_name,
   description = EXCLUDED.description,
+  lot_code = EXCLUDED.lot_code,
   visibility = EXCLUDED.visibility,
   published_at = EXCLUDED.published_at,
   updated_at = NOW();
@@ -192,48 +263,58 @@ ON CONFLICT (id) DO UPDATE SET
 -- Deliberately marked as demo data. This makes the recall experience testable
 -- without implying that any real product or organization has a safety issue.
 INSERT INTO recall_notices (id, reference_code, title, reason, instructions, severity, status, initiated_by_user_id, initiated_by_organization_id, initiated_at) VALUES
-  ('13131313-1313-1313-1313-131313131301', 'DEMO-RECALL-2024-001', 'Demonstration quality hold', 'Demo only: a warehouse inspection recorded moisture outside the agreed quality range.', 'Do not release this demo lot. Contact the listed supplier and keep the package or lot code available.', 'warning', 'active', '33333333-3333-3333-3333-333333333006', '11111111-1111-1111-1111-111111111007', '2024-11-06 10:00:00+00')
+  ('13131313-1313-1313-1313-131313131301', 'DEMO-INCIDENT-2026-001', 'Demonstration quality recall', 'Demo only: retained-sample testing identified moisture-related spoilage after distribution.', 'Do not use or distribute the affected demonstration lots. Quarantine stock and contact the recorded supplier.', 'warning', 'active', '33333333-3333-3333-3333-333333333006', '11111111-1111-1111-1111-111111111007', '2026-09-20 10:00:00+00')
 ON CONFLICT (id) DO UPDATE SET
+  reference_code = EXCLUDED.reference_code,
   title = EXCLUDED.title,
   reason = EXCLUDED.reason,
   instructions = EXCLUDED.instructions,
   severity = EXCLUDED.severity,
   status = EXCLUDED.status;
 
+DELETE FROM recall_affected_batches WHERE recall_id='13131313-1313-1313-1313-131313131301';
 INSERT INTO recall_affected_batches (recall_id, batch_id) VALUES
-  ('13131313-1313-1313-1313-131313131301', '77777777-7777-7777-7777-777777777002')
-ON CONFLICT DO NOTHING;
+  ('13131313-1313-1313-1313-131313131301', '77777777-7777-7777-7777-777777777003');
 
 -- Quantity-aware genealogy demonstration. The declared edge quantity is the
 -- exact source input assigned to a particular output lot.
 INSERT INTO material_lots (id, lot_code, lot_type, batch_id, product_name, quantity_kg, owner_organization_id, status, produced_at) VALUES
-  ('14141414-1414-1414-1414-141414141401', 'GH-2024-0847', 'source', '77777777-7777-7777-7777-777777777001', 'Cocoa beans', 18200, '11111111-1111-1111-1111-111111111004', 'available', '2024-10-12 08:00:00+00'),
-  ('14141414-1414-1414-1414-141414141402', 'GH-2024-0831', 'source', '77777777-7777-7777-7777-777777777002', 'Cocoa beans', 14600, '11111111-1111-1111-1111-111111111004', 'available', '2024-09-28 08:00:00+00'),
-  ('14141414-1414-1414-1414-141414141403', 'NL-LIQUOR-2024-1101', 'production', NULL, 'Cocoa liquor', 9000, '11111111-1111-1111-1111-111111111005', 'consumed', '2024-12-02 09:00:00+00'),
-  ('14141414-1414-1414-1414-141414141404', 'NL-BUTTER-2024-1102', 'production', NULL, 'Cocoa butter', 2000, '11111111-1111-1111-1111-111111111005', 'available', '2024-12-03 09:00:00+00'),
-  ('14141414-1414-1414-1414-141414141405', 'NL-CHOCO-2024-A', 'packaging', NULL, 'Dark chocolate 70%', 4000, '11111111-1111-1111-1111-111111111005', 'distributed', '2024-12-06 11:00:00+00'),
-  ('14141414-1414-1414-1414-141414141406', 'NL-CHOCO-2024-B', 'packaging', NULL, 'Dark chocolate 70%', 3800, '11111111-1111-1111-1111-111111111005', 'distributed', '2024-12-06 14:00:00+00')
-ON CONFLICT (id) DO UPDATE SET quantity_kg=EXCLUDED.quantity_kg, status=EXCLUDED.status;
+  ('14141414-1414-1414-1414-141414141401', 'GH-2026-0042', 'source', '77777777-7777-7777-7777-777777777001', 'Cocoa beans', 12000, '11111111-1111-1111-1111-111111111004', 'available', '2026-07-18 08:00:00+00'),
+  ('14141414-1414-1414-1414-141414141402', 'GH-2026-0917', 'source', '77777777-7777-7777-7777-777777777003', 'Cocoa beans', 6000, '11111111-1111-1111-1111-111111111005', 'recalled', '2026-06-12 08:00:00+00'),
+  ('14141414-1414-1414-1414-141414141403', 'NL-LIQUOR-2026-0820', 'production', NULL, 'Cocoa liquor', 4000, '11111111-1111-1111-1111-111111111005', 'consumed', '2026-08-20 09:00:00+00'),
+  ('14141414-1414-1414-1414-141414141404', 'NL-BUTTER-2026-0821', 'production', NULL, 'Cocoa butter', 1200, '11111111-1111-1111-1111-111111111005', 'available', '2026-08-21 09:00:00+00'),
+  ('14141414-1414-1414-1414-141414141405', 'NL-CHOCO-2026-A', 'packaging', NULL, 'Dark chocolate 70%', 1800, '11111111-1111-1111-1111-111111111005', 'recalled', '2026-08-25 11:00:00+00'),
+  ('14141414-1414-1414-1414-141414141406', 'NL-CHOCO-2026-B', 'packaging', NULL, 'Dark chocolate 70%', 1700, '11111111-1111-1111-1111-111111111005', 'recalled', '2026-08-25 14:00:00+00')
+ON CONFLICT (id) DO UPDATE SET lot_code=EXCLUDED.lot_code,batch_id=EXCLUDED.batch_id,
+  product_name=EXCLUDED.product_name,quantity_kg=EXCLUDED.quantity_kg,
+  owner_organization_id=EXCLUDED.owner_organization_id,status=EXCLUDED.status,
+  produced_at=EXCLUDED.produced_at;
 
 INSERT INTO transformation_events (id, event_code, event_type, facility_organization_id, occurred_at, notes) VALUES
-  ('15151515-1515-1515-1515-151515151501', 'BLEND-RTM-2024-001', 'blend', '11111111-1111-1111-1111-111111111005', '2024-12-02 09:00:00+00', 'Declared blend allocation for cocoa liquor'),
-  ('15151515-1515-1515-1515-151515151502', 'PRESS-RTM-2024-002', 'process', '11111111-1111-1111-1111-111111111005', '2024-12-03 09:00:00+00', 'Cocoa butter press run'),
-  ('15151515-1515-1515-1515-151515151503', 'PACK-RTM-2024-003', 'package', '11111111-1111-1111-1111-111111111005', '2024-12-06 11:00:00+00', 'Two finished packaging lots')
-ON CONFLICT (id) DO NOTHING;
+  ('15151515-1515-1515-1515-151515151501', 'BLEND-RTM-2026-0820', 'blend', '11111111-1111-1111-1111-111111111005', '2026-08-20 09:00:00+00', 'Declared source allocation for cocoa liquor'),
+  ('15151515-1515-1515-1515-151515151502', 'PRESS-RTM-2026-0821', 'process', '11111111-1111-1111-1111-111111111005', '2026-08-21 09:00:00+00', 'Cocoa butter press run'),
+  ('15151515-1515-1515-1515-151515151503', 'PACK-RTM-2026-0825', 'package', '11111111-1111-1111-1111-111111111005', '2026-08-25 10:00:00+00', 'Two finished packaging lots')
+ON CONFLICT (id) DO UPDATE SET event_code=EXCLUDED.event_code,event_type=EXCLUDED.event_type,
+  facility_organization_id=EXCLUDED.facility_organization_id,
+  occurred_at=EXCLUDED.occurred_at,notes=EXCLUDED.notes;
 
 INSERT INTO lot_genealogy_edges (id, transformation_event_id, source_lot_id, destination_lot_id, allocated_input_kg, allocation_method) VALUES
-  ('16161616-1616-1616-1616-161616161601', '15151515-1515-1515-1515-151515151501', '14141414-1414-1414-1414-141414141401', '14141414-1414-1414-1414-141414141403', 6000, 'declared'),
-  ('16161616-1616-1616-1616-161616161602', '15151515-1515-1515-1515-151515151501', '14141414-1414-1414-1414-141414141402', '14141414-1414-1414-1414-141414141403', 4000, 'declared'),
-  ('16161616-1616-1616-1616-161616161603', '15151515-1515-1515-1515-151515151502', '14141414-1414-1414-1414-141414141401', '14141414-1414-1414-1414-141414141404', 2500, 'declared'),
-  ('16161616-1616-1616-1616-161616161604', '15151515-1515-1515-1515-151515151503', '14141414-1414-1414-1414-141414141403', '14141414-1414-1414-1414-141414141405', 4200, 'declared'),
-  ('16161616-1616-1616-1616-161616161605', '15151515-1515-1515-1515-151515151503', '14141414-1414-1414-1414-141414141403', '14141414-1414-1414-1414-141414141406', 4000, 'declared')
+  ('16161616-1616-1616-1616-161616161601', '15151515-1515-1515-1515-151515151501', '14141414-1414-1414-1414-141414141402', '14141414-1414-1414-1414-141414141403', 4000, 'declared'),
+  ('16161616-1616-1616-1616-161616161602', '15151515-1515-1515-1515-151515151502', '14141414-1414-1414-1414-141414141402', '14141414-1414-1414-1414-141414141404', 1500, 'declared'),
+  ('16161616-1616-1616-1616-161616161603', '15151515-1515-1515-1515-151515151503', '14141414-1414-1414-1414-141414141403', '14141414-1414-1414-1414-141414141405', 2000, 'declared'),
+  ('16161616-1616-1616-1616-161616161604', '15151515-1515-1515-1515-151515151503', '14141414-1414-1414-1414-141414141403', '14141414-1414-1414-1414-141414141406', 1900, 'declared')
 ON CONFLICT (id) DO UPDATE SET allocated_input_kg=EXCLUDED.allocated_input_kg, allocation_method=EXCLUDED.allocation_method;
 
-INSERT INTO lot_distributions (id, lot_id, shipment_id, recipient_organization_id, quantity_kg, distribution_reference, dispatched_at) VALUES
-  ('17171717-1717-1717-1717-171717171701', '14141414-1414-1414-1414-141414141405', NULL, '11111111-1111-1111-1111-111111111005', 2500, 'DIST-NL-2024-001', '2024-12-08 10:00:00+00'),
-  ('17171717-1717-1717-1717-171717171702', '14141414-1414-1414-1414-141414141406', NULL, '11111111-1111-1111-1111-111111111005', 1800, 'DIST-NL-2024-002', '2024-12-09 10:00:00+00')
-ON CONFLICT (id) DO UPDATE SET quantity_kg=EXCLUDED.quantity_kg;
+DELETE FROM lot_genealogy_edges WHERE id='16161616-1616-1616-1616-161616161605';
 
+INSERT INTO lot_distributions (id, lot_id, shipment_id, recipient_organization_id, quantity_kg, distribution_reference, dispatched_at) VALUES
+  ('17171717-1717-1717-1717-171717171701', '14141414-1414-1414-1414-141414141405', NULL, '11111111-1111-1111-1111-111111111005', 1800, 'DEMO-DIST-NL-2026-001', '2026-09-02 10:00:00+00'),
+  ('17171717-1717-1717-1717-171717171702', '14141414-1414-1414-1414-141414141406', NULL, '11111111-1111-1111-1111-111111111005', 1700, 'DEMO-DIST-NL-2026-002', '2026-09-03 10:00:00+00')
+ON CONFLICT (id) DO UPDATE SET quantity_kg=EXCLUDED.quantity_kg,
+  distribution_reference=EXCLUDED.distribution_reference,dispatched_at=EXCLUDED.dispatched_at;
+
+DELETE FROM recall_affected_lots WHERE recall_id='13131313-1313-1313-1313-131313131301';
 INSERT INTO recall_affected_lots (recall_id, lot_id, source_equivalent_kg, recall_quantity_kg, relationship_depth) VALUES
-  ('13131313-1313-1313-1313-131313131301', '14141414-1414-1414-1414-141414141402', 14600, 14600, 0)
-ON CONFLICT (recall_id, lot_id) DO NOTHING;
+  ('13131313-1313-1313-1313-131313131301', '14141414-1414-1414-1414-141414141402', 6000, 6000, 0),
+  ('13131313-1313-1313-1313-131313131301', '14141414-1414-1414-1414-141414141405', 1800, 1800, 2),
+  ('13131313-1313-1313-1313-131313131301', '14141414-1414-1414-1414-141414141406', 1700, 1700, 2);
