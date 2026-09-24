@@ -29,7 +29,7 @@ The platform may continue to support the wider trade workflow, but those records
 3. State the promise shown in the hero: “One scan tells the product story. One trace contains the risk.”
 4. Open **Asante Cocoa** to show a clear, public farm-to-fork profile.
 5. Return to the demo and open **Mensah Cocoa** to show the same QR experience with an active, explicitly labelled demonstration warning.
-6. Select **Run live calculation**. The API traces 500 kg from source lot `GH-2024-0831` through declared transformations.
+6. Select **Run live calculation**. The API traces 500 kg from the isolated source lot `GH-2026-0917` through transformations recorded before the incident.
 7. Explain the result using four numbers: suspect input, impacted lots, finished recall quantity, and recipients.
 8. If technical diligence is requested, open **Trace & recall** for the full lot-level calculation and assumptions.
 

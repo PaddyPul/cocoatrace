@@ -26,7 +26,11 @@ async function seed(): Promise<void> {
     console.log('  kofi@marecargo.gh     — Logistics');
     console.log('  ingrid@cocobod.gh     — Regulator');
     console.log('  admin@cocoatrace.io   — Admin');
-    console.log('  pilot@cocoatrace.io   — New-user onboarding');
+    console.log('  pilot@cocoatrace.io   — Pilot manager');
+    console.log('  newbuyer@cocoatrace.io — Isolated new buyer');
+    console.log('  newsupplier@cocoatrace.io — Isolated new supplier');
+    console.log('');
+    console.log('For a clean deterministic reset, run: npm run demo:reset');
   } catch (err) {
     console.error('Seed failed:', (err as Error).message);
     process.exit(1);

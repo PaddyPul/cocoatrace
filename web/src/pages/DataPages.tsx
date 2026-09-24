@@ -636,7 +636,7 @@ export function CertsPage() {
             </div>
             <div>
               <label className="form-label">Accreditation Reference *</label>
-              <input className="form-input" placeholder="e.g. ACC-GH-2024-001" value={iAccred} onChange={(e) => setIAccred(e.target.value)} />
+              <input className="form-input" placeholder="e.g. OCG-GH-2026-001" value={iAccred} onChange={(e) => setIAccred(e.target.value)} />
             </div>
             {iError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{iError}</div>}
             <div className="flex gap-2 pt-1">

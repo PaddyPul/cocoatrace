@@ -54,8 +54,8 @@ requirements audit and talk track are in
 
 Two public scan demonstrations are seeded:
 
-- `http://localhost:3000/p/asante-cocoa-2024-0847` — clear safety status
-- `http://localhost:3000/p/mensah-cocoa-2024-0831` — explicitly labelled demo quality hold
+- `http://localhost:3000/p/akwaaba-cocoa-2026-ready` — clear commercial export lot
+- `http://localhost:3000/p/cocoatrace-demo-incident-2026` — isolated demonstration incident
 
 ---
 
@@ -106,8 +106,8 @@ All passwords: **Password123!**
 | `kofi@marecargo.gh` | Logistics | Record shipment milestones |
 | `ingrid@cocobod.gh` | Regulator | View audit log, all farms, all batches |
 | `admin@cocoatrace.io` | Admin | Full access |
-| `newbuyer@cocoatrace.io` | New buyer | Replay the complete first-run sourcing journey |
-| `newsupplier@cocoatrace.io` | New supplier | Replay the complete first-run supply journey |
+| `newbuyer@cocoatrace.io` | New buyer | Start in a genuinely empty buyer organization |
+| `newsupplier@cocoatrace.io` | New supplier | Start in a genuinely empty supplier organization |
 
 Click the quick-login pills on the login page — no typing needed.
 
@@ -115,14 +115,30 @@ Click the quick-login pills on the login page — no typing needed.
 
 ## Pre-loaded demo corridor
 
-- **2 farms** in Ashanti region with 4 plots (P3 intentionally has no GPS — triggers EUDR warning)
-- **2 EU Organic certificates** issued by OrganicCert GH
-- **3 harvest batches** — 2 attested, 1 awaiting attestation
+- **3 farms** in Ashanti region with 4 plots (C1 intentionally has no GPS — triggers an evidence gap; the incident farm is isolated)
+- **2 current EU Organic certificates** issued by OrganicCert Ghana
+- **3 harvest batches** — one trade-ready, one needing geolocation, one isolated incident lot
 - **4 holdings** across 3 warehouses
 - **2 active listings** on the marketplace
-- **1 sales contract** — 8,000 kg CIF Rotterdam with DutchCacao B.V.
-- **1 active shipment** — MV Cape Harmony, currently at "departed" Tema Port
-- **1 payment request** — €98,400 outstanding
+- **1 sales contract** — 8,000 kg CIF Rotterdam with Northstar Foods B.V.
+- **1 active shipment** — MV Atlantic Bridge, departed Tema on 18 September 2026
+- **1 payment request** — €67,200 outstanding
+- **1 isolated recall graph** — distributed before the 20 September 2026 incident and never listed for sale
+
+### Deterministic demo scenarios
+
+These commands intentionally reset only a recognized local demo database and
+preserve Knex migration history. They refuse to run with `NODE_ENV=production`.
+
+```bash
+npm run demo:seed:fresh       # identities only; empty new-customer workspaces
+npm run demo:seed:commercial  # coherent sourcing-to-shipment story, no incident
+npm run demo:seed:incident    # full commercial story plus isolated recall
+npm run demo:validate         # verify quantities, dates, evidence and safety rules
+```
+
+`npm run demo:reset` is an alias for the complete incident scenario. Ordinary
+`setup.sh` remains non-destructive and never invokes the reset command.
 - **3 evidence documents** — certificate, weighing ticket, bill of lading
 
 ---
@@ -163,7 +179,7 @@ Log in as akosua@organiccert.gh
 
 ```
 Log in as kofi@marecargo.gh
-→ Shipments  — MV Cape Harmony currently at "departed"
+→ Shipments  — MV Atlantic Bridge currently at "departed"
 → + Record milestone → advance to "arrived"
 → Try going backward — API blocks it:
    "Cannot go from arrived to loaded. Milestones must progress forward."
@@ -173,7 +189,7 @@ Log in as kofi@marecargo.gh
 
 ```
 Log in as ama@accragold.gh
-→ Batches → click 📋 on GH-2024-0847
+→ Batches → open the ready 2026 Asante harvest lot
 → Provenance pack shows:
    - 83% completeness (EUDR due-diligence reference missing)
    - 4/6 policy checks passed
@@ -299,7 +315,9 @@ cocoatrace/
 │   │       └── audit.ts      ← Audit log writer + SHA-256 helper
 │   ├── scripts/
 │   │   ├── migrate.ts        ← Apply versioned migrations
-│   │   └── seed.ts           ← Load db/seed.sql
+│   │   ├── seed.ts           ← Non-destructively load db/seed.sql
+│   │   ├── demo.ts           ← Guarded scenario reset runner
+│   │   └── validate-demo.ts  ← Demo integrity gate
 │   └── package.json
 ├── web/
 │   ├── src/                  ← React + TypeScript application
@@ -307,7 +325,8 @@ cocoatrace/
 │   └── package.json
 ├── db/
 │   ├── schema.sql            ← Full PostgreSQL schema (25 tables)
-│   └── seed.sql              ← Ghana → NL demo corridor data
+│   ├── seed.sql              ← Coherent 2026 Ghana → NL demo corridor
+│   └── demo-*.sql            ← Reset and scenario isolation helpers
 ├── docker-compose.yml        ← PostgreSQL 16 container
 ├── .env                      ← Environment variables
 ├── package.json              ← Root: npm run dev starts both API + Web
@@ -350,6 +369,6 @@ npm run db:seed
 
 **Want to reset all data**
 ```bash
-docker compose down -v    # removes the postgres volume
-bash setup.sh             # rebuilds from scratch
+npm run demo:reset        # guarded local reset to the full coherent demo
+npm run demo:validate     # confirm the story is internally consistent
 ```
