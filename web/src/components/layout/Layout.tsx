@@ -2,10 +2,15 @@ import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAuthCtx } from '../auth/AuthProvider';
 import Sidebar from './Sidebar';
 import { useNavigate } from 'react-router-dom';
-import { Boxes, FileText, GitBranch, LayoutDashboard, Menu, QrCode, Search, Ship, Sparkles, Trees, X } from 'lucide-react';
+import { Boxes, FileText, GitBranch, Home, LayoutDashboard, Menu, QrCode, Search, Ship, ShoppingBag, Sparkles, Trees, X } from 'lucide-react';
 import PilotFeedback from '../shared/PilotFeedback';
 
 const PAGE_TITLES: Record<string, string> = {
+  home: 'Your sourcing workspace',
+  'source-new': 'Create a sourcing brief',
+  'source-compare': 'Compare verified supply',
+  'supply-new': 'Publish verified supply',
+  'deal-room': 'Shared deal room',
   demo: 'Investor Demo',
   products: 'Products',
   dashboard: 'Control Tower',
@@ -31,6 +36,11 @@ const PAGE_TITLES: Record<string, string> = {
 };
 
 const PAGE_DESCRIPTIONS: Record<string, string> = {
+  home: 'Move from a requirement to a verified trade, with one evidence trail.',
+  'source-new': 'Describe what you need; CocoaTrace turns it into a buyer-ready requirement.',
+  'source-compare': 'Compare commercial fit and supporting proof side by side.',
+  'supply-new': 'Turn traceable inventory into a buyer-ready offer.',
+  'deal-room': 'Keep commitments, evidence and execution visible to both sides.',
   demo: 'The scan, verification and recall story in one guided flow.',
   products: 'Living product passports connected to evidence, provenance and safety.',
   dashboard: 'Product readiness, evidence gaps and safety risk across your network.',
@@ -80,6 +90,9 @@ export default function Layout({
   }, []);
 
   const commandItems = useMemo(() => [
+    { label: 'Home', hint: 'Your current decisions and next actions', path: '/home', icon: Home, permissions: [] },
+    { label: 'Find verified supply', hint: 'Source by requirement, not by paperwork', path: '/source/new', icon: Search, permissions: ['offer.create'] },
+    { label: 'Publish supply', hint: 'Offer an evidence-backed lot to buyers', path: '/supply/new', icon: ShoppingBag, permissions: ['listing.create'] },
     { label: 'Control Tower', hint: 'Network health and priorities', path: '/dashboard', icon: LayoutDashboard, permissions: [] },
     { label: 'Investor Demo', hint: 'Scan, verify and respond story', path: '/demo', icon: Sparkles, permissions: [] },
     { label: 'Products', hint: 'Product passports and safety state', path: '/products', icon: QrCode, permissions: ['batch.read'] },

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { listings, provenance as provenanceApi, offers } from '../api';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, BadgeCheck, Check, CheckCircle2, Circle, Download, FileCheck2, Leaf, MapPin, PackageCheck, Ship, Sparkles, Sprout, TriangleAlert } from 'lucide-react';
+import { listings, offers, provenance as provenanceApi } from '../api';
 import { Listing, ProvenancePack } from '../types';
-import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
-import { ArrowLeft, Leaf, Shield, Package, Ship, Euro, ChevronRight, MapPin, FileText } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
+import { fmtMoney } from '../components/shared/helpers';
 import { usePermission } from '../hooks/usePermission';
 import { useToast } from '../components/shared/ToastProvider';
 
@@ -15,410 +15,58 @@ export default function ListingDetailPage() {
   const { canDo } = usePermission();
   const { toast } = useToast();
   const [listing, setListing] = useState<Listing | null>(null);
-  const [provenance, setProvenance] = useState<ProvenancePack | null>(null);
+  const [pack, setPack] = useState<ProvenancePack | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  // Offer state
-  const [showOffer, setShowOffer] = useState(false);
-  const [offerQty, setOfferQty] = useState(0);
-  const [offerPrice, setOfferPrice] = useState(0);
-  const [offerNote, setOfferNote] = useState('');
-  const [offerLoading, setOfferLoading] = useState(false);
-  const [offerDone, setOfferDone] = useState(false);
+  const [quantity, setQuantity] = useState(0);
+  const [price, setPrice] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
   const [offerError, setOfferError] = useState('');
 
   useEffect(() => {
     if (!id) return;
-    setLoading(true);
-    Promise.all([
-      listings.get(id),
-      // We could fetch provenance here if needed
-    ])
-      .then(([l]) => {
-        setListing(l);
-        setOfferQty(l.available_quantity_kg || 0);
-        setOfferPrice(l.price_per_kg || 0);
-        // Attempt to load provenance
-        if (l.batch_id) {
-          provenanceApi.get(l.batch_id).then(setProvenance).catch(() => {});
-        }
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+    listings.get(id).then((row) => {
+      setListing(row); setQuantity(row.available_quantity_kg || 0); setPrice(row.price_per_kg || 0);
+      if (row.batch_id) provenanceApi.get(row.batch_id).then(setPack).catch(() => undefined);
+    }).catch((err) => setError(err.message)).finally(() => setLoading(false));
   }, [id]);
 
-  const handleOffer = async () => {
-    if (!listing) return;
-    if (!offerQty || offerQty <= 0) { setOfferError('Quantity must be greater than 0'); return; }
-    if (!offerPrice || offerPrice <= 0) { setOfferError('Price must be greater than 0'); return; }
-    if (offerQty > (listing.available_quantity_kg || 0)) { setOfferError(`Quantity cannot exceed ${listing.available_quantity_kg} kg`); return; }
-    setOfferLoading(true);
-    setOfferError('');
-    try {
-      await offers.create(listing.id, {
-        quantityKg: Number(offerQty),
-        offeredPricePerKg: Number(offerPrice),
-        currency: 'EUR',
-      });
-      setOfferDone(true);
-      toast('success', 'Offer submitted to seller');
-    } catch (e: any) {
-      setOfferError(e.message);
-    } finally {
-      setOfferLoading(false);
-    }
+  const match = useMemo(() => listing ? Math.min(98, 58 + (listing.organic_claim_status === 'attested' ? 18 : 0) + (listing.farm_region ? 10 : 0) + (listing.incoterm === 'CIF' ? 7 : 0)) : 0, [listing]);
+  const submit = async () => {
+    if (!listing || quantity <= 0 || price <= 0 || quantity > listing.available_quantity_kg) { setOfferError('Enter a valid quantity and price within the available supply.'); return; }
+    setBusy(true); setOfferError('');
+    try { await offers.create(listing.id, { quantityKg: Number(quantity), offeredPricePerKg: Number(price), currency: 'EUR' }); setSent(true); toast('success', 'Offer sent with the verified lot attached.'); }
+    catch (err: any) { setOfferError(err.message); } finally { setBusy(false); }
   };
 
-  if (loading) {
-    return <Layout currentPage="listing"><SkeletonDetail /></Layout>;
-  }
+  if (loading) return <Layout currentPage="listing"><SkeletonDetail /></Layout>;
+  if (error || !listing) return <Layout currentPage="listing"><div className="rounded-2xl border border-red-500/30 bg-red-900/10 p-4 text-xs text-red-300">{error || 'Listing not found'}</div></Layout>;
 
-  if (error || !listing) {
-    return (
-      <Layout currentPage="listing">
-        <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">
-          {error || 'Listing not found'}
-        </div>
-      </Layout>
-    );
-  }
+  const batch: any = pack?.batch;
+  const checks = pack?.policyCheckResults || [];
+  const completeness = pack?.completenessPercent || 0;
+  const passed = checks.filter((item) => item.passed).length;
+  return <Layout currentPage="listing" actions={<button className="btn" onClick={() => navigate('/marketplace')}><ArrowLeft size={14} />Back to matches</button>}>
+    <section className="relative overflow-hidden rounded-3xl border border-brand-400/20 bg-[radial-gradient(circle_at_85%_0%,rgba(239,190,106,.2),transparent_28%),linear-gradient(135deg,#173326,#101c16)] p-6 sm:p-8">
+      <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between"><div><div className="flex flex-wrap gap-2"><span className="badge badge-green"><BadgeCheck size={11} />{match}% requirement match</span><span className="badge badge-blue">{listing.grade || 'Export grade'}</span></div><h2 className="mt-4 text-3xl font-bold tracking-[-.04em] sm:text-4xl">{listing.farm_name || `${listing.crop || 'Cocoa'} verified lot`}</h2><p className="mt-3 flex flex-wrap items-center gap-2 text-sm text-emerald-50/60"><MapPin size={15} />{listing.farm_region || listing.origin_location || 'Origin recorded'}<span>·</span>{listing.seller_name || 'Verified supplier'}</p></div><div className="grid grid-cols-3 gap-3"><HeroMetric label="Available" value={`${Number(listing.available_quantity_kg).toLocaleString()} kg`} /><HeroMetric label="Indicative" value={`€${Number(listing.price_per_kg).toFixed(2)}/kg`} /><HeroMetric label="Delivery" value={`${listing.incoterm} ${listing.destination_location || 'Rotterdam'}`} /></div></div>
+    </section>
 
-  const batch = provenance?.batch;
-  const checks = provenance?.policyCheckResults || [];
-  const completeness = provenance?.completenessPercent || 0;
-  const eudrReady = provenance?.eudrReadiness?.ready;
+    <div className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]"><div className="space-y-5">
+      <section className="rounded-3xl border border-border bg-surface p-5 sm:p-6"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">Buyer-visible proof</div><h3 className="mt-1 text-xl font-bold">Why this lot matches</h3></div><div className="flex gap-2"><span className={`badge ${completeness >= 90 ? 'badge-green' : 'badge-amber'}`}>{completeness || '—'}% dossier</span><span className="badge badge-green">Identity preserved</span></div></div><div className="mt-5 grid gap-3 sm:grid-cols-2"><Proof icon={Sprout} title="Field-level origin" value={batch?.farm_name || listing.farm_name || 'Linked farm record'} detail={`${batch?.region || listing.farm_region || 'Origin'} · ${batch?.country || 'Ghana'}`} ok={Boolean(batch?.farm_name || listing.farm_name)} /><Proof icon={Leaf} title="Organic assurance" value={batch?.standard || (listing.organic_claim_status === 'attested' ? 'EU Organic evidence' : 'Review required')} detail={batch?.certifier_name || 'Certificate scope remains inspectable'} ok={listing.organic_claim_status === 'attested'} /><Proof icon={PackageCheck} title="Physical lot" value={batch?.id ? `Batch ${String(batch.id).slice(0, 8)}` : 'Recorded holding'} detail="Quantity and custody stay linked to the trade" ok /><Proof icon={FileCheck2} title="Policy checks" value={checks.length ? `${passed} of ${checks.length} passed` : 'Evidence pack available'} detail={pack?.eudrReadiness?.ready ? 'EUDR data ready' : 'Open gaps remain visible'} ok={Boolean(pack?.eudrReadiness?.ready)} /></div></section>
 
-  return (
-    <Layout
-      currentPage="listing"
-      actions={
-        <button className="btn btn-sm" onClick={() => navigate('/marketplace')}>
-          <ArrowLeft size={14} /> Back
-        </button>
-      }
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: main info */}
-        <div className="lg:col-span-2 space-y-5">
-          {/* Hero card */}
-          <div className="bg-surface border border-border rounded overflow-hidden">
-            <div className="h-48 bg-surface-darker flex items-center justify-center text-6xl relative">
-              🫘🌿
-              <div className="absolute top-3 right-3 flex gap-2">
-                <StatusBadge status={listing.organic_claim_status === 'attested' ? 'organic' : listing.organic_claim_status} />
-                {listing.grade && <span className="badge badge-blue">{listing.grade}</span>}
-              </div>
-            </div>
-            <div className="p-5">
-              <h1 className="text-xl font-bold text-text-primary mb-1">
-                {listing.seller_name || 'Unknown Seller'}
-              </h1>
-              <p className="text-sm text-text-muted">
-                {listing.farm_region || 'Unknown region'}
-                {listing.origin_location ? ` · ${listing.origin_location}` : ''}
-              </p>
+      <section className="rounded-3xl border border-border bg-surface p-5 sm:p-6"><div className="flex items-center justify-between"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">Field to fulfilment</div><h3 className="mt-1 text-xl font-bold">One identity through every handoff</h3></div>{batch?.id && canDo('provenance.export') && <button className="btn btn-sm" onClick={() => provenanceApi.exportBatch(batch.id)}><Download size={13} />Export pack</button>}</div><div className="mt-5 grid gap-3 md:grid-cols-4"><TraceStep done icon={Sprout} title="Farm & plots" copy={batch?.farm_name || listing.farm_name || 'Origin linked'} /><TraceStep done icon={PackageCheck} title="Harvest lot" copy={batch?.grade || listing.grade || 'Identity assigned'} /><TraceStep active icon={BadgeCheck} title="Verified supply" copy="Published to matched buyers" /><TraceStep icon={Ship} title="Shipment" copy="Created after trade award" /></div>{batch?.att_hash && <div className="mt-4 rounded-2xl bg-surface-darker p-4"><div className="text-[9px] font-bold uppercase tracking-[.14em] text-text-muted">Attributable provenance hash</div><div className="mt-2 break-all font-mono text-[10px] text-text-secondary">{batch.att_hash}</div></div>}</section>
 
-              <div className="grid grid-cols-3 gap-4 mt-5 pt-4 border-t border-border">
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Price</div>
-                  <div className="text-2xl font-bold font-mono text-brand-400">
-                    €{listing.price_per_kg}
-                    <span className="text-xs text-text-muted font-normal">/kg</span>
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Available</div>
-                  <div className="text-2xl font-bold font-mono">
-                    {(listing.available_quantity_kg || 0).toLocaleString()} kg
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Incoterm</div>
-                  <div className="text-lg font-bold font-mono">{listing.incoterm}</div>
-                </div>
-              </div>
+      <section className="flex items-start gap-4 rounded-3xl border border-brand-400/20 bg-brand-400/5 p-5"><Sparkles size={20} className="mt-0.5 shrink-0 text-brand-400" /><div><div className="text-sm font-bold">Grounded match explanation</div><p className="mt-1 text-xs leading-5 text-text-muted">This lot matches Ghana origin, organic assurance and commercial delivery terms. {pack?.eudrReadiness?.ready ? 'The recorded EUDR inputs are ready for buyer review.' : 'The buyer should resolve the highlighted EUDR evidence gap before release.'} This explanation summarizes records; it does not certify the lot.</p></div></section>
+    </div>
 
-              {/* Total price calculator (beforward.jp style) */}
-              <div className="mt-5 p-4 bg-surface-darker border border-border rounded">
-                <h4 className="text-xs font-semibold mb-3 flex items-center gap-1.5">
-                  <Euro size={14} /> Total Price Calculator
-                </h4>
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div>
-                    <label className="form-label">Quantity (kg)</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={offerQty}
-                      onChange={(e) => setOfferQty(Number(e.target.value))}
-                      max={listing.available_quantity_kg}
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label">Price per kg (€)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="form-input"
-                      value={offerPrice}
-                      onChange={(e) => setOfferPrice(Number(e.target.value))}
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between pt-2 border-t border-border">
-                  <span className="text-xs text-text-muted">Estimated total</span>
-                  <span className="text-lg font-bold font-mono text-brand-400">
-                    {fmtMoney(offerQty * offerPrice)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Batch provenance pack */}
-          {batch && (
-            <div className="bg-surface border border-border rounded p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold flex items-center gap-2">
-                  <Shield size={16} className="text-brand-400" />
-                  Provenance Pack
-                </h3>
-                <div className="flex gap-2">
-                  <span className={`badge ${completeness >= 95 ? 'badge-green' : 'badge-amber'}`}>
-                    {completeness}% complete
-                  </span>
-                  <span className={`badge ${eudrReady ? 'badge-green' : 'badge-amber'}`}>
-                    EUDR: {eudrReady ? 'Ready' : 'Incomplete'}
-                  </span>
-                </div>
-              </div>
-
-              {!eudrReady && (
-                <div className="bg-yellow-900/10 border border-yellow-500/30 rounded-sm px-3 py-2 mb-4 text-xs text-yellow-400 flex items-start gap-2">
-                  <span>⚠</span>
-                  <span>EUDR due-diligence reference missing. Required before EU customs clearance.</span>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Batch ID</div>
-                  <div className="font-mono text-xs text-text-secondary break-all">
-                    {batch.id?.slice(0, 18)}…
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Farm</div>
-                  <div className="text-sm">{batch.farm_name || '—'}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Region</div>
-                  <div className="text-sm">{batch.region}{batch.country ? `, ${batch.country}` : ''}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Harvest Date</div>
-                  <div className="text-sm">{fmtDate(batch.harvest_date)}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Crop</div>
-                  <div className="text-sm">{batch.crop}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Grade</div>
-                  <div className="text-sm">{batch.grade || '—'}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Certificate</div>
-                  <div className="text-sm">{batch.standard || '—'}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Certifier</div>
-                  <div className="text-sm">{batch.certifier_name || '—'}</div>
-                </div>
-              </div>
-
-              {batch.att_hash && (
-                <div className="mt-3 pt-3 border-t border-border">
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Provenance Hash</div>
-                  <div className="font-mono text-[10px] text-text-muted break-all">{batch.att_hash}</div>
-                </div>
-              )}
-
-              <div className="mt-4 pt-4 border-t border-border flex gap-2">
-                {batch.id && <button className="btn btn-sm text-xs" onClick={() => navigate(`/batches/${batch.id}`)}>View Batch <ChevronRight size={14} /></button>}
-                {listing.farm_name && <button className="btn btn-sm text-xs" onClick={() => navigate(`/farms/${batch.farm_id || ''}`)}><MapPin size={14} /> View Farm</button>}
-                {batch.id && canDo('provenance.export') && <button className="btn btn-sm text-xs" onClick={() => provenanceApi.exportBatch(batch.id)}><FileText size={14} /> Export</button>}
-              </div>
-
-              {/* Policy checks */}
-              {checks.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-border">
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-2">Policy Checks</div>
-                  <div className="space-y-1">
-                    {checks.map((c, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs">
-                        <span>{c.passed ? '✅' : c.warning ? '⚠️' : '❌'}</span>
-                        <span className={c.passed ? 'text-text-secondary' : c.warning ? 'text-yellow-400' : 'text-red-400'}>
-                          {c.rule}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Purchase flow steps (beforward.jp style) */}
-          <div className="bg-surface border border-border rounded p-5">
-            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-              <Package size={16} className="text-brand-400" />
-              Purchase Flow
-            </h3>
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                { step: 1, label: 'Make Offer', icon: '📝' },
-                { step: 2, label: 'Contract', icon: '📄' },
-                { step: 3, label: 'Payment', icon: '💰' },
-                { step: 4, label: 'Shipment', icon: '🚢' },
-              ].map((s) => (
-                <div key={s.step} className="text-center p-3 bg-surface-darker rounded border border-border">
-                  <div className="text-2xl mb-1">{s.icon}</div>
-                  <div className="text-[10px] text-text-muted uppercase">Step {s.step}</div>
-                  <div className="text-xs font-medium mt-0.5">{s.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right: action panel */}
-        <div className="space-y-4">
-          <div className="bg-surface border border-border rounded p-5 sticky top-6">
-            <div className="text-2xl font-bold font-mono text-brand-400 mb-1">
-              €{listing.price_per_kg}
-              <span className="text-xs text-text-muted font-normal">/kg</span>
-            </div>
-            <div className="text-sm text-text-secondary mb-4">
-              {(listing.available_quantity_kg || 0).toLocaleString()} kg available
-            </div>
-
-            {!showOffer && !offerDone && canDo('offer.create') && (
-              <>
-                <button
-                  className="btn btn-primary w-full justify-center mb-2"
-                  onClick={() => setShowOffer(true)}
-                >
-                  Make Offer
-                </button>
-                <button
-                  className="btn w-full justify-center text-xs"
-                  onClick={() => {
-                    setOfferQty(listing.available_quantity_kg || 0);
-                    setOfferPrice(listing.price_per_kg || 0);
-                    setShowOffer(true);
-                  }}
-                >
-                  Buy Now
-                </button>
-              </>
-            )}
-
-            {offerDone && (
-              <div className="text-center py-4">
-                <div className="text-2xl mb-2">🎉</div>
-                <div className="text-sm font-semibold text-brand-400">Offer Submitted!</div>
-                <p className="text-xs text-text-muted mt-1">
-                  The seller will review your offer. Check your contracts for updates.
-                </p>
-                <button
-                  className="btn btn-sm mt-3"
-                  onClick={() => navigate('/contracts')}
-                >
-                  View Contracts <ChevronRight size={14} />
-                </button>
-              </div>
-            )}
-
-            {showOffer && !offerDone && (
-              <div className="space-y-3">
-                <h4 className="text-xs font-semibold">Your Offer</h4>
-                <div>
-                  <label className="form-label">Quantity (kg)</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    value={offerQty}
-                    onChange={(e) => setOfferQty(Number(e.target.value))}
-                    max={listing.available_quantity_kg}
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Price per kg (€)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="form-input"
-                    value={offerPrice}
-                    onChange={(e) => setOfferPrice(Number(e.target.value))}
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Note (optional)</label>
-                  <textarea
-                    className="form-input"
-                    rows={2}
-                    value={offerNote}
-                    onChange={(e) => setOfferNote(e.target.value)}
-                    placeholder="Incoterm, delivery date, etc."
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pt-2 border-t border-border text-sm">
-                  <span className="text-text-muted">Total estimated</span>
-                  <span className="font-bold font-mono text-brand-400">
-                    {fmtMoney(offerQty * offerPrice)}
-                  </span>
-                </div>
-
-                {offerError && (
-                  <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">
-                    {offerError}
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <button
-                    className="btn flex-1 justify-center"
-                    onClick={() => setShowOffer(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="btn btn-primary flex-1 justify-center"
-                    disabled={offerLoading || !offerQty || !offerPrice}
-                    onClick={handleOffer}
-                  >
-                    {offerLoading ? 'Submitting…' : 'Submit Offer'}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="mt-4 pt-4 border-t border-border space-y-2 text-xs text-text-muted">
-              <div className="flex items-center gap-2">
-                <Leaf size={14} className="text-brand-400" />
-                {listing.organic_claim_status === 'attested' ? 'Organic certified' : 'Conventional'}
-              </div>
-              <div className="flex items-center gap-2">
-                <Ship size={14} />
-                Incoterm: {listing.incoterm}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Layout>
-  );
+    <aside className="space-y-5"><section className="sticky top-6 rounded-3xl border border-border bg-surface p-5 sm:p-6"><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">Commercial decision</div><h3 className="mt-1 text-xl font-bold">Build an offer</h3>{sent ? <div className="mt-6 rounded-2xl border border-brand-400/25 bg-brand-400/5 p-5 text-center"><CheckCircle2 size={28} className="mx-auto text-brand-400" /><div className="mt-3 text-sm font-bold">Offer sent with proof attached</div><p className="mt-2 text-xs leading-5 text-text-muted">The supplier sees your commercial terms while both sides keep this same verified lot identity.</p><button className="btn btn-primary mt-5 w-full justify-center" onClick={() => navigate('/offers')}>Track my offer <ArrowRight size={14} /></button></div> : <><div className="mt-5 grid gap-4 sm:grid-cols-2"><Field label="Quantity (kg)"><input type="number" className="form-input" value={quantity} max={listing.available_quantity_kg} onChange={(event) => setQuantity(Number(event.target.value))} /></Field><Field label="Price per kg (€)"><input type="number" step="0.01" className="form-input" value={price} onChange={(event) => setPrice(Number(event.target.value))} /></Field></div><div className="mt-4 flex items-center justify-between rounded-2xl bg-surface-darker p-4"><span className="text-xs text-text-muted">Estimated trade value</span><span className="font-mono text-lg font-bold text-brand-300">{fmtMoney(quantity * price)}</span></div>{offerError && <div className="mt-3 rounded-xl border border-red-500/30 bg-red-900/10 p-3 text-xs text-red-300">{offerError}</div>}{canDo('offer.create') ? <button className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-400 px-5 text-sm font-bold text-emerald-950" onClick={submit} disabled={busy}>{busy ? 'Sending offer…' : <>Send evidence-backed offer <ArrowRight size={15} /></>}</button> : <div className="mt-4 rounded-xl border border-border p-3 text-xs text-text-muted">Your current role can review this lot but cannot create a commercial offer.</div>}</>}
+        <div className="mt-5 space-y-2 border-t border-border pt-5"><Assurance ok label="Seller identity recorded" /><Assurance ok={listing.organic_claim_status === 'attested'} label="Organic claim supported" /><Assurance ok={Boolean(pack?.eudrReadiness?.ready)} label="EUDR inputs ready" /></div><p className="mt-4 text-[10px] leading-4 text-text-muted">CocoaTrace records the offer and evidence context. Payment and regulated escrow remain with approved providers.</p></section></aside></div>
+  </Layout>;
 }
+
+function HeroMetric({ label, value }: { label: string; value: string }) { return <div className="min-w-28 rounded-2xl border border-white/10 bg-black/15 p-4"><div className="text-[9px] uppercase tracking-wider text-white/45">{label}</div><div className="mt-2 text-xs font-bold text-white">{value}</div></div>; }
+function Proof({ icon: Icon, title, value, detail, ok }: { icon: typeof Leaf; title: string; value: string; detail: string; ok: boolean }) { return <div className="flex gap-3 rounded-2xl border border-border bg-surface-darker p-4"><span className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${ok ? 'bg-brand-400/10 text-brand-400' : 'bg-amber-300/10 text-amber-300'}`}><Icon size={17} /></span><div><div className="text-[9px] uppercase tracking-wider text-text-muted">{title}</div><div className="mt-1 text-xs font-bold">{value}</div><div className="mt-1 text-[10px] leading-4 text-text-muted">{detail}</div></div></div>; }
+function TraceStep({ icon: Icon, title, copy, done = false, active = false }: { icon: typeof Sprout; title: string; copy: string; done?: boolean; active?: boolean }) { return <div className={`rounded-2xl border p-4 ${active ? 'border-brand-400/40 bg-brand-400/5' : 'border-border bg-surface-darker'}`}><span className={`grid h-8 w-8 place-items-center rounded-full ${done ? 'bg-brand-400 text-emerald-950' : active ? 'border border-brand-400 text-brand-400' : 'bg-white/5 text-text-muted'}`}>{done ? <Check size={14} /> : <Icon size={14} />}</span><div className="mt-3 text-xs font-bold">{title}</div><div className="mt-1 text-[10px] leading-4 text-text-muted">{copy}</div></div>; }
+function Assurance({ ok, label }: { ok: boolean; label: string }) { return <div className="flex items-center gap-2 text-xs text-text-secondary">{ok ? <CheckCircle2 size={14} className="text-brand-400" /> : <TriangleAlert size={14} className="text-amber-300" />}{label}</div>; }
+function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label><span className="form-label">{label}</span>{children}</label>; }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { loginSchema, createFarmSchema, createBatchSchema, createCertificateSchema, createRecallSchema, createInvitationSchema, acceptInvitationSchema } from './validation';
+import { loginSchema, createFarmSchema, createBatchSchema, createCertificateSchema, createRecallSchema, createInvitationSchema, acceptInvitationSchema, createSourcingRequestSchema } from './validation';
 
 describe('loginSchema', () => {
   it('accepts valid credentials', () => {
@@ -80,6 +80,22 @@ describe('createCertificateSchema', () => {
       accreditationReference: 'EU-2024-001',
     });
     expect(result.standard).toBe('EU_ORGANIC');
+  });
+});
+
+describe('createSourcingRequestSchema', () => {
+  it('accepts an evidence-backed buyer requirement', () => {
+    const result = createSourcingRequestSchema.parse({
+      title: 'Organic cocoa for Rotterdam', commodity: 'cocoa', quantityKg: 20000,
+      originCountries: ['GH'], deliveryLocation: 'Rotterdam, Netherlands', status: 'open',
+      qualityRequirements: { moistureMax: 7.5 }, assuranceRequirements: { euOrganic: true },
+    });
+    expect(result.incoterm).toBe('CIF');
+    expect(result.visibility).toBe('matched');
+  });
+
+  it('rejects non-positive sourcing quantities', () => {
+    expect(() => createSourcingRequestSchema.parse({ title: 'Organic cocoa', commodity: 'cocoa', quantityKg: 0, deliveryLocation: 'Rotterdam' })).toThrow();
   });
 });
 

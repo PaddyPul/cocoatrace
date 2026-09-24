@@ -22,6 +22,11 @@ import ProductsPage from './pages/ProductsPage';
 import OnboardingPage from './pages/OnboardingPage';
 import PilotTeamPage from './pages/PilotTeamPage';
 import AcceptInvitationPage from './pages/AcceptInvitationPage';
+import ExperienceHomePage from './pages/ExperienceHomePage';
+import SourcingBriefPage from './pages/SourcingBriefPage';
+import CompareOffersPage from './pages/CompareOffersPage';
+import PublishSupplyPage from './pages/PublishSupplyPage';
+import DealRoomPage from './pages/DealRoomPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, onboarding, onboardingLoading } = useAuthCtx();
@@ -36,14 +41,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuthCtx();
   if (loading) return <main className="grid min-h-screen place-items-center bg-surface-darker"><div className="spinner" /></main>;
-  if (user) return <Navigate to="/dashboard" replace />;
+  if (user) return <Navigate to="/home" replace />;
   return <>{children}</>;
 }
 
 function RootRedirect() {
   const { user, loading } = useAuthCtx();
   if (loading) return <main className="grid min-h-screen place-items-center bg-surface-darker"><div className="spinner" /></main>;
-  return <Navigate to={user ? '/dashboard' : '/login'} replace />;
+  return <Navigate to={user ? '/home' : '/login'} replace />;
 }
 
 export default function App() {
@@ -57,6 +62,11 @@ export default function App() {
           <Route path="/p/:slug" element={<ErrorBoundary><PublicProductPage /></ErrorBoundary>} />
           <Route path="/accept-invite/:token" element={<ErrorBoundary><AcceptInvitationPage /></ErrorBoundary>} />
           <Route path="/dashboard" element={<ProtectedRoute><ControlTowerPage /></ProtectedRoute>} />
+          <Route path="/home" element={<ProtectedRoute><ExperienceHomePage /></ProtectedRoute>} />
+          <Route path="/source/new" element={<ProtectedRoute><SourcingBriefPage /></ProtectedRoute>} />
+          <Route path="/source/compare" element={<ProtectedRoute><CompareOffersPage /></ProtectedRoute>} />
+          <Route path="/supply/new" element={<ProtectedRoute><PublishSupplyPage /></ProtectedRoute>} />
+          <Route path="/deal-room/:id" element={<ProtectedRoute><DealRoomPage /></ProtectedRoute>} />
           <Route path="/demo" element={<ProtectedRoute><InvestorDemoPage /></ProtectedRoute>} />
           <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
@@ -82,7 +92,7 @@ export default function App() {
           <Route path="/certs" element={<ProtectedRoute><CertsPage /></ProtectedRoute>} />
           <Route path="/my-listings" element={<ProtectedRoute><MyListingsPage /></ProtectedRoute>} />
           <Route path="/organizations" element={<ProtectedRoute><OrganizationsPage /></ProtectedRoute>} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
         </ToastProvider>
       </AuthProvider>

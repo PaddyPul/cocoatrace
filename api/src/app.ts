@@ -29,6 +29,7 @@ import traceabilityRoutes from './routes/traceability';
 import workspaceRoutes from './routes/workspace';
 import readinessRoutes from './routes/readiness';
 import invitationRoutes from './routes/invitations';
+import sourcingRoutes from './routes/sourcing';
 
 const app = express();
 
@@ -77,6 +78,7 @@ app.use(traceabilityRoutes);
 app.use(workspaceRoutes);
 app.use(readinessRoutes);
 app.use(invitationRoutes);
+app.use(sourcingRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });

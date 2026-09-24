@@ -106,6 +106,8 @@ All passwords: **Password123!**
 | `kofi@marecargo.gh` | Logistics | Record shipment milestones |
 | `ingrid@cocobod.gh` | Regulator | View audit log, all farms, all batches |
 | `admin@cocoatrace.io` | Admin | Full access |
+| `newbuyer@cocoatrace.io` | New buyer | Replay the complete first-run sourcing journey |
+| `newsupplier@cocoatrace.io` | New supplier | Replay the complete first-run supply journey |
 
 Click the quick-login pills on the login page — no typing needed.
 
