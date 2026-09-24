@@ -61,6 +61,7 @@ export interface Listing {
   farm_name?: string;
   farm_region?: string;
   origin_location?: string;
+  destination_location?: string;
   available_quantity_kg: number;
   price_per_kg: number;
   incoterm: string;
@@ -68,6 +69,25 @@ export interface Listing {
   harvest_date?: string;
   grade?: string;
   organic_claim_status: string;
+}
+
+export interface SourcingRequest {
+  id: string;
+  buyer_organization_id: string;
+  buyer_name?: string;
+  title: string;
+  commodity: string;
+  quantity_kg: number;
+  origin_countries: string[];
+  quality_requirements: Record<string, unknown>;
+  assurance_requirements: Record<string, unknown>;
+  delivery_location: string;
+  incoterm: string;
+  required_by?: string;
+  offer_deadline?: string;
+  visibility: 'matched' | 'invited' | 'private';
+  status: 'draft' | 'open' | 'awarded' | 'closed' | 'cancelled';
+  created_at: string;
 }
 
 export interface Contract {

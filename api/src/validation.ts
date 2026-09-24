@@ -104,6 +104,21 @@ export const createOfferSchema = z.object({
   validUntil: z.string().optional(),
 });
 
+export const createSourcingRequestSchema = z.object({
+  title: z.string().trim().min(3).max(160),
+  commodity: z.string().trim().min(2).max(80),
+  quantityKg: z.number().positive(),
+  originCountries: z.array(z.string().length(2)).max(30).default([]),
+  qualityRequirements: z.record(z.unknown()).default({}),
+  assuranceRequirements: z.record(z.unknown()).default({}),
+  deliveryLocation: z.string().trim().min(2).max(160),
+  incoterm: z.string().trim().min(2).max(20).default('CIF'),
+  requiredBy: z.string().optional(),
+  offerDeadline: z.string().optional(),
+  visibility: z.enum(['matched','invited','private']).default('matched'),
+  status: z.enum(['draft','open']).default('draft'),
+});
+
 export const updateEudrSchema = z.object({
   eudrDueDiligenceReference: z.string().min(1),
 });

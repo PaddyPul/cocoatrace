@@ -33,7 +33,9 @@ INSERT INTO users (id, organization_id, email, password_hash, name) VALUES
   ('33333333-3333-3333-3333-333333333005', '11111111-1111-1111-1111-111111111006', 'kofi@marecargo.gh',   '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Kofi Osei'),
   ('33333333-3333-3333-3333-333333333006', '11111111-1111-1111-1111-111111111007', 'ingrid@cocobod.gh',   '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Ingrid Boateng'),
   ('33333333-3333-3333-3333-333333333007', '11111111-1111-1111-1111-111111111008', 'admin@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Platform Admin'),
-  ('33333333-3333-3333-3333-333333333008', '11111111-1111-1111-1111-111111111004', 'pilot@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Pilot User')
+  ('33333333-3333-3333-3333-333333333008', '11111111-1111-1111-1111-111111111004', 'pilot@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'Pilot User'),
+  ('33333333-3333-3333-3333-333333333009', '11111111-1111-1111-1111-111111111005', 'newbuyer@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'New Buyer'),
+  ('33333333-3333-3333-3333-333333333010', '11111111-1111-1111-1111-111111111004', 'newsupplier@cocoatrace.io', '$2a$10$abcdefghijklmnopqrstuOhXyMYaX/8YjwfNIE6V8qEexU4z5Vgka', 'New Supplier')
 ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash;
 
 -- User roles
@@ -45,7 +47,9 @@ INSERT INTO user_roles (user_id, role_id) VALUES
   ('33333333-3333-3333-3333-333333333005', '22222222-2222-2222-2222-222222222005'),
   ('33333333-3333-3333-3333-333333333006', '22222222-2222-2222-2222-222222222006'),
   ('33333333-3333-3333-3333-333333333007', '22222222-2222-2222-2222-222222222007'),
-  ('33333333-3333-3333-3333-333333333008', '22222222-2222-2222-2222-222222222003')
+  ('33333333-3333-3333-3333-333333333008', '22222222-2222-2222-2222-222222222003'),
+  ('33333333-3333-3333-3333-333333333009', '22222222-2222-2222-2222-222222222004'),
+  ('33333333-3333-3333-3333-333333333010', '22222222-2222-2222-2222-222222222003')
 ON CONFLICT DO NOTHING;
 
 -- Existing demo accounts skip first-run onboarding. The dedicated pilot user
@@ -58,6 +62,24 @@ FROM users WHERE id IN (
   '33333333-3333-3333-3333-333333333005','33333333-3333-3333-3333-333333333006',
   '33333333-3333-3333-3333-333333333007'
 ) ON CONFLICT (user_id) DO NOTHING;
+
+-- The two new-customer accounts intentionally have no onboarding row. Signing
+-- in shows the complete first-run buyer or supplier experience.
+
+INSERT INTO sourcing_requests (
+  id,buyer_organization_id,created_by_user_id,title,commodity,quantity_kg,
+  origin_countries,quality_requirements,assurance_requirements,delivery_location,
+  incoterm,required_by,offer_deadline,visibility,status
+) VALUES (
+  '18181818-1818-1818-1818-181818181801',
+  '11111111-1111-1111-1111-111111111005',
+  '33333333-3333-3333-3333-333333333004',
+  'Organic cocoa for Rotterdam · November 2026','cocoa',20000,
+  ARRAY['GH'],
+  '{"fermentation":"fully fermented","moistureMax":7.5,"cropYear":2026}'::jsonb,
+  '{"euOrganic":true,"plotGeolocation":true,"eudrDataPack":true}'::jsonb,
+  'Rotterdam, Netherlands','CIF','2026-11-15','2026-09-30 17:00:00+00','matched','open'
+) ON CONFLICT (id) DO UPDATE SET title=EXCLUDED.title,status=EXCLUDED.status,updated_at=NOW();
 
 -- Farms
 INSERT INTO farms (id, farmer_organization_id, cooperative_organization_id, name, country, region, district, community, official_traceability_id, verification_status) VALUES

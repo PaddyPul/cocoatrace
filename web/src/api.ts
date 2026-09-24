@@ -97,6 +97,18 @@ export const listings = {
     api<import('./types').Listing>('POST', '/listings', data),
 };
 
+export const sourcing = {
+  list: () => api<import('./types').SourcingRequest[]>('GET', '/sourcing-requests'),
+  create: (data: {
+    title: string; commodity: string; quantityKg: number; originCountries?: string[];
+    qualityRequirements?: Record<string, unknown>; assuranceRequirements?: Record<string, unknown>;
+    deliveryLocation: string; incoterm?: string; requiredBy?: string; offerDeadline?: string;
+    visibility?: 'matched' | 'invited' | 'private'; status?: 'draft' | 'open';
+  }) => api<import('./types').SourcingRequest>('POST', '/sourcing-requests', data),
+  update: (id: string, data: { status?: string; title?: string; offerDeadline?: string }) =>
+    api<import('./types').SourcingRequest>('PATCH', `/sourcing-requests/${id}`, data),
+};
+
 export const contracts = {
   list: () => api<import('./types').Contract[]>('GET', '/contracts'),
   get: (id: string) => api<any>('GET', `/contracts/${id}`),
