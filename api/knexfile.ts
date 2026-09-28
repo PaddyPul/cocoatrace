@@ -26,8 +26,12 @@ const config: { [key: string]: Knex.Config } = {
       ? { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }
       : process.env.DATABASE_URL,
     migrations: {
-      directory: path.join(__dirname, 'dist', 'migrations'),
-      extension: 'js',
+      // The migration table was originally created by the TypeScript runner,
+      // so Knex records names such as 001_initial_schema.ts. The production
+      // image also runs migrations through `tsx` and contains api/src; using
+      // those same files keeps the on-disk names aligned with database history.
+      directory: path.join(__dirname, 'src', 'migrations'),
+      extension: 'ts',
     },
   },
 };
