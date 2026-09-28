@@ -14,13 +14,16 @@ export default function ExperienceHomePage() {
   const { user, canDo, onboarding } = useAuthCtx();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const defaultMode: Mode = onboarding?.primary_goal?.startsWith('buy') || user?.orgType === 'importer' ? 'buy' : 'sell';
-  const mode = (params.get('mode') === 'sell' ? 'sell' : params.get('mode') === 'buy' ? 'buy' : (localStorage.getItem('ct_experience_mode') as Mode)) || defaultMode;
+  const canBuy = canDo('offer.create');
+  const canSell = canDo('listing.create');
+  const defaultMode: Mode = canBuy && (onboarding?.primary_goal?.startsWith('buy') || user?.orgType === 'importer') ? 'buy' : canSell ? 'sell' : 'buy';
+  const requestedMode = params.get('mode') === 'sell' ? 'sell' : params.get('mode') === 'buy' ? 'buy' : (localStorage.getItem(`ct_experience_mode:${user?.id}`) as Mode | null);
+  const mode: Mode = requestedMode === 'buy' && canBuy ? 'buy' : requestedMode === 'sell' && canSell ? 'sell' : defaultMode;
   const [data, setData] = useState<HomeData>(empty);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem('ct_experience_mode', mode);
+    if (user?.id) localStorage.setItem(`ct_experience_mode:${user.id}`, mode);
     const safe = <T,>(allowed: boolean, call: () => Promise<T[]>) => allowed ? call().catch(() => []) : Promise.resolve([] as T[]);
     Promise.all([
       safe(canDo('listing.read'), listings.list),
@@ -31,31 +34,37 @@ export default function ExperienceHomePage() {
     ]).then(([listingRows, requestRows, offerRows, contractRows, holdingRows]) => setData({ listings: listingRows, requests: requestRows, offers: offerRows, contracts: contractRows, holdings: holdingRows })).finally(() => setLoading(false));
   }, [mode, user?.id]);
 
-  const switchMode = (next: Mode) => { localStorage.setItem('ct_experience_mode', next); setParams({ mode: next }); };
-  return <Layout currentPage="home" actions={<div className="hidden rounded-xl border border-border bg-surface-darker p-1 sm:flex"><ModeButton active={mode === 'buy'} onClick={() => switchMode('buy')} icon={Search}>Buy</ModeButton><ModeButton active={mode === 'sell'} onClick={() => switchMode('sell')} icon={Sprout}>Sell</ModeButton></div>}>
-    {loading ? <div className="loading"><div className="spinner" />Preparing your workspace…</div> : mode === 'buy' ? <BuyerHome data={data} firstName={user?.name?.split(' ')[0] || 'there'} navigate={navigate} /> : <SellerHome data={data} firstName={user?.name?.split(' ')[0] || 'there'} navigate={navigate} />}
+  const switchMode = (next: Mode) => { if (user?.id) localStorage.setItem(`ct_experience_mode:${user.id}`, next); setParams({ mode: next }); };
+  return <Layout currentPage="home" actions={canBuy && canSell ? <div className="hidden rounded-xl border border-border bg-surface-darker p-1 sm:flex"><ModeButton active={mode === 'buy'} onClick={() => switchMode('buy')} icon={Search}>Buy</ModeButton><ModeButton active={mode === 'sell'} onClick={() => switchMode('sell')} icon={Sprout}>Sell</ModeButton></div> : undefined}>
+    {loading ? <div className="loading"><div className="spinner" />Preparing your workspace…</div> : mode === 'buy' ? <BuyerHome data={data} organizationId={user?.organizationId || ''} firstName={user?.name?.split(' ')[0] || 'there'} navigate={navigate} /> : <SellerHome data={data} organizationId={user?.organizationId || ''} firstName={user?.name?.split(' ')[0] || 'there'} navigate={navigate} />}
   </Layout>;
 }
 
-function BuyerHome({ data, firstName, navigate }: { data: HomeData; firstName: string; navigate: ReturnType<typeof useNavigate> }) {
+function BuyerHome({ data, organizationId, firstName, navigate }: { data: HomeData; organizationId: string; firstName: string; navigate: ReturnType<typeof useNavigate> }) {
   const qualified = data.listings.reduce((sum, item) => sum + Number(item.available_quantity_kg || 0), 0);
   const pendingOffers = data.offers.filter((item) => item.status === 'pending').length;
+  const myRequests = data.requests.filter((item) => item.buyer_organization_id === organizationId);
   return <>
     <Hero eyebrow="Verified procurement" title={`Good ${dayPart()}, ${firstName}. Source ingredients with proof already attached.`} copy="Describe what you need once. CocoaTrace matches physical supply, field-level origin, quality evidence and delivery terms—then preserves the trace through fulfilment." action="Create sourcing brief" onClick={() => navigate('/source/new')} />
-    <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4"><Metric label="Qualified supply" value={`${compactKg(qualified)} kg`} note={`${data.listings.length} published lots`} /><Metric label="Open sourcing needs" value={String(data.requests.filter((item) => item.status === 'open').length)} note="matched suppliers can respond" /><Metric label="Offers to decide" value={String(pendingOffers)} note="price and assurance together" /><Metric label="Active orders" value={String(data.contracts.length)} note="commercial + trace record" /></div>
+    <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4"><Metric label="Qualified supply" value={`${compactKg(qualified)} kg`} note={`${data.listings.length} published lots`} /><Metric label="Open sourcing needs" value={String(myRequests.filter((item) => item.status === 'open').length)} note="matched suppliers can respond" /><Metric label="Offers to decide" value={String(pendingOffers)} note="price and assurance together" /><Metric label="Active orders" value={String(data.contracts.length)} note="commercial + trace record" /></div>
     <section className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]"><Panel eyebrow="Next decisions" title="Move procurement forward"><Task icon={Search} title="Review verified cocoa supply" copy={`${data.listings.length} lots expose origin, quantity and assurance before contact.`} action="Find supply" onClick={() => navigate('/marketplace')} /><Task icon={FileCheck2} title="Compare shortlisted offers" copy="Normalize commercial terms and evidence gaps side by side." action="Compare" onClick={() => navigate('/source/compare')} /><Task icon={Handshake} title="Continue the active deal" copy={data.contracts.length ? 'Release conditions, shipment and payment milestones stay in one room.' : 'Accepted offers become an attributable shared fulfilment record.'} action="Deal room" onClick={() => navigate(data.contracts[0] ? `/deal-room/${data.contracts[0].id}` : '/contracts')} /></Panel><Copilot title="Two decisions can move today" text="The Asante lot has complete origin and organic evidence. Mensah is cheaper, but its evidence must be checked against the requested delivery date. CocoaTrace shows the trade-off; your team makes the award." /></section>
     <Journey active={1} labels={['Define need', 'Match supply', 'Review proof', 'Contract', 'Receive']} />
   </>;
 }
 
-function SellerHome({ data, firstName, navigate }: { data: HomeData; firstName: string; navigate: ReturnType<typeof useNavigate> }) {
+function SellerHome({ data, organizationId, firstName, navigate }: { data: HomeData; organizationId: string; firstName: string; navigate: ReturnType<typeof useNavigate> }) {
   const inventory = data.holdings.filter((item) => item.status === 'available').reduce((sum, item) => sum + Number(item.quantity_kg || 0), 0);
   const received = data.offers.filter((item) => item.status === 'pending').length;
+  const myListings = data.listings.filter((item) => item.seller_organization_id === organizationId);
+  const openRequest = data.requests.find((item) => item.status === 'open' && item.buyer_organization_id !== organizationId);
+  const isNewSupplier = data.holdings.length === 0;
+  const heroAction = isNewSupplier ? 'Create first supply record' : 'Publish verified supply';
+  const heroPath = isNewSupplier ? '/farms' : '/supply/new';
   return <>
-    <Hero eyebrow="Verified market access" title={`Good ${dayPart()}, ${firstName}. Turn traceable inventory into buyer-ready supply.`} copy="Reuse approved farm, certification and quality evidence across eligible lots, respond to matched buyer needs and fulfil accepted orders without rebuilding the dossier." action="Publish verified supply" onClick={() => navigate('/supply/new')} />
-    <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4"><Metric label="Available inventory" value={`${compactKg(inventory)} kg`} note="physical and uncommitted" /><Metric label="Published supply" value={String(data.listings.filter((item) => item.seller_organization_id).length)} note="visible to qualified buyers" /><Metric label="Buyer requests" value={String(data.requests.filter((item) => item.status === 'open').length)} note="open verified demand" /><Metric label="Offers received" value={String(received)} note="awaiting commercial decision" /></div>
-    <section className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]"><Panel eyebrow="Matched opportunities" title="Respond where you already qualify"><Task icon={Building2} title="Northstar Foods · organic cocoa" copy="20,000 kg · Ghana origin · Rotterdam · plot proof and EU Organic required." action="Prepare offer" onClick={() => navigate('/supply/new')} /><Task icon={PackageCheck} title="Finish one reusable product dossier" copy="Resolve the plot geolocation gap once, then reuse the approved fact safely." action="Open products" onClick={() => navigate('/products')} /><Task icon={Handshake} title="Manage buyer responses" copy="Review offers and create a contract from an accepted commercial decision." action="Open offers" onClick={() => navigate('/offers')} /></Panel><Copilot title="Best next action" text="Publish the remaining 4,000 kg of GH-2026-0042. It matches every mandatory assurance requirement, while the second lot remains visibly incomplete until its plot geolocation is supplied." /></section>
-    <Journey active={2} labels={['Capture lot', 'Verify proof', 'Publish supply', 'Fulfil order', 'Build history']} />
+    <Hero eyebrow="Verified market access" title={`Good ${dayPart()}, ${firstName}. Turn traceable inventory into buyer-ready supply.`} copy="Reuse approved farm, certification and quality evidence across eligible lots, respond to matched buyer needs and fulfil accepted orders without rebuilding the dossier." action={heroAction} onClick={() => navigate(heroPath)} />
+    <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4"><Metric label="Available inventory" value={`${compactKg(inventory)} kg`} note="physical and uncommitted" /><Metric label="Published supply" value={String(myListings.length)} note="visible to qualified buyers" /><Metric label="Buyer requests" value={String(data.requests.filter((item) => item.status === 'open' && item.buyer_organization_id !== organizationId).length)} note="open verified demand" /><Metric label="Offers received" value={String(received)} note="awaiting commercial decision" /></div>
+    <section className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]"><Panel eyebrow={isNewSupplier ? 'Get ready to sell' : 'Matched opportunities'} title={isNewSupplier ? 'Create your first traceable supply' : 'Respond where you already qualify'}>{isNewSupplier ? <Task icon={Sprout} title="Register a source farm" copy="Add the origin first, then record a harvest batch. CocoaTrace creates inventory from that batch automatically." action="Register farm" onClick={() => navigate('/farms')} /> : openRequest ? <Task icon={Building2} title={`${openRequest.buyer_name || 'Verified buyer'} · ${openRequest.commodity}`} copy={`${Number(openRequest.quantity_kg).toLocaleString()} kg · ${openRequest.incoterm} ${openRequest.delivery_location}`} action="Publish matching supply" onClick={() => navigate('/supply/new')} /> : <Task icon={PackageCheck} title="Publish inventory for matching" copy="No open buyer request matches yet. Keep your verified supply visible for qualified buyers." action="Publish supply" onClick={() => navigate('/supply/new')} />}<Task icon={PackageCheck} title="Manage reusable product dossiers" copy="Keep origin and assurance evidence attached to the lot buyers will review." action="Open products" onClick={() => navigate('/products')} /><Task icon={Handshake} title="Manage buyer responses" copy="Review offers and create a contract from an accepted commercial decision." action="Open offers" onClick={() => navigate('/offers')} /></Panel><Copilot title="Best next action" text={isNewSupplier ? 'Register the source farm and its plot, then record the harvested quantity. That creates the physical inventory required before a supply offer can be published.' : myListings.length === 0 ? `You have ${compactKg(inventory)} kg available. Publish a quantity and commercial terms so matched buyers can review it.` : `${myListings.length} supply ${myListings.length === 1 ? 'listing is' : 'listings are'} visible. Review incoming offers before committing inventory.`} /></section>
+    <Journey active={isNewSupplier ? 0 : myListings.length ? 3 : 2} labels={['Capture lot', 'Verify proof', 'Publish supply', 'Fulfil order', 'Build history']} />
   </>;
 }
 

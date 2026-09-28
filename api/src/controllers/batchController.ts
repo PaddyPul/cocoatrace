@@ -37,9 +37,11 @@ export async function pushToMarketplace(req: Request, res: Response): Promise<vo
     }
 
     const availRes = await client.query('SELECT quantity_kg FROM batch_holdings WHERE id=$1', [holdingId]);
-    if (quantityKg > Number(availRes.rows[0].quantity_kg)) {
+    const listedRes = await client.query('SELECT COALESCE(SUM(available_quantity_kg),0) AS listed_quantity FROM listings WHERE holding_id=$1 AND active=TRUE', [holdingId]);
+    const remainingQuantity = Number(availRes.rows[0].quantity_kg) - Number(listedRes.rows[0].listed_quantity);
+    if (quantityKg > remainingQuantity) {
       await client.query('ROLLBACK');
-      res.status(400).json({ error: `Only ${availRes.rows[0].quantity_kg} kg available in holding` });
+      res.status(400).json({ error: `Only ${remainingQuantity} kg remains available to publish` });
       return;
     }
 
@@ -61,7 +63,7 @@ export async function pushToMarketplace(req: Request, res: Response): Promise<vo
 
 export async function listBatches(req: Request, res: Response): Promise<void> {
   const perms = req.user!.permissions || [];
-  const seeAll = perms.includes('*') || perms.includes('batch.read');
+  const seeAll = perms.includes('*') || perms.includes('batch.attest') || perms.includes('audit.read') || perms.includes('recall.manage.all');
   let sql = `SELECT b.*, f.name as farm_name, o.name as holder_name
              FROM harvest_batches b
              JOIN farms f ON f.id = b.farm_id
@@ -94,8 +96,13 @@ export async function getBatch(req: Request, res: Response): Promise<void> {
     return;
   }
   const perms = req.user!.permissions || [];
-  const seeAll = perms.includes('*') || perms.includes('batch.read');
-  if (!seeAll && rows[0].current_holder_id !== req.user!.organizationId && rows[0].farmer_organization_id !== req.user!.organizationId) {
+  const seeAll = perms.includes('*') || perms.includes('batch.attest') || perms.includes('audit.read') || perms.includes('recall.manage.all');
+  const listed = await query(
+    `SELECT 1 FROM listings l JOIN batch_holdings h ON h.id=l.holding_id
+     WHERE h.batch_id=$1 AND l.active=TRUE LIMIT 1`,
+    [req.params.id]
+  );
+  if (!seeAll && !listed.rows[0] && rows[0].current_holder_id !== req.user!.organizationId && rows[0].farmer_organization_id !== req.user!.organizationId) {
     res.status(403).json({ error: 'Access denied' });
     return;
   }
@@ -105,12 +112,39 @@ export async function getBatch(req: Request, res: Response): Promise<void> {
 
 export async function createBatch(req: Request, res: Response): Promise<void> {
   const { farmId, plotIds, crop, harvestDate, quantityKg, moisturePercent, grade } = req.body;
-  const { rows } = await query(
-    "INSERT INTO harvest_batches (farm_id, plot_ids, crop, harvest_date, quantity_kg, moisture_percent, grade, current_holder_id, organic_claim_status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'pending_attestation') RETURNING *",
-    [farmId, plotIds, crop, harvestDate, quantityKg, moisturePercent || null, grade || null, req.user!.organizationId]
-  );
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'batch.create', entityType: 'harvest_batch', entityId: rows[0].id });
-  res.status(201).json(rows[0]);
+  const farm = await query('SELECT id FROM farms WHERE id=$1 AND farmer_organization_id=$2', [farmId, req.user!.organizationId]);
+  if (!farm.rows[0]) {
+    res.status(400).json({ error: 'Choose a farm managed by your organization' });
+    return;
+  }
+  if (plotIds?.length) {
+    const plots = await query('SELECT id FROM farm_plots WHERE farm_id=$1 AND id=ANY($2::uuid[])', [farmId, plotIds]);
+    if (plots.rows.length !== plotIds.length) {
+      res.status(400).json({ error: 'One or more plots do not belong to the selected farm' });
+      return;
+    }
+  }
+
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    const { rows } = await client.query(
+      "INSERT INTO harvest_batches (farm_id, plot_ids, crop, harvest_date, quantity_kg, moisture_percent, grade, current_holder_id, organic_claim_status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'pending_attestation') RETURNING *",
+      [farmId, plotIds, crop, harvestDate, quantityKg, moisturePercent || null, grade || null, req.user!.organizationId]
+    );
+    const holding = await client.query(
+      "INSERT INTO batch_holdings (batch_id, holder_organization_id, quantity_kg, status) VALUES ($1,$2,$3,'available') RETURNING id",
+      [rows[0].id, req.user!.organizationId, quantityKg]
+    );
+    await client.query('COMMIT');
+    await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'batch.create', entityType: 'harvest_batch', entityId: rows[0].id });
+    res.status(201).json({ ...rows[0], holding_id: holding.rows[0].id });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 export async function attestBatch(req: Request, res: Response): Promise<void> {

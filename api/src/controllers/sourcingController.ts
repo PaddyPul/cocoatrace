@@ -3,11 +3,14 @@ import { query } from '../db';
 import * as audit from '../services/audit';
 
 export async function listRequests(req: Request, res: Response): Promise<void> {
+  const permissions = req.user!.permissions || [];
+  const canSeeMarketplaceDemand = permissions.includes('*') || permissions.includes('listing.create') || permissions.includes('offer.respond');
+  const where = canSeeMarketplaceDemand ? "WHERE sr.buyer_organization_id=$1 OR (sr.status='open' AND sr.visibility='matched')" : 'WHERE sr.buyer_organization_id=$1';
   const result = await query(
     `SELECT sr.*, o.name AS buyer_name
      FROM sourcing_requests sr
      JOIN organizations o ON o.id=sr.buyer_organization_id
-     WHERE sr.buyer_organization_id=$1 OR sr.status='open'
+     ${where}
      ORDER BY sr.created_at DESC`,
     [req.user!.organizationId]
   );

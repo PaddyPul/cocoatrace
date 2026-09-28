@@ -42,8 +42,10 @@ export async function createListing(req: Request, res: Response): Promise<void> 
     res.status(400).json({ error: 'Holding not found or not available' });
     return;
   }
-  if (availableQuantityKg > holdingRes.rows[0].quantity_kg) {
-    res.status(400).json({ error: 'Quantity exceeds holding' });
+  const listedRes = await query('SELECT COALESCE(SUM(available_quantity_kg),0) AS listed_quantity FROM listings WHERE holding_id=$1 AND active=TRUE', [holdingId]);
+  const remainingQuantity = Number(holdingRes.rows[0].quantity_kg) - Number(listedRes.rows[0].listed_quantity);
+  if (availableQuantityKg > remainingQuantity) {
+    res.status(400).json({ error: `Only ${remainingQuantity} kg remains available to publish` });
     return;
   }
   const { rows } = await query(
