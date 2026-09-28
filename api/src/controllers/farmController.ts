@@ -3,7 +3,8 @@ import { query } from '../db';
 import * as audit from '../services/audit';
 
 export async function listFarms(req: Request, res: Response): Promise<void> {
-  const canSeeAll = req.user!.permissions?.includes('*') || req.user!.permissions?.includes('farm.read');
+  const permissions = req.user!.permissions || [];
+  const canSeeAll = permissions.includes('*') || permissions.includes('certificate.issue') || permissions.includes('audit.read') || permissions.includes('shipment.update') || permissions.includes('offer.create');
   let sql: string, params: any[];
   if (canSeeAll) {
     sql = `SELECT f.*, o.name as farmer_org_name FROM farms f JOIN organizations o ON o.id = f.farmer_organization_id ORDER BY f.name`;
@@ -22,7 +23,8 @@ export async function getFarm(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: 'Farm not found' });
     return;
   }
-  const canSeeAll = req.user!.permissions?.includes('*') || req.user!.permissions?.includes('farm.read');
+  const permissions = req.user!.permissions || [];
+  const canSeeAll = permissions.includes('*') || permissions.includes('certificate.issue') || permissions.includes('audit.read') || permissions.includes('shipment.update') || permissions.includes('offer.create');
   if (!canSeeAll && farmRes.rows[0].farmer_organization_id !== req.user!.organizationId) {
     res.status(403).json({ error: 'Access denied' });
     return;

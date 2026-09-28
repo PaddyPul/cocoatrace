@@ -41,6 +41,17 @@ export async function listHoldings(req: Request, res: Response): Promise<void> {
 
 export async function createHolding(req: Request, res: Response): Promise<void> {
   const { batchId, quantityKg, warehouseLocation } = req.body;
+  const batch = await query('SELECT quantity_kg FROM harvest_batches WHERE id=$1 AND current_holder_id=$2', [batchId, req.user!.organizationId]);
+  if (!batch.rows[0]) {
+    res.status(400).json({ error: 'Batch not found or not held by your organization' });
+    return;
+  }
+  const allocated = await query("SELECT COALESCE(SUM(quantity_kg),0) AS quantity_kg FROM batch_holdings WHERE batch_id=$1 AND status <> 'transferred'", [batchId]);
+  const remainingQuantity = Number(batch.rows[0].quantity_kg) - Number(allocated.rows[0].quantity_kg);
+  if (quantityKg > remainingQuantity) {
+    res.status(400).json({ error: `Only ${remainingQuantity} kg remains unallocated for this batch` });
+    return;
+  }
   const { rows } = await query(
     'INSERT INTO batch_holdings (batch_id, holder_organization_id, quantity_kg, warehouse_location) VALUES ($1,$2,$3,$4) RETURNING *',
     [batchId, req.user!.organizationId, quantityKg, warehouseLocation || null]

@@ -51,6 +51,7 @@ export function FarmsPage() {
   const [plotGpsLng, setPlotGpsLng] = useState('');
   const [plotLoading, setPlotLoading] = useState(false);
   const [plotError, setPlotError] = useState('');
+  const [completedFarmId, setCompletedFarmId] = useState<string | null>(null);
 
   const handleCreateFarm = async () => {
     if (!cfName || !cfRegion || !cfDistrict) { setCfError('Name, region, and district required'); return; }
@@ -70,6 +71,7 @@ export function FarmsPage() {
     try {
       await farmsApi.createPlot(createdFarmId, { plotCode, areaHectares: Number(plotArea), crops: plotCrops.split(',').map((s) => s.trim()), gpsLat: plotGpsLat ? Number(plotGpsLat) : undefined, gpsLng: plotGpsLng ? Number(plotGpsLng) : undefined });
       setShowPlot(false); setPlotCode(''); setPlotArea(0); setPlotCrops('cocoa'); setPlotGpsLat(''); setPlotGpsLng('');
+      setCompletedFarmId(createdFarmId);
       setCreatedFarmId(null);
       toast('success', 'Plot added to farm');
     } catch (e: any) { setPlotError(e.message); } finally { setPlotLoading(false); }
@@ -150,6 +152,22 @@ export function FarmsPage() {
               <button className="btn btn-primary flex-1 justify-center" onClick={handleCreatePlot} disabled={plotLoading || !plotCode || !plotArea}>
                 {plotLoading ? 'Creating…' : 'Add Plot'}
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {completedFarmId && (
+      <div className="modal-overlay" onClick={() => setCompletedFarmId(null)}>
+        <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="text-center py-6">
+            <div className="text-3xl mb-3">✓</div>
+            <div className="text-lg font-semibold text-brand-400 mb-1">Source ready</div>
+            <p className="text-xs text-text-muted mb-5">Record the harvested quantity next. CocoaTrace will create the inventory holding automatically.</p>
+            <div className="flex gap-2 justify-center">
+              <button className="btn" onClick={() => setCompletedFarmId(null)}>Stay here</button>
+              <button className="btn btn-primary" onClick={() => navigate('/batches')}>Record harvest →</button>
             </div>
           </div>
         </div>

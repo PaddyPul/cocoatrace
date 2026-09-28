@@ -40,7 +40,7 @@ export default function MyListingsPage() {
         </div>
 
         {filtered.length === 0 && mine.length === 0 ? (
-          <EmptyState icon="🏷" title="No listings yet" description="List your batches on the marketplace to start selling." action={<button className="btn btn-sm btn-primary" onClick={() => navigate('/marketplace')}>View Marketplace →</button>} />
+          <EmptyState icon="🏷" title="No listings yet" description="Create or select inventory, then publish the quantity and terms buyers can review." action={<button className="btn btn-sm btn-primary" onClick={() => navigate('/supply/new')}>Publish supply →</button>} />
         ) : filtered.length === 0 ? (
           <EmptyState icon="🔍" title="No listings match" description="Try adjusting your search." />
         ) : (
