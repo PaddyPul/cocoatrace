@@ -1,13 +1,32 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { contracts } from '../api';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { contracts, evidence, payments } from '../api';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
-import { ArrowLeft, FileText, Ship, Euro, MapPin, Hash, ChevronRight, Tag } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ChevronRight, Circle, Download, Euro, FileText, Ship, Tag, Upload, X } from 'lucide-react';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
 import { SkeletonDetail } from '../components/shared/Skeleton';
-import { X } from 'lucide-react';
+
+const SELLER_DOCUMENTS = [
+  ['commercial_invoice', 'Commercial invoice'],
+  ['packing_list', 'Packing or weight list'],
+  ['quality_certificate', 'Quality certificate'],
+  ['inspection_certificate', 'Inspection certificate'],
+  ['certificate_of_origin', 'Certificate of origin'],
+  ['insurance_certificate', 'Cargo insurance certificate'],
+  ['transport_document', 'Transport document (B/L, waybill or consignment note)'],
+  ['export_permit', 'Export permit'],
+  ['other', 'Other contract document'],
+] as const;
+
+const BUYER_DOCUMENTS = [
+  ['purchase_order', 'Purchase order'],
+  ['import_permit', 'Import/customs document'],
+  ['compliance_document', 'Compliance/due-diligence document'],
+  ['delivery_receipt', 'Delivery receipt'],
+  ['other', 'Other contract document'],
+] as const;
 
 export default function ContractDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -17,339 +36,162 @@ export default function ContractDetailPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showCompliance, setShowCompliance] = useState(false);
+  const [complianceScheme, setComplianceScheme] = useState('EUDR');
+  const [complianceRef, setComplianceRef] = useState('');
+  const [complianceLoading, setComplianceLoading] = useState(false);
+  const [complianceError, setComplianceError] = useState('');
 
-  // Shipment request
-  const [showShipReq, setShowShipReq] = useState(false);
-  const [srVessel, setSrVessel] = useState('');
-  const [srContainer, setSrContainer] = useState('');
-  const [srOrigin, setSrOrigin] = useState('Tema Port, Ghana');
-  const [srDest, setSrDest] = useState('Port of Rotterdam, Netherlands');
-  const [srEta, setSrEta] = useState('');
-  const [srLoading, setSrLoading] = useState(false);
-  const [srError, setSrError] = useState('');
-  const [srDone, setSrDone] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
+  const [documentType, setDocumentType] = useState('commercial_invoice');
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [documentNote, setDocumentNote] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [presenting, setPresenting] = useState(false);
 
-  // Payment request
-  const [showPayReq, setShowPayReq] = useState(false);
-  const [prAmount, setPrAmount] = useState(0);
-  const [prCurrency, setPrCurrency] = useState('EUR');
-  const [prLoading, setPrLoading] = useState(false);
-  const [prError, setPrError] = useState('');
-  const [prDone, setPrDone] = useState(false);
-
-  // EUDR reference
-  const [showEudr, setShowEudr] = useState(false);
-  const [eudrRef, setEudrRef] = useState('');
-  const [eudrLoading, setEudrLoading] = useState(false);
-  const [eudrError, setEudrError] = useState('');
-  const [eudrDone, setEudrDone] = useState(false);
-
-  useEffect(() => {
+  const loadContract = useCallback(async () => {
     if (!id) return;
-    contracts.get(id)
-      .then((d) => {
-        setData(d);
-        if (d.quantity_kg && d.price_per_kg) setPrAmount(d.quantity_kg * d.price_per_kg);
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+    const result = await contracts.get(id);
+    setData(result);
+    setComplianceScheme(result.compliance_scheme || (result.eudr_due_diligence_reference ? 'EUDR' : ''));
+    setComplianceRef(result.compliance_reference || result.eudr_due_diligence_reference || '');
   }, [id]);
 
-  const isSeller = data && user && data.seller_organization_id === user.organizationId;
-  const isBuyer = data && user && data.buyer_organization_id === user.organizationId;
+  useEffect(() => {
+    setLoading(true);
+    loadContract().catch((e) => setError(e.message)).finally(() => setLoading(false));
+  }, [loadContract]);
 
-  const handleShipRequest = async () => {
-    if (!id) return;
-    setSrLoading(true); setSrError('');
+  const isSeller = Boolean(data && user && data.seller_organization_id === user.organizationId);
+  const isBuyer = Boolean(data && user && data.buyer_organization_id === user.organizationId);
+  const isTransportCoordinator = Boolean(data && user && data.transport_coordinator_organization_id === user.organizationId);
+
+  useEffect(() => setDocumentType(isSeller ? 'commercial_invoice' : 'purchase_order'), [isSeller]);
+
+  const requiredDocuments = useMemo(() => {
+    const required = ['commercial_invoice', 'packing_list', 'transport_document'];
+    if (['CIF', 'CIP'].includes(String(data?.incoterm || '').toUpperCase())) required.push('insurance_certificate');
+    return required;
+  }, [data?.incoterm]);
+  const presentDocumentTypes = new Set((data?.documents || []).map((doc: any) => doc.type));
+  const missingDocuments = requiredDocuments.filter((type) => !presentDocumentTypes.has(type));
+  const shipmentLoaded = ['handed_over', 'loaded', 'departed', 'arrived', 'customs_cleared', 'delivered'].includes(data?.current_milestone);
+  const transportDocumentsReady = shipmentLoaded && Boolean(data?.transport_document_reference);
+
+  const handleComplianceUpdate = async () => {
+    if (!id || !complianceScheme.trim() || !complianceRef.trim()) { setComplianceError('Scheme and reference are required'); return; }
+    setComplianceLoading(true); setComplianceError('');
     try {
-      await contracts.requestShipment(id, { vesselName: srVessel || undefined, containerReference: srContainer || undefined, originPort: srOrigin, destinationPort: srDest, etaArrival: srEta || undefined });
-      setSrDone(true);
-      toast('success', 'Shipment requested');
-    } catch (e: any) { setSrError(e.message); } finally { setSrLoading(false); }
+      await contracts.updateCompliance(id, { scheme: complianceScheme.trim(), reference: complianceRef.trim() });
+      await loadContract(); setShowCompliance(false);
+      toast('success', 'Compliance reference saved');
+    } catch (e: any) { setComplianceError(e.message); } finally { setComplianceLoading(false); }
   };
 
-  const handlePayRequest = async () => {
-    if (!id || !prAmount) { setPrError('Amount required'); return; }
-    setPrLoading(true); setPrError('');
+  const handleUpload = async () => {
+    if (!id || !documentFile) { setUploadError('Choose a file'); return; }
+    setUploading(true); setUploadError('');
     try {
-      await contracts.requestPayment(id, { amountTotal: Number(prAmount), currency: prCurrency });
-      setPrDone(true);
-      toast('success', 'Payment request sent to buyer');
-    } catch (e: any) { setPrError(e.message); } finally { setPrLoading(false); }
+      await evidence.upload(documentFile, { type: documentType, linkedEntityType: 'contract', linkedEntityId: id, claimDescription: documentNote });
+      await loadContract(); setDocumentFile(null); setDocumentNote(''); setShowUpload(false);
+      toast('success', 'Document shared with both contract parties');
+    } catch (e: any) { setUploadError(e.message); } finally { setUploading(false); }
   };
 
-  const handleEudrUpdate = async () => {
-    if (!id || !eudrRef) { setEudrError('EUDR reference required'); return; }
-    setEudrLoading(true); setEudrError('');
+  const handlePresentDocuments = async () => {
+    if (!data?.payment_request_id) return;
+    setPresenting(true);
     try {
-      await contracts.updateEudr(id, { eudrDueDiligenceReference: eudrRef });
-      setShowEudr(false);
-      setEudrDone(true);
-      toast('success', 'EUDR reference updated');
-    } catch (e: any) { setEudrError(e.message); } finally { setEudrLoading(false); }
+      await payments.submitDocuments(data.payment_request_id); await loadContract();
+      toast('success', 'Document set presented. The buyer can now record payment.');
+    } catch (e: any) { toast('error', e.message); } finally { setPresenting(false); }
   };
 
   if (loading) return <Layout currentPage="contracts"><SkeletonDetail /></Layout>;
   if (error || !data) return <Layout currentPage="contracts"><div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{error || 'Not found'}</div></Layout>;
 
   const c = data;
-  const totalValue = (c.quantity_kg || 0) * (c.price_per_kg || 0);
+  const totalValue = Number(c.quantity_kg || 0) * Number(c.price_per_kg || 0);
+  const steps = [
+    { label: 'Offer accepted and contract created', done: true },
+    { label: `Transport responsibility assigned to ${c.transport_coordinator_name || 'the responsible party'}`, done: Boolean(c.transport_coordinator_organization_id) },
+    { label: 'External transport arrangement recorded', done: Boolean(c.service_provider_name || c.booking_reference) },
+    { label: 'Buyer and seller assemble the applicable trade documents', done: missingDocuments.length === 0 },
+    { label: 'Cargo dispatched and transport document issued', done: transportDocumentsReady },
+    { label: 'Buyer records external bank payment', done: c.payment_status === 'settled' },
+    { label: 'Cargo delivered and contract closed', done: c.status === 'settled' },
+  ];
+  const uploadChoices = isSeller ? SELLER_DOCUMENTS : BUYER_DOCUMENTS;
+
+  let nextAction = 'Review the contract and shared documents.';
+  if (isTransportCoordinator && !c.service_provider_name && !c.booking_reference) nextAction = `Open the transport workspace and record the external arrangement. Your organization coordinates transport under ${c.incoterm}.`;
+  else if (isSeller && missingDocuments.length > 0) nextAction = `Upload the remaining trade documents (${missingDocuments.length} missing).`;
+  else if (isTransportCoordinator && !transportDocumentsReady) nextAction = 'Update transport progress and record the applicable transport-document reference.';
+  else if (isSeller && c.payment_status === 'awaiting_documents') nextAction = 'Present the complete document set to make payment due.';
+  else if (isBuyer && c.payment_status === 'requested') nextAction = 'Settle through your bank, then record the transaction reference.';
+  else if (c.payment_status === 'settled' && c.current_milestone !== 'delivered') nextAction = 'Track the shipment through delivery.';
+  else if (c.status === 'settled') nextAction = 'Trade complete: payment and delivery are both recorded.';
 
   return (
-    <Layout
-      currentPage="contracts"
-      actions={<button className="btn btn-sm" onClick={() => navigate('/contracts')}><ArrowLeft size={14} /> Back</button>}
-    >
+    <Layout currentPage="contracts" actions={<button className="btn btn-sm" onClick={() => navigate('/contracts')}><ArrowLeft size={14} /> Back</button>}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-5">
+          <div className="bg-brand-500/10 border border-brand-500/30 rounded p-4"><div className="text-[10px] text-brand-400 uppercase tracking-wider mb-1">Your next action</div><div className="text-sm font-semibold">{nextAction}</div></div>
+
           <div className="bg-surface border border-border rounded p-5">
-            <div className="flex items-start justify-between mb-5">
-              <div>
-                <h1 className="text-lg font-bold">Sales Contract</h1>
-                <p className="font-mono text-xs text-text-muted mt-0.5">{c.id}</p>
-              </div>
-              <StatusBadge status={c.status} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Seller</div>
-                <div className="text-sm font-medium">{c.seller_name || '—'}</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Buyer</div>
-                <div className="text-sm font-medium">{c.buyer_name || '—'}</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Quantity</div>
-                <div className="text-lg font-mono">{(c.quantity_kg || 0).toLocaleString()} kg</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Price</div>
-                <div className="text-lg font-mono text-brand-400">€{Number(c.price_per_kg).toFixed(2)}/kg</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Total Value</div>
-                <div className="text-xl font-bold font-mono text-brand-400">{fmtMoney(totalValue)}</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Incoterm</div>
-                <div className="text-sm font-mono">{c.incoterm}</div>
-              </div>
-              {c.eudr_due_diligence_reference && (
-                <div className="col-span-2">
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">EUDR Reference</div>
-                  <div className="font-mono text-xs text-text-muted">{c.eudr_due_diligence_reference}</div>
-                </div>
-              )}
-            </div>
+            <div className="flex items-start justify-between mb-5"><div><h1 className="text-lg font-bold">Sales Contract</h1><p className="font-mono text-xs text-text-muted mt-0.5">{c.id}</p></div><StatusBadge status={c.status} /></div>
+            <div className="grid grid-cols-2 gap-4"><Field label="Seller" value={c.seller_name} /><Field label="Buyer" value={c.buyer_name} /><Field label="Quantity" value={`${Number(c.quantity_kg || 0).toLocaleString()} kg`} /><Field label="Price" value={`€${Number(c.price_per_kg || 0).toFixed(2)}/kg`} /><Field label="Total value" value={fmtMoney(totalValue, c.currency)} highlight /><Field label="Incoterm" value={c.incoterm || '—'} />{c.compliance_reference && <div className="col-span-2"><Field label={`${c.compliance_scheme || 'Compliance'} reference`} value={c.compliance_reference} mono /></div>}</div>
           </div>
 
-          {c.listing_id && (
-            <div className="bg-surface border border-border rounded p-5">
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                <Tag size={16} className="text-brand-400" />
-                Source Listing
-              </h3>
-              <p className="text-xs text-text-muted mb-3">Listing {c.listing_id.slice(0, 8)}…</p>
-              <button className="btn btn-sm" onClick={() => navigate(`/listing/${c.listing_id}`)}>View Listing <ChevronRight size={14} /></button>
-            </div>
-          )}
+          <div className="bg-surface border border-border rounded p-5"><h3 className="text-sm font-semibold mb-4">Trade fulfilment</h3><div className="space-y-3">{steps.map((step) => <div key={step.label} className="flex items-center gap-3 text-xs">{step.done ? <CheckCircle2 size={16} className="text-green-400 shrink-0" /> : <Circle size={16} className="text-text-muted shrink-0" />}<span className={step.done ? 'text-text-primary' : 'text-text-muted'}>{step.label}</span></div>)}</div></div>
 
-          {c.shipment_id && (
-            <div className="bg-surface border border-border rounded p-5">
-              <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                <Ship size={16} className="text-brand-400" />
-                Linked Shipment
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Vessel</div>
-                  <div className="text-sm">{c.vessel_name || '—'}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Container</div>
-                  <div className="font-mono text-xs">{c.container_reference || '—'}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">ETA</div>
-                  <div className="text-sm">{fmtDate(c.eta_arrival)}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Status</div>
-                  <StatusBadge status={c.current_milestone} />
-                </div>
-              </div>
-              <button className="btn btn-sm mt-4" onClick={() => navigate(`/shipments/${c.shipment_id}`)}>
-                View Shipment Details <ChevronRight size={14} />
-              </button>
-            </div>
-          )}
-
-
-
-          {!c.shipment_id && srDone && (
-            <div className="bg-surface border border-border rounded p-5 text-center">
-              <div className="text-2xl mb-2">🚢</div>
-              <div className="text-sm font-semibold text-brand-400 mb-1">Shipment Requested!</div>
-              <p className="text-xs text-text-muted">The logistics provider will pick up the cargo.</p>
-            </div>
-          )}
-
-          {prDone && (
-            <div className="bg-surface border border-border rounded p-5 text-center">
-              <div className="text-2xl mb-2">💰</div>
-              <div className="text-sm font-semibold text-brand-400 mb-1">Payment Requested!</div>
-              <p className="text-xs text-text-muted">The buyer has been notified to complete payment.</p>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <div className="bg-surface border border-border rounded p-5 sticky top-6">
-            <h4 className="text-xs font-semibold mb-3">Quick Actions</h4>
-            <div className="space-y-2">
-              {canDo('contract.read') && (
-                <button className="btn w-full justify-center text-xs" onClick={() => {
-                  const data = { contractId: c.id, seller: c.seller_name, buyer: c.buyer_name, quantityKg: c.quantity_kg, pricePerKg: c.price_per_kg, totalValue: c.quantity_kg * c.price_per_kg, incoterm: c.incoterm, status: c.status, eudrReference: c.eudr_due_diligence_reference, listingId: c.listing_id, shipmentId: c.shipment_id, exportedAt: new Date().toISOString() };
-                  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a'); a.href = url; a.download = `contract-${c.id.slice(0, 8)}.json`; a.click();
-                  URL.revokeObjectURL(url);
-                  toast('success', 'Contract downloaded');
-                }}>
-                  <FileText size={14} /> Download Contract
-                </button>
-              )}
-
-              {isBuyer && !eudrDone && !showEudr && (
-                <button className="btn w-full justify-center text-xs" onClick={() => setShowEudr(true)}>
-                  <FileText size={14} /> Add EUDR Reference
-                </button>
-              )}
-              {eudrDone && (
-                <div className="text-xs text-green-400 text-center py-2 font-semibold">EUDR reference saved</div>
-              )}
-
-              {isSeller && !c.shipment_id && !srDone && (
-                <button className="btn w-full justify-center text-xs" onClick={() => setShowShipReq(true)}>
-                  <Ship size={14} /> Request Shipment
-                </button>
-              )}
-
-              {isSeller && !prDone && (
-                <button className="btn w-full justify-center text-xs" onClick={() => setShowPayReq(true)}>
-                  <Euro size={14} /> Request Payment
-                </button>
-              )}
-
-              {c.shipment_id && (
-                <button className="btn w-full justify-center text-xs" onClick={() => navigate(`/shipments/${c.shipment_id}`)}>
-                  <Ship size={14} /> Track Shipment
-                </button>
-              )}
-            </div>
+          <div className="bg-surface border border-border rounded p-5">
+            <div className="flex items-center justify-between gap-3 mb-4"><div><h3 className="text-sm font-semibold flex items-center gap-2"><FileText size={16} className="text-brand-400" /> Shared trade documents</h3><p className="text-[11px] text-text-muted mt-1">Both buyer and seller can open documents attached to this contract.</p></div>{canDo('evidence.upload') && <button className="btn btn-sm" onClick={() => setShowUpload(true)}><Upload size={14} /> Add document</button>}</div>
+            {(c.documents || []).length ? <div className="divide-y divide-border">{c.documents.map((doc: any) => <div key={doc.id} className="py-3 flex items-center justify-between gap-3"><div className="min-w-0"><div className="text-xs font-medium truncate">{doc.file_name}</div><div className="text-[10px] text-text-muted">{doc.type.split('_').join(' ')} · {doc.uploader_name} · {fmtDate(doc.created_at)}</div></div><button className="btn btn-sm shrink-0" onClick={() => evidence.download(doc.id, doc.file_name).catch((e) => toast('error', e.message))}><Download size={13} /> Download</button></div>)}</div> : <div className="text-xs text-text-muted py-5 text-center">No contract documents shared yet.</div>}
+            {isSeller && missingDocuments.length > 0 && <div className="mt-3 text-[11px] text-amber-400">Required before payment: {missingDocuments.map((type) => type.split('_').join(' ')).join(', ')}.</div>}
           </div>
+
+          {c.shipment_id && <div className="bg-surface border border-border rounded p-5"><h3 className="text-sm font-semibold mb-4 flex items-center gap-2"><Ship size={16} className="text-brand-400" /> Transport workspace</h3><div className="grid grid-cols-2 gap-4"><Field label="Coordinator" value={c.transport_coordinator_name || 'Assigned from Incoterm'} /><Field label="External provider" value={c.service_provider_name || 'Not recorded'} /><Field label="Mode" value={c.transport_mode === 'unspecified' ? 'Not selected' : String(c.transport_mode).split('_').join(' ')} /><Field label="Booking reference" value={c.booking_reference || 'Not recorded'} mono /><Field label="Transport document" value={c.transport_document_reference || 'Not issued'} mono /><Field label="ETA" value={fmtDate(c.eta_arrival)} /><div><div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Status</div><StatusBadge status={c.current_milestone} /></div></div><button className="btn btn-sm mt-4" onClick={() => navigate(`/shipments/${c.shipment_id}`)}>Open transport workspace <ChevronRight size={14} /></button></div>}
+          {c.listing_id && <div className="bg-surface border border-border rounded p-5"><h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Tag size={16} className="text-brand-400" /> Source listing</h3><button className="btn btn-sm" onClick={() => navigate(`/listing/${c.listing_id}`)}>View listing <ChevronRight size={14} /></button></div>}
         </div>
+
+        <div className="space-y-4"><div className="bg-surface border border-border rounded p-5 sticky top-6"><h4 className="text-xs font-semibold mb-3">Contract actions</h4><div className="space-y-2">
+          {isBuyer && !c.compliance_reference && <button className="btn w-full justify-center text-xs" onClick={() => setShowCompliance(true)}><FileText size={14} /> Add compliance reference</button>}
+          {c.shipment_id && <button className={`btn ${isTransportCoordinator && !c.service_provider_name ? 'btn-primary' : ''} w-full justify-center text-xs`} onClick={() => navigate(`/shipments/${c.shipment_id}`)}><Ship size={14} /> {isTransportCoordinator ? 'Manage transport' : 'View transport'}</button>}
+          {isSeller && c.payment_status === 'awaiting_documents' && <button className="btn btn-primary w-full justify-center text-xs" onClick={handlePresentDocuments} disabled={presenting || missingDocuments.length > 0 || !transportDocumentsReady}><Euro size={14} /> {presenting ? 'Presenting…' : 'Present documents for payment'}</button>}
+          {c.payment_request_id && <button className="btn w-full justify-center text-xs" onClick={() => navigate(`/payments/${c.payment_request_id}`)}><Euro size={14} /> {isBuyer && c.payment_status === 'requested' ? 'Record bank payment' : 'View payment workflow'}</button>}
+          <button className="btn w-full justify-center text-xs" onClick={() => downloadContract(c, toast)}><FileText size={14} /> Download contract</button>
+        </div></div></div>
       </div>
 
-      {showShipReq && (
-        <div className="modal-overlay" onClick={() => !srLoading && setShowShipReq(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between mb-2">
-              <div><div className="modal-title">Request Shipment</div></div>
-              <button className="btn btn-sm" onClick={() => setShowShipReq(false)}><X size={14} /></button>
-            </div>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label className="form-label">Vessel Name</label>
-                  <input className="form-input" placeholder="e.g. MV Cocoa Voyager" value={srVessel} onChange={(e) => setSrVessel(e.target.value)} />
-                </div>
-                <div className="col-span-2">
-                  <label className="form-label">Container Reference</label>
-                  <input className="form-input" placeholder="e.g. MSCU4823137" value={srContainer} onChange={(e) => setSrContainer(e.target.value)} />
-                </div>
-                <div>
-                  <label className="form-label">Origin Port</label>
-                  <input className="form-input" value={srOrigin} onChange={(e) => setSrOrigin(e.target.value)} />
-                </div>
-                <div>
-                  <label className="form-label">Destination Port</label>
-                  <input className="form-input" value={srDest} onChange={(e) => setSrDest(e.target.value)} />
-                </div>
-                <div className="col-span-2">
-                  <label className="form-label">ETA</label>
-                  <input type="date" className="form-input" value={srEta} onChange={(e) => setSrEta(e.target.value)} />
-                </div>
-              </div>
-              {srError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{srError}</div>}
-              <div className="flex gap-2 pt-1">
-                <button className="btn flex-1 justify-center" onClick={() => setShowShipReq(false)} disabled={srLoading}>Cancel</button>
-                <button className="btn btn-primary flex-1 justify-center" onClick={handleShipRequest} disabled={srLoading}>
-                  {srLoading ? 'Requesting…' : 'Request Shipment'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showPayReq && (
-        <div className="modal-overlay" onClick={() => !prLoading && setShowPayReq(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between mb-2">
-              <div><div className="modal-title">Request Payment</div></div>
-              <button className="btn btn-sm" onClick={() => setShowPayReq(false)}><X size={14} /></button>
-            </div>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label className="form-label">Amount</label>
-                  <input type="number" step="0.01" className="form-input" value={prAmount || ''} onChange={(e) => setPrAmount(Number(e.target.value))} />
-                </div>
-                <div>
-                  <label className="form-label">Currency</label>
-                  <select className="form-select" value={prCurrency} onChange={(e) => setPrCurrency(e.target.value)}>
-                    <option>EUR</option><option>USD</option><option>GBP</option>
-                  </select>
-                </div>
-              </div>
-              {prError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{prError}</div>}
-              <div className="flex gap-2 pt-1">
-                <button className="btn flex-1 justify-center" onClick={() => setShowPayReq(false)} disabled={prLoading}>Cancel</button>
-                <button className="btn btn-primary flex-1 justify-center" onClick={handlePayRequest} disabled={prLoading || !prAmount}>
-                  {prLoading ? 'Requesting…' : 'Request Payment'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showEudr && (
-        <div className="modal-overlay" onClick={() => !eudrLoading && setShowEudr(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between mb-2">
-              <div><div className="modal-title">EUDR Due Diligence Reference</div></div>
-              <button className="btn btn-sm" onClick={() => setShowEudr(false)}><X size={14} /></button>
-            </div>
-            <div className="space-y-3">
-              <div>
-                <label className="form-label">Reference</label>
-                <input className="form-input" placeholder="e.g. EUDR-2026-COCOA-001" value={eudrRef} onChange={(e) => setEudrRef(e.target.value)} />
-              </div>
-              {eudrError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{eudrError}</div>}
-              <div className="flex gap-2 pt-1">
-                <button className="btn flex-1 justify-center" onClick={() => setShowEudr(false)} disabled={eudrLoading}>Cancel</button>
-                <button className="btn btn-primary flex-1 justify-center" onClick={handleEudrUpdate} disabled={eudrLoading || !eudrRef}>
-                  {eudrLoading ? 'Saving…' : 'Save Reference'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {showCompliance && <Modal title="Compliance Reference" onClose={() => !complianceLoading && setShowCompliance(false)}><div className="space-y-3"><p className="text-[11px] text-text-muted">Use this only when a regulation, certification scheme or buyer policy applies to the material. Examples include EUDR, conflict-minerals due diligence or an import permit.</p><div><label className="form-label">Scheme or requirement</label><input className="form-input" placeholder="e.g. EUDR, OECD Due Diligence, Import Permit" value={complianceScheme} onChange={(e) => setComplianceScheme(e.target.value)} /></div><div><label className="form-label">Reference</label><input className="form-input" placeholder="Reference issued by the applicable system or authority" value={complianceRef} onChange={(e) => setComplianceRef(e.target.value)} /></div><ErrorBox message={complianceError} /><ModalButtons busy={complianceLoading} onCancel={() => setShowCompliance(false)} onConfirm={handleComplianceUpdate} confirmLabel="Save reference" /></div></Modal>}
+      {showUpload && <Modal title="Share Trade Document" onClose={() => !uploading && setShowUpload(false)}><div className="space-y-3"><div><label className="form-label">Document type</label><select className="form-select" value={documentType} onChange={(e) => setDocumentType(e.target.value)}>{uploadChoices.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div><div><label className="form-label">File</label><input type="file" className="form-input" onChange={(e) => setDocumentFile(e.target.files?.[0] || null)} /></div><div><label className="form-label">Note (optional)</label><input className="form-input" value={documentNote} onChange={(e) => setDocumentNote(e.target.value)} placeholder="Document number or short explanation" /></div><ErrorBox message={uploadError} /><ModalButtons busy={uploading} onCancel={() => setShowUpload(false)} onConfirm={handleUpload} confirmLabel="Share document" /></div></Modal>}
     </Layout>
   );
+}
+
+function Field({ label, value, highlight = false, mono = false }: { label: string; value: string; highlight?: boolean; mono?: boolean }) {
+  return <div><div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">{label}</div><div className={`${highlight ? 'text-xl font-bold text-brand-400' : 'text-sm font-medium'} ${mono || highlight ? 'font-mono' : ''}`}>{value || '—'}</div></div>;
+}
+
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return <div className="modal-overlay" onClick={onClose}><div className="modal" onClick={(e) => e.stopPropagation()}><div className="flex items-start justify-between mb-3"><div className="modal-title">{title}</div><button className="btn btn-sm" onClick={onClose}><X size={14} /></button></div>{children}</div></div>;
+}
+
+function ErrorBox({ message }: { message: string }) {
+  return message ? <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{message}</div> : null;
+}
+
+function ModalButtons({ busy, onCancel, onConfirm, confirmLabel }: { busy: boolean; onCancel: () => void; onConfirm: () => void; confirmLabel: string }) {
+  return <div className="flex gap-2 pt-1"><button className="btn flex-1 justify-center" onClick={onCancel} disabled={busy}>Cancel</button><button className="btn btn-primary flex-1 justify-center" onClick={onConfirm} disabled={busy}>{busy ? 'Working…' : confirmLabel}</button></div>;
+}
+
+function downloadContract(c: any, toast: (type: any, message: string) => void) {
+  const exportData = { contractId: c.id, seller: c.seller_name, buyer: c.buyer_name, quantityKg: c.quantity_kg, pricePerKg: c.price_per_kg, currency: c.currency, incoterm: c.incoterm, status: c.status, complianceScheme: c.compliance_scheme, complianceReference: c.compliance_reference, transportCoordinator: c.transport_coordinator_name, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a'); anchor.href = url; anchor.download = `contract-${c.id.slice(0, 8)}.json`; anchor.click();
+  URL.revokeObjectURL(url);
+  toast('success', 'Contract downloaded');
 }

@@ -37,7 +37,7 @@ export default function ControlTowerPage() {
           canDo('batch.read') ? productProfiles.list() : Promise.resolve([]),
           canDo('batch.read') ? traceability.listLots() : Promise.resolve([]),
           canDo('recall.manage') ? recalls.list() : Promise.resolve([]),
-          canDo('shipment.read') || canDo('shipment.request') || canDo('shipment.update') || canDo('shipment.accept') ? shipments.list() : Promise.resolve([]),
+          canDo('shipment.read') || canDo('shipment.update') ? shipments.list() : Promise.resolve([]),
           canDo('evidence.read') || canDo('evidence.upload') ? evidence.list() : Promise.resolve([]),
         ]);
         setData({ batches: batchRows, products, lots, recalls: recallRows, shipments: shipmentRows, evidence: evidenceRows });

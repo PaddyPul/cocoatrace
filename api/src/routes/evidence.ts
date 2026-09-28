@@ -14,6 +14,7 @@ const upload = multer({ dest: uploadsDir });
 const router = Router();
 
 router.get('/evidence', requireAuth, requirePermission('evidence.read'), evidenceController.listEvidence);
+router.get('/evidence/:id/download', requireAuth, requirePermission('evidence.read'), evidenceController.downloadEvidence);
 router.post('/evidence', requireAuth, requirePermission('evidence.upload'), upload.single('file'), validate(uploadEvidenceSchema), evidenceController.uploadEvidence);
 
 export = router;

@@ -20,8 +20,8 @@ ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, type=EXCLUDED.type,
 INSERT INTO roles (id, name, permissions) VALUES
   ('22222222-2222-2222-2222-222222222001', 'farmer',    ARRAY['farm.read','farm.create','batch.read','batch.create','holding.read','listing.read','listing.create','offer.respond','custody.transfer.request','custody.transfer.accept','payment.read','contract.read']),
   ('22222222-2222-2222-2222-222222222002', 'certifier', ARRAY['certificate.read','certificate.issue','batch.read','batch.attest','farm.read','evidence.read','evidence.upload']),
-  ('22222222-2222-2222-2222-222222222003', 'exporter',  ARRAY['farm.read','farm.create','batch.read','batch.create','holding.read','holding.create','listing.read','listing.create','offer.respond','contract.read','shipment.read','shipment.request','payment.read','payment.request','evidence.read','evidence.upload','recall.manage','member.invite']),
-  ('22222222-2222-2222-2222-222222222004', 'importer',  ARRAY['listing.read','offer.create','contract.read','shipment.read','payment.read','payment.confirm','evidence.read','evidence.upload','provenance.export','batch.read','farm.read','certificate.read']),
+  ('22222222-2222-2222-2222-222222222003', 'exporter',  ARRAY['farm.read','farm.create','batch.read','batch.create','holding.read','holding.create','listing.read','listing.create','offer.respond','contract.read','shipment.read','shipment.update','payment.read','payment.request','evidence.read','evidence.upload','recall.manage','member.invite']),
+  ('22222222-2222-2222-2222-222222222004', 'importer',  ARRAY['listing.read','offer.create','contract.read','shipment.read','shipment.update','payment.read','payment.confirm','evidence.read','evidence.upload','provenance.export','batch.read','farm.read','certificate.read']),
   ('22222222-2222-2222-2222-222222222005', 'logistics', ARRAY['shipment.read','shipment.accept','shipment.update','evidence.read','evidence.upload','batch.read','contract.read','farm.read']),
   ('22222222-2222-2222-2222-222222222006', 'regulator', ARRAY['audit.read','farm.read','batch.read','certificate.read','evidence.read','provenance.export','audit.export','recall.manage','recall.manage.all']),
   ('22222222-2222-2222-2222-222222222007', 'admin',     ARRAY['*'])
@@ -182,9 +182,13 @@ ON CONFLICT (id) DO UPDATE SET holding_id=EXCLUDED.holding_id,quantity_kg=EXCLUD
   incoterm=EXCLUDED.incoterm,status=EXCLUDED.status;
 
 -- Shipment
-INSERT INTO shipments (id, contract_id, logistics_organization_id, container_reference, vessel_name, bill_of_lading_number, origin_port, destination_port, eta_arrival, current_milestone) VALUES
-  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'cccccccc-cccc-cccc-cccc-ccccccccc001', '11111111-1111-1111-1111-111111111006', 'MSKU2609421', 'MV Atlantic Bridge', 'MCL-2026-0942', 'Tema Port, Ghana', 'Port of Rotterdam, Netherlands', '2026-10-02', 'departed')
+INSERT INTO shipments (id, contract_id, logistics_organization_id, transport_coordinator_organization_id, service_provider_name, booking_reference, transport_mode, transport_document_type, transport_document_reference, container_reference, vessel_name, bill_of_lading_number, origin_port, destination_port, eta_arrival, current_milestone) VALUES
+  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'cccccccc-cccc-cccc-cccc-ccccccccc001', '11111111-1111-1111-1111-111111111006', '11111111-1111-1111-1111-111111111004', 'MareCargo Logistics', 'MCG-BOOK-0942', 'sea', 'bill_of_lading', 'MCL-2026-0942', 'MSKU2609421', 'MV Atlantic Bridge', 'MCL-2026-0942', 'Tema Port, Ghana', 'Port of Rotterdam, Netherlands', '2026-10-02', 'departed')
 ON CONFLICT (id) DO UPDATE SET logistics_organization_id=EXCLUDED.logistics_organization_id,
+  transport_coordinator_organization_id=EXCLUDED.transport_coordinator_organization_id,
+  service_provider_name=EXCLUDED.service_provider_name,booking_reference=EXCLUDED.booking_reference,
+  transport_mode=EXCLUDED.transport_mode,transport_document_type=EXCLUDED.transport_document_type,
+  transport_document_reference=EXCLUDED.transport_document_reference,
   container_reference=EXCLUDED.container_reference,vessel_name=EXCLUDED.vessel_name,
   bill_of_lading_number=EXCLUDED.bill_of_lading_number,origin_port=EXCLUDED.origin_port,
   destination_port=EXCLUDED.destination_port,eta_arrival=EXCLUDED.eta_arrival,
@@ -193,10 +197,10 @@ ON CONFLICT (id) DO UPDATE SET logistics_organization_id=EXCLUDED.logistics_orga
 -- Milestones
 DELETE FROM shipment_milestones WHERE shipment_id='dddddddd-dddd-dddd-dddd-ddddddddd001';
 INSERT INTO shipment_milestones (shipment_id, milestone, recorded_by_user_id, recorded_at, location, notes) VALUES
-  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'accepted',      '33333333-3333-3333-3333-333333333005', '2026-09-12 09:00:00+00', 'Tema, Ghana',   'Carrier accepted the shipment'),
-  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'picked_up',     '33333333-3333-3333-3333-333333333005', '2026-09-14 07:30:00+00', 'AKC-WH1, Tema', 'Sealed cargo collected'),
-  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'port_received', '33333333-3333-3333-3333-333333333005', '2026-09-16 14:00:00+00', 'Tema Port',      'Container received at terminal'),
-  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'departed',      '33333333-3333-3333-3333-333333333005', '2026-09-18 06:00:00+00', 'Tema Port',      'Vessel departed for Rotterdam');
+  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'booked',      '33333333-3333-3333-3333-333333333003', '2026-09-12 09:00:00+00', 'Tema, Ghana',   'Seller recorded the external freight booking'),
+  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'cargo_ready', '33333333-3333-3333-3333-333333333003', '2026-09-14 07:30:00+00', 'AKC-WH1, Tema', 'Cargo sealed and ready for collection'),
+  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'handed_over', '33333333-3333-3333-3333-333333333003', '2026-09-16 14:00:00+00', 'Tema Port',     'Cargo handed to the external transport provider'),
+  ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'departed',    '33333333-3333-3333-3333-333333333003', '2026-09-18 06:00:00+00', 'Tema Port',     'Seller recorded departure from provider tracking');
 
 -- Payment request
 INSERT INTO payment_requests (id, contract_id, requested_by_organization_id, amount_total, currency, status) VALUES
@@ -225,7 +229,7 @@ UPDATE payment_requests SET created_at='2026-09-10 11:00:00+00'
 INSERT INTO evidence_items (id, uploader_user_id, uploader_organization_id, type, file_name, sha256_hash, storage_path, review_status, linked_entity_type, linked_entity_id, claim_description) VALUES
   ('ffffffff-ffff-ffff-ffff-fffffffffff1', '33333333-3333-3333-3333-333333333002', '11111111-1111-1111-1111-111111111003', 'certificate_pdf', 'OCG-2026-GH-0042.pdf', 'sha256:certready2026', 'evidence/2026/cert-ready.pdf', 'approved', 'batch', '77777777-7777-7777-7777-777777777001', 'Valid EU Organic certificate'),
   ('ffffffff-ffff-ffff-ffff-fffffffffff2', '33333333-3333-3333-3333-333333333003', '11111111-1111-1111-1111-111111111004', 'weighing_ticket', 'AKC-WT-20260718.pdf', 'sha256:weightready2026', 'evidence/2026/weight-ready.pdf', 'approved', 'batch', '77777777-7777-7777-7777-777777777001', 'Warehouse intake and weighing ticket'),
-  ('ffffffff-ffff-ffff-ffff-fffffffffff3', '33333333-3333-3333-3333-333333333005', '11111111-1111-1111-1111-111111111006', 'bill_of_lading', 'MCL-2026-0942.pdf', 'sha256:bol2026', 'evidence/2026/bol-0942.pdf', 'approved', 'shipment', 'dddddddd-dddd-dddd-dddd-ddddddddd001', 'Bill of lading for the contracted lot')
+  ('ffffffff-ffff-ffff-ffff-fffffffffff3', '33333333-3333-3333-3333-333333333003', '11111111-1111-1111-1111-111111111004', 'transport_document', 'MCL-2026-0942.pdf', 'sha256:bol2026', 'evidence/2026/bol-0942.pdf', 'approved', 'contract', 'cccccccc-cccc-cccc-cccc-ccccccccc001', 'Transport document received from the external provider')
 ON CONFLICT (id) DO UPDATE SET file_name=EXCLUDED.file_name,sha256_hash=EXCLUDED.sha256_hash,
   storage_path=EXCLUDED.storage_path,review_status=EXCLUDED.review_status,
   linked_entity_type=EXCLUDED.linked_entity_type,linked_entity_id=EXCLUDED.linked_entity_id,

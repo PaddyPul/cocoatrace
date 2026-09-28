@@ -123,13 +123,9 @@ export const updateEudrSchema = z.object({
   eudrDueDiligenceReference: z.string().min(1),
 });
 
-export const createShipmentSchema = z.object({
-  logisticsOrganizationId: z.string().uuid().optional(),
-  vesselName: z.string().optional(),
-  containerReference: z.string().optional(),
-  originPort: z.string().min(1),
-  destinationPort: z.string().min(1),
-  etaArrival: z.string().optional(),
+export const updateComplianceSchema = z.object({
+  scheme: z.string().trim().min(1).max(100),
+  reference: z.string().trim().min(1).max(255),
 });
 
 export const createMilestoneSchema = z.object({
@@ -137,6 +133,20 @@ export const createMilestoneSchema = z.object({
   location: z.string().optional(),
   notes: z.string().optional(),
 });
+
+export const updateShipmentDetailsSchema = z.object({
+  serviceProviderName: z.string().trim().min(1).optional(),
+  bookingReference: z.string().trim().min(1).optional(),
+  transportMode: z.enum(['road', 'rail', 'sea', 'air', 'inland_waterway', 'multimodal', 'unspecified']).optional(),
+  transportDocumentType: z.enum(['bill_of_lading', 'sea_waybill', 'air_waybill', 'road_consignment_note', 'rail_consignment_note', 'warehouse_release', 'other']).optional(),
+  transportDocumentReference: z.string().trim().min(1).optional(),
+  trackingUrl: z.string().url().optional(),
+  vesselName: z.string().trim().min(1).optional(),
+  containerReference: z.string().trim().min(1).optional(),
+  originLocation: z.string().trim().min(1).optional(),
+  destinationLocation: z.string().trim().min(1).optional(),
+  etaArrival: z.string().optional(),
+}).refine((value) => Object.values(value).some(Boolean), 'Provide at least one transport detail');
 
 export const createPaymentRequestSchema = z.object({
   amountTotal: z.number().positive(),

@@ -42,7 +42,7 @@ export default function PaymentDetailPage() {
       setPayDone(true);
       const updated = await payments.get(id);
       setData(updated);
-      toast('success', 'Payment confirmed successfully');
+      toast('success', 'External bank payment recorded');
     } catch (e: any) { setPayError(e.message); } finally { setPayLoading(false); }
   };
 
@@ -107,6 +107,15 @@ export default function PaymentDetailPage() {
             </div>
           </div>
 
+          <div className="bg-surface border border-border rounded p-5">
+            <h3 className="text-sm font-semibold mb-2">Documentary payment</h3>
+            <p className="text-xs text-text-muted leading-relaxed">
+              This trade uses documents against payment (D/P). CocoaTrace coordinates the document handoff and records the bank reference; it does not hold or transfer funds.
+            </p>
+            {p.status === 'awaiting_documents' && <div className="mt-3 text-xs text-amber-400">The exporter is preparing the required shipping documents. Payment is not due yet.</div>}
+            {p.status === 'requested' && <div className="mt-3 text-xs text-brand-400">The document set has been presented. The buyer can settle through their bank and record the transaction reference here.</div>}
+          </div>
+
           {p.quantity_kg && (
             <div className="bg-surface border border-border rounded p-5">
               <h3 className="text-sm font-semibold mb-3">Contract Summary</h3>
@@ -139,14 +148,14 @@ export default function PaymentDetailPage() {
             <div className="space-y-2">
               {p.status === 'requested' && isBuyer && canDo('payment.confirm') && !showPay && !payDone && (
                 <button className="btn btn-primary w-full justify-center text-xs" onClick={() => setShowPay(true)}>
-                  <Euro size={14} /> Pay Now
+                  <Euro size={14} /> Record Bank Payment
                 </button>
               )}
 
               {payDone && (
                 <div className="text-center py-3">
                   <Check size={20} className="text-green-400 mx-auto mb-1" />
-                  <div className="text-xs font-semibold text-green-400">Payment Confirmed!</div>
+                  <div className="text-xs font-semibold text-green-400">Bank Payment Recorded</div>
                 </div>
               )}
 
@@ -155,12 +164,13 @@ export default function PaymentDetailPage() {
                   <div>
                     <label className="form-label">Transaction Reference</label>
                     <input className="form-input" placeholder="e.g. SWIFT:COCO12345" value={txRef} onChange={(e) => setTxRef(e.target.value)} />
+                    <p className="text-[10px] text-text-muted mt-1">Use the reference issued by your bank or trade-finance provider.</p>
                   </div>
                   {payError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{payError}</div>}
                   <div className="flex gap-2">
                     <button className="btn flex-1 justify-center text-xs" onClick={() => setShowPay(false)} disabled={payLoading}>Cancel</button>
                     <button className="btn btn-primary flex-1 justify-center text-xs" onClick={handlePay} disabled={payLoading || !txRef}>
-                      {payLoading ? 'Processing…' : 'Confirm Payment'}
+                      {payLoading ? 'Recording…' : 'Record Payment'}
                     </button>
                   </div>
                 </div>

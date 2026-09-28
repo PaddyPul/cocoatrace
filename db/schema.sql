@@ -304,6 +304,8 @@ CREATE TABLE IF NOT EXISTS sales_contracts (
   incoterm TEXT NOT NULL DEFAULT 'CIF',
   status TEXT NOT NULL DEFAULT 'accepted',
   eudr_due_diligence_reference TEXT,
+  compliance_scheme TEXT,
+  compliance_reference TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -312,13 +314,20 @@ CREATE TABLE IF NOT EXISTS shipments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   contract_id UUID NOT NULL REFERENCES sales_contracts(id),
   logistics_organization_id UUID REFERENCES organizations(id),
+  transport_coordinator_organization_id UUID REFERENCES organizations(id),
+  service_provider_name TEXT,
+  booking_reference TEXT,
+  transport_mode TEXT NOT NULL DEFAULT 'unspecified',
+  transport_document_type TEXT,
+  transport_document_reference TEXT,
+  tracking_url TEXT,
   container_reference TEXT,
   vessel_name TEXT,
   bill_of_lading_number TEXT,
   origin_port TEXT NOT NULL DEFAULT 'Tema Port, Ghana',
   destination_port TEXT NOT NULL DEFAULT 'Port of Rotterdam, Netherlands',
   eta_arrival DATE,
-  current_milestone TEXT NOT NULL DEFAULT 'requested',
+  current_milestone TEXT NOT NULL DEFAULT 'planning',
   delivered_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -353,6 +362,8 @@ CREATE TABLE IF NOT EXISTS payment_requests (
   amount_total NUMERIC(14,2) NOT NULL,
   currency CHAR(3) NOT NULL DEFAULT 'EUR',
   status TEXT NOT NULL DEFAULT 'requested',
+  payment_method TEXT NOT NULL DEFAULT 'documentary_collection_dp',
+  due_trigger TEXT NOT NULL DEFAULT 'documents_presented',
   payment_reference_external TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   settled_at TIMESTAMPTZ

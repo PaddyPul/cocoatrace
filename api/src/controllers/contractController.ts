@@ -42,7 +42,15 @@ export async function acceptOffer(req: Request, res: Response): Promise<void> {
   const client = await getClient();
   try {
     await client.query('BEGIN');
-    const offRes = await client.query('SELECT o.*, l.holding_id, l.seller_organization_id, l.incoterm FROM trade_offers o JOIN listings l ON l.id=o.listing_id WHERE o.id=$1 AND o.status=$2', [offerId, 'pending']);
+    const offRes = await client.query(`
+      SELECT o.*, l.holding_id, l.seller_organization_id, l.incoterm,
+             l.origin_location, l.destination_location,
+             h.batch_id, h.quantity_kg as holding_quantity, h.warehouse_location
+      FROM trade_offers o
+      JOIN listings l ON l.id=o.listing_id
+      JOIN batch_holdings h ON h.id=l.holding_id
+      WHERE o.id=$1 AND o.status=$2
+      FOR UPDATE OF o, l, h`, [offerId, 'pending']);
     const offer = offRes.rows[0];
     if (!offer) {
       await client.query('ROLLBACK');
@@ -56,16 +64,39 @@ export async function acceptOffer(req: Request, res: Response): Promise<void> {
     }
 
     await client.query("UPDATE trade_offers SET status='accepted' WHERE id=$1", [offerId]);
-    await client.query("UPDATE batch_holdings SET status='committed' WHERE id=$1", [offer.holding_id]);
+    await client.query("UPDATE trade_offers SET status='rejected' WHERE listing_id=$1 AND id<>$2 AND status='pending'", [offer.listing_id, offerId]);
+    const residualQuantity = Number(offer.holding_quantity) - Number(offer.quantity_kg);
+    if (residualQuantity > 0) {
+      await client.query(
+        "INSERT INTO batch_holdings (batch_id, holder_organization_id, quantity_kg, warehouse_location, status) VALUES ($1,$2,$3,$4,'available')",
+        [offer.batch_id, req.user!.organizationId, residualQuantity, offer.warehouse_location]
+      );
+    }
+    await client.query("UPDATE batch_holdings SET quantity_kg=$1, status='committed' WHERE id=$2", [offer.quantity_kg, offer.holding_id]);
     await client.query("UPDATE listings SET active=FALSE WHERE id=$1", [offer.listing_id]);
 
     const contractRes = await client.query(
       'INSERT INTO sales_contracts (listing_id, offer_id, seller_organization_id, buyer_organization_id, holding_id, quantity_kg, price_per_kg, currency, incoterm) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',
       [offer.listing_id, offer.id, req.user!.organizationId, offer.buyer_organization_id, offer.holding_id, offer.quantity_kg, offer.offered_price_per_kg, offer.currency, offer.incoterm]
     );
+    const paymentRes = await client.query(
+      "INSERT INTO payment_requests (contract_id, requested_by_organization_id, amount_total, currency, status) VALUES ($1,$2,$3,$4,'awaiting_documents') RETURNING *",
+      [contractRes.rows[0].id, req.user!.organizationId, Number(offer.quantity_kg) * Number(offer.offered_price_per_kg), offer.currency]
+    );
+    const buyerArrangesCarriage = ['EXW', 'FCA', 'FAS', 'FOB'].includes(String(offer.incoterm).toUpperCase());
+    const coordinatorOrganizationId = buyerArrangesCarriage ? offer.buyer_organization_id : req.user!.organizationId;
+    const shipmentRes = await client.query(
+      `INSERT INTO shipments (
+         contract_id, transport_coordinator_organization_id, origin_port, destination_port,
+         current_milestone, transport_mode
+       ) VALUES ($1,$2,$3,$4,'planning','unspecified') RETURNING *`,
+      [contractRes.rows[0].id, coordinatorOrganizationId, offer.origin_location, offer.destination_location]
+    );
     await client.query('COMMIT');
     await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'contract.create', entityType: 'sales_contract', entityId: contractRes.rows[0].id });
-    res.json({ offer, contract: contractRes.rows[0] });
+    await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'payment.prepare', entityType: 'payment_request', entityId: paymentRes.rows[0].id });
+    await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'transport.workspace.create', entityType: 'shipment', entityId: shipmentRes.rows[0].id });
+    res.json({ offer, contract: contractRes.rows[0], paymentRequest: paymentRes.rows[0], shipment: shipmentRes.rows[0] });
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -110,11 +141,18 @@ export async function getContract(req: Request, res: Response): Promise<void> {
   const id = req.params.id as string;
   const { rows } = await query(
     `SELECT c.*, s.name as seller_name, b.name as buyer_name,
-            ship.id as shipment_id, ship.vessel_name, ship.current_milestone, ship.eta_arrival, ship.container_reference
+            ship.id as shipment_id, ship.vessel_name, ship.current_milestone, ship.eta_arrival, ship.container_reference,
+            ship.transport_coordinator_organization_id, ship.service_provider_name, ship.booking_reference,
+            ship.transport_mode, ship.transport_document_type, ship.transport_document_reference, ship.tracking_url,
+            coordinator.name as transport_coordinator_name,
+            pay.id as payment_request_id, pay.status as payment_status, pay.amount_total as payment_amount,
+            pay.currency as payment_currency, pay.payment_reference_external
      FROM sales_contracts c
      JOIN organizations s ON s.id = c.seller_organization_id
      JOIN organizations b ON b.id = c.buyer_organization_id
-     LEFT JOIN shipments ship ON ship.contract_id = c.id
+     LEFT JOIN LATERAL (SELECT * FROM shipments WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1) ship ON TRUE
+     LEFT JOIN organizations coordinator ON coordinator.id=ship.transport_coordinator_organization_id
+     LEFT JOIN LATERAL (SELECT * FROM payment_requests WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1) pay ON TRUE
      WHERE c.id=$1 AND (c.seller_organization_id=$2 OR c.buyer_organization_id=$2)`,
     [id, req.user!.organizationId]
   );
@@ -122,7 +160,16 @@ export async function getContract(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: 'Contract not found' });
     return;
   }
-  res.json(rows[0]);
+  const documents = await query(
+    `SELECT e.id, e.type, e.file_name, e.file_size_bytes, e.mime_type, e.sha256_hash,
+            e.claim_description, e.review_status, e.created_at, o.name as uploader_name
+     FROM evidence_items e
+     JOIN organizations o ON o.id=e.uploader_organization_id
+     WHERE e.linked_entity_type='contract' AND e.linked_entity_id=$1
+     ORDER BY e.created_at DESC`,
+    [id]
+  );
+  res.json({ ...rows[0], documents: documents.rows });
 }
 
 export async function updateEudrReference(req: Request, res: Response): Promise<void> {
@@ -134,5 +181,26 @@ export async function updateEudrReference(req: Request, res: Response): Promise<
     return;
   }
   await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'contract.eudr.update', entityType: 'sales_contract', entityId: id });
+  res.json(rows[0]);
+}
+
+export async function updateComplianceReference(req: Request, res: Response): Promise<void> {
+  const id = req.params.id as string;
+  const { scheme, reference } = req.body;
+  const isEudr = String(scheme).trim().toUpperCase() === 'EUDR';
+  const { rows } = await query(
+    `UPDATE sales_contracts
+        SET compliance_scheme=$1,
+            compliance_reference=$2,
+            eudr_due_diligence_reference=CASE WHEN $3 THEN $2 ELSE eudr_due_diligence_reference END
+      WHERE id=$4 AND buyer_organization_id=$5
+      RETURNING *`,
+    [scheme.trim(), reference.trim(), isEudr, id, req.user!.organizationId]
+  );
+  if (!rows[0]) {
+    res.status(404).json({ error: 'Contract not found or not your contract' });
+    return;
+  }
+  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'contract.compliance.update', entityType: 'sales_contract', entityId: id });
   res.json(rows[0]);
 }
