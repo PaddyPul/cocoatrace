@@ -24,7 +24,7 @@ export default function DashboardPage() {
         const promises: Record<string, Promise<any>> = {};
         if (hasAny('batch.read', 'batch.create', 'batch.attest')) promises.batches = batches.list();
         if (hasAny('contract.read')) promises.contracts = contracts.list();
-        if (hasAny('shipment.read', 'shipment.request', 'shipment.update', 'shipment.accept')) promises.shipments = shipments.list();
+        if (hasAny('shipment.read', 'shipment.update')) promises.shipments = shipments.list();
         if (hasAny('farm.read', 'farm.create')) promises.farms = farms.list();
         if (hasAny('listing.read', 'listing.create')) promises.listings = listings.list();
         if (hasAny('audit.read')) promises.audit = audit.list();

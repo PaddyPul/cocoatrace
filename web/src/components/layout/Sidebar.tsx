@@ -27,7 +27,7 @@ const TOOL_NAV: NavGroup[] = [
     { icon: ShoppingBag, label: 'My listings', page: 'my-listings', orPermissions: ['listing.create'] },
     { icon: PackageCheck, label: 'Inventory', page: 'holdings', orPermissions: ['holding.read', 'holding.create', 'listing.create'] },
     { icon: Handshake, label: 'Offers', page: 'offers', orPermissions: ['offer.respond', 'offer.create'] },
-    { icon: Ship, label: 'Shipments', page: 'shipments', orPermissions: ['shipment.read', 'shipment.request', 'shipment.update', 'shipment.accept'] },
+    { icon: Ship, label: 'Transport', page: 'shipments', orPermissions: ['shipment.read', 'shipment.update'] },
     { icon: WalletCards, label: 'Payments', page: 'payments', orPermissions: ['payment.read', 'payment.request', 'payment.confirm'] },
   ] },
   { label: 'Administration', items: [

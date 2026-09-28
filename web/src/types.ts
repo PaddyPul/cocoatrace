@@ -103,6 +103,14 @@ export interface Contract {
 export interface Shipment {
   id: string;
   contract_id: string;
+  transport_coordinator_organization_id?: string;
+  transport_coordinator_name?: string;
+  service_provider_name?: string;
+  booking_reference?: string;
+  transport_mode?: string;
+  transport_document_type?: string;
+  transport_document_reference?: string;
+  tracking_url?: string;
   vessel_name?: string;
   container_reference?: string;
   origin_port: string;

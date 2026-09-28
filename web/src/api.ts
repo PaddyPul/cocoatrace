@@ -112,12 +112,12 @@ export const sourcing = {
 export const contracts = {
   list: () => api<import('./types').Contract[]>('GET', '/contracts'),
   get: (id: string) => api<any>('GET', `/contracts/${id}`),
-  requestShipment: (id: string, data: { logisticsOrganizationId?: string; vesselName?: string; containerReference?: string; originPort?: string; destinationPort?: string; etaArrival?: string }) =>
-    api<any>('POST', `/contracts/${id}/shipments`, data),
   requestPayment: (id: string, data: { amountTotal: number; currency?: string }) =>
     api<any>('POST', `/contracts/${id}/payment-requests`, data),
   updateEudr: (id: string, data: { eudrDueDiligenceReference: string }) =>
     api<any>('PATCH', `/contracts/${id}/eudr`, data),
+  updateCompliance: (id: string, data: { scheme: string; reference: string }) =>
+    api<any>('PATCH', `/contracts/${id}/compliance`, data),
 };
 
 export const payments = {
@@ -125,12 +125,14 @@ export const payments = {
   get: (id: string) => api<any>('GET', `/payment-requests/${id}`),
   pay: (id: string, data: { transactionReference: string }) =>
     api<any>('POST', `/payment-requests/${id}/pay`, data),
+  submitDocuments: (id: string) => api<any>('POST', `/payment-requests/${id}/submit-documents`),
 };
 
 export const shipments = {
   list: () => api<import('./types').Shipment[]>('GET', '/shipments'),
   get: (id: string) => api<{ shipment: import('./types').Shipment; milestones: any[] }>('GET', `/shipments/${id}`),
-  accept: (id: string) => api<any>('POST', `/shipments/${id}/accept`),
+  updateDetails: (id: string, data: { serviceProviderName?: string; bookingReference?: string; transportMode?: string; transportDocumentType?: string; transportDocumentReference?: string; trackingUrl?: string; vesselName?: string; containerReference?: string; originLocation?: string; destinationLocation?: string; etaArrival?: string }) =>
+    api<any>('PATCH', `/shipments/${id}/details`, data),
   recordMilestone: (id: string, data: { milestone: string; location?: string; notes?: string }) =>
     api<any>('POST', `/shipments/${id}/milestones`, data),
 };
@@ -149,7 +151,10 @@ export const holdings = {
 };
 
 export const evidence = {
-  list: () => api<import('./types').Evidence[]>('GET', '/evidence'),
+  list: (entityType?: string, entityId?: string) => {
+    const qs = entityType && entityId ? `?entityType=${encodeURIComponent(entityType)}&entityId=${encodeURIComponent(entityId)}` : '';
+    return api<import('./types').Evidence[]>('GET', `/evidence${qs}`);
+  },
   upload: (file: File, data: { type?: string; linkedEntityType: string; linkedEntityId: string; claimDescription?: string }) => {
     const fd = new FormData();
     fd.append('file', file);
@@ -158,6 +163,20 @@ export const evidence = {
     fd.append('linkedEntityId', data.linkedEntityId);
     if (data.claimDescription) fd.append('claimDescription', data.claimDescription);
     return api<any>('POST', '/evidence', fd, true);
+  },
+  download: async (id: string, fileName: string) => {
+    const res = await fetch(`${API_BASE}/evidence/${id}/download`, {
+      credentials: 'include',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error('Could not download document');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
   },
 };
 
