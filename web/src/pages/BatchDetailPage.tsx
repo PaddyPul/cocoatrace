@@ -29,6 +29,7 @@ export default function BatchDetailPage() {
   const [pincoterm, setPincoterm] = useState('CIF');
   const [pushing, setPushing] = useState(false);
   const [pushDone, setPushDone] = useState(false);
+  const [createdListingId, setCreatedListingId] = useState('');
   const [pushErr, setPushErr] = useState('');
 
   const [showAttest, setShowAttest] = useState(false);
@@ -110,11 +111,12 @@ export default function BatchDetailPage() {
     if (!batch || !pqty || pqty <= 0 || !pprice || pprice <= 0) { setPushErr('Quantity and price required'); return; }
     setPushing(true); setPushErr('');
     try {
-      await batchesApi.pushToMarketplace(batch.id, {
+      const listing = await batchesApi.pushToMarketplace(batch.id, {
         quantityKg: Number(pqty), pricePerKg: Number(pprice),
         currency: 'EUR', incoterm: pincoterm,
         originLocation: porigin, destinationLocation: pdest,
       });
+      setCreatedListingId(listing.id);
       setPushDone(true);
       toast('success', 'Batch listed on marketplace');
     } catch (e: any) { setPushErr(e.message); } finally { setPushing(false); }
@@ -239,7 +241,7 @@ export default function BatchDetailPage() {
               <div className="text-center py-4">
                 <div className="text-2xl mb-2">🎉</div>
                 <div className="text-sm font-semibold text-brand-400 mb-1">Listed!</div>
-                <button className="btn btn-sm mt-2" onClick={() => navigate('/marketplace')}>
+                <button className="btn btn-sm mt-2" onClick={() => navigate(`/marketplace?published=${createdListingId}`)}>
                   View Marketplace <ChevronRight size={14} />
                 </button>
               </div>
