@@ -52,8 +52,19 @@ function requirePermission(permission: string) {
   };
 }
 
+function requireAnyPermission(...permissions: string[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const perms = req.user?.permissions || [];
+    if (perms.includes('*') || permissions.some((permission) => perms.includes(permission))) {
+      next();
+      return;
+    }
+    res.status(403).json({ error: `One of these permissions is required: ${permissions.join(', ')}` });
+  };
+}
+
 function signToken(payload: object): string {
   return jwt.sign(payload, jwtSecret, { expiresIn: '24h' });
 }
 
-export { requireAuth, requirePermission, signToken };
+export { requireAuth, requirePermission, requireAnyPermission, signToken };

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { offers as offersApi } from '../api';
 import { Offer } from '../types';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
@@ -25,10 +25,11 @@ function useFetch<T>(fetcher: () => Promise<T[]>) {
 
 export default function OffersPage() {
   const navigate = useNavigate();
-  const { user } = useAuthCtx();
+  const [params, setParams] = useSearchParams();
+  const { user, canDo } = useAuthCtx();
   const { toast } = useToast();
   const { data, loading, error, refetch } = useFetch(() => offersApi.list());
-  const [tab, setTab] = useState<'received' | 'sent'>('received');
+  const [tab, setTab] = useState<'received' | 'sent'>(() => params.get('tab') === 'sent' || (!canDo('offer.respond') && canDo('offer.create')) ? 'sent' : 'received');
   const [search, setSearch] = useState('');
   const [confirmReject, setConfirmReject] = useState<string | null>(null);
   const [processing, setProcessing] = useState('');
@@ -58,14 +59,15 @@ export default function OffersPage() {
   const visible = (tab === 'received' ? received : sent).filter((o) => !search || o.listing_id.toLowerCase().includes(search.toLowerCase()) || (o.buyer_name || '').toLowerCase().includes(search.toLowerCase()) || (o.seller_name || '').toLowerCase().includes(search.toLowerCase()) || o.status.toLowerCase().includes(search.toLowerCase()));
   const pending = visible.filter((o) => o.status === 'pending');
   const history = visible.filter((o) => o.status !== 'pending');
+  const selectTab = (next: 'received' | 'sent') => { setTab(next); setParams({ tab: next }, { replace: true }); };
 
   return (
     <Layout currentPage="offers">
       {loading ? <SkeletonTable rows={5} cols={6} /> : error ? <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{error}</div> : <div className="table-wrap">
         <div className="flex flex-wrap items-center gap-3 mb-3">
           <div className="flex gap-1 bg-surface-darker rounded p-0.5">
-            <button className={`btn btn-sm ${tab === 'received' ? 'btn-primary' : ''}`} onClick={() => setTab('received')}>Received ({received.length})</button>
-            <button className={`btn btn-sm ${tab === 'sent' ? 'btn-primary' : ''}`} onClick={() => setTab('sent')}>Sent ({sent.length})</button>
+            {canDo('offer.respond') && <button className={`btn btn-sm ${tab === 'received' ? 'btn-primary' : ''}`} onClick={() => selectTab('received')}>Received ({received.length})</button>}
+            {canDo('offer.create') && <button className={`btn btn-sm ${tab === 'sent' ? 'btn-primary' : ''}`} onClick={() => selectTab('sent')}>Sent ({sent.length})</button>}
           </div>
           <div className="relative flex-1 min-w-[160px]"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input type="text" placeholder="Search offers…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
           <div className="text-xs text-text-muted">{visible.length} offer{visible.length !== 1 ? 's' : ''}</div>
