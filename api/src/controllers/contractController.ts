@@ -4,10 +4,12 @@ import * as audit from '../services/audit';
 
 export async function listOffers(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT t.*, l.origin_location, l.destination_location, o.name as buyer_name
+    `SELECT t.*, l.seller_organization_id, l.origin_location, l.destination_location,
+            buyer.name as buyer_name, seller.name as seller_name
      FROM trade_offers t
      JOIN listings l ON l.id = t.listing_id
-     JOIN organizations o ON o.id = t.buyer_organization_id
+     JOIN organizations buyer ON buyer.id = t.buyer_organization_id
+     JOIN organizations seller ON seller.id = l.seller_organization_id
      WHERE l.seller_organization_id=$1 OR t.buyer_organization_id=$1
      ORDER BY t.created_at DESC`,
     [req.user!.organizationId]
