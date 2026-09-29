@@ -69,12 +69,25 @@ Run the applicable checks before opening a pull request:
 
 ```bash
 npm test --workspace=api
+npm run test:integration:docker
 npm run typecheck --workspace=api
 npm run build --workspace=api
 npm run build --workspace=web
 ```
 
-As the backlog adds them, also run lint, database integration and Playwright suites.
+The integration command creates a disposable PostgreSQL 16 database on port
+`15434`, applies the current production schema baseline, executes the API
+integration suite, and then removes the database. The reset guard refuses any
+database whose name does not contain a standalone `test` segment. Never point it
+at development, staging, or production data.
+
+To use a dedicated PostgreSQL service that is already running:
+
+```bash
+TEST_DATABASE_URL=postgresql://user:password@localhost:5432/cocoatrace_test npm run test:integration
+```
+
+As the backlog adds them, also run lint and Playwright suites.
 
 Test the risk, not just the successful path. Authorization changes require an allowed case and at least one unrelated-tenant denial. Quantity/state changes require invalid-transition and concurrency coverage.
 
@@ -125,4 +138,3 @@ A change is done when:
 - CI passes;
 - staging verification passes for release-bound work; and
 - the backlog accurately represents what remains.
-

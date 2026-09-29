@@ -19,3 +19,31 @@ jobs:
       - run: npm test --workspace=api
       - run: npm run build --workspace=api
       - run: npm run build --workspace=web
+
+  postgres-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: cocoatrace_test
+          POSTGRES_USER: cocoa_test
+          POSTGRES_PASSWORD: cocoa_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cocoa_test -d cocoatrace_test"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run test:integration --workspace=api
+        env:
+          TEST_DATABASE_URL: postgresql://cocoa_test:cocoa_test@127.0.0.1:5432/cocoatrace_test
