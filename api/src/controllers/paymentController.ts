@@ -1,127 +1,63 @@
 import { Request, Response } from 'express';
-import { query } from '../db';
+import { getClient, query } from '../db';
 import * as audit from '../services/audit';
+import { completeTradeIfReady } from '../services/tradeSettlement';
 
-export async function listPaymentRequests(req: Request, res: Response): Promise<void> {
-  const { rows } = await query(
-    `SELECT p.*, c.seller_organization_id, c.buyer_organization_id
-     FROM payment_requests p
-     JOIN sales_contracts c ON c.id = p.contract_id
-     WHERE c.seller_organization_id=$1 OR c.buyer_organization_id=$1
-     ORDER BY p.created_at DESC`,
-    [req.user!.organizationId]
-  );
-  res.json(rows);
+export async function listPaymentRequests(req:Request,res:Response):Promise<void>{
+  const {rows}=await query(`SELECT p.*,c.seller_organization_id,c.buyer_organization_id,c.payment_plan,c.payment_terms_status,c.deposit_percentage
+    FROM payment_requests p JOIN sales_contracts c ON c.id=p.contract_id WHERE c.seller_organization_id=$1 OR c.buyer_organization_id=$1 ORDER BY p.created_at DESC`,[req.user!.organizationId]);res.json(rows);
 }
-
-export async function getPaymentRequest(req: Request, res: Response): Promise<void> {
-  const { rows } = await query(
-    `SELECT p.*, c.seller_organization_id, c.buyer_organization_id, c.quantity_kg, c.price_per_kg, c.incoterm,
-            s.name as seller_name, b.name as buyer_name
-     FROM payment_requests p
-     JOIN sales_contracts c ON c.id = p.contract_id
-     JOIN organizations s ON s.id = c.seller_organization_id
-     JOIN organizations b ON b.id = c.buyer_organization_id
-     WHERE p.id=$1`,
-    [req.params.id]
-  );
-  if (!rows[0]) {
-    res.status(404).json({ error: 'Payment request not found' });
-    return;
-  }
-  if (rows[0].seller_organization_id !== req.user!.organizationId && rows[0].buyer_organization_id !== req.user!.organizationId) {
-    res.status(403).json({ error: 'Access denied' });
-    return;
-  }
-  res.json(rows[0]);
+export async function getPaymentRequest(req:Request,res:Response):Promise<void>{
+  const {rows}=await query(`SELECT p.*,c.seller_organization_id,c.buyer_organization_id,c.quantity_kg,c.price_per_kg,c.incoterm,c.payment_plan,c.deposit_percentage,c.credit_days,c.payment_terms_status,c.payment_terms_note,c.payment_terms_confirmed_at,
+    s.name seller_name,b.name buyer_name,sh.current_milestone,fee.amount_total platform_fee_amount,fee.fee_payer,fee.status platform_fee_status
+    FROM payment_requests p JOIN sales_contracts c ON c.id=p.contract_id JOIN organizations s ON s.id=c.seller_organization_id JOIN organizations b ON b.id=c.buyer_organization_id
+    LEFT JOIN LATERAL(SELECT current_milestone FROM shipments WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1)sh ON TRUE LEFT JOIN platform_fee_invoices fee ON fee.contract_id=c.id WHERE p.id=$1`,[req.params.id]);
+  if(!rows[0]){res.status(404).json({error:'Payment request not found'});return;} const p=rows[0];
+  if(p.seller_organization_id!==req.user!.organizationId&&p.buyer_organization_id!==req.user!.organizationId){res.status(403).json({error:'Access denied'});return;}
+  const installments=await query('SELECT * FROM payment_installments WHERE payment_request_id=$1 ORDER BY sequence_number',[req.params.id]);res.json({...p,installments:installments.rows});
 }
-
-export async function createPaymentRequest(req: Request, res: Response): Promise<void> {
-  const id = req.params.id as string;
-  const { amountTotal, currency } = req.body;
-  const contractRes = await query('SELECT * FROM sales_contracts WHERE id=$1 AND seller_organization_id=$2', [id, req.user!.organizationId]);
-  if (!contractRes.rows[0]) {
-    res.status(404).json({ error: 'Contract not found' });
-    return;
-  }
-  const existing = await query("SELECT id FROM payment_requests WHERE contract_id=$1 AND status IN ('awaiting_documents','requested','settled') LIMIT 1", [id]);
-  if (existing.rows[0]) {
-    res.status(409).json({ error: 'A payment workflow already exists for this contract' });
-    return;
-  }
-  const { rows } = await query(
-    'INSERT INTO payment_requests (contract_id, requested_by_organization_id, amount_total, currency) VALUES ($1,$2,$3,$4) RETURNING *',
-    [id, req.user!.organizationId, amountTotal, currency]
-  );
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'payment.request', entityType: 'payment_request', entityId: rows[0].id });
-  res.status(201).json(rows[0]);
+export async function createPaymentRequest(req:Request,res:Response):Promise<void>{
+  const id=req.params.id as string,{amountTotal,currency}=req.body;const c=await query('SELECT * FROM sales_contracts WHERE id=$1 AND seller_organization_id=$2',[id,req.user!.organizationId]);
+  if(!c.rows[0]){res.status(404).json({error:'Contract not found'});return;} const existing=await query('SELECT id FROM payment_requests WHERE contract_id=$1 LIMIT 1',[id]);
+  if(existing.rows[0]){res.status(409).json({error:'A payment workflow already exists for this contract'});return;}
+  const {rows}=await query('INSERT INTO payment_requests(contract_id,requested_by_organization_id,amount_total,currency)VALUES($1,$2,$3,$4)RETURNING *',[id,req.user!.organizationId,amountTotal,currency]);
+  await audit.record({actorUserId:req.user!.id,actorOrganizationId:req.user!.organizationId,action:'payment.request',entityType:'payment_request',entityId:rows[0].id});res.status(201).json(rows[0]);
 }
-
-export async function payPaymentRequest(req: Request, res: Response): Promise<void> {
-  const id = req.params.id as string;
-  const { transactionReference } = req.body;
-  const check = await query(
-    'SELECT p.id, c.buyer_organization_id FROM payment_requests p JOIN sales_contracts c ON c.id=p.contract_id WHERE p.id=$1',
-    [id]
-  );
-  if (!check.rows[0]) {
-    res.status(404).json({ error: 'Payment request not found' });
-    return;
-  }
-  if (check.rows[0].buyer_organization_id !== req.user!.organizationId) {
-    res.status(403).json({ error: 'Only the buyer can settle this payment' });
-    return;
-  }
-  const { rows } = await query("UPDATE payment_requests SET status='settled', payment_reference_external=$1, settled_at=NOW() WHERE id=$2 AND status='requested' RETURNING *", [transactionReference, id]);
-  if (!rows[0]) {
-    res.status(400).json({ error: 'Payment can only be confirmed after the seller presents the required documents' });
-    return;
-  }
-  const shipment = await query("SELECT current_milestone FROM shipments WHERE contract_id=$1 ORDER BY created_at DESC LIMIT 1", [rows[0].contract_id]);
-  await query('UPDATE sales_contracts SET status=$1 WHERE id=$2', [shipment.rows[0]?.current_milestone === 'delivered' ? 'settled' : 'payment_received', rows[0].contract_id]);
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'payment.settle', entityType: 'payment_request', entityId: id });
-  res.json(rows[0]);
+export async function payPaymentRequest(req:Request,res:Response):Promise<void>{
+  const id=req.params.id as string,{transactionReference}=req.body;const check=await query(`SELECT p.id,c.buyer_organization_id,(SELECT id FROM payment_installments i WHERE i.payment_request_id=p.id AND i.status='due' ORDER BY sequence_number LIMIT 1)installment_id FROM payment_requests p JOIN sales_contracts c ON c.id=p.contract_id WHERE p.id=$1`,[id]);
+  if(!check.rows[0]){res.status(404).json({error:'Payment request not found'});return;}if(check.rows[0].buyer_organization_id!==req.user!.organizationId){res.status(403).json({error:'Only the buyer can submit this payment'});return;}
+  if(!check.rows[0].installment_id){res.status(400).json({error:'No payment installment is currently due'});return;}
+  const {rows}=await query(`UPDATE payment_installments SET status='payment_submitted',payment_reference_external=$1,submitted_by_user_id=$2,submitted_at=NOW(),rejected_at=NULL,rejection_reason=NULL,updated_at=NOW() WHERE id=$3 AND status='due' RETURNING *`,[transactionReference,req.user!.id,check.rows[0].installment_id]);
+  await query("UPDATE payment_requests SET status='payment_pending_verification',payment_reference_external=$1,updated_at=NOW() WHERE id=$2",[transactionReference,id]);
+  await audit.record({actorUserId:req.user!.id,actorOrganizationId:req.user!.organizationId,action:'payment.submit',entityType:'payment_installment',entityId:rows[0].id});res.json(rows[0]);
 }
-
-export async function submitPaymentDocuments(req: Request, res: Response): Promise<void> {
-  const id = req.params.id as string;
-  const payment = await query(
-    `SELECT p.*, c.seller_organization_id, c.incoterm
-     FROM payment_requests p JOIN sales_contracts c ON c.id=p.contract_id
-     WHERE p.id=$1 AND c.seller_organization_id=$2`,
-    [id, req.user!.organizationId]
-  );
-  if (!payment.rows[0]) {
-    res.status(404).json({ error: 'Payment workflow not found or not your contract' });
-    return;
-  }
-  if (payment.rows[0].status !== 'awaiting_documents') {
-    res.status(400).json({ error: 'Documents have already been presented' });
-    return;
-  }
-  const shipment = await query('SELECT current_milestone, transport_document_reference FROM shipments WHERE contract_id=$1 ORDER BY created_at DESC LIMIT 1', [payment.rows[0].contract_id]);
-  const progressed = ['handed_over','loaded','departed','arrived','customs_cleared','delivered'].includes(shipment.rows[0]?.current_milestone);
-  if (!progressed) {
-    res.status(400).json({ error: 'The goods must be handed to the transport provider before presenting transport documents for payment' });
-    return;
-  }
-  if (!shipment.rows[0]?.transport_document_reference) {
-    res.status(400).json({ error: 'Record the applicable transport-document reference first' });
-    return;
-  }
-  const required = ['commercial_invoice','packing_list','transport_document'];
-  if (['CIF', 'CIP'].includes(String(payment.rows[0].incoterm).toUpperCase())) required.push('insurance_certificate');
-  const documents = await query(
-    "SELECT DISTINCT type FROM evidence_items WHERE linked_entity_type='contract' AND linked_entity_id=$1 AND type=ANY($2::text[])",
-    [payment.rows[0].contract_id, required]
-  );
-  const present = new Set(documents.rows.map((row) => row.type));
-  const missing = required.filter((type) => !present.has(type));
-  if (missing.length) {
-    res.status(400).json({ error: `Upload the required documents first: ${missing.join(', ')}` });
-    return;
-  }
-  const { rows } = await query("UPDATE payment_requests SET status='requested' WHERE id=$1 RETURNING *", [id]);
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'payment.documents.present', entityType: 'payment_request', entityId: id });
-  res.json(rows[0]);
+export async function submitPaymentDocuments(req:Request,res:Response):Promise<void>{
+  const id=req.params.id as string;const r=await query(`SELECT p.*,c.seller_organization_id,c.incoterm,c.payment_plan,c.payment_terms_status FROM payment_requests p JOIN sales_contracts c ON c.id=p.contract_id WHERE p.id=$1 AND c.seller_organization_id=$2`,[id,req.user!.organizationId]);const p=r.rows[0];
+  if(!p){res.status(404).json({error:'Payment workflow not found or not your contract'});return;}if(p.payment_terms_status!=='agreed'){res.status(409).json({error:'The buyer must confirm the payment terms first'});return;}if(p.documents_presented_at){res.status(400).json({error:'Documents have already been presented'});return;}
+  const shipment=await query('SELECT current_milestone,transport_document_reference FROM shipments WHERE contract_id=$1 ORDER BY created_at DESC LIMIT 1',[p.contract_id]);
+  if(!['handed_over','loaded','departed','arrived','customs_cleared','delivered'].includes(shipment.rows[0]?.current_milestone)){res.status(400).json({error:'The goods must be handed to the transport provider before presenting documents'});return;}
+  if(!shipment.rows[0]?.transport_document_reference){res.status(400).json({error:'Record the applicable transport-document reference first'});return;}
+  const required=['commercial_invoice','packing_list','transport_document'];if(['CIF','CIP'].includes(String(p.incoterm).toUpperCase()))required.push('insurance_certificate');
+  const docs=await query("SELECT DISTINCT type FROM evidence_items WHERE linked_entity_type='contract' AND linked_entity_id=$1 AND type=ANY($2::text[])",[p.contract_id,required]);const present=new Set(docs.rows.map(x=>x.type)),missing=required.filter(x=>!present.has(x));
+  if(missing.length){res.status(400).json({error:`Upload the required documents first: ${missing.join(', ')}`});return;}
+  await query("UPDATE payment_installments SET status='due',updated_at=NOW() WHERE payment_request_id=$1 AND due_trigger='documents_presented' AND status='awaiting_trigger'",[id]);
+  const due=await query("SELECT 1 FROM payment_installments WHERE payment_request_id=$1 AND status='due' LIMIT 1",[id]);const {rows}=await query("UPDATE payment_requests SET status=$1,documents_presented_at=NOW(),updated_at=NOW() WHERE id=$2 RETURNING *",[due.rows[0]?'payment_due':p.status,id]);
+  await audit.record({actorUserId:req.user!.id,actorOrganizationId:req.user!.organizationId,action:'payment.documents.present',entityType:'payment_request',entityId:id});res.json(rows[0]);
 }
+export async function submitInstallmentPayment(req:Request,res:Response):Promise<void>{
+  const {rows}=await query(`UPDATE payment_installments i SET status='payment_submitted',payment_reference_external=$1,submitted_by_user_id=$2,submitted_at=NOW(),rejected_at=NULL,rejection_reason=NULL,updated_at=NOW()
+    FROM payment_requests p,sales_contracts c WHERE i.id=$3 AND p.id=i.payment_request_id AND c.id=p.contract_id AND c.buyer_organization_id=$4 AND c.payment_terms_status='agreed' AND i.status='due' RETURNING i.*,p.id request_id`,[req.body.transactionReference,req.user!.id,req.params.id,req.user!.organizationId]);
+  if(!rows[0]){res.status(409).json({error:'This installment is not due, the terms are unconfirmed, or you are not its buyer'});return;}await query("UPDATE payment_requests SET status='payment_pending_verification',payment_reference_external=$1,updated_at=NOW() WHERE id=$2",[req.body.transactionReference,rows[0].request_id]);
+  await audit.record({actorUserId:req.user!.id,actorOrganizationId:req.user!.organizationId,action:'payment.submit',entityType:'payment_installment',entityId:req.params.id});res.json(rows[0]);
+}
+export async function confirmInstallmentPayment(req:Request,res:Response):Promise<void>{
+  const client=await getClient(),id=req.params.id as string;try{await client.query('BEGIN');const r=await client.query(`SELECT i.*,p.contract_id,p.amount_total,c.seller_organization_id FROM payment_installments i JOIN payment_requests p ON p.id=i.payment_request_id JOIN sales_contracts c ON c.id=p.contract_id WHERE i.id=$1 AND c.seller_organization_id=$2 FOR UPDATE OF i,p`,[id,req.user!.organizationId]);const i=r.rows[0];
+    if(!i){await client.query('ROLLBACK');res.status(404).json({error:'Installment not found or only the seller can verify receipt'});return;}if(i.status==='paid'){await client.query('COMMIT');res.json(i);return;}if(i.status!=='payment_submitted'){await client.query('ROLLBACK');res.status(409).json({error:'The buyer must submit a payment reference first'});return;}
+    await client.query("UPDATE payment_installments SET status='paid',verified_by_user_id=$1,verified_at=NOW(),updated_at=NOW() WHERE id=$2",[req.user!.id,id]);const totals=await client.query(`SELECT p.id,p.amount_total,COALESCE(SUM(i.amount_due)FILTER(WHERE i.status='paid'),0)confirmed FROM payment_requests p LEFT JOIN payment_installments i ON i.payment_request_id=p.id WHERE p.id=$1 GROUP BY p.id`,[i.payment_request_id]);const confirmed=Number(totals.rows[0].confirmed),settled=confirmed+.005>=Number(totals.rows[0].amount_total);
+    await client.query(`UPDATE payment_requests SET amount_confirmed=$1,status=$2,release_status=CASE WHEN $3 THEN 'authorized' ELSE release_status END,settled_at=CASE WHEN $3 THEN NOW() ELSE settled_at END,updated_at=NOW() WHERE id=$4`,[confirmed,settled?'settled':'partially_paid',settled,i.payment_request_id]);if(settled)await completeTradeIfReady(client,i.contract_id);await client.query('COMMIT');
+    await audit.record({actorUserId:req.user!.id,actorOrganizationId:req.user!.organizationId,action:'payment.receipt.verify',entityType:'payment_installment',entityId:id});res.json({...i,status:'paid',amountConfirmed:confirmed,settled});
+  }catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
+}
+export async function rejectInstallmentPayment(req:Request,res:Response):Promise<void>{const {rows}=await query(`UPDATE payment_installments i SET status='due',rejected_at=NOW(),rejection_reason=$1,submitted_by_user_id=NULL,submitted_at=NULL,updated_at=NOW() FROM payment_requests p,sales_contracts c WHERE i.id=$2 AND p.id=i.payment_request_id AND c.id=p.contract_id AND c.seller_organization_id=$3 AND i.status='payment_submitted' RETURNING i.*,p.id request_id`,[req.body.reason,req.params.id,req.user!.organizationId]);if(!rows[0]){res.status(409).json({error:'No submitted payment is awaiting verification'});return;}await query("UPDATE payment_requests SET status='payment_due',updated_at=NOW() WHERE id=$1",[rows[0].request_id]);await audit.record({actorUserId:req.user!.id,actorOrganizationId:req.user!.organizationId,action:'payment.receipt.reject',entityType:'payment_installment',entityId:req.params.id,reason:req.body.reason});res.json(rows[0]);}
+export async function submitPaymentSecurity(req:Request,res:Response):Promise<void>{const {rows}=await query(`UPDATE payment_requests p SET security_status='submitted',security_provider=$1,security_reference=$2,security_submitted_at=NOW(),updated_at=NOW() FROM sales_contracts c WHERE p.id=$3 AND c.id=p.contract_id AND c.buyer_organization_id=$4 AND c.payment_plan='bank_secured' AND c.payment_terms_status='agreed' RETURNING p.*`,[req.body.provider,req.body.reference,req.params.id,req.user!.organizationId]);if(!rows[0]){res.status(409).json({error:'Bank security cannot be submitted for this workflow'});return;}await audit.record({actorUserId:req.user!.id,actorOrganizationId:req.user!.organizationId,action:'payment.security.submit',entityType:'payment_request',entityId:req.params.id});res.json(rows[0]);}
+export async function confirmPaymentSecurity(req:Request,res:Response):Promise<void>{const {rows}=await query(`UPDATE payment_requests p SET security_status='verified',security_verified_at=NOW(),security_verified_by_user_id=$1,release_status='authorized',status='security_verified',updated_at=NOW() FROM sales_contracts c WHERE p.id=$2 AND c.id=p.contract_id AND c.seller_organization_id=$3 AND c.payment_plan='bank_secured' AND p.security_status='submitted' RETURNING p.*`,[req.user!.id,req.params.id,req.user!.organizationId]);if(!rows[0]){res.status(409).json({error:'No submitted bank security is awaiting verification'});return;}await audit.record({actorUserId:req.user!.id,actorOrganizationId:req.user!.organizationId,action:'payment.security.verify',entityType:'payment_request',entityId:req.params.id});res.json(rows[0]);}

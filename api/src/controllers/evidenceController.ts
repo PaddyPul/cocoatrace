@@ -60,10 +60,15 @@ export async function downloadEvidence(req: Request, res: Response): Promise<voi
   const { rows } = await query(
     `SELECT e.*,
             c.seller_organization_id,
-            c.buyer_organization_id
+            c.buyer_organization_id,
+            p.release_status
        FROM evidence_items e
        LEFT JOIN sales_contracts c
          ON e.linked_entity_type='contract' AND e.linked_entity_id=c.id
+       LEFT JOIN LATERAL (
+         SELECT release_status FROM payment_requests
+          WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1
+       ) p ON TRUE
       WHERE e.id=$1`,
     [req.params.id]
   );
@@ -79,6 +84,15 @@ export async function downloadEvidence(req: Request, res: Response): Promise<voi
     || item.buyer_organization_id === organizationId;
   if (!allowed) {
     res.status(403).json({ error: 'You do not have access to this document' });
+    return;
+  }
+
+  const controlledDocuments = new Set(['transport_document', 'bill_of_lading', 'warehouse_release']);
+  if (item.buyer_organization_id === organizationId
+      && item.uploader_organization_id !== organizationId
+      && controlledDocuments.has(item.type)
+      && item.release_status !== 'authorized') {
+    res.status(423).json({ error: 'This transport document is protected until the agreed payment release condition is satisfied' });
     return;
   }
 

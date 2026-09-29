@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
-import { query } from '../db';
+import { getClient, query } from '../db';
 import * as audit from '../services/audit';
+import { dispatchDecision, PaymentPlan } from '../services/paymentProtection';
+import { completeTradeIfReady } from '../services/tradeSettlement';
 
 // Includes legacy demo milestones so existing records remain readable.
 const MILESTONE_ORDER = [
@@ -11,11 +13,12 @@ const MILESTONE_ORDER = [
 
 export async function listShipments(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT sh.*, c.seller_organization_id, c.buyer_organization_id,
+    `SELECT sh.*,c.seller_organization_id,c.buyer_organization_id,c.payment_plan,c.payment_terms_status,p.amount_confirmed,p.dispatch_required_amount,p.security_status,p.release_status,
             coordinator.name as transport_coordinator_name
      FROM shipments sh
      JOIN sales_contracts c ON c.id=sh.contract_id
      LEFT JOIN organizations coordinator ON coordinator.id=sh.transport_coordinator_organization_id
+     LEFT JOIN LATERAL(SELECT * FROM payment_requests WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1)p ON TRUE
      WHERE c.seller_organization_id=$1 OR c.buyer_organization_id=$1
      ORDER BY sh.created_at DESC`,
     [req.user!.organizationId]
@@ -25,7 +28,8 @@ export async function listShipments(req: Request, res: Response): Promise<void> 
 
 export async function getShipment(req: Request, res: Response): Promise<void> {
   const shipRes = await query(
-    `SELECT sh.*, c.seller_organization_id, c.buyer_organization_id, c.incoterm,
+    `SELECT sh.*,c.seller_organization_id,c.buyer_organization_id,c.incoterm,c.payment_plan,c.payment_terms_status,c.deposit_percentage,
+            p.id payment_request_id,p.status payment_status,p.amount_total,p.amount_confirmed,p.dispatch_required_amount,p.security_status,p.release_status,
             seller.name as seller_name, buyer.name as buyer_name,
             coordinator.name as transport_coordinator_name
      FROM shipments sh
@@ -33,6 +37,7 @@ export async function getShipment(req: Request, res: Response): Promise<void> {
      JOIN organizations seller ON seller.id=c.seller_organization_id
      JOIN organizations buyer ON buyer.id=c.buyer_organization_id
      LEFT JOIN organizations coordinator ON coordinator.id=sh.transport_coordinator_organization_id
+     LEFT JOIN LATERAL(SELECT * FROM payment_requests WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1)p ON TRUE
      WHERE sh.id=$1`,
     [req.params.id]
   );
@@ -82,6 +87,7 @@ export async function updateShipmentDetails(req: Request, res: Response): Promis
      FROM sales_contracts c
      WHERE sh.id=$12 AND c.id=sh.contract_id
        AND sh.transport_coordinator_organization_id=$13
+       AND sh.current_milestone <> 'delivered'
      RETURNING sh.*`,
     [
       serviceProviderName || null, bookingReference || null, transportMode || null,
@@ -109,45 +115,17 @@ export async function updateShipmentDetails(req: Request, res: Response): Promis
 
 export async function recordMilestone(req: Request, res: Response): Promise<void> {
   const id = req.params.id as string;
-  const { milestone, location, notes } = req.body;
-  const shipRes = await query(
-    `SELECT sh.*, c.seller_organization_id, c.buyer_organization_id
-       FROM shipments sh JOIN sales_contracts c ON c.id=sh.contract_id
-      WHERE sh.id=$1`,
-    [id]
-  );
-  const shipment = shipRes.rows[0];
-  if (!shipment) {
-    res.status(404).json({ error: 'Transport record not found' });
-    return;
-  }
-  const organizationId = req.user!.organizationId;
-  if (shipment.seller_organization_id !== organizationId && shipment.buyer_organization_id !== organizationId) {
-    res.status(403).json({ error: 'Only a party to the contract can report transport progress' });
-    return;
-  }
-  if (!MILESTONE_ORDER.includes(milestone)) {
-    res.status(400).json({ error: 'Unknown transport milestone' });
-    return;
-  }
-  const currentIndex = MILESTONE_ORDER.indexOf(shipment.current_milestone);
-  const newIndex = MILESTONE_ORDER.indexOf(milestone);
-  if (newIndex <= currentIndex) {
-    res.status(400).json({ error: `Cannot go from ${shipment.current_milestone} to ${milestone}. Milestones must progress forward.` });
-    return;
-  }
-
-  await query(
-    'INSERT INTO shipment_milestones (shipment_id, milestone, recorded_by_user_id, location, notes) VALUES ($1,$2,$3,$4,$5)',
-    [id, milestone, req.user!.id, location || null, notes || null]
-  );
-  if (['loaded', 'departed'].includes(milestone)) await query("UPDATE sales_contracts SET status='in_transit' WHERE id=$1", [shipment.contract_id]);
-  if (milestone === 'delivered') {
-    const payment = await query('SELECT status FROM payment_requests WHERE contract_id=$1 ORDER BY created_at DESC LIMIT 1', [shipment.contract_id]);
-    await query('UPDATE sales_contracts SET status=$1 WHERE id=$2', [payment.rows[0]?.status === 'settled' ? 'settled' : 'delivered', shipment.contract_id]);
-  }
-  const updateFields = `current_milestone=$1${milestone === 'delivered' ? ', delivered_at=NOW()' : ''}`;
-  const { rows } = await query(`UPDATE shipments SET ${updateFields} WHERE id=$2 RETURNING *`, [milestone, id]);
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: `transport.milestone.${milestone}`, entityType: 'shipment', entityId: id });
-  res.json(rows[0]);
+  const {milestone,location,notes,exceptionalDispatch}=req.body,client=await getClient();
+  try{await client.query('BEGIN');const r=await client.query(`SELECT sh.*,c.seller_organization_id,c.buyer_organization_id,c.payment_plan,c.payment_terms_status,c.credit_days,p.id payment_request_id,p.amount_confirmed,p.dispatch_required_amount,p.security_status
+    FROM shipments sh JOIN sales_contracts c ON c.id=sh.contract_id JOIN payment_requests p ON p.contract_id=c.id WHERE sh.id=$1 FOR UPDATE OF sh,c,p`,[id]);const s=r.rows[0],org=req.user!.organizationId;
+    if(!s){await client.query('ROLLBACK');res.status(404).json({error:'Transport record not found'});return;}if(s.seller_organization_id!==org&&s.buyer_organization_id!==org){await client.query('ROLLBACK');res.status(403).json({error:'Only a party can report progress'});return;}
+    if(!MILESTONE_ORDER.includes(milestone)){await client.query('ROLLBACK');res.status(400).json({error:'Unknown transport milestone'});return;}const current=MILESTONE_ORDER.indexOf(s.current_milestone),next=MILESTONE_ORDER.indexOf(milestone);if(next<=current){await client.query('ROLLBACK');res.status(400).json({error:`Cannot go from ${s.current_milestone} to ${milestone}. Milestones must progress forward.`});return;}
+    const crosses=current<MILESTONE_ORDER.indexOf('loaded')&&next>=MILESTONE_ORDER.indexOf('loaded');let exception=false;
+    if(crosses){const d=dispatchDecision({plan:s.payment_plan as PaymentPlan,termsStatus:s.payment_terms_status,amountConfirmed:Number(s.amount_confirmed||0),dispatchRequiredAmount:Number(s.dispatch_required_amount||0),securityStatus:s.security_status||'not_required'});if(!d.allowed){if(!exceptionalDispatch){await client.query('ROLLBACK');res.status(409).json({error:d.reason,code:'PAYMENT_DISPATCH_GATE'});return;}if(s.seller_organization_id!==org){await client.query('ROLLBACK');res.status(403).json({error:'Only the seller can authorize exceptional dispatch'});return;}exception=true;await client.query(`UPDATE shipments SET dispatch_exception=TRUE,dispatch_exception_reason=$1,dispatch_exception_recorded_at=NOW(),dispatch_exception_recorded_by_user_id=$2 WHERE id=$3`,[exceptionalDispatch.reason,req.user!.id,id]);}}
+    await client.query('INSERT INTO shipment_milestones(shipment_id,milestone,recorded_by_user_id,location,notes)VALUES($1,$2,$3,$4,$5)',[id,milestone,req.user!.id,location||null,notes||null]);
+    if(next>=MILESTONE_ORDER.indexOf('loaded'))await client.query('UPDATE sales_contracts SET status=$1 WHERE id=$2',[exception||s.dispatch_exception?'payment_risk_exception':'in_transit',s.contract_id]);
+    if(milestone==='delivered'){await client.query("UPDATE payment_installments SET status='due',due_at=NOW()+make_interval(days=>$2),updated_at=NOW() WHERE payment_request_id=$1 AND due_trigger='delivery' AND status='awaiting_trigger'",[s.payment_request_id,Number(s.credit_days||0)]);const due=await client.query("SELECT 1 FROM payment_installments WHERE payment_request_id=$1 AND status='due' LIMIT 1",[s.payment_request_id]);if(due.rows[0])await client.query("UPDATE payment_requests SET status='payment_due',updated_at=NOW() WHERE id=$1",[s.payment_request_id]);await client.query('UPDATE sales_contracts SET status=$1 WHERE id=$2',[exception||s.dispatch_exception?'delivered_payment_risk':'delivered',s.contract_id]);}
+    const fields=`current_milestone=$1${milestone==='delivered'?', delivered_at=NOW()':''}`;const {rows}=await client.query(`UPDATE shipments SET ${fields} WHERE id=$2 RETURNING *`,[milestone,id]);if(milestone==='delivered')await completeTradeIfReady(client,s.contract_id);await client.query('COMMIT');
+    await audit.record({actorUserId:req.user!.id,actorOrganizationId:org,action:`transport.milestone.${milestone}`,entityType:'shipment',entityId:id,reason:exception?exceptionalDispatch.reason:undefined});res.json({...rows[0],dispatchExceptionRecorded:exception});
+  }catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
 }

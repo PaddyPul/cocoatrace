@@ -175,11 +175,13 @@ ON CONFLICT (id) DO UPDATE SET listing_id=EXCLUDED.listing_id,
   valid_until=EXCLUDED.valid_until,status=EXCLUDED.status;
 
 -- Contract
-INSERT INTO sales_contracts (id, listing_id, offer_id, seller_organization_id, buyer_organization_id, holding_id, quantity_kg, price_per_kg, currency, incoterm, status) VALUES
-  ('cccccccc-cccc-cccc-cccc-ccccccccc001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbb001', '11111111-1111-1111-1111-111111111004', '11111111-1111-1111-1111-111111111005', '99999999-9999-9999-9999-999999999002', 8000.000, 8.40, 'EUR', 'CIF', 'in_transit')
+INSERT INTO sales_contracts (id, listing_id, offer_id, seller_organization_id, buyer_organization_id, holding_id, quantity_kg, price_per_kg, currency, incoterm, status, payment_plan, deposit_percentage, payment_terms_status, payment_terms_confirmed_at) VALUES
+  ('cccccccc-cccc-cccc-cccc-ccccccccc001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbb001', '11111111-1111-1111-1111-111111111004', '11111111-1111-1111-1111-111111111005', '99999999-9999-9999-9999-999999999002', 8000.000, 8.40, 'EUR', 'CIF', 'in_transit', 'documentary_collection', 0, 'agreed', '2026-09-10 10:30:00+00')
 ON CONFLICT (id) DO UPDATE SET holding_id=EXCLUDED.holding_id,quantity_kg=EXCLUDED.quantity_kg,
   price_per_kg=EXCLUDED.price_per_kg,currency=EXCLUDED.currency,
-  incoterm=EXCLUDED.incoterm,status=EXCLUDED.status;
+  incoterm=EXCLUDED.incoterm,status=EXCLUDED.status,payment_plan=EXCLUDED.payment_plan,
+  deposit_percentage=EXCLUDED.deposit_percentage,payment_terms_status=EXCLUDED.payment_terms_status,
+  payment_terms_confirmed_at=EXCLUDED.payment_terms_confirmed_at;
 
 -- Shipment
 INSERT INTO shipments (id, contract_id, logistics_organization_id, transport_coordinator_organization_id, service_provider_name, booking_reference, transport_mode, transport_document_type, transport_document_reference, container_reference, vessel_name, bill_of_lading_number, origin_port, destination_port, eta_arrival, current_milestone) VALUES
@@ -203,10 +205,24 @@ INSERT INTO shipment_milestones (shipment_id, milestone, recorded_by_user_id, re
   ('dddddddd-dddd-dddd-dddd-ddddddddd001', 'departed',    '33333333-3333-3333-3333-333333333003', '2026-09-18 06:00:00+00', 'Tema Port',     'Seller recorded departure from provider tracking');
 
 -- Payment request
-INSERT INTO payment_requests (id, contract_id, requested_by_organization_id, amount_total, currency, status) VALUES
-  ('eeeeeeee-eeee-eeee-eeee-eeeeeeeee001', 'cccccccc-cccc-cccc-cccc-ccccccccc001', '11111111-1111-1111-1111-111111111004', 67200.00, 'EUR', 'requested')
+INSERT INTO payment_requests (id, contract_id, requested_by_organization_id, amount_total, currency, status, dispatch_required_amount, amount_confirmed, documents_presented_at, security_status, release_status) VALUES
+  ('eeeeeeee-eeee-eeee-eeee-eeeeeeeee001', 'cccccccc-cccc-cccc-cccc-ccccccccc001', '11111111-1111-1111-1111-111111111004', 67200.00, 'EUR', 'payment_due', 0, 0, '2026-09-18 10:00:00+00', 'not_required', 'locked')
 ON CONFLICT (id) DO UPDATE SET amount_total=EXCLUDED.amount_total,currency=EXCLUDED.currency,
-  status=EXCLUDED.status,payment_reference_external=NULL,settled_at=NULL;
+  status=EXCLUDED.status,dispatch_required_amount=EXCLUDED.dispatch_required_amount,
+  amount_confirmed=EXCLUDED.amount_confirmed,documents_presented_at=EXCLUDED.documents_presented_at,
+  security_status=EXCLUDED.security_status,release_status=EXCLUDED.release_status,
+  payment_reference_external=NULL,settled_at=NULL;
+
+INSERT INTO payment_installments (id, payment_request_id, installment_type, sequence_number, amount_due, due_trigger, status) VALUES
+  ('19191919-1919-1919-1919-191919191901', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeee001', 'full', 1, 67200.00, 'documents_presented', 'due')
+ON CONFLICT (payment_request_id, installment_type) DO UPDATE SET amount_due=EXCLUDED.amount_due,
+  due_trigger=EXCLUDED.due_trigger,status=EXCLUDED.status,payment_reference_external=NULL,
+  submitted_at=NULL,verified_at=NULL,rejected_at=NULL,rejection_reason=NULL;
+
+INSERT INTO platform_fee_invoices (id, contract_id, fee_payer, rate_bps, amount_total, currency, status) VALUES
+  ('20202020-2020-2020-2020-202020202001', 'cccccccc-cccc-cccc-cccc-ccccccccc001', 'seller', 100, 672.00, 'EUR', 'estimated')
+ON CONFLICT (contract_id) DO UPDATE SET fee_payer=EXCLUDED.fee_payer,rate_bps=EXCLUDED.rate_bps,
+  amount_total=EXCLUDED.amount_total,currency=EXCLUDED.currency,status=EXCLUDED.status;
 
 -- Stable chronology keeps the demo believable even after a later reset.
 UPDATE sourcing_requests SET created_at='2026-09-04 09:00:00+00',updated_at='2026-09-04 09:00:00+00'
