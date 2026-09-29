@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { webConfig } from '../config';
 import {
   AlertTriangle, ArrowRight, Boxes, CheckCircle2, CircleDot, FileCheck2,
   GitBranch, Globe2, MapPin, PackageCheck, QrCode, ShieldCheck, Ship, Sparkles,
@@ -109,7 +110,7 @@ export default function ControlTowerPage() {
     </section>
 
     <section className="mt-5 rounded-3xl border border-border bg-surface p-5 sm:p-6">
-      <div className="flex flex-wrap items-end justify-between gap-4"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">Core workflows</div><h3 className="mt-1 text-lg font-bold">Move from signal to action</h3></div><button className="text-xs font-semibold text-brand-300 hover:text-brand-200" onClick={() => navigate('/demo')}>Open guided story →</button></div>
+      <div className="flex flex-wrap items-end justify-between gap-4"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">Core workflows</div><h3 className="mt-1 text-lg font-bold">Move from signal to action</h3></div>{webConfig.demoMode && <button className="text-xs font-semibold text-brand-300 hover:text-brand-200" onClick={() => navigate('/demo')}>Open guided story →</button>}</div>
       <div className="mt-5 grid gap-3 md:grid-cols-3"><ActionCard icon={QrCode} title="Manage product identities" copy="Review public passports, evidence coverage and safety state." action="Open products" onClick={() => navigate('/products')} /><ActionCard icon={GitBranch} title="Investigate genealogy" copy="Trace material backward to origin or forward to every recipient." action="Start a trace" onClick={() => navigate('/recalls')} /><ActionCard icon={PackageCheck} title="Prepare buyer assurance" copy="Resolve verification gaps before a lot enters the market." action="Review batches" onClick={() => navigate('/batches')} /></div>
     </section>
 

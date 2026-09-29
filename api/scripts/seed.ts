@@ -1,14 +1,15 @@
 import { Pool } from 'pg';
 import fs from 'fs';
 import path from 'path';
+import { config } from '../src/config/env';
 
 try {
   require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 } catch (e) {}
 
 async function seed(): Promise<void> {
-  const connectionString: string =
-    process.env.DATABASE_URL || 'postgresql://cocoa:cocoa_dev@127.0.0.1:5432/cocoatrace';
+  if (config.isDeployed) throw new Error(`Seed data is disabled in ${config.environment}.`);
+  const connectionString = config.databaseUrl;
 
   console.log('Running seed...');
 

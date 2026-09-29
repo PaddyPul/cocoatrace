@@ -25,5 +25,5 @@ USER appuser
 EXPOSE 3001
 ENV NODE_ENV=production
 
-# Auto-apply schema + seed on container start, then run app
-CMD npx tsx api/scripts/migrate.ts && npx tsx api/scripts/seed.ts && node api/dist/server.js
+# Apply schema changes on start. Demo data is loaded only by an explicit demo command.
+CMD npx tsx api/scripts/migrate.ts && node api/dist/server.js

@@ -1,5 +1,4 @@
 import 'express-async-errors';
-import dotenv from 'dotenv';
 import path from 'path';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
@@ -8,8 +7,7 @@ import pinoHttp from 'pino-http';
 import logger from './logger';
 import { AppError } from './errors';
 import { verifyBrowserOrigin } from './middleware/security';
-
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+import { config } from './config/env';
 
 import authRoutes from './routes/auth';
 import orgRoutes from './routes/organizations';
@@ -35,7 +33,7 @@ const app = express();
 
 app.use(pinoHttp({ logger }));
 app.use(helmet({ crossOriginResourcePolicy: false }));
-app.use(cors({ origin: process.env.WEB_URL || 'http://localhost:3000', credentials: true }));
+app.use(cors({ origin: config.webUrl, credentials: true }));
 app.use(express.json());
 app.use(verifyBrowserOrigin);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -50,11 +48,11 @@ app.get('/health', async (_req, res) => {
     res.status(503).json({ status: 'error', db: 'disconnected' });
   }
 });
-app.get('/health/live', (_req, res) => res.json({ status: 'ok', version: process.env.APP_VERSION || 'development' }));
+app.get('/health/live', (_req, res) => res.json({ status: 'ok', version: config.appVersion, environment: config.environment }));
 app.get('/health/ready', async (_req, res) => {
   try {
     await query('SELECT 1');
-    res.json({ status: 'ready', database: 'connected', aiNarrative: Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL) });
+    res.json({ status: 'ready', database: 'connected', aiNarrative: Boolean(config.openAiApiKey && config.openAiModel) });
   } catch {
     res.status(503).json({ status: 'not_ready', database: 'disconnected' });
   }
@@ -96,7 +94,7 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
 
   logger.error({ err, path: req.path, method: req.method }, 'Unhandled error');
   res.status(500).json({
-    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+    error: config.isDeployed ? 'Internal server error' : err.message,
   });
 });
 

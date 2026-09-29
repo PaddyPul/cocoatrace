@@ -28,6 +28,7 @@ import CompareOffersPage from './pages/CompareOffersPage';
 import PublishSupplyPage from './pages/PublishSupplyPage';
 import DealRoomPage from './pages/DealRoomPage';
 import DirectInventoryPage from './pages/DirectInventoryPage';
+import { webConfig } from './config';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, onboarding, onboardingLoading } = useAuthCtx();
@@ -69,7 +70,7 @@ export default function App() {
           <Route path="/supply/new" element={<ProtectedRoute><PublishSupplyPage /></ProtectedRoute>} />
           <Route path="/inventory/new" element={<ProtectedRoute><DirectInventoryPage /></ProtectedRoute>} />
           <Route path="/deal-room/:id" element={<ProtectedRoute><DealRoomPage /></ProtectedRoute>} />
-          <Route path="/demo" element={<ProtectedRoute><InvestorDemoPage /></ProtectedRoute>} />
+          <Route path="/demo" element={webConfig.demoMode ? <ProtectedRoute><InvestorDemoPage /></ProtectedRoute> : <Navigate to="/home" replace />} />
           <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
           <Route path="/pilot" element={<ProtectedRoute><PilotTeamPage /></ProtectedRoute>} />

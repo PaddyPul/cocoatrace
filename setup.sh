@@ -37,7 +37,7 @@ echo "✓ Dependencies installed"
 
 # Keep local startup deterministic without requiring users to export variables
 # in every terminal session.
-[ -f "$ROOT/.env" ] || cp "$ROOT/.env.example" "$ROOT/.env"
+[ -f "$ROOT/.env" ] || cp "$ROOT/.env.demo.example" "$ROOT/.env"
 [ -f "$ROOT/api/.env" ] || cp "$ROOT/api/.env.example" "$ROOT/api/.env"
 echo "✓ Local environment configured"
 

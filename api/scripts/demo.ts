@@ -1,5 +1,6 @@
 import path from 'path';
 import { DemoScenario, resetAndSeed } from './demo-data';
+import { config } from '../src/config/env';
 
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
@@ -9,7 +10,7 @@ if (!['fresh', 'commercial', 'incident'].includes(scenario)) {
   process.exit(1);
 }
 
-const connectionString = process.env.DATABASE_URL || 'postgresql://cocoa:cocoa_dev@127.0.0.1:15433/cocoatrace';
+const connectionString = config.databaseUrl;
 
 resetAndSeed(scenario, connectionString)
   .then(() => console.log(`✓ Demo database reset to the ${scenario} scenario`))
@@ -17,4 +18,3 @@ resetAndSeed(scenario, connectionString)
     console.error(`Demo reset failed: ${(error as Error).message}`);
     process.exit(1);
   });
-

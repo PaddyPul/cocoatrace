@@ -18,7 +18,9 @@
     "dev": "node scripts/dev.js",
     "dev:api": "npm run dev --workspace=api",
     "dev:web": "npm run dev --workspace=web",
-    "check:production": "node scripts/check-production-env.js"
+    "check:production": "node scripts/check-production-env.js",
+    "test:integration": "npm run test:integration --workspace=api",
+    "test:integration:docker": "npm run test:integration:docker --workspace=api"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

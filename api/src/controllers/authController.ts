@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { query } from '../db';
 import { signToken, JwtPayload } from '../middleware/auth';
+import { config } from '../config/env';
 
 export async function login(req: Request, res: Response): Promise<void> {
   const { email, password } = req.body;
@@ -50,7 +51,7 @@ export async function login(req: Request, res: Response): Promise<void> {
 
   res.cookie('ct_session', token, {
     httpOnly: true,
-    secure: process.env.COOKIE_SECURE === 'true' || (process.env.NODE_ENV === 'production' && process.env.COOKIE_SECURE !== 'false'),
+    secure: config.cookieSecure,
     sameSite: 'lax',
     path: '/',
     maxAge: 24 * 60 * 60 * 1000,

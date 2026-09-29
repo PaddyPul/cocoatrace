@@ -2,9 +2,9 @@ import { Request, Response } from 'express';
 import { query, getClient } from '../db';
 import * as audit from '../services/audit';
 import { buildInstallments, PaymentPlan, requiredBeforeDispatch } from '../services/paymentProtection';
+import { config } from '../config/env';
 
-const feeCandidate=Number(process.env.PLATFORM_FEE_BPS||100);
-const configuredFeeBps=Number.isFinite(feeCandidate)?Math.max(0,Math.min(1000,feeCandidate)):100;
+const configuredFeeBps = config.platformFeeBps;
 
 export async function listOffers(req: Request, res: Response): Promise<void> {
   const { rows } = await query(

@@ -1,5 +1,6 @@
 import logger from '../logger';
 import { ReadinessFacts, ReadinessRecommendation } from './readinessAdvisor';
+import { config } from '../config/env';
 
 function deterministicSummary(score: number, top: ReadinessRecommendation): string {
   return `Measured readiness is ${score}%. ${top.title}. ${top.detail}`;
@@ -7,8 +8,8 @@ function deterministicSummary(score: number, top: ReadinessRecommendation): stri
 
 export async function createReadinessNarrative(score: number, facts: ReadinessFacts, recommendations: ReadinessRecommendation[]) {
   const fallback = { mode: 'rules' as const, text: deterministicSummary(score, recommendations[0]) };
-  const apiKey = process.env.OPENAI_API_KEY;
-  const model = process.env.OPENAI_MODEL;
+  const apiKey = config.openAiApiKey;
+  const model = config.openAiModel;
   if (!apiKey || !model) return fallback;
 
   const controller = new AbortController();

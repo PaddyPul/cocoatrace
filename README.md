@@ -25,6 +25,7 @@ Ongoing product and engineering work is managed in the repository:
 - [`North Star`](docs/NORTH_STAR.md) — product promise, investability thesis, outcomes and release definitions
 - [`Delivery backlog`](docs/DELIVERY_BACKLOG.md) — numbered, prioritized and tickable 16-week work plan
 - [`Architecture modernization`](docs/ARCHITECTURE_MODERNIZATION.md) — SOLID boundaries, target structure and incremental refactor order
+- [`Environment model`](docs/ENVIRONMENTS.md) — development, test, demo, staging and production safety boundaries
 - [`Contributing`](CONTRIBUTING.md) — branch, test, security, migration and backlog-update rules
 
 When deciding what to build next, start with the delivery backlog's **Current
@@ -142,7 +143,8 @@ Click the quick-login pills on the login page — no typing needed.
 ### Deterministic demo scenarios
 
 These commands intentionally reset only a recognized local demo database and
-preserve Knex migration history. They refuse to run with `NODE_ENV=production`.
+preserve Knex migration history. They require `APP_ENV=demo` and
+`DEMO_MODE=true`, and always refuse staging or production.
 
 ```bash
 npm run demo:seed:fresh       # identities only; empty new-customer workspaces

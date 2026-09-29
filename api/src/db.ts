@@ -1,18 +1,11 @@
-import path from 'path';
-import dotenv from 'dotenv';
 import { Pool, QueryResult, PoolClient } from 'pg';
 import logger from './logger';
-
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
-
-const connectionString: string = process.env.DATABASE_URL!;
-if (!connectionString) { console.error('FATAL: DATABASE_URL environment variable is not set'); process.exit(1); }
+import { config } from './config/env';
 
 const pool = new Pool({
-  connectionString,
-  ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== 'false' } : undefined,
-  max: Number(process.env.DATABASE_POOL_MAX || 10),
+  connectionString: config.databaseUrl,
+  ssl: config.databaseSsl ? { rejectUnauthorized: config.databaseSslRejectUnauthorized } : undefined,
+  max: config.databasePoolMax,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,
 });
@@ -25,7 +18,7 @@ async function query(text: string, params?: any[]): Promise<QueryResult> {
   const start = Date.now();
   const res = await pool.query(text, params);
   const duration = Date.now() - start;
-  if (process.env.LOG_QUERIES) {
+  if (config.logQueries) {
     logger.debug({ text: text.slice(0, 80), duration, rows: res.rowCount }, 'query');
   }
   return res;

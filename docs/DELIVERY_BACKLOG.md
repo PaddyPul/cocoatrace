@@ -50,16 +50,16 @@ Complete these canonical backlog items in order unless a blocker requires
 resequencing. Update their checkbox in the detailed section below; this queue is
 only the ordered view and deliberately has no duplicate checkboxes.
 
-1. **ENV-001** — typed, fail-closed environment configuration
-2. **ENV-002** — remove demo seeding from production startup
-3. **ENV-003** — gate all demo-only behavior
-4. **QLT-001** — PostgreSQL-backed multi-tenant integration-test harness
-5. **SEC-001** — resource authorization matrix
-6. **SEC-002** — repair known tenant-isolation defects
-7. **UPL-001** — remove unauthenticated static evidence serving
-8. **DAT-001** — honest trust-state defaults
-9. **TRD-001** — atomic inventory reservation and offer acceptance
-10. **RCL-001** — enforced recall holds
+1. **QLT-001** — obtain the first green CI run for the implemented PostgreSQL multi-tenant harness
+2. **SEC-002** — repair the matrix's confirmed tenant-isolation defects with regression tests
+3. **SEC-003** — separate ordinary resource reads from explicit network-wide access
+4. **SEC-004** — bind provenance requests to their batch, contract and authorized parties
+5. **SEC-005** — enforce contract-document party authorization
+6. **UPL-001** — remove unauthenticated static evidence serving
+7. **QLT-004** — characterize upload authorization, scanning and release behavior
+8. **DAT-001** — replace optimistic trust-state defaults with honest states
+9. **TRD-001** — make inventory reservation and offer acceptance atomic
+10. **RCL-001** — enforce recall holds across listing, transfer and dispatch
 
 ---
 
@@ -78,9 +78,9 @@ only the ordered view and deliberately has no duplicate checkboxes.
 
 # 2. Environments, build and deployment
 
-- [ ] **ENV-001 · P0 · Phase 0:** Create typed configuration for `development`, `test`, `demo`, `staging` and `production`.
-- [ ] **ENV-002 · P0 · Phase 0:** Remove automatic demo seeding from the production Docker command.
-- [ ] **ENV-003 · P0 · Phase 0:** Add `DEMO_MODE` and remove demo-only UI/API behavior outside demo.
+- [x] **ENV-001 · P0 · Phase 0:** Create typed configuration for `development`, `test`, `demo`, `staging` and `production`.
+- [x] **ENV-002 · P0 · Phase 0:** Remove automatic demo seeding from the production Docker command.
+- [x] **ENV-003 · P0 · Phase 0:** Add `DEMO_MODE` and remove demo-only UI/API behavior outside demo.
 - [ ] **ENV-004 · P0 · Phase 0:** Create separate databases, storage buckets, secrets and service identities for demo, staging and production.
 - [ ] **ENV-005 · P0 · Phase 0:** Make database ports private outside local development.
 - [ ] **ENV-006 · P0 · Phase 0:** Require HTTPS, secure cookies and exact allowed origins in staging/production.
@@ -99,7 +99,7 @@ only the ordered view and deliberately has no duplicate checkboxes.
 
 # 3. Architecture and code quality
 
-- [ ] **ARC-001 · P1 · Phase 1:** Add a typed `config/` module and remove scattered environment parsing.
+- [x] **ARC-001 · P1 · Phase 1:** Add a typed `config/` module and remove scattered environment parsing.
 - [ ] **ARC-002 · P1 · Phase 1:** Define shared actor, organization scope, money, quantity and identifier types.
 - [ ] **ARC-003 · P1 · Phase 1:** Create reusable resource policy interfaces and move authorization decisions out of controllers.
 - [ ] **ARC-004 · P1 · Phase 1:** Extract evidence controller logic into service, policy, repository and infrastructure adapters.
@@ -152,7 +152,7 @@ only the ordered view and deliberately has no duplicate checkboxes.
 
 # 5. Authorization and application security
 
-- [ ] **SEC-001 · P0 · Phase 1:** Document route/resource authorization matrix with explicit network-wide permissions.
+- [x] **SEC-001 · P0 · Phase 1:** Document route/resource authorization matrix with explicit network-wide permissions. See [`security/AUTHORIZATION_MATRIX.md`](security/AUTHORIZATION_MATRIX.md).
 - [ ] **SEC-002 · P0 · Phase 1:** Fix known farm, plot, certificate, profile, provenance, evidence and contract IDOR paths.
 - [ ] **SEC-003 · P0 · Phase 1:** Ensure `*.read` never implicitly means global/network read.
 - [ ] **SEC-004 · P0 · Phase 1:** Bind provenance `contractId` to the requested batch and authorized organization.
@@ -319,7 +319,7 @@ only the ordered view and deliberately has no duplicate checkboxes.
 
 # 14. Testing and engineering quality gates
 
-- [ ] **QLT-001 · P0 · Phase 1:** Add real-PostgreSQL API integration tests with at least two unrelated organizations.
+- [ ] **QLT-001 · P0 · Phase 1 — IN PROGRESS:** Add real-PostgreSQL API integration tests with at least two unrelated organizations. The disposable PostgreSQL harness, safety guard, two-tenant API tests and CI job are implemented; completion awaits the first green PostgreSQL CI run.
 - [ ] **QLT-002 · P0 · Phase 1:** Add negative authorization tests for every protected resource family.
 - [ ] **QLT-003 · P0 · Phase 1:** Add inventory and offer concurrency tests.
 - [ ] **QLT-004 · P0 · Phase 1:** Test evidence upload authorization, file limits, quarantine, scan and download release.

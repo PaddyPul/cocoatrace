@@ -1,8 +1,9 @@
 import knex from 'knex';
 import config from '../knexfile';
+import { config as appConfig } from '../src/config/env';
 
 async function migrate(): Promise<void> {
-  const environment = process.env.NODE_ENV || 'development';
+  const environment = appConfig.isProduction ? 'production' : 'development';
   const db = knex(config[environment]);
 
   try {

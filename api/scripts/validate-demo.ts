@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import path from 'path';
+import { config } from '../src/config/env';
 
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
@@ -55,7 +56,7 @@ const checks: Check[] = [
 ];
 
 async function main(): Promise<void> {
-  const connectionString = process.env.DATABASE_URL || 'postgresql://cocoa:cocoa_dev@127.0.0.1:15433/cocoatrace';
+  const connectionString = config.databaseUrl;
   const pool = new Pool({ connectionString });
   let failed = 0;
   try {
