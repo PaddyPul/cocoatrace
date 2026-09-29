@@ -6,9 +6,14 @@ export async function loadTraceGraph(): Promise<TraceGraph> {
     query(
       `SELECT ml.id, ml.lot_code, ml.lot_type, ml.product_name, ml.quantity_kg,
               ml.batch_id, ml.owner_organization_id, ml.status, ml.produced_at,
-              o.name AS owner_name
+              o.name AS owner_name, b.source_mode,
+              COALESCE(f.name, b.source_name, b.source_region, b.source_country) AS source_label,
+              (SELECT COUNT(*)::int FROM lot_genealogy_edges ge WHERE ge.source_lot_id=ml.id) AS downstream_lot_count,
+              (SELECT COUNT(*)::int FROM lot_distributions ld WHERE ld.lot_id=ml.id) AS distribution_count
        FROM material_lots ml
        JOIN organizations o ON o.id = ml.owner_organization_id
+       LEFT JOIN harvest_batches b ON b.id=ml.batch_id
+       LEFT JOIN farms f ON f.id=b.farm_id
        ORDER BY ml.produced_at, ml.lot_code`
     ),
     query(
@@ -41,6 +46,10 @@ export async function loadTraceGraph(): Promise<TraceGraph> {
       ownerOrganizationId: row.owner_organization_id,
       status: row.status,
       producedAt: row.produced_at,
+      sourceMode: row.source_mode,
+      sourceLabel: row.source_label,
+      downstreamLotCount: Number(row.downstream_lot_count || 0),
+      distributionCount: Number(row.distribution_count || 0),
     })),
     edges: edgesResult.rows.map((row: any) => ({
       id: row.id,
@@ -63,4 +72,25 @@ export async function loadTraceGraph(): Promise<TraceGraph> {
       dispatchedAt: row.dispatched_at,
     })),
   };
+}
+
+export async function accessibleTraceLotIds(organizationId: string, seeAll = false): Promise<Set<string>> {
+  if (seeAll) {
+    const result = await query('SELECT id FROM material_lots');
+    return new Set(result.rows.map((row: any) => row.id));
+  }
+  const result = await query(
+    `SELECT DISTINCT ml.id
+       FROM material_lots ml
+       LEFT JOIN batch_holdings h ON h.batch_id=ml.batch_id
+       LEFT JOIN sales_contracts c ON c.holding_id=h.id
+       LEFT JOIN lot_distributions ld ON ld.lot_id=ml.id
+      WHERE ml.owner_organization_id=$1
+         OR h.holder_organization_id=$1
+         OR c.seller_organization_id=$1
+         OR c.buyer_organization_id=$1
+         OR ld.recipient_organization_id=$1`,
+    [organizationId]
+  );
+  return new Set(result.rows.map((row: any) => row.id));
 }

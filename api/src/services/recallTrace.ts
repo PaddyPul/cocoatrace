@@ -11,6 +11,10 @@ export type TraceLot = {
   ownerOrganizationId?: string;
   status?: string;
   producedAt?: string;
+  sourceMode?: 'farm_traceable' | 'direct_inventory' | null;
+  sourceLabel?: string | null;
+  downstreamLotCount?: number;
+  distributionCount?: number;
 };
 
 export type TraceEdge = {
