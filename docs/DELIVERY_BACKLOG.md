@@ -50,16 +50,16 @@ Complete these canonical backlog items in order unless a blocker requires
 resequencing. Update their checkbox in the detailed section below; this queue is
 only the ordered view and deliberately has no duplicate checkboxes.
 
-1. **ENV-001** — typed, fail-closed environment configuration
-2. **ENV-002** — remove demo seeding from production startup
-3. **ENV-003** — gate all demo-only behavior
-4. **QLT-001** — PostgreSQL-backed multi-tenant integration-test harness
-5. **SEC-001** — resource authorization matrix
-6. **SEC-002** — repair known tenant-isolation defects
-7. **UPL-001** — remove unauthenticated static evidence serving
-8. **DAT-001** — honest trust-state defaults
-9. **TRD-001** — atomic inventory reservation and offer acceptance
-10. **RCL-001** — enforced recall holds
+1. **QLT-001** — obtain the first green CI run for the implemented PostgreSQL multi-tenant harness
+2. **SEC-002** — repair the matrix's confirmed tenant-isolation defects with regression tests
+3. **SEC-003** — separate ordinary resource reads from explicit network-wide access
+4. **SEC-004** — bind provenance requests to their batch, contract and authorized parties
+5. **SEC-005** — enforce contract-document party authorization
+6. **UPL-001** — remove unauthenticated static evidence serving
+7. **QLT-004** — characterize upload authorization, scanning and release behavior
+8. **DAT-001** — replace optimistic trust-state defaults with honest states
+9. **TRD-001** — make inventory reservation and offer acceptance atomic
+10. **RCL-001** — enforce recall holds across listing, transfer and dispatch
 
 ---
 
@@ -319,7 +319,7 @@ only the ordered view and deliberately has no duplicate checkboxes.
 
 # 14. Testing and engineering quality gates
 
-- [ ] **QLT-001 · P0 · Phase 1:** Add real-PostgreSQL API integration tests with at least two unrelated organizations.
+- [ ] **QLT-001 · P0 · Phase 1 — IN PROGRESS:** Add real-PostgreSQL API integration tests with at least two unrelated organizations. The disposable PostgreSQL harness, safety guard, two-tenant API tests and CI job are implemented; completion awaits the first green PostgreSQL CI run.
 - [ ] **QLT-002 · P0 · Phase 1:** Add negative authorization tests for every protected resource family.
 - [ ] **QLT-003 · P0 · Phase 1:** Add inventory and offer concurrency tests.
 - [ ] **QLT-004 · P0 · Phase 1:** Test evidence upload authorization, file limits, quarantine, scan and download release.
