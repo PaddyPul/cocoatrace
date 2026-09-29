@@ -33,7 +33,7 @@ export interface Farm {
 
 export interface Batch {
   id: string;
-  farm_id: string;
+  farm_id?: string | null;
   farm_name?: string;
   current_holder_id: string;
   harvest_date: string;
@@ -42,6 +42,10 @@ export interface Batch {
   organic_claim_status: string;
   holder_name?: string;
   crop: string;
+  source_mode?: 'farm_traceable' | 'direct_inventory';
+  source_name?: string;
+  source_country?: string;
+  source_region?: string;
   region?: string;
   country?: string;
   standard?: string;
@@ -69,6 +73,25 @@ export interface Listing {
   harvest_date?: string;
   grade?: string;
   organic_claim_status: string;
+  source_mode?: 'farm_traceable' | 'direct_inventory';
+  source_name?: string;
+  source_country?: string;
+  source_region?: string;
+  farm_country?: string;
+}
+
+export interface StructuredSourcingBrief {
+  title: string;
+  commodity: string;
+  quantityKg: number | null;
+  originCountries: string[];
+  qualityRequirements: Record<string, unknown>;
+  assuranceRequirements: Record<string, unknown>;
+  deliveryLocation: string;
+  incoterm: string;
+  requiredBy: string;
+  extractedFacts: Array<{ field: string; value: string; confidence: 'high' | 'medium' }>;
+  unresolved: string[];
 }
 
 export interface SourcingRequest {
@@ -145,6 +168,10 @@ export interface Holding {
   farm_name?: string;
   grade?: string;
   organic_claim_status?: string;
+  source_mode?: 'farm_traceable' | 'direct_inventory';
+  source_name?: string;
+  source_country?: string;
+  source_region?: string;
   quantity_kg: number;
   warehouse_location?: string;
   status: string;

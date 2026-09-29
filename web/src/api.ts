@@ -85,6 +85,8 @@ export const batches = {
   get: (id: string) => api<{ batch: import('./types').Batch; evidence: import('./types').Evidence[] }>('GET', `/batches/${id}`),
   create: (data: { farmId: string; plotIds?: string[]; crop?: string; harvestDate: string; quantityKg: number; moisturePercent?: number; grade?: string }) =>
     api<import('./types').Batch>('POST', '/batches', data),
+  createDirectInventory: (data: { commodity: string; quantityKg: number; inventoryDate: string; sourceName?: string; sourceCountry: string; sourceRegion?: string; warehouseLocation?: string; moisturePercent?: number; grade?: string }) =>
+    api<import('./types').Batch>('POST', '/inventory/direct', data),
   pushToMarketplace: (id: string, data: { quantityKg: number; pricePerKg: number; currency?: string; incoterm?: string; originLocation: string; destinationLocation: string }) =>
     api<import('./types').Listing>('POST', `/batches/${id}/push-to-marketplace`, data),
   attest: (id: string, data: { certificateId: string; notes?: string }) =>
@@ -100,6 +102,7 @@ export const listings = {
 
 export const sourcing = {
   list: () => api<import('./types').SourcingRequest[]>('GET', '/sourcing-requests'),
+  structure: (brief: string) => api<import('./types').StructuredSourcingBrief>('POST', '/sourcing-requests/structure', { brief }),
   create: (data: {
     title: string; commodity: string; quantityKg: number; originCountries?: string[];
     qualityRequirements?: Record<string, unknown>; assuranceRequirements?: Record<string, unknown>;

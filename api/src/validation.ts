@@ -48,6 +48,20 @@ export const createBatchSchema = z.object({
   grade: z.string().optional(),
 });
 
+export const createDirectInventorySchema = z.object({
+  commodity: z.string().trim().min(2).max(80),
+  quantityKg: z.number().positive(),
+  inventoryDate: z.string(),
+  sourceName: z.string().trim().max(160).optional(),
+  sourceCountry: z.string().length(2).transform((value) => value.toUpperCase()),
+  sourceRegion: z.string().trim().max(160).optional(),
+  warehouseLocation: z.string().trim().max(240).optional(),
+  moisturePercent: z.number().min(0).max(100).optional(),
+  grade: z.string().trim().max(80).optional(),
+});
+
+export const structureSourcingBriefSchema = z.object({ brief: z.string().trim().min(10).max(4000) });
+
 export const attestBatchSchema = z.object({
   certificateId: z.string().uuid(),
   notes: z.string().optional(),

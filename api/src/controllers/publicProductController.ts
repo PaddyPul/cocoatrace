@@ -13,15 +13,15 @@ function publicProductUrl(slug: string): string {
 
 export async function getPublicProduct(req: Request, res: Response): Promise<void> {
   const profileRes = await query(
-    `SELECT pp.*, b.crop, b.harvest_date, b.quantity_kg, b.moisture_percent, b.grade,
+    `SELECT pp.*, b.crop, b.harvest_date, b.quantity_kg, b.moisture_percent, b.grade, b.source_mode, b.source_name, b.source_country, b.source_region,
             b.organic_claim_status, b.provenance_hash, b.attestation_id,
             f.name AS farm_name, f.country, f.region, f.district, f.community,
             f.official_traceability_id, f.verification_status AS farm_verification_status,
             farmer.name AS farmer_name, holder.name AS current_holder_name
      FROM product_profiles pp
      JOIN harvest_batches b ON b.id = pp.batch_id
-     JOIN farms f ON f.id = b.farm_id
-     JOIN organizations farmer ON farmer.id = f.farmer_organization_id
+     LEFT JOIN farms f ON f.id = b.farm_id
+     LEFT JOIN organizations farmer ON farmer.id = f.farmer_organization_id
      JOIN organizations holder ON holder.id = b.current_holder_id
      WHERE pp.slug = $1 AND pp.visibility = 'published'`,
     [req.params.slug]
@@ -104,12 +104,12 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
   const journey = buildJourney([
     [{
       type: 'harvest',
-      title: 'Harvested at origin',
-      summary: `${Number(product.quantity_kg).toLocaleString()} kg of ${product.crop} recorded`,
+      title: product.source_mode === 'direct_inventory' ? 'Inventory recorded' : 'Harvested at origin',
+      summary: `${Number(product.quantity_kg).toLocaleString()} kg of ${product.crop} recorded${product.source_mode === 'direct_inventory' ? ' from supplier-declared source information' : ''}`,
       occurredAt: product.harvest_date,
       location: [product.community, product.district, product.region, product.country].filter(Boolean).join(', '),
       organization: product.farmer_name,
-      verified: product.farm_verification_status === 'verified',
+      verified: product.source_mode !== 'direct_inventory' && product.farm_verification_status === 'verified',
     }],
     certificate ? [{
       type: 'verification',
@@ -227,7 +227,7 @@ export async function listProductProfiles(_req: Request, res: Response): Promise
             active_recall.severity AS safety_status
      FROM product_profiles pp
      JOIN harvest_batches b ON b.id = pp.batch_id
-     JOIN farms f ON f.id = b.farm_id
+     LEFT JOIN farms f ON f.id = b.farm_id
      JOIN organizations holder ON holder.id = b.current_holder_id
      LEFT JOIN LATERAL (
        SELECT COUNT(*) AS scan_count FROM product_profile_scans s WHERE s.product_profile_id = pp.id

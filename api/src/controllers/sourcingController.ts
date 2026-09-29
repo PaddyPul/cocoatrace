@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
 import { query } from '../db';
 import * as audit from '../services/audit';
+import { structureSourcingBrief } from '../services/sourcingStructurer';
+
+export async function structureRequest(req: Request, res: Response): Promise<void> {
+  res.json(structureSourcingBrief(req.body.brief));
+}
 
 export async function listRequests(req: Request, res: Response): Promise<void> {
   const permissions = req.user!.permissions || [];

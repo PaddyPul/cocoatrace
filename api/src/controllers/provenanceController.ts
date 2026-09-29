@@ -11,7 +11,7 @@ export async function getProvenancePack(req: Request, res: Response): Promise<vo
                   a.attested_at, a.provenance_hash as att_hash,
                   c.standard, c.valid_from, c.valid_to, cert_org.name as certifier_name
            FROM harvest_batches b
-           JOIN farms f ON f.id = b.farm_id
+           LEFT JOIN farms f ON f.id = b.farm_id
            LEFT JOIN batch_attestations a ON a.id = b.attestation_id
            LEFT JOIN organic_certificates c ON c.id = a.certificate_id
            LEFT JOIN organizations cert_org ON cert_org.id = c.certifier_organization_id
@@ -49,7 +49,7 @@ export async function getProvenancePack(req: Request, res: Response): Promise<vo
     { rule: 'Batch has organic attestation', passed: !!batch.attestation_id, warning: false },
     { rule: 'Certificate active on harvest date', passed: batch.attestation_id && new Date(batch.harvest_date) >= new Date(batch.valid_from) && new Date(batch.harvest_date) <= new Date(batch.valid_to), warning: false },
     { rule: 'Plot geolocation present', passed: plots.some((p: any) => p.gps_lat), warning: !plots.some((p: any) => p.gps_lat) },
-    { rule: 'EUDR cutoff checked', passed: plots.every((p: any) => p.eudr_cutoff_checked), warning: !plots.every((p: any) => p.eudr_cutoff_checked) },
+    { rule: 'EUDR cutoff checked', passed: plots.length > 0 && plots.every((p: any) => p.eudr_cutoff_checked), warning: plots.length === 0 || !plots.every((p: any) => p.eudr_cutoff_checked) },
     { rule: 'Route permitted', passed: !shipment || !!shipment.origin_port, warning: !shipment },
     { rule: 'EUDR due-diligence reference', passed: !!(contract?.eudr_due_diligence_reference), warning: !(contract?.eudr_due_diligence_reference) },
   ];
@@ -71,9 +71,9 @@ export async function getProvenancePack(req: Request, res: Response): Promise<vo
     policyCheckResults: policyChecks,
     eudrReadiness: {
       plotGeolocationPresent: plots.some((p: any) => p.gps_lat),
-      deforestationCutoffChecked: plots.every((p: any) => p.eudr_cutoff_checked),
+      deforestationCutoffChecked: plots.length > 0 && plots.every((p: any) => p.eudr_cutoff_checked),
       dueDiligenceReferenceNumber: contract?.eudr_due_diligence_reference || null,
-      riskAssessmentStatus: plots.every((p: any) => p.deforestation_risk_status === 'clear') ? 'clear' : 'unknown',
+      riskAssessmentStatus: plots.length > 0 && plots.every((p: any) => p.deforestation_risk_status === 'clear') ? 'clear' : 'unknown',
       ready: plots.some((p: any) => p.gps_lat) && plots.every((p: any) => p.eudr_cutoff_checked) && !!(contract?.eudr_due_diligence_reference),
     },
   });
@@ -88,7 +88,7 @@ export async function exportProvenancePack(req: Request, res: Response): Promise
                   a.attested_at, a.provenance_hash as att_hash,
                   c.standard, c.valid_from, c.valid_to, cert_org.name as certifier_name
            FROM harvest_batches b
-           JOIN farms f ON f.id = b.farm_id
+           LEFT JOIN farms f ON f.id = b.farm_id
            LEFT JOIN batch_attestations a ON a.id = b.attestation_id
            LEFT JOIN organic_certificates c ON c.id = a.certificate_id
            LEFT JOIN organizations cert_org ON cert_org.id = c.certifier_organization_id
