@@ -39,7 +39,7 @@ export default function OffersPage() {
     try {
       const result: any = await offersApi.accept(offerId);
       toast('success', 'Offer accepted. Contract and fulfilment workflow created.');
-      navigate(`/contracts/${result.contract.id}`);
+      navigate(`/deal-room/${result.contract.id}`);
     } catch (e: any) { toast('error', e.message); } finally { setProcessing(''); }
   };
 
