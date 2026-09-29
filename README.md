@@ -18,6 +18,20 @@ The product strategy and system-wide experience now follow the
 Control Tower → Products → Trace & Recall, with operational records available
 as supporting tools.
 
+## Delivery source of truth
+
+Ongoing product and engineering work is managed in the repository:
+
+- [`North Star`](docs/NORTH_STAR.md) — product promise, investability thesis, outcomes and release definitions
+- [`Delivery backlog`](docs/DELIVERY_BACKLOG.md) — numbered, prioritized and tickable 16-week work plan
+- [`Architecture modernization`](docs/ARCHITECTURE_MODERNIZATION.md) — SOLID boundaries, target structure and incremental refactor order
+- [`Contributing`](CONTRIBUTING.md) — branch, test, security, migration and backlog-update rules
+
+When deciding what to build next, start with the delivery backlog's **Current
+execution queue** and active phase exit gate. Material pull requests should cite
+a backlog ID and update its status only after the documented definition of done
+is satisfied.
+
 ---
 
 ## Prerequisites

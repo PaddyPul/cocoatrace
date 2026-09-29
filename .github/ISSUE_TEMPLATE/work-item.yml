@@ -1,0 +1,75 @@
+name: CocoaTrace work item
+description: Track a scoped item from the delivery backlog
+title: "[BACKLOG-ID] "
+labels: ["planned-work"]
+body:
+  - type: input
+    id: backlog
+    attributes:
+      label: Backlog ID
+      description: Use the ID from docs/DELIVERY_BACKLOG.md.
+      placeholder: SEC-002
+    validations:
+      required: true
+  - type: dropdown
+    id: concern
+    attributes:
+      label: Concern
+      options:
+        - Product
+        - Identity and registration
+        - Security and authorization
+        - Evidence and uploads
+        - Data and trust
+        - Trading and inventory
+        - Payments
+        - Logistics
+        - Traceability and recall
+        - Architecture and code quality
+        - Testing
+        - Infrastructure and operations
+        - Privacy and legal
+        - Investor readiness
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options: [P0, P1, P2, P3]
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: Describe the user, safety or engineering outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List observable conditions required for completion.
+      placeholder: "- [ ] Condition one\n- [ ] Condition two"
+    validations:
+      required: true
+  - type: textarea
+    id: security
+    attributes:
+      label: Security, tenant and data impact
+      description: Include authorization, sensitive data, concurrency, audit and retention considerations.
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Test and release plan
+      description: Unit, integration, E2E, migration, staging and rollback expectations.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and blockers
+
