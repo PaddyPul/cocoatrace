@@ -118,6 +118,9 @@ export const contracts = {
     api<any>('PATCH', `/contracts/${id}/eudr`, data),
   updateCompliance: (id: string, data: { scheme: string; reference: string }) =>
     api<any>('PATCH', `/contracts/${id}/compliance`, data),
+  updatePaymentTerms: (id: string, data: { paymentPlan: string; depositPercentage?: number; creditDays?: number; note?: string }) =>
+    api<any>('PATCH', `/contracts/${id}/payment-terms`, data),
+  confirmPaymentTerms: (id: string) => api<any>('POST', `/contracts/${id}/payment-terms/confirm`),
 };
 
 export const payments = {
@@ -126,6 +129,11 @@ export const payments = {
   pay: (id: string, data: { transactionReference: string }) =>
     api<any>('POST', `/payment-requests/${id}/pay`, data),
   submitDocuments: (id: string) => api<any>('POST', `/payment-requests/${id}/submit-documents`),
+  submitInstallment: (id: string, transactionReference: string) => api<any>('POST', `/payment-installments/${id}/submit`, { transactionReference }),
+  confirmInstallment: (id: string) => api<any>('POST', `/payment-installments/${id}/confirm`),
+  rejectInstallment: (id: string, reason: string) => api<any>('POST', `/payment-installments/${id}/reject`, { reason }),
+  submitSecurity: (id: string, provider: string, reference: string) => api<any>('POST', `/payment-requests/${id}/security`, { provider, reference }),
+  confirmSecurity: (id: string) => api<any>('POST', `/payment-requests/${id}/security/confirm`),
 };
 
 export const shipments = {
@@ -133,7 +141,7 @@ export const shipments = {
   get: (id: string) => api<{ shipment: import('./types').Shipment; milestones: any[] }>('GET', `/shipments/${id}`),
   updateDetails: (id: string, data: { serviceProviderName?: string; bookingReference?: string; transportMode?: string; transportDocumentType?: string; transportDocumentReference?: string; trackingUrl?: string; vesselName?: string; containerReference?: string; originLocation?: string; destinationLocation?: string; etaArrival?: string }) =>
     api<any>('PATCH', `/shipments/${id}/details`, data),
-  recordMilestone: (id: string, data: { milestone: string; location?: string; notes?: string }) =>
+  recordMilestone: (id: string, data: { milestone: string; location?: string; notes?: string; exceptionalDispatch?: { reason: string; acknowledgePaymentRisk: true } }) =>
     api<any>('POST', `/shipments/${id}/milestones`, data),
 };
 

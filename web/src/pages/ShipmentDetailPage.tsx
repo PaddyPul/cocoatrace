@@ -36,6 +36,8 @@ export default function ShipmentDetailPage() {
   const [notes, setNotes] = useState('');
   const [milestoneLoading, setMilestoneLoading] = useState(false);
   const [milestoneError, setMilestoneError] = useState('');
+  const [dispatchBlocked, setDispatchBlocked] = useState(false);
+  const [exceptionReason, setExceptionReason] = useState('');
 
   const refresh = async () => {
     if (!id) return;
@@ -51,6 +53,7 @@ export default function ShipmentDetailPage() {
 
   const { shipment: s, milestones } = data;
   const isCoordinator = s.transport_coordinator_organization_id === user?.organizationId;
+  const isSeller = s.seller_organization_id === user?.organizationId;
   const currentIndex = MILESTONES.indexOf(s.current_milestone);
   const availableMilestones = MILESTONES.filter((_, index) => index > currentIndex);
 
@@ -85,6 +88,16 @@ export default function ShipmentDetailPage() {
       await shipments.recordMilestone(id, { milestone, location: location || undefined, notes: notes || undefined });
       await refresh(); setShowMilestone(false); setMilestone(''); setLocation(''); setNotes('');
       toast('success', 'Transport progress recorded');
+    } catch (e: any) { setMilestoneError(e.message); setDispatchBlocked(e.code === 'PAYMENT_DISPATCH_GATE' || String(e.message).toLowerCase().includes('dispatch')); } finally { setMilestoneLoading(false); }
+  };
+
+  const recordExceptionalDispatch = async () => {
+    if (!id || !milestone || !exceptionReason.trim()) return;
+    setMilestoneLoading(true); setMilestoneError('');
+    try {
+      await shipments.recordMilestone(id, { milestone, location: location || undefined, notes: notes || undefined, exceptionalDispatch: { reason: exceptionReason.trim(), acknowledgePaymentRisk: true } });
+      await refresh(); setShowMilestone(false); setMilestone(''); setLocation(''); setNotes(''); setExceptionReason(''); setDispatchBlocked(false);
+      toast('success', 'Exceptional dispatch recorded with an audit trail');
     } catch (e: any) { setMilestoneError(e.message); } finally { setMilestoneLoading(false); }
   };
 
@@ -95,6 +108,7 @@ export default function ShipmentDetailPage() {
           <div className="font-semibold text-brand-400">Buyer–seller managed transport</div>
           <div className="text-text-muted">{s.transport_coordinator_name} coordinates transport under {s.incoterm}. External providers do not need a CocoaTrace account; the parties record information received from their provider.</div>
         </div>
+        <div className={`${Number(s.amount_confirmed || 0) >= Number(s.dispatch_required_amount || 0) && s.payment_terms_status === 'agreed' ? 'bg-green-500/10 border-green-500/30' : 'bg-amber-500/10 border-amber-500/30'} border rounded p-4 text-xs leading-5`}><div className="font-semibold">Payment dispatch gate</div><div className="text-text-muted">Plan: {pretty(s.payment_plan)} · confirmed {Number(s.amount_confirmed || 0).toLocaleString()} of {Number(s.dispatch_required_amount || 0).toLocaleString()} required before dispatch · security {pretty(s.security_status || 'not required')}.</div>{s.dispatch_exception && <div className="text-amber-400 mt-1">Exceptional dispatch: {s.dispatch_exception_reason}</div>}</div>
 
         <div className="bg-surface border border-border rounded p-5">
           <div className="flex items-start justify-between mb-5"><div><h1 className="text-lg font-bold">Transport Arrangement</h1><p className="font-mono text-xs text-text-muted mt-0.5">{s.id}</p></div><StatusBadge status={s.current_milestone} /></div>
@@ -142,7 +156,7 @@ export default function ShipmentDetailPage() {
       <ErrorBox message={detailsError} /><Buttons busy={detailsLoading} onCancel={() => setShowDetails(false)} onConfirm={saveDetails} label="Save arrangement" />
     </div></Modal>}
 
-    {showMilestone && <Modal title="Record Transport Progress" onClose={() => !milestoneLoading && setShowMilestone(false)}><div className="space-y-3"><div><label className="form-label">Milestone</label><select className="form-select" value={milestone} onChange={(e) => setMilestone(e.target.value)}><option value="">Select next milestone</option>{availableMilestones.map((item) => <option key={item} value={item}>{LABELS[item]}</option>)}</select></div><Input label="Location (optional)" value={location} onChange={setLocation} icon={<MapPin size={12} />} /><div><label className="form-label">Notes (optional)</label><textarea className="form-input" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div><ErrorBox message={milestoneError} /><Buttons busy={milestoneLoading} onCancel={() => setShowMilestone(false)} onConfirm={recordMilestone} label="Record progress" /></div></Modal>}
+    {showMilestone && <Modal title="Record Transport Progress" onClose={() => !milestoneLoading && setShowMilestone(false)}><div className="space-y-3"><div><label className="form-label">Milestone</label><select className="form-select" value={milestone} onChange={(e) => { setMilestone(e.target.value); setDispatchBlocked(false); setMilestoneError(''); }}><option value="">Select next milestone</option>{availableMilestones.map((item) => <option key={item} value={item}>{LABELS[item]}</option>)}</select></div><Input label="Location (optional)" value={location} onChange={setLocation} icon={<MapPin size={12} />} /><div><label className="form-label">Notes (optional)</label><textarea className="form-input" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div><ErrorBox message={milestoneError} />{dispatchBlocked && isSeller && <div className="border border-amber-500/30 bg-amber-500/10 rounded p-3 space-y-2"><div className="text-xs font-semibold text-amber-400">Exceptional dispatch override</div><p className="text-[11px] text-text-muted">Use only when you deliberately accept dispatch risk without the contract’s required payment protection. The reason is permanently audited.</p><textarea className="form-input" rows={2} placeholder="Required business justification" value={exceptionReason} onChange={(e) => setExceptionReason(e.target.value)} /><button className="btn w-full justify-center text-xs" disabled={!exceptionReason.trim() || milestoneLoading} onClick={recordExceptionalDispatch}>Acknowledge risk and dispatch</button></div>}<Buttons busy={milestoneLoading} onCancel={() => setShowMilestone(false)} onConfirm={recordMilestone} label="Record progress" /></div></Modal>}
   </Layout>;
 }
 

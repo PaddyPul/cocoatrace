@@ -1,196 +1,68 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { payments } from '../api';
-import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
+import { StatusBadge, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
-import { ArrowLeft, Euro, CreditCard, Building2, User, Check, FileText } from 'lucide-react';
+import { ArrowLeft, Building2, CheckCircle2, FileText, ShieldCheck, User } from 'lucide-react';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 
+const pretty = (value: string) => String(value || '—').split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+
 export default function PaymentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, canDo } = useAuthCtx();
+  const { user } = useAuthCtx();
   const { toast } = useToast();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [reference, setReference] = useState('');
+  const [provider, setProvider] = useState('');
+  const [busy, setBusy] = useState('');
 
-  // Pay
-  const [showPay, setShowPay] = useState(false);
-  const [txRef, setTxRef] = useState('');
-  const [payLoading, setPayLoading] = useState(false);
-  const [payError, setPayError] = useState('');
-  const [payDone, setPayDone] = useState(false);
-
-  useEffect(() => {
-    if (!id) return;
-    payments.get(id)
-      .then(setData)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [id]);
-
-  const isBuyer = data && user && data.buyer_organization_id === user.organizationId;
-
-  const handlePay = async () => {
-    if (!id || !txRef) { setPayError('Transaction reference required'); return; }
-    setPayLoading(true); setPayError('');
-    try {
-      await payments.pay(id, { transactionReference: txRef });
-      setPayDone(true);
-      const updated = await payments.get(id);
-      setData(updated);
-      toast('success', 'External bank payment recorded');
-    } catch (e: any) { setPayError(e.message); } finally { setPayLoading(false); }
+  const refresh = useCallback(async () => { if (id) setData(await payments.get(id)); }, [id]);
+  useEffect(() => { refresh().catch((e) => setError(e.message)).finally(() => setLoading(false)); }, [refresh]);
+  const act = async (name: string, action: () => Promise<unknown>, message: string) => {
+    setBusy(name);
+    try { await action(); await refresh(); setReference(''); toast('success', message); }
+    catch (e: any) { toast('error', e.message); } finally { setBusy(''); }
   };
 
   if (loading) return <Layout currentPage="payments"><SkeletonDetail /></Layout>;
-  if (error || !data) return <Layout currentPage="payments"><div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{error || 'Not found'}</div></Layout>;
-
+  if (error || !data) return <Layout currentPage="payments"><Error message={error || 'Not found'} /></Layout>;
   const p = data;
+  const isBuyer = p.buyer_organization_id === user?.organizationId;
+  const isSeller = p.seller_organization_id === user?.organizationId;
+  const installments = p.installments || [];
 
-  return (
-    <Layout
-      currentPage="payments"
-      actions={<button className="btn btn-sm" onClick={() => navigate('/payments')}><ArrowLeft size={14} /> Back</button>}
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-5">
-          <div className="bg-surface border border-border rounded p-5">
-            <div className="flex items-start justify-between mb-5">
-              <div>
-                <h1 className="text-lg font-bold">Payment Request</h1>
-                <p className="font-mono text-xs text-text-muted mt-0.5">{p.id}</p>
-              </div>
-              <StatusBadge status={p.status} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Amount</div>
-                <div className="text-2xl font-bold font-mono text-brand-400">{fmtMoney(p.amount_total, p.currency)}</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Currency</div>
-                <div className="text-sm font-medium">{p.currency}</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Status</div>
-                <StatusBadge status={p.status} />
-              </div>
-              {p.seller_name && (
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Seller</div>
-                  <div className="text-sm flex items-center gap-1"><Building2 size={14} /> {p.seller_name}</div>
-                </div>
-              )}
-              {p.buyer_name && (
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Buyer</div>
-                  <div className="text-sm flex items-center gap-1"><User size={14} /> {p.buyer_name}</div>
-                </div>
-              )}
-              {p.payment_reference_external && (
-                <div className="col-span-2">
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Transaction Reference</div>
-                  <div className="font-mono text-xs">{p.payment_reference_external}</div>
-                </div>
-              )}
-              {p.settled_at && (
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Settled At</div>
-                  <div className="text-sm">{fmtDate(p.settled_at)}</div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-surface border border-border rounded p-5">
-            <h3 className="text-sm font-semibold mb-2">Documentary payment</h3>
-            <p className="text-xs text-text-muted leading-relaxed">
-              This trade uses documents against payment (D/P). CocoaTrace coordinates the document handoff and records the bank reference; it does not hold or transfer funds.
-            </p>
-            {p.status === 'awaiting_documents' && <div className="mt-3 text-xs text-amber-400">The exporter is preparing the required shipping documents. Payment is not due yet.</div>}
-            {p.status === 'requested' && <div className="mt-3 text-xs text-brand-400">The document set has been presented. The buyer can settle through their bank and record the transaction reference here.</div>}
-          </div>
-
-          {p.quantity_kg && (
-            <div className="bg-surface border border-border rounded p-5">
-              <h3 className="text-sm font-semibold mb-3">Contract Summary</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Quantity</div>
-                  <div className="text-sm font-mono">{(p.quantity_kg || 0).toLocaleString()} kg</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Price</div>
-                  <div className="text-sm font-mono">€{Number(p.price_per_kg || 0).toFixed(2)}/kg</div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Incoterm</div>
-                  <div className="text-sm font-mono">{p.incoterm || '—'}</div>
-                </div>
-              </div>
-              {p.contract_id && (
-                <button className="btn btn-sm mt-3" onClick={() => navigate(`/contracts/${p.contract_id}`)}>
-                  <FileText size={14} /> View Contract
-                </button>
-              )}
-            </div>
-          )}
+  return <Layout currentPage="payments" actions={<button className="btn btn-sm" onClick={() => navigate('/payments')}><ArrowLeft size={14} /> Back</button>}>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-2 space-y-5">
+        <div className="bg-surface border border-border rounded p-5">
+          <div className="flex items-start justify-between mb-5"><div><h1 className="text-lg font-bold">Protected Payment</h1><p className="font-mono text-xs text-text-muted mt-0.5">{p.id}</p></div><StatusBadge status={p.status} /></div>
+          <div className="grid grid-cols-2 gap-4"><Field label="Trade value" value={fmtMoney(p.amount_total, p.currency)} highlight /><Field label="Confirmed received" value={fmtMoney(p.amount_confirmed || 0, p.currency)} /><Field label="Seller" value={p.seller_name} icon={<Building2 size={14} />} /><Field label="Buyer" value={p.buyer_name} icon={<User size={14} />} /><Field label="Protection plan" value={pretty(p.payment_plan)} /><Field label="Terms" value={pretty(p.payment_terms_status)} /><Field label="Document release" value={pretty(p.release_status)} /><Field label="Platform fee" value={fmtMoney(p.platform_fee_amount || 0, p.currency)} /></div>
         </div>
 
-        <div className="space-y-4">
-          <div className="bg-surface border border-border rounded p-5 sticky top-6">
-            <h4 className="text-xs font-semibold mb-3">Quick Actions</h4>
-            <div className="space-y-2">
-              {p.status === 'requested' && isBuyer && canDo('payment.confirm') && !showPay && !payDone && (
-                <button className="btn btn-primary w-full justify-center text-xs" onClick={() => setShowPay(true)}>
-                  <Euro size={14} /> Record Bank Payment
-                </button>
-              )}
+        <div className="bg-surface border border-border rounded p-5"><h3 className="text-sm font-semibold flex items-center gap-2 mb-2"><ShieldCheck size={16} className="text-brand-400" /> How protection works</h3><p className="text-xs text-text-muted leading-relaxed">The buyer records an external bank transaction reference. The seller independently verifies receipt before an installment counts as paid. CocoaTrace does not hold funds. Dispatch and controlled document release follow the agreed plan.</p></div>
 
-              {payDone && (
-                <div className="text-center py-3">
-                  <Check size={20} className="text-green-400 mx-auto mb-1" />
-                  <div className="text-xs font-semibold text-green-400">Bank Payment Recorded</div>
-                </div>
-              )}
-
-              {showPay && !payDone && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="form-label">Transaction Reference</label>
-                    <input className="form-input" placeholder="e.g. SWIFT:COCO12345" value={txRef} onChange={(e) => setTxRef(e.target.value)} />
-                    <p className="text-[10px] text-text-muted mt-1">Use the reference issued by your bank or trade-finance provider.</p>
-                  </div>
-                  {payError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{payError}</div>}
-                  <div className="flex gap-2">
-                    <button className="btn flex-1 justify-center text-xs" onClick={() => setShowPay(false)} disabled={payLoading}>Cancel</button>
-                    <button className="btn btn-primary flex-1 justify-center text-xs" onClick={handlePay} disabled={payLoading || !txRef}>
-                      {payLoading ? 'Recording…' : 'Record Payment'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {p.status === 'settled' && (
-                <button className="btn w-full justify-center text-xs" onClick={() => {
-                  const blob = new Blob([JSON.stringify({ receiptId: p.id, amount: p.amount_total, currency: p.currency, seller: p.seller_name, buyer: p.buyer_name, status: p.status, settledAt: new Date().toISOString(), transactionReference: p.payment_reference_external }, null, 2)], { type: 'application/json' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a'); a.href = url; a.download = `receipt-${p.id.slice(0, 8)}.json`; a.click();
-                  URL.revokeObjectURL(url);
-                  toast('success', 'Receipt downloaded');
-                }}>
-                  <CreditCard size={14} /> Download Receipt
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+        <div className="bg-surface border border-border rounded p-5"><h3 className="text-sm font-semibold mb-4">Payment schedule</h3><div className="space-y-3">{installments.map((item: any) => <div key={item.id} className="border border-border rounded p-4"><div className="flex justify-between gap-3"><div><div className="text-sm font-semibold">{pretty(item.installment_type)}</div><div className="text-[11px] text-text-muted">Due: {pretty(item.due_trigger)}</div></div><div className="text-right"><div className="font-mono text-sm">{fmtMoney(item.amount_due, p.currency)}</div><StatusBadge status={item.status} /></div></div>{item.payment_reference_external && <div className="mt-2 text-[11px] font-mono">Reference: {item.payment_reference_external}</div>}
+          {isBuyer && item.status === 'due' && <div className="mt-3 flex gap-2"><input className="form-input" placeholder="Bank transaction reference" value={reference} onChange={(e) => setReference(e.target.value)} /><button className="btn btn-primary text-xs shrink-0" disabled={!reference || Boolean(busy)} onClick={() => act(`submit-${item.id}`, () => payments.submitInstallment(item.id, reference), 'Payment submitted for seller verification')}>{busy === `submit-${item.id}` ? 'Submitting…' : 'Submit payment'}</button></div>}
+          {isSeller && item.status === 'payment_submitted' && <div className="mt-3 flex gap-2"><button className="btn btn-primary text-xs" disabled={Boolean(busy)} onClick={() => act(`confirm-${item.id}`, () => payments.confirmInstallment(item.id), 'Receipt verified')}>Confirm funds received</button><button className="btn text-xs" disabled={Boolean(busy)} onClick={() => { const reason = window.prompt('Why are you rejecting this payment reference?'); if (reason) act(`reject-${item.id}`, () => payments.rejectInstallment(item.id, reason), 'Payment returned to buyer'); }}>Reject reference</button></div>}
+        </div>)}</div></div>
       </div>
-    </Layout>
-  );
+
+      <div><div className="bg-surface border border-border rounded p-5 sticky top-6"><h4 className="text-xs font-semibold mb-3">Workflow actions</h4><div className="space-y-2">
+        {isBuyer && p.payment_plan === 'bank_secured' && ['awaiting_submission', 'rejected'].includes(p.security_status) && <><input className="form-input" placeholder="Bank / provider" value={provider} onChange={(e) => setProvider(e.target.value)} /><input className="form-input" placeholder="Guarantee or LC reference" value={reference} onChange={(e) => setReference(e.target.value)} /><button className="btn btn-primary w-full justify-center text-xs" disabled={!provider || !reference || Boolean(busy)} onClick={() => act('security', () => payments.submitSecurity(p.id, provider, reference), 'Bank security submitted')}>Submit bank security</button></>}
+        {isSeller && p.security_status === 'submitted' && <button className="btn btn-primary w-full justify-center text-xs" disabled={Boolean(busy)} onClick={() => act('confirm-security', () => payments.confirmSecurity(p.id), 'Bank security verified')}>Verify bank security</button>}
+        {isSeller && p.payment_plan === 'documentary_collection' && !p.documents_presented_at && <button className="btn btn-primary w-full justify-center text-xs" disabled={Boolean(busy)} onClick={() => act('documents', () => payments.submitDocuments(p.id), 'Documents presented for payment')}><FileText size={14} /> Present document set</button>}
+        {p.status === 'settled' && <div className="text-center py-3"><CheckCircle2 className="text-green-400 mx-auto mb-1" size={20} /><div className="text-xs font-semibold text-green-400">Payment fully verified</div></div>}
+        <button className="btn w-full justify-center text-xs" onClick={() => navigate(`/contracts/${p.contract_id}`)}><FileText size={14} /> View contract</button>
+      </div></div></div>
+    </div>
+  </Layout>;
 }
+
+function Field({ label, value, highlight = false, icon }: { label: string; value: string; highlight?: boolean; icon?: React.ReactNode }) { return <div><div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">{label}</div><div className={`${highlight ? 'text-xl font-bold text-brand-400 font-mono' : 'text-sm font-medium'} flex items-center gap-1`}>{icon}{value || '—'}</div></div>; }
+function Error({ message }: { message: string }) { return <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{message}</div>; }

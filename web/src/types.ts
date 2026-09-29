@@ -98,6 +98,12 @@ export interface Contract {
   price_per_kg: number;
   incoterm: string;
   status: string;
+  payment_plan?: string;
+  deposit_percentage?: number;
+  credit_days?: number;
+  payment_terms_status?: string;
+  payment_request_id?: string;
+  platform_fee_amount?: number;
 }
 
 export interface Shipment {
@@ -118,6 +124,17 @@ export interface Shipment {
   bill_of_lading_number?: string;
   eta_arrival: string;
   current_milestone: string;
+  payment_request_id?: string;
+  payment_status?: string;
+  payment_plan?: string;
+  payment_terms_status?: string;
+  amount_total?: number;
+  amount_confirmed?: number;
+  dispatch_required_amount?: number;
+  security_status?: string;
+  release_status?: string;
+  dispatch_exception?: boolean;
+  dispatch_exception_reason?: string;
 }
 
 export interface Holding {
@@ -142,6 +159,11 @@ export interface Payment {
   currency: string;
   status: string;
   payment_reference_external?: string;
+  payment_plan?: string;
+  payment_terms_status?: string;
+  amount_confirmed?: number;
+  dispatch_required_amount?: number;
+  release_status?: string;
 }
 
 export interface Evidence {

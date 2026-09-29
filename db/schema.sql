@@ -306,6 +306,14 @@ CREATE TABLE IF NOT EXISTS sales_contracts (
   eudr_due_diligence_reference TEXT,
   compliance_scheme TEXT,
   compliance_reference TEXT,
+  payment_plan TEXT NOT NULL DEFAULT 'deposit_balance',
+  deposit_percentage NUMERIC(5,2) NOT NULL DEFAULT 20,
+  credit_days INTEGER NOT NULL DEFAULT 30,
+  payment_terms_status TEXT NOT NULL DEFAULT 'proposed',
+  payment_terms_note TEXT,
+  payment_terms_confirmed_at TIMESTAMPTZ,
+  payment_terms_confirmed_by_user_id UUID REFERENCES users(id),
+  completed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -329,6 +337,10 @@ CREATE TABLE IF NOT EXISTS shipments (
   eta_arrival DATE,
   current_milestone TEXT NOT NULL DEFAULT 'planning',
   delivered_at TIMESTAMPTZ,
+  dispatch_exception BOOLEAN NOT NULL DEFAULT FALSE,
+  dispatch_exception_reason TEXT,
+  dispatch_exception_recorded_at TIMESTAMPTZ,
+  dispatch_exception_recorded_by_user_id UUID REFERENCES users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -357,17 +369,40 @@ CREATE TABLE IF NOT EXISTS lot_distributions (
 -- Payment requests
 CREATE TABLE IF NOT EXISTS payment_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  contract_id UUID NOT NULL REFERENCES sales_contracts(id),
+  contract_id UUID NOT NULL UNIQUE REFERENCES sales_contracts(id),
   requested_by_organization_id UUID NOT NULL REFERENCES organizations(id),
   amount_total NUMERIC(14,2) NOT NULL,
   currency CHAR(3) NOT NULL DEFAULT 'EUR',
   status TEXT NOT NULL DEFAULT 'requested',
   payment_method TEXT NOT NULL DEFAULT 'documentary_collection_dp',
   due_trigger TEXT NOT NULL DEFAULT 'documents_presented',
+  dispatch_required_amount NUMERIC(14,2) NOT NULL DEFAULT 0,
+  amount_confirmed NUMERIC(14,2) NOT NULL DEFAULT 0,
+  documents_presented_at TIMESTAMPTZ,
+  security_status TEXT NOT NULL DEFAULT 'not_required',
+  security_provider TEXT,
+  security_reference TEXT,
+  security_submitted_at TIMESTAMPTZ,
+  security_verified_at TIMESTAMPTZ,
+  security_verified_by_user_id UUID REFERENCES users(id),
+  release_status TEXT NOT NULL DEFAULT 'locked',
   payment_reference_external TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  settled_at TIMESTAMPTZ
+  settled_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS payment_installments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(), payment_request_id UUID NOT NULL REFERENCES payment_requests(id) ON DELETE CASCADE,
+  installment_type TEXT NOT NULL, sequence_number INTEGER NOT NULL, amount_due NUMERIC(14,2) NOT NULL CHECK(amount_due>=0), due_trigger TEXT NOT NULL,
+  due_at TIMESTAMPTZ, status TEXT NOT NULL DEFAULT 'awaiting_trigger', payment_reference_external TEXT, submitted_by_user_id UUID REFERENCES users(id),
+  submitted_at TIMESTAMPTZ, verified_by_user_id UUID REFERENCES users(id), verified_at TIMESTAMPTZ, rejected_at TIMESTAMPTZ, rejection_reason TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), UNIQUE(payment_request_id,installment_type));
+
+CREATE TABLE IF NOT EXISTS platform_fee_invoices (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(), contract_id UUID NOT NULL UNIQUE REFERENCES sales_contracts(id), fee_payer TEXT NOT NULL DEFAULT 'seller',
+  rate_bps INTEGER NOT NULL DEFAULT 100 CHECK(rate_bps>=0), amount_total NUMERIC(14,2) NOT NULL CHECK(amount_total>=0), currency CHAR(3) NOT NULL,
+  status TEXT NOT NULL DEFAULT 'estimated', payment_reference_external TEXT, invoiced_at TIMESTAMPTZ, paid_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
 
 -- Evidence items
 CREATE TABLE IF NOT EXISTS evidence_items (
