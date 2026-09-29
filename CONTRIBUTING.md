@@ -77,7 +77,9 @@ npm run build --workspace=web
 
 The integration command creates a disposable PostgreSQL 16 database on port
 `15434`, applies the current production schema baseline, executes the API
-integration suite, and then removes the database. The reset guard refuses any
+integration suite, and then removes the database. It uses the isolated Compose
+project `cocoatrace-integration-tests` and never removes the normal development
+stack. The reset guard refuses any
 database whose name does not contain a standalone `test` segment. Never point it
 at development, staging, or production data.
 
