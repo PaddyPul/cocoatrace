@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { query, getClient } from '../db';
 import * as audit from '../services/audit';
+import { ensureSourceMaterialLot } from '../services/materialLot';
 
 export async function pushToMarketplace(req: Request, res: Response): Promise<void> {
   const batchId = req.params.id as string;
@@ -132,6 +133,7 @@ export async function createBatch(req: Request, res: Response): Promise<void> {
       "INSERT INTO harvest_batches (farm_id, plot_ids, crop, harvest_date, quantity_kg, moisture_percent, grade, current_holder_id, organic_claim_status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'pending_attestation') RETURNING *",
       [farmId, plotIds, crop, harvestDate, quantityKg, moisturePercent || null, grade || null, req.user!.organizationId]
     );
+    await ensureSourceMaterialLot(client, rows[0]);
     const holding = await client.query(
       "INSERT INTO batch_holdings (batch_id, holder_organization_id, quantity_kg, status) VALUES ($1,$2,$3,'available') RETURNING id",
       [rows[0].id, req.user!.organizationId, quantityKg]
@@ -159,6 +161,7 @@ export async function createDirectInventory(req: Request, res: Response): Promis
       ) VALUES (NULL,'{}',$1,$2,$3,$4,$5,$6,'none','direct_inventory',$7,$8,$9) RETURNING *`,
       [commodity, inventoryDate, quantityKg, moisturePercent || null, grade || null, req.user!.organizationId, sourceName || null, sourceCountry, sourceRegion || null]
     );
+    await ensureSourceMaterialLot(client, batch.rows[0]);
     const holding = await client.query(
       "INSERT INTO batch_holdings (batch_id, holder_organization_id, quantity_kg, warehouse_location, status) VALUES ($1,$2,$3,$4,'available') RETURNING *",
       [batch.rows[0].id, req.user!.organizationId, quantityKg, warehouseLocation || null]

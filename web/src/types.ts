@@ -395,6 +395,10 @@ export interface MaterialLot {
   quantityKg: number;
   batchId?: string;
   ownerName?: string;
+  sourceMode?: 'farm_traceable' | 'direct_inventory' | null;
+  sourceLabel?: string | null;
+  downstreamLotCount?: number;
+  distributionCount?: number;
 }
 
 export interface TraceLotResult extends MaterialLot {

@@ -4,7 +4,7 @@ import { getClient, query } from '../db';
 import * as audit from '../services/audit';
 import { buildJourney, deriveSafetyStatus, JourneyEvent } from '../services/publicProduct';
 import { calculateTraceForward } from '../services/recallTrace';
-import { loadTraceGraph } from '../services/traceGraphRepository';
+import { accessibleTraceLotIds, loadTraceGraph } from '../services/traceGraphRepository';
 
 function publicProductUrl(slug: string): string {
   const base = (process.env.PUBLIC_WEB_URL || process.env.WEB_URL || 'http://localhost:3000').replace(/\/$/, '');
@@ -341,9 +341,10 @@ export async function createRecall(req: Request, res: Response): Promise<void> {
     if (!seeds.some((seed: any) => seed.lotId === sourceLot.id)) seeds.push({ lotId: sourceLot.id });
   }
   if (!canManageAll) {
-    const unauthorized = seeds.find((seed: any) => graph.lots.find((lot) => lot.id === seed.lotId)?.ownerOrganizationId !== req.user!.organizationId);
+    const accessible = await accessibleTraceLotIds(req.user!.organizationId, false);
+    const unauthorized = seeds.find((seed: any) => !accessible.has(seed.lotId));
     if (unauthorized) {
-      res.status(403).json({ error: 'You can only initiate recalls from lots owned by your organization' });
+      res.status(403).json({ error: 'You can only initiate recalls from lots connected to your organization’s inventory, custody or trade records' });
       return;
     }
   }

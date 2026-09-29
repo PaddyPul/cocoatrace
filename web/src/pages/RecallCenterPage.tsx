@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle2, GitBranch, Plus, X } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CheckCircle2, GitBranch, PackagePlus, Plus, Sprout, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import { recalls as recallsApi, traceability } from '../api';
 import { MaterialLot, RecallImpactResult, RecallNotice, TraceBackResult } from '../types';
@@ -10,6 +11,7 @@ import { useAuthCtx } from '../components/auth/AuthProvider';
 export default function RecallCenterPage() {
   const { toast } = useToast();
   const { canDo } = useAuthCtx();
+  const navigate = useNavigate();
   const canManageRecalls = canDo('recall.manage');
   const [items, setItems] = useState<RecallNotice[]>([]);
   const [lots, setLots] = useState<MaterialLot[]>([]);
@@ -29,6 +31,7 @@ export default function RecallCenterPage() {
   const [traceQuantity, setTraceQuantity] = useState('');
   const [traceBusy, setTraceBusy] = useState(false);
   const [traceResult, setTraceResult] = useState<TraceBackResult | RecallImpactResult | null>(null);
+  const selectedLot = lots.find((lot) => lot.id === selectedLotId);
 
   const refresh = () => Promise.all([canManageRecalls ? recallsApi.list() : Promise.resolve([]), traceability.listLots()])
     .then(([recalls, allLots]) => {
@@ -84,18 +87,19 @@ export default function RecallCenterPage() {
     } catch (err: any) { setError(err.message); } finally { setBusy(false); }
   };
 
-  return <Layout currentPage="recalls" actions={canManageRecalls ? <button className="btn btn-sm btn-danger" onClick={() => { setError(''); setShowCreate(true); }}><Plus size={13} /> Activate recall</button> : <span className="badge badge-blue">Investigation access</span>}>
+  return <Layout currentPage="recalls" actions={canManageRecalls ? <button className="btn btn-sm btn-danger" disabled={!lots.length} onClick={() => { setError(''); setShowCreate(true); }}><Plus size={13} /> Activate recall</button> : <span className="badge badge-blue">Investigation access</span>}>
     <div className="mb-5 rounded border border-yellow-500/20 bg-yellow-500/5 p-4 text-xs text-yellow-200">
       <div className="flex items-start gap-3"><AlertTriangle size={18} className="shrink-0 text-yellow-400" /><div><strong className="block text-sm text-yellow-300">Investigate first. Activate with confidence.</strong><p className="mt-1 text-text-secondary">Trace any lot backward to its sources or forward to every descendant and recipient. {canManageRecalls ? 'When the scope is verified, activate a notice that immediately updates affected product profiles.' : 'Your role has investigation access; an authorized recall manager controls public notices.'}</p></div></div>
     </div>
     <section className="mb-5 rounded border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex items-center gap-2 text-sm font-semibold"><GitBranch size={16} className="text-brand-400" /> Lot genealogy calculator</div><p className="mt-1 text-xs text-text-secondary">Calculate exact declared mass flow backward to source lots or forward to every descendant and recipient.</p></div><span className="badge badge-blue">quantity-aware</span></div>
-      <div className="mt-4 grid gap-3 md:grid-cols-[160px_1fr_180px_auto]">
+      {loading ? <div className="loading"><div className="spinner" />Loading connected material records…</div> : lots.length ? <><div className="mt-4 grid gap-3 md:grid-cols-[160px_1fr_180px_auto]">
         <select className="form-select" value={traceMode} onChange={(event) => { setTraceMode(event.target.value as typeof traceMode); setTraceResult(null); }}><option value="trace-forward">Trace forward</option><option value="trace-back">Trace back</option></select>
-        <select className="form-select" value={selectedLotId} onChange={(event) => { setSelectedLotId(event.target.value); setTraceResult(null); }}><option value="">Select a lot…</option>{lots.map((lot) => <option key={lot.id} value={lot.id}>{lot.lotCode} · {lot.productName} · {Number(lot.quantityKg).toLocaleString()} kg</option>)}</select>
+        <select className="form-select" value={selectedLotId} onChange={(event) => { setSelectedLotId(event.target.value); setTraceResult(null); }}><option value="">Select a lot…</option>{lots.map((lot) => <option key={lot.id} value={lot.id}>{lot.lotCode} · {lot.productName} · {Number(lot.quantityKg).toLocaleString()} kg{lot.sourceLabel ? ` · ${lot.sourceLabel}` : ''}</option>)}</select>
         <input className="form-input" inputMode="decimal" placeholder="Quantity (full lot)" value={traceQuantity} onChange={(event) => setTraceQuantity(event.target.value)} />
         <button className="btn btn-primary justify-center" disabled={!selectedLotId || traceBusy} onClick={calculateTrace}>{traceBusy ? 'Calculating…' : 'Calculate'}</button>
       </div>
+      {selectedLot && <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface-darker p-4 text-xs"><span className="badge badge-green">Live workspace record</span><span><strong>{selectedLot.lotCode}</strong> was created from {selectedLot.sourceMode === 'direct_inventory' ? 'conventional inventory' : selectedLot.batchId ? 'a recorded source batch' : 'a transformation event'}.</span><span className="text-text-muted">{selectedLot.downstreamLotCount || 0} downstream lot links · {selectedLot.distributionCount || 0} recorded deliveries</span></div>}
       {traceResult && <div className="mt-5 border-t border-border pt-4">
         <div className="mb-3 flex flex-wrap gap-2 text-[10px]"><span className={`badge ${traceResult.exactness === 'declared' ? 'badge-green' : 'badge-amber'}`}>{traceResult.exactness} allocations</span>{traceResult.warnings.map((warning) => <span key={warning} className="badge badge-amber">{warning}</span>)}</div>
         {traceResult.direction === 'trace-forward' ? <>
@@ -112,7 +116,7 @@ export default function RecallCenterPage() {
           <div className="overflow-x-auto"><table className="data-table"><thead><tr><th>Source lot</th><th>Product</th><th>Required quantity</th><th>Share of source lot</th><th>Confidence</th></tr></thead><tbody>{traceResult.sourceLots.map((lot) => <tr key={lot.id}><td className="font-mono text-xs">{lot.lotCode}</td><td>{lot.productName}</td><td className="font-semibold">{Number(lot.quantityRequiredKg).toLocaleString()} kg</td><td>{lot.percentOfLot}%</td><td>{lot.allocationConfidence}</td></tr>)}</tbody></table></div>
         </>}
         <details className="mt-4 text-[10px] text-text-muted"><summary className="cursor-pointer">Calculation assumptions</summary><ul className="mt-2 list-disc space-y-1 pl-5">{traceResult.assumptions.map((assumption) => <li key={assumption}>{assumption}</li>)}</ul></details>
-      </div>}
+      </div>}</> : <div className="mt-5 rounded-2xl border border-dashed border-border p-8 text-center"><GitBranch size={28} className="mx-auto text-text-muted" /><h3 className="mt-4 text-base font-semibold">No traceable material records yet</h3><p className="mx-auto mt-2 max-w-xl text-xs leading-5 text-text-muted">Trace & Recall starts from inventory created by your organization or received through a completed trade. Create material first; CocoaTrace will generate its source lot automatically.</p><div className="mt-5 flex flex-wrap justify-center gap-2">{canDo('listing.create') ? <><button className="btn btn-primary" onClick={() => navigate('/farms')}><Sprout size={14} />Organic / origin-verified</button><button className="btn" onClick={() => navigate('/inventory/new')}><PackagePlus size={14} />Conventional inventory</button></> : <button className="btn btn-primary" onClick={() => navigate(canDo('offer.create') ? '/source/new' : '/home')}>Continue to workspace <ArrowRight size={14} /></button>}</div></div>}
     </section>
     {error && !showCreate && <div className="mb-4 rounded-sm border border-red-500/30 bg-red-900/10 px-3 py-2 text-xs text-red-400">{error}</div>}
     {!canManageRecalls ? <div className="rounded-2xl border border-border bg-surface p-5 text-xs text-text-secondary"><strong className="block text-sm text-text-primary">Recall notices are managed by authorized roles</strong><p className="mt-1">You can use all genealogy investigation tools above. Contact a regulator, administrator or your organization’s recall manager to activate or resolve a public notice.</p></div> : loading ? <div className="loading"><div className="spinner" /><div>Loading recalls…</div></div> : items.length === 0 ? <div className="empty-state"><div className="empty-icon">✓</div><div className="empty-title">No recall notices</div><p>No active or resolved recalls are recorded.</p></div> : <div className="space-y-3">
