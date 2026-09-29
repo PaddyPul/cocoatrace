@@ -4,10 +4,10 @@ import * as audit from '../services/audit';
 
 export async function getHolding(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT h.*, b.crop, b.harvest_date, b.organic_claim_status, b.grade, b.farm_id, f.name as farm_name, b.quantity_kg as batch_quantity
+    `SELECT h.*, b.crop, b.harvest_date, b.organic_claim_status, b.grade, b.farm_id, b.source_mode, b.source_name, b.source_country, b.source_region, f.name as farm_name, b.quantity_kg as batch_quantity
      FROM batch_holdings h
      JOIN harvest_batches b ON b.id = h.batch_id
-     JOIN farms f ON f.id = b.farm_id
+     LEFT JOIN farms f ON f.id = b.farm_id
      WHERE h.id = $1 AND h.holder_organization_id = $2`,
     [req.params.id, req.user!.organizationId]
   );
@@ -18,7 +18,7 @@ export async function getHolding(req: Request, res: Response): Promise<void> {
   const batchRes = await query(
     `SELECT b.*, f.name as farm_name, o.name as holder_name
      FROM harvest_batches b
-     JOIN farms f ON f.id = b.farm_id
+     LEFT JOIN farms f ON f.id = b.farm_id
      JOIN organizations o ON o.id = b.current_holder_id
      WHERE b.id = $1`,
     [rows[0].batch_id]
@@ -28,10 +28,10 @@ export async function getHolding(req: Request, res: Response): Promise<void> {
 
 export async function listHoldings(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT h.*, b.crop, b.harvest_date, b.organic_claim_status, b.grade, f.name as farm_name
+    `SELECT h.*, b.crop, b.harvest_date, b.organic_claim_status, b.grade, b.source_mode, b.source_name, b.source_country, b.source_region, f.name as farm_name
      FROM batch_holdings h
      JOIN harvest_batches b ON b.id = h.batch_id
-     JOIN farms f ON f.id = b.farm_id
+     LEFT JOIN farms f ON f.id = b.farm_id
      WHERE h.holder_organization_id = $1
      ORDER BY h.created_at DESC`,
     [req.user!.organizationId]

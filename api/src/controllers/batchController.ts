@@ -66,7 +66,7 @@ export async function listBatches(req: Request, res: Response): Promise<void> {
   const seeAll = perms.includes('*') || perms.includes('batch.attest') || perms.includes('audit.read') || perms.includes('recall.manage.all');
   let sql = `SELECT b.*, f.name as farm_name, o.name as holder_name
              FROM harvest_batches b
-             JOIN farms f ON f.id = b.farm_id
+             LEFT JOIN farms f ON f.id = b.farm_id
              JOIN organizations o ON o.id = b.current_holder_id`;
   const params: any[] = [];
   if (!seeAll) {
@@ -84,7 +84,7 @@ export async function getBatch(req: Request, res: Response): Promise<void> {
             a.attested_at, a.provenance_hash as att_hash, a.notes as att_notes,
             c.standard as cert_standard, c.valid_to as cert_valid_to
      FROM harvest_batches b
-     JOIN farms f ON f.id = b.farm_id
+     LEFT JOIN farms f ON f.id = b.farm_id
      JOIN organizations o ON o.id = b.current_holder_id
      LEFT JOIN batch_attestations a ON a.id = b.attestation_id
      LEFT JOIN organic_certificates c ON c.id = a.certificate_id
@@ -147,6 +147,33 @@ export async function createBatch(req: Request, res: Response): Promise<void> {
   }
 }
 
+export async function createDirectInventory(req: Request, res: Response): Promise<void> {
+  const { commodity, quantityKg, inventoryDate, sourceName, sourceCountry, sourceRegion, warehouseLocation, moisturePercent, grade } = req.body;
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    const batch = await client.query(
+      `INSERT INTO harvest_batches (
+        farm_id, plot_ids, crop, harvest_date, quantity_kg, moisture_percent, grade,
+        current_holder_id, organic_claim_status, source_mode, source_name, source_country, source_region
+      ) VALUES (NULL,'{}',$1,$2,$3,$4,$5,$6,'none','direct_inventory',$7,$8,$9) RETURNING *`,
+      [commodity, inventoryDate, quantityKg, moisturePercent || null, grade || null, req.user!.organizationId, sourceName || null, sourceCountry, sourceRegion || null]
+    );
+    const holding = await client.query(
+      "INSERT INTO batch_holdings (batch_id, holder_organization_id, quantity_kg, warehouse_location, status) VALUES ($1,$2,$3,$4,'available') RETURNING *",
+      [batch.rows[0].id, req.user!.organizationId, quantityKg, warehouseLocation || null]
+    );
+    await client.query('COMMIT');
+    await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'inventory.create_direct', entityType: 'harvest_batch', entityId: batch.rows[0].id });
+    res.status(201).json({ ...batch.rows[0], holding_id: holding.rows[0].id });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 export async function attestBatch(req: Request, res: Response): Promise<void> {
   const id = req.params.id as string;
   const { certificateId, notes } = req.body;
@@ -158,6 +185,10 @@ export async function attestBatch(req: Request, res: Response): Promise<void> {
   }
   if (batch.attestation_id) {
     res.status(400).json({ error: 'Batch already attested' });
+    return;
+  }
+  if (batch.source_mode === 'direct_inventory' || !batch.farm_id) {
+    res.status(400).json({ error: 'Direct conventional inventory cannot be presented as farm-attested organic supply' });
     return;
   }
 

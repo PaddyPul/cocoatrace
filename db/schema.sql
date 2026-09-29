@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS organic_certificates (
 -- Harvest batches
 CREATE TABLE IF NOT EXISTS harvest_batches (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  farm_id UUID NOT NULL REFERENCES farms(id),
+  farm_id UUID REFERENCES farms(id),
   plot_ids UUID[] NOT NULL DEFAULT '{}',
   crop TEXT NOT NULL DEFAULT 'cocoa',
   harvest_date DATE NOT NULL,
@@ -155,6 +155,10 @@ CREATE TABLE IF NOT EXISTS harvest_batches (
   attestation_id UUID,
   current_holder_id UUID NOT NULL REFERENCES organizations(id),
   provenance_hash TEXT,
+  source_mode TEXT NOT NULL DEFAULT 'farm_traceable' CHECK (source_mode IN ('farm_traceable','direct_inventory')),
+  source_name TEXT,
+  source_country CHAR(2),
+  source_region TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

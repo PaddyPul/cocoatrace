@@ -58,7 +58,7 @@ export default function BatchDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    if (showAttest && batch) {
+    if (showAttest && batch?.farm_id) {
       certificatesApi.list(batch.farm_id).then(setCerts).catch(() => {});
     }
   }, [showAttest, batch]);

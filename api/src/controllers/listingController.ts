@@ -4,12 +4,14 @@ import * as audit from '../services/audit';
 
 export async function listListings(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT l.*, o.name as seller_name, b.crop, b.organic_claim_status, b.grade, b.harvest_date, f.name as farm_name, f.region as farm_region
+    `SELECT l.*, o.name as seller_name, b.crop, b.organic_claim_status, b.grade, b.harvest_date,
+            b.source_mode, b.source_name, b.source_country, b.source_region,
+            f.name as farm_name, f.region as farm_region, f.country as farm_country
      FROM listings l
      JOIN organizations o ON o.id = l.seller_organization_id
      JOIN batch_holdings h ON h.id = l.holding_id
      JOIN harvest_batches b ON b.id = h.batch_id
-     JOIN farms f ON f.id = b.farm_id
+     LEFT JOIN farms f ON f.id = b.farm_id
      WHERE l.active = TRUE
      ORDER BY l.created_at DESC`
   );
@@ -18,13 +20,15 @@ export async function listListings(req: Request, res: Response): Promise<void> {
 
 export async function getListing(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT l.*, o.name as seller_name, b.crop, b.organic_claim_status, b.grade, b.harvest_date, f.name as farm_name, f.region as farm_region,
+    `SELECT l.*, o.name as seller_name, b.crop, b.organic_claim_status, b.grade, b.harvest_date,
+            b.source_mode, b.source_name, b.source_country, b.source_region,
+            f.name as farm_name, f.region as farm_region, f.country as farm_country,
             h.batch_id
      FROM listings l
      JOIN organizations o ON o.id = l.seller_organization_id
      JOIN batch_holdings h ON h.id = l.holding_id
      JOIN harvest_batches b ON b.id = h.batch_id
-     JOIN farms f ON f.id = b.farm_id
+     LEFT JOIN farms f ON f.id = b.farm_id
      WHERE l.id = $1`,
     [req.params.id]
   );

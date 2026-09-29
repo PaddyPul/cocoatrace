@@ -36,6 +36,7 @@ export default function LoginPage() {
     setError('');
     setSubmitting(true);
     try {
+      localStorage.removeItem('ct_guided_fresh_start');
       await login(email, password);
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -69,6 +70,7 @@ export default function LoginPage() {
       await login(mode === 'buy' ? 'newbuyer@cocoatrace.io' : 'newsupplier@cocoatrace.io', 'Password123!');
       await workspace.updateOnboarding({ status: 'not_started', currentStep: 0, primaryGoal: mode === 'buy' ? 'buy_verified' : 'sell_verified', pilotMode: true });
       localStorage.setItem('ct_experience_mode', mode);
+      localStorage.setItem('ct_guided_fresh_start', mode);
       navigate('/onboarding');
     } catch (err: any) { setError(err.message || 'Could not start the new-user experience'); }
     finally { setSubmitting(false); }
