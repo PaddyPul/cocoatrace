@@ -63,6 +63,7 @@ export const workspace = {
     api<import('./types').OnboardingState>('PUT', '/onboarding', data),
   sendFeedback: (data: { page: string; task: string; rating: number; comment: string }) =>
     api<any>('POST', '/pilot-feedback', data),
+  tradeActions: () => api<any[]>('GET', '/trade-actions'),
   listFeedback: () => api<any[]>('GET', '/pilot-feedback'),
 };
 

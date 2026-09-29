@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { query } from '../db';
 import * as audit from '../services/audit';
+import { buildTradeActions } from '../services/tradeNextAction';
 
 const defaultOnboarding = {
   status: 'not_started', current_step: 0, primary_goal: null,
@@ -50,4 +51,23 @@ export async function listFeedback(req: Request, res: Response): Promise<void> {
     [allAccess, req.user!.organizationId]
   );
   res.json(result.rows);
+}
+
+export async function getTradeActions(req: Request, res: Response): Promise<void> {
+  const organizationId=req.user!.organizationId;
+  const [offers,deals]=await Promise.all([
+    query(`SELECT o.id,o.status,o.buyer_organization_id,l.seller_organization_id,b.name buyer_name,s.name seller_name
+      FROM trade_offers o JOIN listings l ON l.id=o.listing_id JOIN organizations b ON b.id=o.buyer_organization_id JOIN organizations s ON s.id=l.seller_organization_id
+      WHERE o.status='pending' AND (o.buyer_organization_id=$1 OR l.seller_organization_id=$1)`,[organizationId]),
+    query(`SELECT c.id,c.status,c.seller_organization_id,c.buyer_organization_id,c.payment_terms_status,c.payment_plan,c.currency,
+      seller.name seller_name,buyer.name buyer_name,p.id payment_request_id,p.status payment_status,p.security_status,
+      i.id installment_id,i.status installment_status,i.installment_type,i.amount_due,
+      sh.id shipment_id,sh.transport_coordinator_organization_id,sh.current_milestone
+      FROM sales_contracts c JOIN organizations seller ON seller.id=c.seller_organization_id JOIN organizations buyer ON buyer.id=c.buyer_organization_id
+      LEFT JOIN LATERAL(SELECT * FROM payment_requests WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1)p ON TRUE
+      LEFT JOIN LATERAL(SELECT * FROM payment_installments WHERE payment_request_id=p.id AND status IN('payment_submitted','due') ORDER BY CASE status WHEN 'payment_submitted' THEN 0 ELSE 1 END,sequence_number LIMIT 1)i ON TRUE
+      LEFT JOIN LATERAL(SELECT * FROM shipments WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1)sh ON TRUE
+      WHERE c.seller_organization_id=$1 OR c.buyer_organization_id=$1 ORDER BY c.created_at DESC`,[organizationId]),
+  ]);
+  res.json(buildTradeActions(offers.rows,deals.rows,organizationId));
 }

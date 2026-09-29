@@ -11,10 +11,16 @@ const PRIMARY_NAV: NavGroup[] = [{ label: 'Workspace', items: [
   { icon: Home, label: 'Home', page: 'home', orPermissions: [] },
   { icon: Store, label: 'Find verified supply', page: 'marketplace', orPermissions: ['listing.read', 'offer.create'] },
   { icon: ShoppingBag, label: 'Publish supply', page: 'supply-new', path: '/supply/new', orPermissions: ['listing.create'] },
+  { icon: Handshake, label: 'Offers', page: 'offers', orPermissions: ['offer.respond', 'offer.create'] },
   { icon: ScrollText, label: 'Orders & deals', page: 'contracts', orPermissions: ['contract.read', 'offer.respond', 'offer.create'] },
   { icon: QrCode, label: 'Products', page: 'products', orPermissions: ['batch.read'] },
   { icon: ShieldAlert, label: 'Trace & recall', page: 'recalls', orPermissions: ['batch.read', 'recall.manage'], emphasis: 'safety' },
 ] }];
+
+const TRADE_NAV: NavGroup = { label: 'Active trade', items: [
+  { icon: Ship, label: 'Transport', page: 'shipments', orPermissions: ['shipment.read', 'shipment.update'] },
+  { icon: WalletCards, label: 'Payments', page: 'payments', orPermissions: ['payment.read', 'payment.request', 'payment.confirm'] },
+] };
 
 const TOOL_NAV: NavGroup[] = [
   { label: 'Origin & proof', items: [
@@ -23,12 +29,9 @@ const TOOL_NAV: NavGroup[] = [
     { icon: BadgeCheck, label: 'Certificates', page: 'certs', orPermissions: ['certificate.read', 'certificate.issue'] },
     { icon: FileCheck2, label: 'Evidence', page: 'evidence', orPermissions: ['evidence.read', 'evidence.upload'] },
   ] },
-  { label: 'Trade operations', items: [
+  { label: 'Supply records', items: [
     { icon: ShoppingBag, label: 'My listings', page: 'my-listings', orPermissions: ['listing.create'] },
     { icon: PackageCheck, label: 'Inventory', page: 'holdings', orPermissions: ['holding.read', 'holding.create', 'listing.create'] },
-    { icon: Handshake, label: 'Offers', page: 'offers', orPermissions: ['offer.respond', 'offer.create'] },
-    { icon: Ship, label: 'Transport', page: 'shipments', orPermissions: ['shipment.read', 'shipment.update'] },
-    { icon: WalletCards, label: 'Payments', page: 'payments', orPermissions: ['payment.read', 'payment.request', 'payment.confirm'] },
   ] },
   { label: 'Administration', items: [
     { icon: FileClock, label: 'Audit log', page: 'audit', orPermissions: ['audit.read'] },
@@ -42,7 +45,7 @@ export default function Sidebar({ currentPage, onNavigate, className = '' }: { c
   const navigate = useNavigate();
   const go = (item: Pick<NavItem, 'page' | 'path'>) => { navigate(item.path || '/' + item.page); onNavigate(); };
   const setMode = (mode: 'buy' | 'sell') => { localStorage.setItem('ct_experience_mode', mode); navigate(`/home?mode=${mode}`); onNavigate(); };
-  const isActive = (item: NavItem) => currentPage === item.page || currentPage + 's' === item.page;
+  const isActive = (item: NavItem) => currentPage === item.page || currentPage + 's' === item.page || (currentPage === 'deal-room' && item.page === 'contracts');
 
   const replayWelcome = async () => {
     await workspace.updateOnboarding({ status: 'not_started', currentStep: 0, primaryGoal: onboarding?.primary_goal || (canAny('listing.create') ? 'sell_verified' : 'buy_verified'), pilotMode: onboarding?.pilot_mode ?? true });
@@ -60,7 +63,8 @@ export default function Sidebar({ currentPage, onNavigate, className = '' }: { c
     <nav className="flex-1 space-y-5 px-3 py-5">
       <div className="grid grid-cols-2 gap-1 rounded-2xl border border-white/10 bg-black/15 p-1"><button onClick={() => setMode('buy')} className="rounded-xl px-3 py-2 text-[11px] font-bold text-white/65 transition hover:bg-white/10 hover:text-white">Buy</button><button onClick={() => setMode('sell')} className="rounded-xl px-3 py-2 text-[11px] font-bold text-white/65 transition hover:bg-white/10 hover:text-white">Sell</button></div>
       {PRIMARY_NAV.map((group) => { const items = group.items.filter((item) => !item.orPermissions.length || canAny(...item.orPermissions)); return items.length ? <section key={group.label}><div className="mb-1.5 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-white/30">{group.label}</div><div className="space-y-1">{items.map((item) => renderItem(item))}</div></section> : null; })}
-      <details open={TOOL_NAV.some((group) => group.items.some(isActive)) || undefined} className="group rounded-xl border border-white/10 bg-white/[.025] p-2"><summary className="cursor-pointer list-none rounded-lg px-2 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-white/40 transition hover:bg-white/[.05] hover:text-white/70">Records & administration <span className="float-right text-white/25 transition group-open:rotate-45">+</span></summary><div className="mt-3 space-y-5 border-t border-white/10 pt-3">{TOOL_NAV.map((group) => { const items = group.items.filter((item) => !item.orPermissions.length || canAny(...item.orPermissions)); return items.length ? <section key={group.label}><div className="mb-1.5 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-white/25">{group.label}</div><div className="space-y-1">{items.map((item) => renderItem(item, true))}</div></section> : null; })}</div></details>
+      {(() => { const items = TRADE_NAV.items.filter((item) => canAny(...item.orPermissions)); return items.length ? <section><div className="mb-1.5 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-white/30">{TRADE_NAV.label}</div><div className="space-y-1">{items.map((item) => renderItem(item))}</div></section> : null; })()}
+      <details open={TOOL_NAV.some((group) => group.items.some(isActive)) || undefined} className="group rounded-xl border border-white/10 bg-white/[.025] p-2"><summary className="cursor-pointer list-none rounded-lg px-2 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-white/40 transition hover:bg-white/[.05] hover:text-white/70">Data & administration <span className="float-right text-white/25 transition group-open:rotate-45">+</span></summary><div className="mt-3 space-y-5 border-t border-white/10 pt-3">{TOOL_NAV.map((group) => { const items = group.items.filter((item) => !item.orPermissions.length || canAny(...item.orPermissions)); return items.length ? <section key={group.label}><div className="mb-1.5 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-white/25">{group.label}</div><div className="space-y-1">{items.map((item) => renderItem(item, true))}</div></section> : null; })}</div></details>
     </nav>
     <div className="m-3 rounded-2xl border border-white/10 bg-white/[0.05] p-3.5">
       <button onClick={replayWelcome} className="mb-3 flex w-full items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-left text-[10px] font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"><RefreshCw size={13} /> Replay first-time experience</button>
