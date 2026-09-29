@@ -309,7 +309,7 @@ CREATE TABLE IF NOT EXISTS sales_contracts (
   payment_plan TEXT NOT NULL DEFAULT 'deposit_balance',
   deposit_percentage NUMERIC(5,2) NOT NULL DEFAULT 20,
   credit_days INTEGER NOT NULL DEFAULT 30,
-  payment_terms_status TEXT NOT NULL DEFAULT 'proposed',
+  payment_terms_status TEXT NOT NULL DEFAULT 'draft',
   payment_terms_note TEXT,
   payment_terms_confirmed_at TIMESTAMPTZ,
   payment_terms_confirmed_by_user_id UUID REFERENCES users(id),

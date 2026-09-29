@@ -7,6 +7,7 @@ import * as controller from '../controllers/workspaceController';
 const router = Router();
 
 router.get('/onboarding', requireAuth, controller.getOnboarding);
+router.get('/trade-actions', requireAuth, controller.getTradeActions);
 router.put('/onboarding', requireAuth, validate(onboardingSchema), controller.updateOnboarding);
 router.post('/pilot-feedback', requireAuth, validate(pilotFeedbackSchema), controller.createFeedback);
 router.get('/pilot-feedback', requireAuth, requirePermission('organization.admin'), controller.listFeedback);

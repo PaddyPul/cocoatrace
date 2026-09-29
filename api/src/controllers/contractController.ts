@@ -81,7 +81,7 @@ export async function acceptOffer(req: Request, res: Response): Promise<void> {
 
     const contractRes = await client.query(
       `INSERT INTO sales_contracts (listing_id,offer_id,seller_organization_id,buyer_organization_id,holding_id,quantity_kg,price_per_kg,currency,incoterm,payment_plan,deposit_percentage,payment_terms_status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'deposit_balance',20,'proposed') RETURNING *`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'deposit_balance',20,'draft') RETURNING *`,
       [offer.listing_id, offer.id, req.user!.organizationId, offer.buyer_organization_id, offer.holding_id, offer.quantity_kg, offer.offered_price_per_kg, offer.currency, offer.incoterm]
     );
     const contractValue=Number(offer.quantity_kg)*Number(offer.offered_price_per_kg);
@@ -210,6 +210,7 @@ export async function confirmPaymentTerms(req:Request,res:Response):Promise<void
   try{await client.query('BEGIN');const r=await client.query(`SELECT c.*,p.id payment_request_id FROM sales_contracts c JOIN payment_requests p ON p.contract_id=c.id WHERE c.id=$1 AND c.buyer_organization_id=$2 FOR UPDATE OF c,p`,[id,req.user!.organizationId]);const c=r.rows[0];
     if(!c){await client.query('ROLLBACK');res.status(404).json({error:'Contract not found or only the buyer can confirm its payment terms'});return;}
     if(c.payment_terms_status==='agreed'){await client.query('COMMIT');res.json({ok:true,alreadyConfirmed:true});return;}
+    if(c.payment_terms_status!=='proposed'){await client.query('ROLLBACK');res.status(409).json({error:'The supplier must propose the payment terms before the buyer can confirm them'});return;}
     await client.query("UPDATE sales_contracts SET payment_terms_status='agreed',payment_terms_confirmed_at=NOW(),payment_terms_confirmed_by_user_id=$1 WHERE id=$2",[req.user!.id,id]);
     await client.query("UPDATE payment_installments SET status='due',updated_at=NOW() WHERE payment_request_id=$1 AND due_trigger='terms_agreed'",[c.payment_request_id]);
     const status=c.payment_plan==='bank_secured'?'awaiting_security':c.payment_plan==='pay_after_delivery'?'awaiting_delivery':c.payment_plan==='documentary_collection'?'awaiting_documents':'payment_due';

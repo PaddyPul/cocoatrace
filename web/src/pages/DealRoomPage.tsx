@@ -66,12 +66,16 @@ export default function DealRoomPage() {
   let nextTitle = 'Review the shared deal record';
   let nextCopy = 'The agreement, payment, documents and transport state are synchronized here.';
   let nextAction: React.ReactNode = null;
-  if (!termsReady && isSeller) {
+  if (deal.payment_terms_status === 'draft' && isSeller) {
     nextTitle = 'Set the payment protection plan'; nextCopy = 'Choose when payment or bank security must be verified before dispatch.';
     nextAction = <button className="btn btn-primary" onClick={() => navigate(`/contracts/${deal.id}`)}><ShieldCheck size={14} />Configure protection</button>;
-  } else if (!termsReady && isBuyer) {
+  } else if (deal.payment_terms_status === 'draft' && isBuyer) {
+    nextTitle = 'Offer accepted—supplier preparing payment terms'; nextCopy = `${deal.seller_name} must select and propose the payment protection plan before you can review it.`;
+  } else if (deal.payment_terms_status === 'proposed' && isBuyer) {
     nextTitle = 'Confirm the payment terms'; nextCopy = `${deal.seller_name} proposed “${PLAN_LABELS[deal.payment_plan] || deal.payment_plan}”.`;
     nextAction = <button className="btn btn-primary" disabled={Boolean(busy)} onClick={() => run('terms', () => contracts.confirmPaymentTerms(deal.id), 'Payment terms confirmed')}><Check size={14} />{busy === 'terms' ? 'Confirming…' : 'Confirm terms'}</button>;
+  } else if (deal.payment_terms_status === 'proposed' && isSeller) {
+    nextTitle = 'Payment terms sent—awaiting buyer confirmation'; nextCopy = `${deal.buyer_name} can now review and confirm the proposed plan.`;
   } else if (dueInstallment && isBuyer) {
     nextTitle = 'Submit the payment reference'; nextCopy = `${fmtMoney(dueInstallment.amount_due, deal.currency)} is now due. Record the reference from your regulated payment provider.`;
     nextAction = <div className="flex w-full flex-col gap-2 sm:flex-row"><input className="form-input min-w-0 flex-1" placeholder="Bank transaction reference" value={reference} onChange={(event) => setReference(event.target.value)} /><button className="btn btn-primary shrink-0" disabled={!reference.trim() || Boolean(busy)} onClick={() => run('submit', () => payments.submitInstallment(dueInstallment.id, reference.trim()), 'Payment submitted for seller verification')}><WalletCards size={14} />{busy === 'submit' ? 'Submitting…' : 'Submit payment'}</button></div>;
