@@ -28,7 +28,9 @@ services:
     ports:
       - "3001:3001"
     environment:
+      APP_ENV: demo
       NODE_ENV: production
+      DEMO_MODE: "true"
       DATABASE_URL: postgresql://cocoa:cocoa_dev@postgres:5432/cocoatrace
       JWT_SECRET: ${JWT_SECRET:-cocoatrace_dev_secret_change_in_production}
       PLATFORM_FEE_BPS: ${PLATFORM_FEE_BPS:-100}
@@ -50,6 +52,8 @@ services:
     build:
       context: .
       dockerfile: web/Dockerfile
+      args:
+        VITE_DEMO_MODE: "true"
     container_name: cocoatrace-web
     restart: unless-stopped
     ports:

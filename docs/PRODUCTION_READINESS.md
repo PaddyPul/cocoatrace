@@ -22,6 +22,7 @@ Run `npm run check:production` in the release environment. It rejects missing UR
 
 Set at least:
 
+- `APP_ENV=production` and `DEMO_MODE=false`
 - `DATABASE_URL`
 - `JWT_SECRET` (unique and at least 32 characters)
 - `WEB_URL` and `PUBLIC_WEB_URL` (HTTPS)

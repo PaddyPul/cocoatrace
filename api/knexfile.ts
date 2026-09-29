@@ -1,16 +1,16 @@
 import type { Knex } from 'knex';
-import dotenv from 'dotenv';
 import path from 'path';
+import { config as appConfig } from './src/config/env';
 
-dotenv.config({ path: path.join(__dirname, '../.env') });
-dotenv.config({ path: path.join(__dirname, '../../.env') });
-
-const connectionString = process.env.DATABASE_URL || 'postgresql://cocoa:cocoa_dev@localhost:15433/cocoatrace';
+const connectionString = appConfig.databaseUrl;
+const connection = appConfig.databaseSsl
+  ? { connectionString, ssl: { rejectUnauthorized: appConfig.databaseSslRejectUnauthorized } }
+  : connectionString;
 
 const config: { [key: string]: Knex.Config } = {
   development: {
     client: 'pg',
-    connection: connectionString,
+    connection,
     migrations: {
       directory: path.join(__dirname, 'src', 'migrations'),
       extension: 'ts',
@@ -22,9 +22,7 @@ const config: { [key: string]: Knex.Config } = {
   },
   production: {
     client: 'pg',
-    connection: process.env.DB_USE_SSL === 'true'
-      ? { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }
-      : process.env.DATABASE_URL,
+    connection,
     migrations: {
       // The migration table was originally created by the TypeScript runner,
       // so Knex records names such as 001_initial_schema.ts. The production

@@ -1,6 +1,7 @@
 import pino from 'pino';
+import { config } from './config/env';
 
-const transport = process.env.NODE_ENV === 'production'
+const transport = config.isDeployed
   ? undefined
   : {
       target: 'pino-pretty',
@@ -8,7 +9,7 @@ const transport = process.env.NODE_ENV === 'production'
     };
 
 const logger = pino({
-  level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+  level: config.logLevel || (config.isDeployed ? 'info' : 'debug'),
   transport,
   formatters: {
     level(label) {

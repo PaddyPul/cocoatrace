@@ -5,10 +5,10 @@ import * as audit from '../services/audit';
 import { buildJourney, deriveSafetyStatus, JourneyEvent } from '../services/publicProduct';
 import { calculateTraceForward } from '../services/recallTrace';
 import { accessibleTraceLotIds, loadTraceGraph } from '../services/traceGraphRepository';
+import { config } from '../config/env';
 
 function publicProductUrl(slug: string): string {
-  const base = (process.env.PUBLIC_WEB_URL || process.env.WEB_URL || 'http://localhost:3000').replace(/\/$/, '');
-  return `${base}/p/${slug}`;
+  return `${config.publicWebUrl}/p/${slug}`;
 }
 
 export async function getPublicProduct(req: Request, res: Response): Promise<void> {

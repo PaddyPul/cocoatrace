@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { config } from '../config/env';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { getClient, query } from '../db';
@@ -23,7 +24,7 @@ export async function createInvitation(req: Request, res: Response): Promise<voi
      VALUES ($1,$2,$3,$4,$5,NOW()+INTERVAL '7 days') RETURNING id,email,expires_at,created_at`,
     [organizationId, req.body.email, role.id, hashToken(token), req.user!.id]
   );
-  const inviteUrl = `${(process.env.PUBLIC_WEB_URL || process.env.WEB_URL || 'http://localhost:3000').replace(/\/$/, '')}/accept-invite/${token}`;
+  const inviteUrl = `${config.publicWebUrl}/accept-invite/${token}`;
   await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'member.invite', entityType: 'user_invitation', entityId: result.rows[0].id, metadata: { invitedOrganizationId: organizationId, role: role.name } });
   res.status(201).json({ ...result.rows[0], organizationName: org.name, role: role.name, inviteUrl });
 }

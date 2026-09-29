@@ -3,6 +3,7 @@ import { ArrowRight, CheckCircle2, Leaf, QrCode, Route, Search, ShieldCheck, Sho
 import { useNavigate } from 'react-router-dom';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { workspace } from '../api';
+import { webConfig } from '../config';
 
 const QUICK_USERS = [
   { label: 'New buyer', email: 'newbuyer@cocoatrace.io' },
@@ -96,11 +97,11 @@ export default function LoginPage() {
       <section className="flex min-h-screen items-center justify-center p-5 sm:p-10">
         <div className="w-full max-w-md">
           <div className="mb-9 flex items-center gap-3 lg:hidden"><span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-500"><Leaf size={20} /></span><div><div className="font-bold">CocoaTrace</div><div className="text-[9px] uppercase tracking-[.18em] text-white/40">Verified sourcing network</div></div></div>
-          <div className="mb-7"><div className="text-[10px] font-bold uppercase tracking-[.18em] text-brand-300">Explore the full product</div><h2 className="mt-2 text-3xl font-bold tracking-tight">Choose your starting point</h2><p className="mt-2 text-sm text-white/45">Start as a new user, or sign in to an existing organization workspace.</p></div>
+          <div className="mb-7"><div className="text-[10px] font-bold uppercase tracking-[.18em] text-brand-300">{webConfig.demoMode ? 'Explore the full product' : 'Secure workspace access'}</div><h2 className="mt-2 text-3xl font-bold tracking-tight">{webConfig.demoMode ? 'Choose your starting point' : 'Sign in'}</h2><p className="mt-2 text-sm text-white/45">{webConfig.demoMode ? 'Start as a new user, or sign in to an existing organization workspace.' : 'Use the account provided by your organization.'}</p></div>
 
           {error && <div className="mb-5 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-xs text-red-200">{error}</div>}
 
-          <div className="mb-6 grid gap-3 sm:grid-cols-2"><button type="button" onClick={() => launchNewExperience('buy')} disabled={submitting} className="rounded-2xl border border-brand-300/25 bg-brand-300/10 p-4 text-left transition hover:bg-brand-300/15"><Search size={19} className="text-brand-300" /><span className="mt-4 block text-sm font-bold">Experience as a new buyer</span><span className="mt-1 block text-[11px] leading-5 text-white/45">Onboard, state a need and compare verified supply.</span></button><button type="button" onClick={() => launchNewExperience('sell')} disabled={submitting} className="rounded-2xl border border-amber-300/20 bg-amber-300/[.07] p-4 text-left transition hover:bg-amber-300/10"><ShoppingBag size={19} className="text-amber-200" /><span className="mt-4 block text-sm font-bold">Experience as a new supplier</span><span className="mt-1 block text-[11px] leading-5 text-white/45">Onboard, package a lot and reach qualified buyers.</span></button></div>
+          {webConfig.demoMode && <div className="mb-6 grid gap-3 sm:grid-cols-2"><button type="button" onClick={() => launchNewExperience('buy')} disabled={submitting} className="rounded-2xl border border-brand-300/25 bg-brand-300/10 p-4 text-left transition hover:bg-brand-300/15"><Search size={19} className="text-brand-300" /><span className="mt-4 block text-sm font-bold">Experience as a new buyer</span><span className="mt-1 block text-[11px] leading-5 text-white/45">Onboard, state a need and compare verified supply.</span></button><button type="button" onClick={() => launchNewExperience('sell')} disabled={submitting} className="rounded-2xl border border-amber-300/20 bg-amber-300/[.07] p-4 text-left transition hover:bg-amber-300/10"><ShoppingBag size={19} className="text-amber-200" /><span className="mt-4 block text-sm font-bold">Experience as a new supplier</span><span className="mt-1 block text-[11px] leading-5 text-white/45">Onboard, package a lot and reach qualified buyers.</span></button></div>}
 
           <div className="my-6 flex items-center gap-3"><div className="h-px flex-1 bg-white/10" /><span className="text-[9px] font-bold uppercase tracking-[.16em] text-white/25">Existing account</span><div className="h-px flex-1 bg-white/10" /></div>
 
@@ -110,12 +111,12 @@ export default function LoginPage() {
             <button type="submit" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 text-sm font-bold shadow-xl shadow-brand-900/30 transition hover:bg-brand-400" disabled={submitting}>{submitting ? 'Signing in…' : <>Sign in <ArrowRight size={16} /></>}</button>
           </form>
 
-          <div className="my-7 flex items-center gap-3"><div className="h-px flex-1 bg-white/10" /><span className="text-[9px] font-bold uppercase tracking-[.16em] text-white/25">More demo access</span><div className="h-px flex-1 bg-white/10" /></div>
+          {webConfig.demoMode && <><div className="my-7 flex items-center gap-3"><div className="h-px flex-1 bg-white/10" /><span className="text-[9px] font-bold uppercase tracking-[.16em] text-white/25">More demo access</span><div className="h-px flex-1 bg-white/10" /></div>
           <button type="button" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-4 text-sm font-bold text-emerald-200 transition hover:bg-emerald-300/15" onClick={launchDemo} disabled={submitting}><QrCode size={17} />{submitting ? 'Opening demo…' : 'Launch investor demo'}<ArrowRight size={15} /></button>
           <a href="/p/akwaaba-cocoa-2026-ready" target="_blank" rel="noreferrer" className="mt-2 flex min-h-10 w-full items-center justify-center text-xs font-semibold text-white/45 transition hover:text-white">View public product profile without signing in</a>
           <p className="mb-3 text-xs text-white/40">Choose a role to prefill the seeded demonstration account.</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{QUICK_USERS.map((user) => <button key={user.email} type="button" className={`rounded-xl border px-3 py-2.5 text-left text-[11px] font-semibold transition ${email === user.email ? 'border-brand-400 bg-brand-400/15 text-brand-200' : 'border-white/10 bg-white/[.03] text-white/55 hover:border-white/25 hover:bg-white/[.06] hover:text-white'}`} onClick={() => quickLogin(user.email)}>{user.label}</button>)}</div>
-          <p className="mt-5 text-center text-[10px] text-white/25">Demo password: Password123!</p>
+          <p className="mt-5 text-center text-[10px] text-white/25">Demo password: Password123!</p></>}
         </div>
       </section>
     </main>

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { config } from '../config/env';
 
 type Counter = { count: number; resetAt: number };
 const attempts = new Map<string, Counter>();
@@ -26,7 +27,7 @@ export function sensitiveActionLimit(req: Request, res: Response, next: NextFunc
 export function verifyBrowserOrigin(req: Request, res: Response, next: NextFunction): void {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method) || req.headers.authorization || !req.headers.cookie?.includes('ct_session=')) { next(); return; }
   const origin = req.headers.origin;
-  const permitted = process.env.WEB_URL || 'http://localhost:3000';
+  const permitted = config.webUrl;
   if (origin && origin !== permitted) {
     res.status(403).json({ error: 'Request origin is not permitted' });
     return;

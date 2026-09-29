@@ -78,9 +78,9 @@ only the ordered view and deliberately has no duplicate checkboxes.
 
 # 2. Environments, build and deployment
 
-- [ ] **ENV-001 · P0 · Phase 0:** Create typed configuration for `development`, `test`, `demo`, `staging` and `production`.
-- [ ] **ENV-002 · P0 · Phase 0:** Remove automatic demo seeding from the production Docker command.
-- [ ] **ENV-003 · P0 · Phase 0:** Add `DEMO_MODE` and remove demo-only UI/API behavior outside demo.
+- [x] **ENV-001 · P0 · Phase 0:** Create typed configuration for `development`, `test`, `demo`, `staging` and `production`.
+- [x] **ENV-002 · P0 · Phase 0:** Remove automatic demo seeding from the production Docker command.
+- [x] **ENV-003 · P0 · Phase 0:** Add `DEMO_MODE` and remove demo-only UI/API behavior outside demo.
 - [ ] **ENV-004 · P0 · Phase 0:** Create separate databases, storage buckets, secrets and service identities for demo, staging and production.
 - [ ] **ENV-005 · P0 · Phase 0:** Make database ports private outside local development.
 - [ ] **ENV-006 · P0 · Phase 0:** Require HTTPS, secure cookies and exact allowed origins in staging/production.
@@ -99,7 +99,7 @@ only the ordered view and deliberately has no duplicate checkboxes.
 
 # 3. Architecture and code quality
 
-- [ ] **ARC-001 · P1 · Phase 1:** Add a typed `config/` module and remove scattered environment parsing.
+- [x] **ARC-001 · P1 · Phase 1:** Add a typed `config/` module and remove scattered environment parsing.
 - [ ] **ARC-002 · P1 · Phase 1:** Define shared actor, organization scope, money, quantity and identifier types.
 - [ ] **ARC-003 · P1 · Phase 1:** Create reusable resource policy interfaces and move authorization decisions out of controllers.
 - [ ] **ARC-004 · P1 · Phase 1:** Extract evidence controller logic into service, policy, repository and infrastructure adapters.
@@ -152,7 +152,7 @@ only the ordered view and deliberately has no duplicate checkboxes.
 
 # 5. Authorization and application security
 
-- [ ] **SEC-001 · P0 · Phase 1:** Document route/resource authorization matrix with explicit network-wide permissions.
+- [x] **SEC-001 · P0 · Phase 1:** Document route/resource authorization matrix with explicit network-wide permissions. See [`security/AUTHORIZATION_MATRIX.md`](security/AUTHORIZATION_MATRIX.md).
 - [ ] **SEC-002 · P0 · Phase 1:** Fix known farm, plot, certificate, profile, provenance, evidence and contract IDOR paths.
 - [ ] **SEC-003 · P0 · Phase 1:** Ensure `*.read` never implicitly means global/network read.
 - [ ] **SEC-004 · P0 · Phase 1:** Bind provenance `contractId` to the requested batch and authorized organization.

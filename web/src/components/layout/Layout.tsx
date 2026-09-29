@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 import { useNavigate } from 'react-router-dom';
 import { Boxes, FileText, GitBranch, Home, LayoutDashboard, Menu, QrCode, Search, Ship, ShoppingBag, Sparkles, Trees, X } from 'lucide-react';
 import PilotFeedback from '../shared/PilotFeedback';
+import { webConfig } from '../../config';
 
 const PAGE_TITLES: Record<string, string> = {
   home: 'Your sourcing workspace',
@@ -94,7 +95,7 @@ export default function Layout({
     { label: 'Find verified supply', hint: 'Source by requirement, not by paperwork', path: '/source/new', icon: Search, permissions: ['offer.create'] },
     { label: 'Publish supply', hint: 'Offer an evidence-backed lot to buyers', path: '/supply/new', icon: ShoppingBag, permissions: ['listing.create'] },
     { label: 'Control Tower', hint: 'Network health and priorities', path: '/dashboard', icon: LayoutDashboard, permissions: [] },
-    { label: 'Investor Demo', hint: 'Scan, verify and respond story', path: '/demo', icon: Sparkles, permissions: [] },
+    ...(webConfig.demoMode ? [{ label: 'Investor Demo', hint: 'Scan, verify and respond story', path: '/demo', icon: Sparkles, permissions: [] }] : []),
     { label: 'Products', hint: 'Product passports and safety state', path: '/products', icon: QrCode, permissions: ['batch.read'] },
     { label: 'Trace & Recall', hint: 'Genealogy and incident response', path: '/recalls', icon: GitBranch, permissions: ['batch.read', 'recall.manage'] },
     { label: 'Harvest Batches', hint: 'Source material and verification', path: '/batches', icon: Boxes, permissions: ['batch.read', 'batch.create', 'batch.attest'] },
