@@ -1,16 +1,20 @@
 import { Request, Response } from 'express';
 import { query } from '../db';
 import * as audit from '../services/audit';
+import { hasExplicitPermission, hasFarmRelationship } from '../services/resourcePolicy';
 
 export async function listFarms(req: Request, res: Response): Promise<void> {
-  const permissions = req.user!.permissions || [];
-  const canSeeAll = permissions.includes('*') || permissions.includes('certificate.issue') || permissions.includes('audit.read') || permissions.includes('shipment.update') || permissions.includes('offer.create');
+  const canSeeAll = hasExplicitPermission(req.user!, 'farm.read.all');
   let sql: string, params: any[];
   if (canSeeAll) {
     sql = `SELECT f.*, o.name as farmer_org_name FROM farms f JOIN organizations o ON o.id = f.farmer_organization_id ORDER BY f.name`;
     params = [];
   } else {
-    sql = `SELECT f.*, o.name as farmer_org_name FROM farms f JOIN organizations o ON o.id = f.farmer_organization_id WHERE f.farmer_organization_id = $1 ORDER BY f.name`;
+    sql = `SELECT DISTINCT f.*, o.name as farmer_org_name
+      FROM farms f JOIN organizations o ON o.id=f.farmer_organization_id
+      LEFT JOIN organic_certificates c ON c.farm_id=f.id AND c.certifier_organization_id=$1
+      WHERE f.farmer_organization_id=$1 OR f.cooperative_organization_id=$1 OR c.id IS NOT NULL
+      ORDER BY f.name`;
     params = [req.user!.organizationId];
   }
   const { rows } = await query(sql, params);
@@ -23,9 +27,8 @@ export async function getFarm(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: 'Farm not found' });
     return;
   }
-  const permissions = req.user!.permissions || [];
-  const canSeeAll = permissions.includes('*') || permissions.includes('certificate.issue') || permissions.includes('audit.read') || permissions.includes('shipment.update') || permissions.includes('offer.create');
-  if (!canSeeAll && farmRes.rows[0].farmer_organization_id !== req.user!.organizationId) {
+  const canSeeAll = hasExplicitPermission(req.user!, 'farm.read.all');
+  if (!canSeeAll && !await hasFarmRelationship(req.user!, req.params.id)) {
     res.status(403).json({ error: 'Access denied' });
     return;
   }

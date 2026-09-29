@@ -23,7 +23,7 @@ INSERT INTO roles (id, name, permissions) VALUES
   ('22222222-2222-2222-2222-222222222003', 'exporter',  ARRAY['farm.read','farm.create','batch.read','batch.create','holding.read','holding.create','listing.read','listing.create','offer.respond','contract.read','shipment.read','shipment.update','payment.read','payment.request','evidence.read','evidence.upload','recall.manage','member.invite']),
   ('22222222-2222-2222-2222-222222222004', 'importer',  ARRAY['listing.read','offer.create','contract.read','shipment.read','shipment.update','payment.read','payment.confirm','evidence.read','evidence.upload','provenance.export','batch.read','farm.read','certificate.read']),
   ('22222222-2222-2222-2222-222222222005', 'logistics', ARRAY['shipment.read','shipment.accept','shipment.update','evidence.read','evidence.upload','batch.read','contract.read','farm.read']),
-  ('22222222-2222-2222-2222-222222222006', 'regulator', ARRAY['audit.read','farm.read','batch.read','certificate.read','evidence.read','provenance.export','audit.export','recall.manage','recall.manage.all']),
+  ('22222222-2222-2222-2222-222222222006', 'regulator', ARRAY['audit.read','audit.read.all','audit.export','audit.export.all','farm.read','farm.read.all','batch.read','batch.read.all','certificate.read','certificate.read.all','evidence.read','evidence.read.all','provenance.export','provenance.read.network','provenance.export.network','product_profile.read.all','traceability.read.network','analytics.read.network','recall.manage','recall.manage.all']),
   ('22222222-2222-2222-2222-222222222007', 'admin',     ARRAY['*'])
 ON CONFLICT (id) DO UPDATE SET permissions = EXCLUDED.permissions;
 

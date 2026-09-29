@@ -1,16 +1,21 @@
 import { Request, Response } from 'express';
 import { query } from '../db';
 import * as audit from '../services/audit';
+import { hasCertificateRelationship, hasExplicitPermission } from '../services/resourcePolicy';
 
 export async function listCertificates(req: Request, res: Response): Promise<void> {
   const { farmId } = req.query;
-  const perms = req.user!.permissions || [];
-  const seeAll = perms.includes('*') || perms.includes('certificate.read');
+  const seeAll = hasExplicitPermission(req.user!, 'certificate.read.all');
   let sql = `SELECT c.*, o.name as certifier_name FROM organic_certificates c JOIN organizations o ON o.id = c.certifier_organization_id`;
   const params: any[] = [];
   const conditions: string[] = [];
   if (!seeAll) {
-    conditions.push('(c.certifier_organization_id = $1 OR c.farmer_organization_id = $1)');
+    conditions.push(`(c.certifier_organization_id=$1 OR c.farmer_organization_id=$1 OR EXISTS (
+      SELECT 1 FROM harvest_batches b
+      JOIN batch_holdings h ON h.batch_id=b.id
+      JOIN sales_contracts sc ON sc.holding_id=h.id
+      WHERE b.farm_id=c.farm_id AND (sc.seller_organization_id=$1 OR sc.buyer_organization_id=$1)
+    ))`);
     params.push(req.user!.organizationId);
   }
   if (farmId) {
@@ -32,9 +37,8 @@ export async function getCertificate(req: Request, res: Response): Promise<void>
     res.status(404).json({ error: 'Certificate not found' });
     return;
   }
-  const perms = req.user!.permissions || [];
-  const seeAll = perms.includes('*') || perms.includes('certificate.read');
-  if (!seeAll && rows[0].certifier_organization_id !== req.user!.organizationId && rows[0].farmer_organization_id !== req.user!.organizationId) {
+  const seeAll = hasExplicitPermission(req.user!, 'certificate.read.all');
+  if (!seeAll && !await hasCertificateRelationship(req.user!, req.params.id)) {
     res.status(403).json({ error: 'Access denied' });
     return;
   }
@@ -43,6 +47,11 @@ export async function getCertificate(req: Request, res: Response): Promise<void>
 
 export async function issueCertificate(req: Request, res: Response): Promise<void> {
   const { farmerOrganizationId, farmId, standard, cropScope, validFrom, validTo, issuingAuthority, accreditationReference } = req.body;
+  const farm = await query('SELECT id FROM farms WHERE id=$1 AND farmer_organization_id=$2', [farmId, farmerOrganizationId]);
+  if (!farm.rows[0]) {
+    res.status(400).json({ error: 'Farm does not belong to the supplied farmer organization' });
+    return;
+  }
   const { rows } = await query(
     'INSERT INTO organic_certificates (certifier_organization_id, farmer_organization_id, farm_id, standard, crop_scope, valid_from, valid_to, issuing_authority, accreditation_reference) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',
     [req.user!.organizationId, farmerOrganizationId, farmId, standard, cropScope, validFrom, validTo, issuingAuthority, accreditationReference]
