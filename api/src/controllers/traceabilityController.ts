@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { calculateTraceBack, calculateTraceForward } from '../services/recallTrace';
 import { accessibleTraceLotIds, loadTraceGraph } from '../services/traceGraphRepository';
+import { hasExplicitPermission } from '../services/resourcePolicy';
 
 function canSeeAll(req: Request): boolean {
-  const permissions = req.user!.permissions || [];
-  return permissions.includes('*') || permissions.includes('recall.manage.all') || permissions.includes('audit.read');
+  return hasExplicitPermission(req.user!, 'traceability.read.network', 'recall.manage.all');
 }
 
 async function requireLotAccess(req: Request, res: Response, lotIds: string[]): Promise<boolean> {

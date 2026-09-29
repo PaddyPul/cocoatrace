@@ -50,16 +50,14 @@ Complete these canonical backlog items in order unless a blocker requires
 resequencing. Update their checkbox in the detailed section below; this queue is
 only the ordered view and deliberately has no duplicate checkboxes.
 
-1. **QLT-001** — obtain the first green CI run for the implemented PostgreSQL multi-tenant harness
-2. **SEC-002** — repair the matrix's confirmed tenant-isolation defects with regression tests
-3. **SEC-003** — separate ordinary resource reads from explicit network-wide access
-4. **SEC-004** — bind provenance requests to their batch, contract and authorized parties
-5. **SEC-005** — enforce contract-document party authorization
-6. **UPL-001** — remove unauthenticated static evidence serving
-7. **QLT-004** — characterize upload authorization, scanning and release behavior
-8. **DAT-001** — replace optimistic trust-state defaults with honest states
-9. **TRD-001** — make inventory reservation and offer acceptance atomic
-10. **RCL-001** — enforce recall holds across listing, transfer and dispatch
+1. **SEC-002–SEC-005, UPL-001** — run the new PostgreSQL security regression suite and merge the verified security-boundary wave
+2. **UPL-002** — move evidence into private, environment-isolated object storage
+3. **UPL-003** — add entity-authorized upload intents and expiring signed URLs
+4. **UPL-004–UPL-007** — quarantine, validate, limit and malware-scan every upload
+5. **QLT-004** — verify upload authorization, quarantine, scanning and controlled release end to end
+6. **DAT-001** — replace optimistic trust-state defaults with honest states
+7. **TRD-001** — make inventory reservation and offer acceptance atomic
+8. **RCL-001** — enforce recall holds across listing, transfer and dispatch
 
 ---
 
@@ -153,10 +151,10 @@ only the ordered view and deliberately has no duplicate checkboxes.
 # 5. Authorization and application security
 
 - [x] **SEC-001 · P0 · Phase 1:** Document route/resource authorization matrix with explicit network-wide permissions. See [`security/AUTHORIZATION_MATRIX.md`](security/AUTHORIZATION_MATRIX.md).
-- [ ] **SEC-002 · P0 · Phase 1:** Fix known farm, plot, certificate, profile, provenance, evidence and contract IDOR paths.
-- [ ] **SEC-003 · P0 · Phase 1:** Ensure `*.read` never implicitly means global/network read.
-- [ ] **SEC-004 · P0 · Phase 1:** Bind provenance `contractId` to the requested batch and authorized organization.
-- [ ] **SEC-005 · P0 · Phase 1:** Prevent non-parties from listing, uploading or downloading contract documents.
+- [-] **SEC-002 · P0 · Phase 1 — IN PROGRESS:** Farm, plot, certificate, profile, provenance, evidence and indirect contract IDOR fixes and PostgreSQL regressions are implemented; completion awaits the green PostgreSQL security suite.
+- [-] **SEC-003 · P0 · Phase 1 — IN PROGRESS:** Ordinary reads are tenant/relationship bounded and explicit `*.all`/`*.network` grants were added; completion awaits the green PostgreSQL security suite.
+- [-] **SEC-004 · P0 · Phase 1 — IN PROGRESS:** Provenance now binds `contractId` to both the batch and an authorized party; completion awaits the green PostgreSQL security suite.
+- [-] **SEC-005 · P0 · Phase 1 — IN PROGRESS:** Contract document listing, attachment and download inherit contract-party authorization; completion awaits the green PostgreSQL security suite.
 - [ ] **SEC-006 · P1 · Phase 1:** Decide whether unauthorized resources consistently return `403` or non-disclosing `404` and test it.
 - [ ] **SEC-007 · P1 · Phase 1:** Add CSRF/origin tests for every cookie-authenticated state-changing request.
 - [ ] **SEC-008 · P1 · Phase 1:** Add a restrictive Content Security Policy and verify public profile assets.
@@ -175,7 +173,7 @@ only the ordered view and deliberately has no duplicate checkboxes.
 
 # 6. Evidence and file uploads
 
-- [ ] **UPL-001 · P0 · Phase 1:** Remove `/uploads` static serving and internal storage paths from responses.
+- [-] **UPL-001 · P0 · Phase 1 — IN PROGRESS:** `/uploads` static serving and response storage paths are removed; completion awaits the regression against a real stored object.
 - [ ] **UPL-002 · P0 · Phase 1:** Create private, per-environment object-storage buckets with encryption and public access blocked.
 - [ ] **UPL-003 · P0 · Phase 1:** Add entity-authorized upload intents using opaque object keys and expiring signed URLs.
 - [ ] **UPL-004 · P0 · Phase 1:** Add quarantine storage and keep documents unavailable until validation completes.
@@ -199,8 +197,8 @@ only the ordered view and deliberately has no duplicate checkboxes.
 - [ ] **DAT-001 · P0 · Phase 1:** Replace verified/approved/clear/EUDR-checked defaults with pending, self-declared or unknown states.
 - [ ] **DAT-002 · P0 · Phase 1:** Migrate existing non-seed records to an honest trust state with an audit report.
 - [ ] **DAT-003 · P1 · Phase 1:** Record claim source, reviewer, method, timestamp and expiry.
-- [ ] **DAT-004 · P1 · Phase 1:** Validate that certificate farmer organization and farm ownership agree.
-- [ ] **DAT-005 · P1 · Phase 1:** Validate certificate crop scope and harvest-date coverage.
+- [-] **DAT-004 · P1 · Phase 1 — IN PROGRESS:** Certificate issue and attestation validate farmer organization against farm ownership; completion awaits the PostgreSQL regression run.
+- [-] **DAT-005 · P1 · Phase 1 — IN PROGRESS:** Attestation validates crop scope and harvest-date coverage; completion awaits the PostgreSQL regression run.
 - [ ] **DAT-006 · P1 · Phase 1:** Prevent contradictory duplicate active certificates.
 - [ ] **DAT-007 · P1 · Phase 2:** Cascade certificate suspension/revocation into affected claims, listings, deals and alerts.
 - [ ] **DAT-008 · P1 · Phase 2:** Recalculate marketplace and product-profile trust labels from current source data.
@@ -319,7 +317,7 @@ only the ordered view and deliberately has no duplicate checkboxes.
 
 # 14. Testing and engineering quality gates
 
-- [ ] **QLT-001 · P0 · Phase 1 — IN PROGRESS:** Add real-PostgreSQL API integration tests with at least two unrelated organizations. The disposable PostgreSQL harness, safety guard, two-tenant API tests and CI job are implemented; completion awaits the first green PostgreSQL CI run.
+- [x] **QLT-001 · P0 · Phase 1:** Add real-PostgreSQL API integration tests with at least two unrelated organizations. The disposable PostgreSQL harness, safety guard, two-tenant API tests and CI job have completed a green run.
 - [ ] **QLT-002 · P0 · Phase 1:** Add negative authorization tests for every protected resource family.
 - [ ] **QLT-003 · P0 · Phase 1:** Add inventory and offer concurrency tests.
 - [ ] **QLT-004 · P0 · Phase 1:** Test evidence upload authorization, file limits, quarantine, scan and download release.

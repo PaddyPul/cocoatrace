@@ -6,6 +6,7 @@ import { buildJourney, deriveSafetyStatus, JourneyEvent } from '../services/publ
 import { calculateTraceForward } from '../services/recallTrace';
 import { accessibleTraceLotIds, loadTraceGraph } from '../services/traceGraphRepository';
 import { config } from '../config/env';
+import { hasBatchRelationship, hasExplicitPermission } from '../services/resourcePolicy';
 
 function publicProductUrl(slug: string): string {
   return `${config.publicWebUrl}/p/${slug}`;
@@ -218,7 +219,8 @@ export async function recordScan(req: Request, res: Response): Promise<void> {
   res.status(204).send();
 }
 
-export async function listProductProfiles(_req: Request, res: Response): Promise<void> {
+export async function listProductProfiles(req: Request, res: Response): Promise<void> {
+  const seeAll = hasExplicitPermission(req.user!, 'product_profile.read.all');
   const result = await query(
     `SELECT pp.*, b.crop, b.harvest_date, b.quantity_kg, b.organic_claim_status,
             f.name AS farm_name, f.region, f.country, holder.name AS current_holder_name,
@@ -243,7 +245,17 @@ export async function listProductProfiles(_req: Request, res: Response): Promise
        ORDER BY CASE r.severity WHEN 'critical' THEN 3 WHEN 'warning' THEN 2 ELSE 1 END DESC
        LIMIT 1
      ) active_recall ON TRUE
-     ORDER BY pp.updated_at DESC`
+     WHERE ($1::boolean OR b.current_holder_id=$2 OR EXISTS (
+       SELECT 1 FROM farms source_farm WHERE source_farm.id=b.farm_id
+         AND (source_farm.farmer_organization_id=$2 OR source_farm.cooperative_organization_id=$2)
+     ) OR EXISTS (
+       SELECT 1 FROM batch_holdings bh JOIN sales_contracts sc ON sc.holding_id=bh.id
+       WHERE bh.batch_id=b.id AND (sc.seller_organization_id=$2 OR sc.buyer_organization_id=$2)
+     ) OR EXISTS (
+       SELECT 1 FROM batch_attestations ba WHERE ba.batch_id=b.id AND ba.certifier_organization_id=$2
+     ))
+     ORDER BY pp.updated_at DESC`,
+    [seeAll, req.user!.organizationId]
   );
   res.json(result.rows.map((profile: any) => ({
     ...profile,
@@ -254,6 +266,12 @@ export async function listProductProfiles(_req: Request, res: Response): Promise
 }
 
 export async function getProfileForBatch(req: Request, res: Response): Promise<void> {
+  const allowed = hasExplicitPermission(req.user!, 'product_profile.read.all')
+    || await hasBatchRelationship(req.user!, req.params.batchId);
+  if (!allowed) {
+    res.status(403).json({ error: 'Access denied' });
+    return;
+  }
   const result = await query('SELECT * FROM product_profiles WHERE batch_id=$1', [req.params.batchId]);
   if (!result.rows[0]) {
     res.status(404).json({ error: 'Product profile not found' });

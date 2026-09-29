@@ -2,10 +2,10 @@ import { Request, Response } from 'express';
 import { query } from '../db';
 import { adviseReadiness, ReadinessFacts } from '../services/readinessAdvisor';
 import { createReadinessNarrative } from '../services/readinessNarrative';
+import { hasExplicitPermission } from '../services/resourcePolicy';
 
 export async function getReadiness(req: Request, res: Response): Promise<void> {
-  const orgType = req.user!.orgType;
-  const networkScope = (req.user!.permissions || []).includes('*') || ['regulator', 'importer', 'certifier'].includes(orgType);
+  const networkScope = hasExplicitPermission(req.user!, 'analytics.read.network');
   const result = await query(
     `WITH scoped_batches AS (
        SELECT b.id, b.organic_claim_status FROM harvest_batches b
