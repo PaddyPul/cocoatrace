@@ -50,6 +50,18 @@ export type AppConfig = Readonly<{
   openAiModel?: string;
   allowRemoteDemoReset: boolean;
   appVersion: string;
+  evidenceStorageDriver: 'local' | 's3';
+  evidenceStorageLocalRoot: string;
+  evidenceStorageEndpoint?: string;
+  evidenceStorageRegion: string;
+  evidenceStorageBucket?: string;
+  evidenceStorageAccessKey?: string;
+  evidenceStorageSecretKey?: string;
+  evidenceStorageSse?: 'AES256';
+  evidenceStorageAutoCreateBucket: boolean;
+  evidenceUploadSigningSecret: string;
+  evidenceMaxFileBytes: number;
+  evidenceOrganizationQuotaBytes: number;
 }>;
 
 export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
@@ -76,6 +88,22 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     APP_VERSION: z.string().trim().min(1).default('development'),
     DEMO_MODE: booleanValue.default(environment === 'demo'),
     COCOATRACE_ALLOW_REMOTE_DEMO_RESET: z.literal('I_UNDERSTAND').optional(),
+    EVIDENCE_STORAGE_DRIVER: z.enum(['local', 's3']).default(
+      environment === 'staging' || environment === 'production' ? 's3' : 'local',
+    ),
+    EVIDENCE_STORAGE_LOCAL_ROOT: z.string().trim().min(1).default('api/private-evidence'),
+    EVIDENCE_STORAGE_ENDPOINT: optionalText,
+    EVIDENCE_STORAGE_REGION: z.string().trim().min(1).default('us-east-1'),
+    EVIDENCE_STORAGE_BUCKET: optionalText,
+    EVIDENCE_STORAGE_ACCESS_KEY: optionalText,
+    EVIDENCE_STORAGE_SECRET_KEY: optionalText,
+    EVIDENCE_STORAGE_SSE: z.literal('AES256').optional(),
+    EVIDENCE_STORAGE_AUTO_CREATE_BUCKET: booleanValue.default(!(environment === 'staging' || environment === 'production')),
+    EVIDENCE_UPLOAD_SIGNING_SECRET: z.string().min(1).default(
+      environment === 'staging' || environment === 'production' ? '' : 'cocoatrace_local_evidence_signing_secret',
+    ),
+    EVIDENCE_MAX_FILE_BYTES: z.coerce.number().int().min(1).max(100 * 1024 * 1024).default(10 * 1024 * 1024),
+    EVIDENCE_ORGANIZATION_QUOTA_BYTES: z.coerce.number().int().min(1).default(1024 * 1024 * 1024),
   }).superRefine((values, context) => {
     const deployed = environment === 'staging' || environment === 'production';
     if (deployed) {
@@ -105,6 +133,29 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     }
     if (Boolean(values.OPENAI_API_KEY) !== Boolean(values.OPENAI_MODEL)) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ['OPENAI_API_KEY'], message: 'OPENAI_API_KEY and OPENAI_MODEL must be configured together' });
+    }
+    if (deployed && values.EVIDENCE_STORAGE_DRIVER !== 's3') {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_STORAGE_DRIVER'], message: 'must be s3 in staging and production' });
+    }
+    if (values.EVIDENCE_STORAGE_DRIVER === 's3') {
+      for (const name of ['EVIDENCE_STORAGE_ENDPOINT', 'EVIDENCE_STORAGE_BUCKET', 'EVIDENCE_STORAGE_ACCESS_KEY', 'EVIDENCE_STORAGE_SECRET_KEY'] as const) {
+        if (!values[name]) context.addIssue({ code: z.ZodIssueCode.custom, path: [name], message: 'is required for s3 evidence storage' });
+      }
+      if (deployed && values.EVIDENCE_STORAGE_ENDPOINT && !values.EVIDENCE_STORAGE_ENDPOINT.startsWith('https://')) {
+        context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_STORAGE_ENDPOINT'], message: 'must use HTTPS in staging and production' });
+      }
+      if (values.EVIDENCE_STORAGE_BUCKET && !values.EVIDENCE_STORAGE_BUCKET.includes(environment)) {
+        context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_STORAGE_BUCKET'], message: `must include the environment name "${environment}"` });
+      }
+      if (deployed && values.EVIDENCE_STORAGE_SSE !== 'AES256') {
+        context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_STORAGE_SSE'], message: 'must be AES256 in staging and production' });
+      }
+    }
+    if (deployed && values.EVIDENCE_UPLOAD_SIGNING_SECRET.length < 32) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_UPLOAD_SIGNING_SECRET'], message: 'must contain at least 32 characters in staging and production' });
+    }
+    if (values.EVIDENCE_ORGANIZATION_QUOTA_BYTES < values.EVIDENCE_MAX_FILE_BYTES) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_ORGANIZATION_QUOTA_BYTES'], message: 'must be at least EVIDENCE_MAX_FILE_BYTES' });
     }
   });
 
@@ -136,6 +187,18 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     openAiModel: values.OPENAI_MODEL,
     allowRemoteDemoReset: values.COCOATRACE_ALLOW_REMOTE_DEMO_RESET === 'I_UNDERSTAND',
     appVersion: values.APP_VERSION,
+    evidenceStorageDriver: values.EVIDENCE_STORAGE_DRIVER,
+    evidenceStorageLocalRoot: values.EVIDENCE_STORAGE_LOCAL_ROOT,
+    evidenceStorageEndpoint: values.EVIDENCE_STORAGE_ENDPOINT,
+    evidenceStorageRegion: values.EVIDENCE_STORAGE_REGION,
+    evidenceStorageBucket: values.EVIDENCE_STORAGE_BUCKET,
+    evidenceStorageAccessKey: values.EVIDENCE_STORAGE_ACCESS_KEY,
+    evidenceStorageSecretKey: values.EVIDENCE_STORAGE_SECRET_KEY,
+    evidenceStorageSse: values.EVIDENCE_STORAGE_SSE,
+    evidenceStorageAutoCreateBucket: values.EVIDENCE_STORAGE_AUTO_CREATE_BUCKET,
+    evidenceUploadSigningSecret: values.EVIDENCE_UPLOAD_SIGNING_SECRET,
+    evidenceMaxFileBytes: values.EVIDENCE_MAX_FILE_BYTES,
+    evidenceOrganizationQuotaBytes: values.EVIDENCE_ORGANIZATION_QUOTA_BYTES,
   });
 }
 

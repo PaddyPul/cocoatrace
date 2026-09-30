@@ -10,6 +10,7 @@ api/.env
 
 # uploads / generated data
 api/uploads/
+api/private-evidence/
 uploads/
 
 # logs

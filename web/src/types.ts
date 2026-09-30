@@ -201,6 +201,10 @@ export interface Evidence {
   linked_entity_type: string;
   linked_entity_id: string;
   review_status: string;
+  file_size_bytes?: number;
+  mime_type?: string;
+  detected_mime_type?: string;
+  validation_status?: string;
   created_at: string;
 }
 
