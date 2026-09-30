@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { loginSchema, createFarmSchema, createBatchSchema, createCertificateSchema, createRecallSchema, createInvitationSchema, acceptInvitationSchema, createSourcingRequestSchema } from './validation';
+import { loginSchema, createFarmSchema, createBatchSchema, createCertificateSchema, createRecallSchema, createInvitationSchema, acceptInvitationSchema, createSourcingRequestSchema, productProfileSchema } from './validation';
 
 describe('loginSchema', () => {
   it('accepts valid credentials', () => {
@@ -96,6 +96,22 @@ describe('createSourcingRequestSchema', () => {
 
   it('rejects non-positive sourcing quantities', () => {
     expect(() => createSourcingRequestSchema.parse({ title: 'Organic cocoa', commodity: 'cocoa', quantityKg: 0, deliveryLocation: 'Rotterdam' })).toThrow();
+  });
+});
+
+describe('productProfileSchema', () => {
+  const profile = {
+    batchId: '550e8400-e29b-41d4-a716-446655440000',
+    displayName: 'Integration cocoa',
+    lotCode: 'LOT-INTEGRATION-A',
+  };
+
+  it('accepts a lowercase, hyphenated product slug', () => {
+    expect(productProfileSchema.parse({ ...profile, slug: 'integration-a' }).slug).toBe('integration-a');
+  });
+
+  it('rejects malformed product slugs', () => {
+    expect(() => productProfileSchema.parse({ ...profile, slug: 'integration--a' })).toThrow();
   });
 });
 

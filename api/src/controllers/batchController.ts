@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { query, getClient } from '../db';
 import * as audit from '../services/audit';
 import { ensureSourceMaterialLot } from '../services/materialLot';
+import { hasBatchRelationship, hasExplicitPermission } from '../services/resourcePolicy';
 
 export async function pushToMarketplace(req: Request, res: Response): Promise<void> {
   const batchId = req.params.id as string;
@@ -63,15 +64,20 @@ export async function pushToMarketplace(req: Request, res: Response): Promise<vo
 }
 
 export async function listBatches(req: Request, res: Response): Promise<void> {
-  const perms = req.user!.permissions || [];
-  const seeAll = perms.includes('*') || perms.includes('batch.attest') || perms.includes('audit.read') || perms.includes('recall.manage.all');
+  const seeAll = hasExplicitPermission(req.user!, 'batch.read.all');
   let sql = `SELECT b.*, f.name as farm_name, o.name as holder_name
              FROM harvest_batches b
              LEFT JOIN farms f ON f.id = b.farm_id
              JOIN organizations o ON o.id = b.current_holder_id`;
   const params: any[] = [];
   if (!seeAll) {
-    sql += ' WHERE b.current_holder_id = $1 OR f.farmer_organization_id = $1';
+    sql += ` WHERE b.current_holder_id=$1 OR f.farmer_organization_id=$1 OR f.cooperative_organization_id=$1
+      OR EXISTS (SELECT 1 FROM batch_holdings h WHERE h.batch_id=b.id AND h.holder_organization_id=$1)
+      OR EXISTS (SELECT 1 FROM batch_attestations a WHERE a.batch_id=b.id AND a.certifier_organization_id=$1)
+      OR EXISTS (
+        SELECT 1 FROM batch_holdings h JOIN sales_contracts c ON c.holding_id=h.id
+        WHERE h.batch_id=b.id AND (c.seller_organization_id=$1 OR c.buyer_organization_id=$1)
+      )`;
     params.push(req.user!.organizationId);
   }
   sql += ' ORDER BY b.harvest_date DESC';
@@ -96,18 +102,17 @@ export async function getBatch(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: 'Batch not found' });
     return;
   }
-  const perms = req.user!.permissions || [];
-  const seeAll = perms.includes('*') || perms.includes('batch.attest') || perms.includes('audit.read') || perms.includes('recall.manage.all');
-  const listed = await query(
-    `SELECT 1 FROM listings l JOIN batch_holdings h ON h.id=l.holding_id
-     WHERE h.batch_id=$1 AND l.active=TRUE LIMIT 1`,
-    [req.params.id]
-  );
-  if (!seeAll && !listed.rows[0] && rows[0].current_holder_id !== req.user!.organizationId && rows[0].farmer_organization_id !== req.user!.organizationId) {
+  const seeAll = hasExplicitPermission(req.user!, 'batch.read.all');
+  if (!seeAll && !await hasBatchRelationship(req.user!, req.params.id)) {
     res.status(403).json({ error: 'Access denied' });
     return;
   }
-  const evidenceRes = await query("SELECT * FROM evidence_items WHERE linked_entity_type='batch' AND linked_entity_id=$1", [req.params.id]);
+  const evidenceRes = await query(
+    `SELECT id,type,file_name,file_size_bytes,mime_type,
+            sha256_hash,review_status,linked_entity_type,linked_entity_id,claim_description,created_at
+       FROM evidence_items WHERE linked_entity_type='batch' AND linked_entity_id=$1`,
+    [req.params.id],
+  );
   res.json({ batch: rows[0], evidence: evidenceRes.rows });
 }
 
@@ -207,6 +212,15 @@ export async function attestBatch(req: Request, res: Response): Promise<void> {
   }
   if (cert.farm_id !== batch.farm_id) {
     res.status(400).json({ error: 'Certificate does not cover this farm' });
+    return;
+  }
+  const farm = await query('SELECT farmer_organization_id FROM farms WHERE id=$1', [batch.farm_id]);
+  if (!farm.rows[0] || cert.farmer_organization_id !== farm.rows[0].farmer_organization_id) {
+    res.status(400).json({ error: 'Certificate farmer organization does not match the farm owner' });
+    return;
+  }
+  if (!Array.isArray(cert.crop_scope) || !cert.crop_scope.includes(batch.crop)) {
+    res.status(400).json({ error: 'Certificate does not cover this crop' });
     return;
   }
 

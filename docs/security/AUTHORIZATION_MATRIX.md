@@ -4,7 +4,7 @@ Status: approved authorization contract for Phase 1 implementation
 Last reviewed: 2026-09-29  
 Backlog owner: SEC-001
 
-This document defines who may perform each operation and the tenant or relationship scope that must be enforced by the API. It records the intended policy, not a claim that the current implementation already satisfies it. Confirmed gaps remain tracked by SEC-002 through SEC-006 and must be closed before a production pilot.
+This document defines who may perform each operation and the tenant or relationship scope that must be enforced by the API. The SEC-002 through SEC-005 and UPL-001 remediations are implemented on the security-boundary branch and await a green real-PostgreSQL regression run before their backlog items close. SEC-006 remains open before a production pilot.
 
 ## Security principles
 
@@ -118,9 +118,9 @@ The following permissions are distinct from their ordinary tenant-bounded counte
 
 The existing `*` permission remains platform-administrator-only. No ordinary permission such as `batch.read`, `certificate.read`, `audit.read`, `offer.create` or `shipment.update` may be used as a proxy for any permission in this table.
 
-## Confirmed implementation defects
+## Confirmed security review findings
 
-Line references reflect the 2026-09-29 review and may move as remediation is merged.
+The findings below were confirmed in the 2026-09-29 review. Findings covered by SEC-002 through SEC-005 and UPL-001 have implemented repairs and negative PostgreSQL regressions pending a green run. Public-field policy, session revocation and other findings outside that scope remain open under their own backlog items. Historical evidence is retained so future changes do not reintroduce repaired defects.
 
 | Severity | Defect | Evidence |
 |---|---|---|
@@ -189,4 +189,4 @@ SEC-006 must choose one documented convention per endpoint class and update the 
 
 ## Completion boundaries
 
-SEC-001 is complete when this matrix is maintained in the repository. It does not close any implementation defect. SEC-002 through SEC-005 remain open until their source changes and P0 tests pass. SEC-006 remains open until the response policy is decided and tested.
+SEC-001 is complete when this matrix is maintained in the repository. SEC-002 through SEC-005 and UPL-001 remain in progress until the implemented real-PostgreSQL regressions pass. SEC-006 remains open until the response policy is decided and tested.

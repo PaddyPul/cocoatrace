@@ -11,6 +11,14 @@ import { ArrowLeft, MapPin, FileText, Sprout } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 import { X } from 'lucide-react';
 
+function formatCoordinates(latitude: unknown, longitude: unknown): string {
+  if (latitude == null || longitude == null) return '';
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return '';
+  return ` · ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+}
+
 export default function FarmDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -107,7 +115,7 @@ export default function FarmDetailPage() {
                       <span className="font-mono font-medium">{p.plot_code}</span>
                       <span className="badge badge-blue">{p.area_hectares} ha</span>
                     </div>
-                    <div className="text-text-muted">{(p.crops || []).join(', ') || 'cocoa'}{p.gps_lat ? ` · ${p.gps_lat.toFixed(4)}, ${p.gps_lng.toFixed(4)}` : ''}</div>
+                    <div className="text-text-muted">{(p.crops || []).join(', ') || 'cocoa'}{formatCoordinates(p.gps_lat, p.gps_lng)}</div>
                   </div>
                 ))}
               </div>
@@ -144,7 +152,7 @@ export default function FarmDetailPage() {
                       <span className="font-mono font-medium">{b.id.slice(0, 8)}…</span>
                       <StatusBadge status={b.organic_claim_status} />
                     </div>
-                    <div className="text-text-muted">{b.crop} · {fmtDate(b.harvest_date)} · {(b.quantity_kg || 0).toLocaleString()} kg</div>
+                    <div className="text-text-muted">{b.crop} · {fmtDate(b.harvest_date)} · {Number(b.quantity_kg || 0).toLocaleString()} kg</div>
                   </div>
                 ))}
               </div>
@@ -159,7 +167,7 @@ export default function FarmDetailPage() {
               <div className="flex items-center justify-between"><span className="text-text-muted">Plots</span><span className="font-medium">{plots.length}</span></div>
               <div className="flex items-center justify-between"><span className="text-text-muted">Certificates</span><span className="font-medium">{certificates.length}</span></div>
               <div className="flex items-center justify-between"><span className="text-text-muted">Batches</span><span className="font-medium">{batchList.length}</span></div>
-              <div className="flex items-center justify-between"><span className="text-text-muted">Total volume</span><span className="font-medium">{(batchList.reduce((s: number, b: any) => s + (b.quantity_kg || 0), 0)).toLocaleString()} kg</span></div>
+              <div className="flex items-center justify-between"><span className="text-text-muted">Total volume</span><span className="font-medium">{batchList.reduce((sum: number, batch: any) => sum + Number(batch.quantity_kg || 0), 0).toLocaleString()} kg</span></div>
             </div>
             {canDo('farm.create') && <button className="btn w-full justify-center mt-4 text-xs" onClick={() => setShowPlot(true)}>+ Add Plot</button>}
             <button className="btn w-full justify-center mt-2 text-xs" onClick={() => navigate('/farms')}>All Farms →</button>

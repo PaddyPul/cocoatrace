@@ -186,10 +186,22 @@ export const certificateActionSchema = z.object({
 
 export const uploadEvidenceSchema = z.object({
   type: z.string().optional(),
-  linkedEntityType: z.string(),
-  linkedEntityId: z.string(),
+  linkedEntityType: z.enum(['batch','certificate','contract','farm','product_profile','shipment']),
+  linkedEntityId: z.string().uuid(),
   claimDescription: z.string().optional(),
 });
+
+export const evidenceListQuerySchema = z.object({
+  entityType: z.enum(['batch','certificate','contract','farm','product_profile','shipment']).optional(),
+  entityId: z.string().uuid().optional(),
+}).superRefine((value, ctx) => {
+  if (Boolean(value.entityType) !== Boolean(value.entityId)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'entityType and entityId are required together' });
+  }
+});
+
+export const provenanceViewQuerySchema = z.object({ contractId: z.string().uuid().optional() });
+export const provenanceExportQuerySchema = provenanceViewQuerySchema.extend({ format: z.literal('json').default('json') });
 
 export const pushToMarketplaceSchema = z.object({
   quantityKg: z.number().positive('Quantity must be positive'),

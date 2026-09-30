@@ -1,5 +1,4 @@
 import 'express-async-errors';
-import path from 'path';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -36,7 +35,6 @@ app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: config.webUrl, credentials: true }));
 app.use(express.json());
 app.use(verifyBrowserOrigin);
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 import { query } from './db';
 
