@@ -19,6 +19,19 @@ services:
       timeout: 5s
       retries: 10
 
+  clamav:
+    image: clamav/clamav:1.5.4-debian13-slim
+    container_name: cocoatrace-clamav
+    restart: unless-stopped
+    volumes:
+      - cocoatrace_clamav_signatures:/var/lib/clamav
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
   api:
     build:
       context: .
@@ -41,6 +54,11 @@ services:
       EVIDENCE_STORAGE_DRIVER: local
       EVIDENCE_STORAGE_LOCAL_ROOT: /app/private-evidence
       EVIDENCE_UPLOAD_SIGNING_SECRET: ${EVIDENCE_UPLOAD_SIGNING_SECRET:-cocoatrace_demo_upload_signing_secret}
+      EVIDENCE_SCANNER_DRIVER: clamav
+      EVIDENCE_SCANNER_HOST: clamav
+      EVIDENCE_SCANNER_PORT: "3310"
+      EVIDENCE_SCANNER_TIMEOUT_MS: "30000"
+      EVIDENCE_SCANNER_RETRIES: "2"
     volumes:
       - cocoatrace_evidence:/app/private-evidence
     healthcheck:
@@ -51,6 +69,8 @@ services:
       start_period: 10s
     depends_on:
       postgres:
+        condition: service_healthy
+      clamav:
         condition: service_healthy
 
   web:
@@ -78,3 +98,4 @@ services:
 volumes:
   cocoatrace_pgdata:
   cocoatrace_evidence:
+  cocoatrace_clamav_signatures:

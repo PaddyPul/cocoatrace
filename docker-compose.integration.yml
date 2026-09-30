@@ -24,3 +24,16 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+
+  clamav-integration:
+    image: clamav/clamav:1.5.4-debian13-slim
+    ports:
+      - "${COCOATRACE_TEST_SCANNER_PORT:-13310}:3310"
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s

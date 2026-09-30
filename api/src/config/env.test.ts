@@ -15,6 +15,8 @@ const deployedBase = {
   EVIDENCE_STORAGE_SECRET_KEY: 'staging-secret-key',
   EVIDENCE_STORAGE_SSE: 'AES256',
   EVIDENCE_UPLOAD_SIGNING_SECRET: 'a-separate-upload-secret-with-32-characters',
+  EVIDENCE_SCANNER_DRIVER: 'clamav',
+  EVIDENCE_SCANNER_HOST: 'scanner.internal',
 };
 
 describe('environment configuration', () => {
@@ -43,6 +45,11 @@ describe('environment configuration', () => {
 
   it('requires environment-isolated evidence buckets', () => {
     expect(() => parseConfig({ ...deployedBase, APP_ENV: 'production' })).toThrow(/EVIDENCE_STORAGE_BUCKET/);
+  });
+
+  it('requires a real malware scanner in deployed environments', () => {
+    expect(() => parseConfig({ ...deployedBase, APP_ENV: 'staging', EVIDENCE_SCANNER_DRIVER: 'development' })).toThrow(/EVIDENCE_SCANNER_DRIVER/);
+    expect(() => parseConfig({ ...deployedBase, APP_ENV: 'staging', EVIDENCE_SCANNER_HOST: '' })).toThrow(/EVIDENCE_SCANNER_HOST/);
   });
 
   it.each([
