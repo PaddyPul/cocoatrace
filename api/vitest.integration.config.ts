@@ -25,8 +25,11 @@ export default defineConfig({
       EVIDENCE_STORAGE_SECRET_KEY: process.env.EVIDENCE_STORAGE_SECRET_KEY || '',
       EVIDENCE_STORAGE_AUTO_CREATE_BUCKET: process.env.EVIDENCE_STORAGE_AUTO_CREATE_BUCKET || 'true',
       EVIDENCE_UPLOAD_SIGNING_SECRET: process.env.EVIDENCE_UPLOAD_SIGNING_SECRET || 'integration-evidence-signing-secret-32-chars',
-      EVIDENCE_MAX_FILE_BYTES: process.env.EVIDENCE_MAX_FILE_BYTES || '10485760',
-      EVIDENCE_ORGANIZATION_QUOTA_BYTES: process.env.EVIDENCE_ORGANIZATION_QUOTA_BYTES || '1073741824',
+      // Keep boundary-test limits deterministic across direct Vitest, CI and
+      // the Docker harness. Several assertions intentionally exceed these
+      // small limits without allocating production-sized test files.
+      EVIDENCE_MAX_FILE_BYTES: process.env.EVIDENCE_MAX_FILE_BYTES || '512',
+      EVIDENCE_ORGANIZATION_QUOTA_BYTES: process.env.EVIDENCE_ORGANIZATION_QUOTA_BYTES || '700',
       EVIDENCE_SCANNER_DRIVER: process.env.EVIDENCE_SCANNER_DRIVER || 'development',
       EVIDENCE_SCANNER_HOST: process.env.EVIDENCE_SCANNER_HOST || '',
       EVIDENCE_SCANNER_PORT: process.env.EVIDENCE_SCANNER_PORT || '3310',
