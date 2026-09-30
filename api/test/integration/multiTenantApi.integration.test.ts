@@ -494,7 +494,7 @@ describe('real PostgreSQL multi-tenant API boundary', () => {
   });
 
   it('rejects an EICAR test file, audits the infection and deletes quarantine bytes', async () => {
-    const content = Buffer.from('%PDF-1.7\nX5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*');
+    const content = Buffer.from('X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*');
     const intent = await request(app).post('/evidence/upload-intents').set('Authorization', `Bearer ${tenantA.token}`).send({
       type: 'other', fileName: 'eicar-test.pdf', mimeType: 'application/pdf', fileSizeBytes: content.length,
       linkedEntityType: 'batch', linkedEntityId: tenantA.batchId,
