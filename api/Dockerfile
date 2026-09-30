@@ -27,5 +27,7 @@ USER appuser
 EXPOSE 3001
 ENV NODE_ENV=production
 
-# Apply schema changes on start. Demo data is loaded only by an explicit demo command.
-CMD npx tsx api/scripts/migrate.ts && node api/dist/server.js
+# Apply schema changes on start. Demo data is loaded only by an explicit demo
+# command. exec makes the API process PID 1 after migration so Docker SIGTERM
+# reaches the graceful-shutdown handlers.
+CMD ["sh", "-c", "npx tsx api/scripts/migrate.ts && exec node api/dist/server.js"]
