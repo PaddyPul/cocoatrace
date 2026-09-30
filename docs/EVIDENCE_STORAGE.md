@@ -30,3 +30,5 @@ Staging and production must set `EVIDENCE_SCANNER_DRIVER=clamav` plus the privat
 ## Operational work still required
 
 Provision the staging bucket and scanner, monitor signature age and scanner failures, alert on accumulated scan failures, and rehearse restoration before enabling customer uploads.
+
+Use [`runbooks/EVIDENCE_SCANNER_AND_DEPLOYMENT_ROLLBACK.md`](runbooks/EVIDENCE_SCANNER_AND_DEPLOYMENT_ROLLBACK.md) for fail-closed scanner triage, quarantine reconciliation and application rollback. The runbook is guidance until its owners, alerts, provider-specific commands and recovery points have been exercised in staging.

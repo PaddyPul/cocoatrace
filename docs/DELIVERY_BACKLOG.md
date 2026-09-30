@@ -3,7 +3,7 @@
 **Purpose:** Single source of truth for work required to move CocoaTrace from a passion project to an investor-ready, pilot-safe and production-capable company.  
 **North Star:** [`NORTH_STAR.md`](./NORTH_STAR.md)  
 **Architecture direction:** [`ARCHITECTURE_MODERNIZATION.md`](./ARCHITECTURE_MODERNIZATION.md)  
-**Last triaged:** 2026-09-29  
+**Last triaged:** 2026-09-30
 **Next formal review:** Weekly, before selecting new work
 
 ## How to use this file
@@ -50,14 +50,13 @@ Complete these canonical backlog items in order unless a blocker requires
 resequencing. Update their checkbox in the detailed section below; this queue is
 only the ordered view and deliberately has no duplicate checkboxes.
 
-1. **UPL-002, ENV-004** — provision and verify independent staging storage and malware scanning
-2. **OPS-006** — alert on scanner failure, signature staleness and quarantine backlog
-3. **AUTH/registration wave** — email verification, password recovery, throttling and organization approval
-4. **TRD-001–TRD-009** — enforce transactional inventory and agreement invariants
-5. **QLT-004** — verify upload authorization, quarantine, scanning and controlled release end to end
-6. **DAT-001** — replace optimistic trust-state defaults with honest states
-7. **TRD-001** — make inventory reservation and offer acceptance atomic
-8. **RCL-001** — enforce recall holds across listing, transfer and dispatch
+1. **Repository CI and operations foundation — ENV-007, QLT-005–QLT-006, SEC-013–SEC-014, OPS-003–OPS-006:** run migrations from zero in CI, enforce static quality and supply-chain checks, centralize operational signals and alert on storage/scanner failures.
+2. **Pilot Identity & Access v1 — IDN-002–IDN-011, IDN-013–IDN-015:** request access, verify email, review organizations, create the first administrator only after approval, deliver/revoke invitations, recover passwords, revoke sessions and record policy acceptance.
+3. **Trading Integrity v1 — ARC-005, ARC-012, TRD-001–TRD-009:** make offer acceptance, reservation and every competing inventory mutation transactional, constrained and concurrency-tested.
+4. **DAT-001–DAT-003** — replace optimistic trust-state defaults and preserve the source of every claim.
+5. **RCL-001–RCL-002** — enforce recall holds across listings, offers, transfers and dispatch.
+
+The following deployment work is a **parallel external gate**, not repository-complete work: **ENV-004–ENV-006, UPL-002, OPS-001–OPS-002**. A named infrastructure owner must provision isolated staging resources, private encrypted object storage, HTTPS/secrets, managed database recovery and a recorded restore drill. Repository tests and local Docker do not close those items.
 
 ---
 
@@ -151,10 +150,10 @@ only the ordered view and deliberately has no duplicate checkboxes.
 # 5. Authorization and application security
 
 - [x] **SEC-001 · P0 · Phase 1:** Document route/resource authorization matrix with explicit network-wide permissions. See [`security/AUTHORIZATION_MATRIX.md`](security/AUTHORIZATION_MATRIX.md).
-- [-] **SEC-002 · P0 · Phase 1 — IN PROGRESS:** Farm, plot, certificate, profile, provenance, evidence and indirect contract IDOR fixes and PostgreSQL regressions are implemented; completion awaits the green PostgreSQL security suite.
-- [-] **SEC-003 · P0 · Phase 1 — IN PROGRESS:** Ordinary reads are tenant/relationship bounded and explicit `*.all`/`*.network` grants were added; completion awaits the green PostgreSQL security suite.
-- [-] **SEC-004 · P0 · Phase 1 — IN PROGRESS:** Provenance now binds `contractId` to both the batch and an authorized party; completion awaits the green PostgreSQL security suite.
-- [-] **SEC-005 · P0 · Phase 1 — IN PROGRESS:** Contract document listing, attachment and download inherit contract-party authorization; completion awaits the green PostgreSQL security suite.
+- [x] **SEC-002 · P0 · Phase 1:** Farm, certificate, batch, product-profile, provenance, evidence and indirect contract IDOR fixes pass the real-PostgreSQL two-tenant regression suite.
+- [x] **SEC-003 · P0 · Phase 1:** Ordinary reads are tenant/relationship bounded, explicit `*.all`/`*.network` grants are exercised, and ordinary users cannot inherit network-wide reads.
+- [x] **SEC-004 · P0 · Phase 1:** Provenance binds `contractId` to both the batch and an authorized contract party; direct and export splicing regressions pass against PostgreSQL.
+- [x] **SEC-005 · P0 · Phase 1:** Contract document listing, attachment and download inherit contract-party authorization and reject unrelated organizations in PostgreSQL tests.
 - [ ] **SEC-006 · P1 · Phase 1:** Decide whether unauthorized resources consistently return `403` or non-disclosing `404` and test it.
 - [ ] **SEC-007 · P1 · Phase 1:** Add CSRF/origin tests for every cookie-authenticated state-changing request.
 - [ ] **SEC-008 · P1 · Phase 1:** Add a restrictive Content Security Policy and verify public profile assets.
@@ -197,8 +196,8 @@ only the ordered view and deliberately has no duplicate checkboxes.
 - [ ] **DAT-001 · P0 · Phase 1:** Replace verified/approved/clear/EUDR-checked defaults with pending, self-declared or unknown states.
 - [ ] **DAT-002 · P0 · Phase 1:** Migrate existing non-seed records to an honest trust state with an audit report.
 - [ ] **DAT-003 · P1 · Phase 1:** Record claim source, reviewer, method, timestamp and expiry.
-- [-] **DAT-004 · P1 · Phase 1 — IN PROGRESS:** Certificate issue and attestation validate farmer organization against farm ownership; completion awaits the PostgreSQL regression run.
-- [-] **DAT-005 · P1 · Phase 1 — IN PROGRESS:** Attestation validates crop scope and harvest-date coverage; completion awaits the PostgreSQL regression run.
+- [x] **DAT-004 · P1 · Phase 1:** Certificate issue and attestation validate farmer organization against farm ownership, with a real-PostgreSQL cross-tenant regression.
+- [-] **DAT-005 · P1 · Phase 1 — IN PROGRESS:** Attestation validates certificate subject, crop scope and harvest-date coverage. PostgreSQL regressions cover mismatched subject and crop; add an out-of-validity harvest-date regression before closing this item.
 - [ ] **DAT-006 · P1 · Phase 1:** Prevent contradictory duplicate active certificates.
 - [ ] **DAT-007 · P1 · Phase 2:** Cascade certificate suspension/revocation into affected claims, listings, deals and alerts.
 - [ ] **DAT-008 · P1 · Phase 2:** Recalculate marketplace and product-profile trust labels from current source data.
@@ -320,7 +319,7 @@ only the ordered view and deliberately has no duplicate checkboxes.
 - [x] **QLT-001 · P0 · Phase 1:** Add real-PostgreSQL API integration tests with at least two unrelated organizations. The disposable PostgreSQL harness, safety guard, two-tenant API tests and CI job have completed a green run.
 - [ ] **QLT-002 · P0 · Phase 1:** Add negative authorization tests for every protected resource family.
 - [ ] **QLT-003 · P0 · Phase 1:** Add inventory and offer concurrency tests.
-- [ ] **QLT-004 · P0 · Phase 1:** Test evidence upload authorization, file limits, quarantine, scan and download release.
+- [x] **QLT-004 · P0 · Phase 1:** Real-PostgreSQL integration tests cover linked-resource upload authorization, private quarantine, extension/MIME/signature validation, file and tenant quota limits, EICAR rejection and audit, quarantine deletion, scan-clean download gating and unauthenticated `/uploads` denial. The Docker harness additionally exercises S3-compatible storage and ClamAV.
 - [ ] **QLT-005 · P1 · Phase 1:** Test migrations from an empty database and from the current baseline snapshot.
 - [ ] **QLT-006 · P1 · Phase 1:** Add ESLint, formatting and typecheck commands to CI.
 - [ ] **QLT-007 · P1 · Phase 1:** Prohibit new `any` in changed high-risk modules.
@@ -347,8 +346,8 @@ only the ordered view and deliberately has no duplicate checkboxes.
 - [ ] **OPS-005 · P1 · Phase 1:** Add uptime checks for web, API liveness and API readiness.
 - [ ] **OPS-006 · P1 · Phase 1:** Alert on elevated 5xx, failed login abuse, authorization failures, queue backlog, DB exhaustion and storage scan failures.
 - [ ] **OPS-007 · P1 · Phase 1:** Define on-call/incident owner and escalation contacts for the pilot.
-- [ ] **OPS-008 · P1 · Phase 1:** Write incident-response, secret-rotation and customer-communication runbooks.
-- [ ] **OPS-009 · P1 · Phase 1:** Write and exercise deployment rollback procedures.
+- [-] **OPS-008 · P1 · Phase 1 — IN PROGRESS:** Scanner outage and quarantine response are drafted in [`runbooks/EVIDENCE_SCANNER_AND_DEPLOYMENT_ROLLBACK.md`](runbooks/EVIDENCE_SCANNER_AND_DEPLOYMENT_ROLLBACK.md). Assign provider-specific owners, add secret-rotation and customer-communication procedures, and exercise them before closing.
+- [-] **OPS-009 · P1 · Phase 1 — IN PROGRESS:** The immutable-image rollback sequence is drafted in [`runbooks/EVIDENCE_SCANNER_AND_DEPLOYMENT_ROLLBACK.md`](runbooks/EVIDENCE_SCANNER_AND_DEPLOYMENT_ROLLBACK.md). Adapt it to the selected hosting/database providers and record a successful staging exercise before closing.
 - [ ] **OPS-010 · P1 · Phase 2:** Add a durable job queue with retries, dead-letter handling and idempotency.
 - [ ] **OPS-011 · P1 · Phase 2:** Add database pool, query latency, HTTP latency and queue metrics.
 - [ ] **OPS-012 · P1 · Phase 2:** Define pilot SLOs, initial alert thresholds, RPO and RTO.
@@ -481,14 +480,14 @@ An item is complete only when applicable criteria are met:
 | Risk | Severity | Current mitigation | Closure items |
 | --- | --- | --- | --- |
 | Demo credentials/data reach a production-like deployment | Critical | Documentation warning only | ENV-001–006, IDN-001 |
-| Cross-tenant farm/provenance/profile/certificate access | Critical | Partial controller checks | SEC-001–006, QLT-001–002 |
-| Uploaded evidence bypasses protected download route | Critical | Random storage name only | UPL-001–010 |
+| Untested authorization regressions in resource families outside the current two-tenant matrix | High | Farm, certificate, batch, profile, provenance, evidence and contract-document PostgreSQL regressions are green | SEC-006, QLT-002 |
+| Staging evidence infrastructure is not yet independently provisioned or operationally monitored | Critical | Private upload, quarantine, scanning and controlled-download behavior is implemented and Docker-tested | ENV-004, UPL-002, OPS-006 |
 | Self-entered records appear verified/approved | Critical | Organic attestation on batches only | DAT-001–010 |
 | Same inventory can underpin inconsistent contracts | Critical | Some application quantity checks | TRD-001–009 |
 | Recall notice does not quarantine affected supply | Critical | Public notice and calculation | RCL-001–010 |
 | Critical audit events can fail after business commit | High | Warning log | ARC-013–014 |
 | Real users lack reset/MFA/revocation lifecycle | High | Invite and password login | IDN-008–014 |
-| No database integration or browser E2E suite | High | 50 unit-focused API tests | QLT-001–018 |
+| No critical browser E2E suite and migrations are not yet rehearsed from baseline in CI | High | Real-PostgreSQL two-tenant integration suite runs in CI | ENV-007, QLT-005, QLT-009–012 |
 | Large, coupled files slow safe inheritance | Medium | TypeScript build | ARC-004–023 |
 | No restore/monitoring/incident proof | High | Health endpoints and structured logger | OPS-001–012 |
 | Marketing claims exceed implemented transformations | Medium | Demo genealogy | PRD-001, RCL-011, INV-005 |

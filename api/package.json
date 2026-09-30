@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "db:migrate": "tsx scripts/migrate.ts",
+    "migrations:verify": "node scripts/check-migration-integrity.mjs",
     "db:seed": "tsx scripts/seed.ts",
     "evidence:migrate-legacy": "tsx scripts/migrate-legacy-evidence.ts",
     "evidence:scan-pending": "tsx scripts/scan-pending-evidence.ts",

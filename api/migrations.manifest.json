@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "baseline": {
+    "path": "db/schema.sql",
+    "sha256": "c4ac42c51c91543421058ec5dbfb5a3c1f886168531fd34fa8be7a3541e5dff2"
+  },
+  "migrations": [
+    { "path": "api/src/migrations/001_initial_schema.ts", "sha256": "e28c2117fd0cd9e96e2d2d180c3976d20acdd9752c0dc5e1d5f13c6a09058e94" },
+    { "path": "api/src/migrations/002_pilot_ready_workspace.ts", "sha256": "8a66ffadad10193be0b2b9e01d52f1d149efebaade87321676e9e76b0d755d4a" },
+    { "path": "api/src/migrations/002_quantity_aware_lot_genealogy.ts", "sha256": "89395170c6d1448e2d2caa20c0f864ff0e95201798d034a86ac3f74aa27ffe92" },
+    { "path": "api/src/migrations/003_verified_sourcing.ts", "sha256": "e23d133dade610a30c33c72982e61c0568ae4241a66f63d0a564e5d3102e03cd" },
+    { "path": "api/src/migrations/004_complete_first_supply_workflow.ts", "sha256": "80ed34863ad0183ab7ea8ef77360d7e50cfb669f6a069e850af79ac92991cf36" },
+    { "path": "api/src/migrations/005_trade_fulfilment_workflow.ts", "sha256": "5c5878b8698c1f13598723bf42b9e15efb64eb27f7654ee6365a0c8c7e72962e" },
+    { "path": "api/src/migrations/006_repair_trade_fulfilment_columns.ts", "sha256": "771dc2e2019d951a90a4d984027aeb4e32a6f6158aadc1a2dfb284aa3a789f09" },
+    { "path": "api/src/migrations/007_payment_protection.ts", "sha256": "23a0a4db2aaa10f242e0a1433838bff930a241114eeab4f18704d6dce3cb4926" },
+    { "path": "api/src/migrations/008_payment_terms_draft_default.ts", "sha256": "e2728695424229d14870786d59a85523af1c42d32ea24b0eb274bd0e8041c28e" },
+    { "path": "api/src/migrations/009_supplier_paths_and_real_sourcing.ts", "sha256": "c06aa693861249bcdcca22819187efa5b59a56b877ceb852a46ad7f70f65c8e6" },
+    { "path": "api/src/migrations/010_live_traceability_wiring.ts", "sha256": "e0a14ba2e7c9d1bf88f884dff7dc47e3cad32df4ac3663931037864c4cb71729" },
+    { "path": "api/src/migrations/011_explicit_network_permissions.ts", "sha256": "113773ea3e1cdd9eedc386feb081177ac76174c4e207ce9728ff5a74ce1fad58" },
+    { "path": "api/src/migrations/012_repair_product_profile_slug_constraint.ts", "sha256": "948ec7895f80640ef133bcff821e5bf2dff2eb247b420c1b8ebe916ae686caaf" },
+    { "path": "api/src/migrations/013_private_evidence_uploads.ts", "sha256": "4ce057c5ef535980162b6a2a6755739d7b69b27634f5669e8cebeb785f73058a" },
+    { "path": "api/src/migrations/014_evidence_malware_scanning.ts", "sha256": "72c8b12606c42343be01a932f8b84b48d0a8634a87790b69ac99274ebe55fe2e" },
+    { "path": "api/src/migrations/015_remove_missing_seed_evidence.ts", "sha256": "15e26906fd9a53f00f88277aa032b6590b305e945bba0f2b7c4706c348a564e5" }
+  ]
+}

@@ -18,6 +18,7 @@ RUN npm run build --workspace=api && rm -f api/dist/migrations/*.d.ts
 # Copy runtime assets, knexfile, db scripts, and migration/seed scripts
 COPY api/uploads/ ./api/uploads/
 COPY api/knexfile.ts ./api/
+COPY api/migrations.manifest.json ./api/
 COPY db/ ./db/
 COPY api/scripts/ ./api/scripts/
 RUN mkdir -p /app/private-evidence && chown appuser:appgroup /app/private-evidence
