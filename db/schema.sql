@@ -431,7 +431,7 @@ CREATE TABLE IF NOT EXISTS evidence_items (
 CREATE TABLE IF NOT EXISTS product_profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   batch_id UUID NOT NULL UNIQUE REFERENCES harvest_batches(id),
-  slug TEXT NOT NULL UNIQUE CHECK (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
+  slug TEXT NOT NULL UNIQUE CHECK (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
   display_name TEXT NOT NULL,
   brand_name TEXT,
   description TEXT NOT NULL DEFAULT '',
