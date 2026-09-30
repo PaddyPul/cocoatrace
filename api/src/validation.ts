@@ -184,11 +184,14 @@ export const certificateActionSchema = z.object({
   reason: z.string().optional(),
 });
 
-export const uploadEvidenceSchema = z.object({
-  type: z.string().optional(),
+export const createEvidenceUploadIntentSchema = z.object({
+  type: z.string().trim().min(1).max(100),
+  fileName: z.string().trim().min(1).max(255),
+  mimeType: z.enum(['application/pdf','image/jpeg','image/png']),
+  fileSizeBytes: z.number().int().positive(),
   linkedEntityType: z.enum(['batch','certificate','contract','farm','product_profile','shipment']),
   linkedEntityId: z.string().uuid(),
-  claimDescription: z.string().optional(),
+  claimDescription: z.string().trim().max(2000).optional(),
 });
 
 export const evidenceListQuerySchema = z.object({

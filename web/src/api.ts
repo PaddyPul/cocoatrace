@@ -168,13 +168,16 @@ export const evidence = {
     return api<import('./types').Evidence[]>('GET', `/evidence${qs}`);
   },
   upload: (file: File, data: { type?: string; linkedEntityType: string; linkedEntityId: string; claimDescription?: string }) => {
-    const fd = new FormData();
-    fd.append('file', file);
-    if (data.type) fd.append('type', data.type);
-    fd.append('linkedEntityType', data.linkedEntityType);
-    fd.append('linkedEntityId', data.linkedEntityId);
-    if (data.claimDescription) fd.append('claimDescription', data.claimDescription);
-    return api<any>('POST', '/evidence', fd, true);
+    return api<{ uploadUrl: string }>('POST', '/evidence/upload-intents', {
+      type: data.type || 'other', fileName: file.name, mimeType: file.type,
+      fileSizeBytes: file.size, linkedEntityType: data.linkedEntityType,
+      linkedEntityId: data.linkedEntityId, claimDescription: data.claimDescription,
+    }).then(async ({ uploadUrl }) => {
+      const res = await fetch(API_BASE + uploadUrl, { method: 'PUT', credentials: 'include', headers: { 'Content-Type': file.type || 'application/octet-stream' }, body: file });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(result.error || `Upload failed (${res.status})`);
+      return result;
+    });
   },
   download: async (id: string, fileName: string) => {
     const res = await fetch(`${API_BASE}/evidence/${id}/download`, {

@@ -1,20 +1,16 @@
 import { Router } from 'express';
-import fs from 'fs';
-import path from 'path';
-import multer from 'multer';
+import express from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth';
 import validate from '../middleware/validate';
-import { evidenceListQuerySchema, uploadEvidenceSchema } from '../validation';
+import { createEvidenceUploadIntentSchema, evidenceListQuerySchema } from '../validation';
 import * as evidenceController from '../controllers/evidenceController';
-
-const uploadsDir = path.join(__dirname, '../../uploads');
-fs.mkdirSync(uploadsDir, { recursive: true });
-const upload = multer({ dest: uploadsDir });
+import { config } from '../config/env';
 
 const router = Router();
 
 router.get('/evidence', requireAuth, requirePermission('evidence.read'), validate(evidenceListQuerySchema, 'query'), evidenceController.listEvidence);
 router.get('/evidence/:id/download', requireAuth, requirePermission('evidence.read'), evidenceController.downloadEvidence);
-router.post('/evidence', requireAuth, requirePermission('evidence.upload'), upload.single('file'), validate(uploadEvidenceSchema), evidenceController.uploadEvidence);
+router.post('/evidence/upload-intents', requireAuth, requirePermission('evidence.upload'), validate(createEvidenceUploadIntentSchema), evidenceController.createEvidenceUploadIntent);
+router.put('/evidence/upload-intents/:id/content', express.raw({ type: '*/*', limit: config.evidenceMaxFileBytes }), evidenceController.uploadEvidenceContent);
 
 export = router;

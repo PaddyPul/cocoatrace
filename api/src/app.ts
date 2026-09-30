@@ -7,6 +7,7 @@ import logger from './logger';
 import { AppError } from './errors';
 import { verifyBrowserOrigin } from './middleware/security';
 import { config } from './config/env';
+import { evidenceStorage } from './services/evidenceStorage';
 
 import authRoutes from './routes/auth';
 import orgRoutes from './routes/organizations';
@@ -49,6 +50,14 @@ app.get('/health', async (_req, res) => {
 app.get('/health/live', (_req, res) => res.json({ status: 'ok', version: config.appVersion, environment: config.environment }));
 app.get('/health/ready', async (_req, res) => {
   try {
+    await Promise.all([query('SELECT 1'), evidenceStorage().healthcheck()]);
+    res.json({ status: 'ready', database: 'connected', evidenceStorage: 'connected', aiNarrative: Boolean(config.openAiApiKey && config.openAiModel) });
+  } catch {
+    res.status(503).json({ status: 'not_ready', dependency: 'database_or_evidence_storage' });
+  }
+});
+app.get('/health/ready', async (_req, res) => {
+  try {
     await query('SELECT 1');
     res.json({ status: 'ready', database: 'connected', aiNarrative: Boolean(config.openAiApiKey && config.openAiModel) });
   } catch {
@@ -81,6 +90,10 @@ app.use((_req, res) => {
 });
 
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+  if ((err as Error & { type?: string }).type === 'entity.too.large') {
+    res.status(413).json({ error: 'Request body exceeds the configured evidence file limit', code: 'EVIDENCE_FILE_TOO_LARGE' });
+    return;
+  }
   if (err instanceof AppError) {
     logger.warn({ err, path: req.path, method: req.method }, 'Operational error');
     res.status(err.statusCode).json({

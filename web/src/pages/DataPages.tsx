@@ -478,7 +478,7 @@ export function EvidencePage() {
         <div className="space-y-3">
           <div>
             <label className="form-label">File *</label>
-            <input type="file" className="form-input" onChange={(e) => setUpFile(e.target.files?.[0] || null)} />
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="form-input" onChange={(e) => setUpFile(e.target.files?.[0] || null)} />
           </div>
           <input className="form-input" placeholder="Type (e.g. certificate_pdf, weighing_ticket)" value={upType} onChange={(e) => setUpType(e.target.value)} />
           <select className="form-select" value={upLinkedType} onChange={(e) => setUpLinkedType(e.target.value)}>
