@@ -10,6 +10,7 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
     "evidence:migrate-legacy": "tsx scripts/migrate-legacy-evidence.ts",
+    "evidence:scan-pending": "tsx scripts/scan-pending-evidence.ts",
     "demo:seed:fresh": "tsx scripts/demo.ts fresh",
     "demo:seed:commercial": "tsx scripts/demo.ts commercial",
     "demo:seed:incident": "tsx scripts/demo.ts incident",

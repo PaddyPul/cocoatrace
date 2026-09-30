@@ -50,10 +50,10 @@ Complete these canonical backlog items in order unless a blocker requires
 resequencing. Update their checkbox in the detailed section below; this queue is
 only the ordered view and deliberately has no duplicate checkboxes.
 
-1. **SEC-002–SEC-005, UPL-001** — run the new PostgreSQL security regression suite and merge the verified security-boundary wave
-2. **UPL-002** — move evidence into private, environment-isolated object storage
-3. **UPL-003** — add entity-authorized upload intents and expiring signed URLs
-4. **UPL-004–UPL-007** — quarantine, validate, limit and malware-scan every upload
+1. **UPL-002, ENV-004** — provision and verify independent staging storage and malware scanning
+2. **OPS-006** — alert on scanner failure, signature staleness and quarantine backlog
+3. **AUTH/registration wave** — email verification, password recovery, throttling and organization approval
+4. **TRD-001–TRD-009** — enforce transactional inventory and agreement invariants
 5. **QLT-004** — verify upload authorization, quarantine, scanning and controlled release end to end
 6. **DAT-001** — replace optimistic trust-state defaults with honest states
 7. **TRD-001** — make inventory reservation and offer acceptance atomic
@@ -173,15 +173,15 @@ only the ordered view and deliberately has no duplicate checkboxes.
 
 # 6. Evidence and file uploads
 
-- [-] **UPL-001 · P0 · Phase 1 — IN PROGRESS:** `/uploads` static serving and response storage paths are removed; completion awaits the regression against a real stored object.
+- [x] **UPL-001 · P0 · Phase 1:** `/uploads` static serving and response storage paths are removed and regression-tested.
 - [ ] **UPL-002 · P0 · Phase 1:** Create private, per-environment object-storage buckets with encryption and public access blocked.
-- [ ] **UPL-003 · P0 · Phase 1:** Add entity-authorized upload intents using opaque object keys and expiring signed URLs.
-- [ ] **UPL-004 · P0 · Phase 1:** Add quarantine storage and keep documents unavailable until validation completes.
-- [ ] **UPL-005 · P0 · Phase 1:** Initially allow only PDF, JPEG and PNG using extension, MIME and file-signature checks.
-- [ ] **UPL-006 · P0 · Phase 1:** Add explicit per-file and per-organization size limits.
-- [ ] **UPL-007 · P0 · Phase 1:** Add malware scanning and record engine/result/time.
-- [ ] **UPL-008 · P1 · Phase 1:** Calculate the definitive SHA-256 after upload and before approval.
-- [ ] **UPL-009 · P1 · Phase 1:** Implement evidence states: upload pending, scan pending, submitted, approved, rejected, expired and quarantined.
+- [x] **UPL-003 · P0 · Phase 1:** Add entity-authorized upload intents using opaque object keys and expiring signed URLs.
+- [x] **UPL-004 · P0 · Phase 1:** Add quarantine storage and keep documents unavailable until validation completes.
+- [x] **UPL-005 · P0 · Phase 1:** Initially allow only PDF, JPEG and PNG using extension, MIME and file-signature checks.
+- [x] **UPL-006 · P0 · Phase 1:** Add explicit per-file and per-organization size limits.
+- [x] **UPL-007 · P0 · Phase 1:** Add malware scanning and record engine/result/time.
+- [x] **UPL-008 · P1 · Phase 1:** Calculate the definitive SHA-256 after upload and before approval.
+- [-] **UPL-009 · P1 · Phase 1 — IN PROGRESS:** Upload, scan, infection, failure, submission and expiry states are explicit; reviewer approval/rejection UX remains.
 - [ ] **UPL-010 · P1 · Phase 1:** Add authorized expiring downloads with attachment disposition and release-condition checks.
 - [ ] **UPL-011 · P1 · Phase 2:** Add reviewer queues, rejection reasons and replacement/version history.
 - [ ] **UPL-012 · P1 · Phase 2:** Add certificate/document expiry and renewal reminders.

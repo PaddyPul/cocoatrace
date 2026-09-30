@@ -177,8 +177,9 @@ beforeAll(async () => {
   tenantA.contractEvidenceId = contractEvidenceA.body.id;
   tenantB.contractEvidenceId = contractEvidenceB.body.id;
 
-  const stored = await query('SELECT storage_key,storage_path FROM evidence_items WHERE id=ANY($1::uuid[])', [[tenantA.evidenceId, tenantB.evidenceId, tenantA.contractEvidenceId, tenantB.contractEvidenceId]]);
+  const stored = await query('SELECT storage_key,storage_path,malware_scan_status FROM evidence_items WHERE id=ANY($1::uuid[])', [[tenantA.evidenceId, tenantB.evidenceId, tenantA.contractEvidenceId, tenantB.contractEvidenceId]]);
   expect(stored.rows.every((row) => row.storage_path === null)).toBe(true);
+  expect(stored.rows.every((row) => row.malware_scan_status === 'clean')).toBe(true);
   uploadedKeys.push(...stored.rows.map((row) => row.storage_key));
 
   const networkOrg = await query(
@@ -489,5 +490,33 @@ describe('real PostgreSQL multi-tenant API boundary', () => {
     const exceeded = await create(100);
     expect(exceeded.status).toBe(413);
     expect(exceeded.body.code).toBe('EVIDENCE_QUOTA_EXCEEDED');
+    await query(`UPDATE evidence_upload_intents SET status='expired' WHERE id=$1`, [reserved.body.intentId]);
+  });
+
+  it('rejects an EICAR test file, audits the infection and deletes quarantine bytes', async () => {
+    const content = Buffer.from('X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*');
+    const intent = await request(app).post('/evidence/upload-intents').set('Authorization', `Bearer ${tenantA.token}`).send({
+      type: 'other', fileName: 'eicar-test.pdf', mimeType: 'application/pdf', fileSizeBytes: content.length,
+      linkedEntityType: 'batch', linkedEntityId: tenantA.batchId,
+    });
+    expect(intent.status).toBe(201);
+    const upload = await request(app).put(intent.body.uploadUrl).set('Content-Type', 'application/pdf').send(content);
+    expect(upload.status).toBe(422);
+    expect(upload.body.code).toBe('MALWARE_DETECTED');
+    const stored = await query('SELECT status,malware_scan_status,quarantine_object_key,evidence_item_id FROM evidence_upload_intents WHERE id=$1', [intent.body.intentId]);
+    expect(stored.rows[0]).toMatchObject({ status: 'infected', malware_scan_status: 'infected', evidence_item_id: null });
+    expect(await evidenceStorage().get(stored.rows[0].quarantine_object_key)).toBeNull();
+    const audited = await query(`SELECT COUNT(*)::int AS count FROM audit_events WHERE action='evidence.scan.infected' AND entity_id=$1`, [intent.body.intentId]);
+    expect(audited.rows[0].count).toBe(1);
+  });
+
+  it('blocks downloads unless malware scan status is clean', async () => {
+    await query(`UPDATE evidence_items SET malware_scan_status='legacy_unscanned' WHERE id=$1`, [tenantA.evidenceId]);
+    const blocked = await request(app).get(`/evidence/${tenantA.evidenceId}/download`).set('Authorization', `Bearer ${tenantA.token}`);
+    expect(blocked.status).toBe(423);
+    expect(blocked.body.code).toBe('EVIDENCE_NOT_SCAN_CLEAN');
+    await query(`UPDATE evidence_items SET malware_scan_status='clean' WHERE id=$1`, [tenantA.evidenceId]);
+    const allowed = await request(app).get(`/evidence/${tenantA.evidenceId}/download`).set('Authorization', `Bearer ${tenantA.token}`);
+    expect(allowed.status).toBe(200);
   });
 });

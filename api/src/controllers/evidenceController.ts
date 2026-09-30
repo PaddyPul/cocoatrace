@@ -12,7 +12,8 @@ import { completeUploadIntent, createUploadIntent } from '../services/evidenceUp
 import { evidenceStorage } from '../services/evidenceStorage';
 
 const evidenceColumns = `id,type,file_name,file_size_bytes,mime_type,detected_mime_type,
-  sha256_hash,validation_status,review_status,linked_entity_type,linked_entity_id,claim_description,created_at`;
+  sha256_hash,validation_status,malware_scan_status,malware_scanner_engine,malware_scanned_at,
+  review_status,linked_entity_type,linked_entity_id,claim_description,created_at`;
 
 function isEvidenceEntityType(value: unknown): value is EvidenceEntityType {
   return typeof value === 'string' && (EVIDENCE_ENTITY_TYPES as readonly string[]).includes(value);
@@ -88,6 +89,11 @@ export async function downloadEvidence(req: Request, res: Response): Promise<voi
   const allowed = item.uploader_organization_id === organizationId || entityAllowed;
   if (!allowed) {
     res.status(403).json({ error: 'You do not have access to this document' });
+    return;
+  }
+
+  if (item.malware_scan_status !== 'clean') {
+    res.status(423).json({ error: 'This document is unavailable until malware scanning completes', code: 'EVIDENCE_NOT_SCAN_CLEAN' });
     return;
   }
 

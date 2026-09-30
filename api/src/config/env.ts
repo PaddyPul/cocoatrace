@@ -62,6 +62,11 @@ export type AppConfig = Readonly<{
   evidenceUploadSigningSecret: string;
   evidenceMaxFileBytes: number;
   evidenceOrganizationQuotaBytes: number;
+  evidenceScannerDriver: 'development' | 'clamav';
+  evidenceScannerHost?: string;
+  evidenceScannerPort: number;
+  evidenceScannerTimeoutMs: number;
+  evidenceScannerRetries: number;
 }>;
 
 export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
@@ -104,6 +109,13 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     ),
     EVIDENCE_MAX_FILE_BYTES: z.coerce.number().int().min(1).max(100 * 1024 * 1024).default(10 * 1024 * 1024),
     EVIDENCE_ORGANIZATION_QUOTA_BYTES: z.coerce.number().int().min(1).default(1024 * 1024 * 1024),
+    EVIDENCE_SCANNER_DRIVER: z.enum(['development', 'clamav']).default(
+      environment === 'staging' || environment === 'production' ? 'clamav' : 'development',
+    ),
+    EVIDENCE_SCANNER_HOST: optionalText,
+    EVIDENCE_SCANNER_PORT: z.coerce.number().int().min(1).max(65_535).default(3310),
+    EVIDENCE_SCANNER_TIMEOUT_MS: z.coerce.number().int().min(500).max(120_000).default(15_000),
+    EVIDENCE_SCANNER_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
   }).superRefine((values, context) => {
     const deployed = environment === 'staging' || environment === 'production';
     if (deployed) {
@@ -157,6 +169,12 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     if (values.EVIDENCE_ORGANIZATION_QUOTA_BYTES < values.EVIDENCE_MAX_FILE_BYTES) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_ORGANIZATION_QUOTA_BYTES'], message: 'must be at least EVIDENCE_MAX_FILE_BYTES' });
     }
+    if (deployed && values.EVIDENCE_SCANNER_DRIVER !== 'clamav') {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_SCANNER_DRIVER'], message: 'must be clamav in staging and production' });
+    }
+    if (values.EVIDENCE_SCANNER_DRIVER === 'clamav' && !values.EVIDENCE_SCANNER_HOST) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_SCANNER_HOST'], message: 'is required when EVIDENCE_SCANNER_DRIVER is clamav' });
+    }
   });
 
   const result = schema.safeParse(source);
@@ -199,6 +217,11 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     evidenceUploadSigningSecret: values.EVIDENCE_UPLOAD_SIGNING_SECRET,
     evidenceMaxFileBytes: values.EVIDENCE_MAX_FILE_BYTES,
     evidenceOrganizationQuotaBytes: values.EVIDENCE_ORGANIZATION_QUOTA_BYTES,
+    evidenceScannerDriver: values.EVIDENCE_SCANNER_DRIVER,
+    evidenceScannerHost: values.EVIDENCE_SCANNER_HOST,
+    evidenceScannerPort: values.EVIDENCE_SCANNER_PORT,
+    evidenceScannerTimeoutMs: values.EVIDENCE_SCANNER_TIMEOUT_MS,
+    evidenceScannerRetries: values.EVIDENCE_SCANNER_RETRIES,
   });
 }
 

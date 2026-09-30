@@ -7,6 +7,7 @@ const repositoryRoot = path.resolve(scriptDirectory, '../..');
 const composeFile = path.join(repositoryRoot, 'docker-compose.integration.yml');
 const port = process.env.COCOATRACE_TEST_DB_PORT || '15434';
 const storagePort = process.env.COCOATRACE_TEST_STORAGE_PORT || '19000';
+const scannerPort = process.env.COCOATRACE_TEST_SCANNER_PORT || '13310';
 const composeProject = process.env.COCOATRACE_TEST_COMPOSE_PROJECT || 'cocoatrace-integration-tests';
 const testDatabaseUrl = `postgresql://cocoa_test:cocoa_test@127.0.0.1:${port}/cocoatrace_test`;
 const docker = process.platform === 'win32' ? 'docker.exe' : 'docker';
@@ -39,6 +40,8 @@ try {
         EVIDENCE_STORAGE_ACCESS_KEY: 'cocoa_test_access', EVIDENCE_STORAGE_SECRET_KEY: 'cocoa_test_secret_key',
         EVIDENCE_STORAGE_AUTO_CREATE_BUCKET: 'true', EVIDENCE_UPLOAD_SIGNING_SECRET: 'integration-evidence-signing-secret-32-chars',
         EVIDENCE_MAX_FILE_BYTES: '512', EVIDENCE_ORGANIZATION_QUOTA_BYTES: '700',
+        EVIDENCE_SCANNER_DRIVER: 'clamav', EVIDENCE_SCANNER_HOST: '127.0.0.1',
+        EVIDENCE_SCANNER_PORT: scannerPort, EVIDENCE_SCANNER_TIMEOUT_MS: '30000', EVIDENCE_SCANNER_RETRIES: '1',
       },
     });
   }

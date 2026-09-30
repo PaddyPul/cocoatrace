@@ -7,10 +7,12 @@ import { JwtPayload } from '../middleware/auth';
 import * as audit from './audit';
 import { AllowedEvidenceMime, validateEvidenceContent, validateEvidenceMetadata } from './evidenceFilePolicy';
 import { evidenceStorage } from './evidenceStorage';
+import { evidenceMalwareScanner } from './evidenceMalwareScanner';
 import { canAccessEvidenceEntity, EvidenceEntityType } from './resourcePolicy';
 
 const evidenceColumns = `id,type,file_name,file_size_bytes,mime_type,detected_mime_type,
-  sha256_hash,validation_status,review_status,linked_entity_type,linked_entity_id,claim_description,created_at`;
+  sha256_hash,validation_status,malware_scan_status,malware_scanner_engine,malware_scanned_at,
+  review_status,linked_entity_type,linked_entity_id,claim_description,created_at`;
 const intentLifetimeSeconds = 15 * 60;
 
 export type CreateEvidenceUploadIntent = {
@@ -51,12 +53,13 @@ async function cleanupAbandonedUploads(): Promise<void> {
   const stale = await query(
     `WITH stale AS (
        SELECT id FROM evidence_upload_intents
-       WHERE (status='pending' AND expires_at<=NOW()) OR (status='uploading' AND updated_at<NOW()-INTERVAL '30 minutes')
+       WHERE (status='pending' AND expires_at<=NOW()) OR (status IN ('uploading','scanning') AND updated_at<NOW()-INTERVAL '30 minutes')
        ORDER BY updated_at LIMIT 100 FOR UPDATE SKIP LOCKED
      )
      UPDATE evidence_upload_intents i
-       SET status=CASE WHEN status='pending' THEN 'expired' ELSE 'rejected' END,
-           rejection_reason=CASE WHEN status='uploading' THEN 'Upload processing did not complete' ELSE rejection_reason END,
+       SET status=CASE WHEN status='pending' THEN 'expired' ELSE 'scan_failed' END,
+           malware_scan_status=CASE WHEN status='pending' THEN malware_scan_status ELSE 'scan_failed' END,
+           rejection_reason=CASE WHEN status IN ('uploading','scanning') THEN 'Upload processing did not complete' ELSE rejection_reason END,
            updated_at=NOW()
      FROM stale WHERE i.id=stale.id RETURNING i.quarantine_object_key`,
   );
@@ -81,7 +84,7 @@ export async function createUploadIntent(actor: JwtPayload, rawInput: CreateEvid
     const usage = await client.query(
       `SELECT COALESCE((SELECT SUM(file_size_bytes) FROM evidence_items WHERE uploader_organization_id=$1),0)::bigint AS stored_bytes,
         COALESCE((SELECT SUM(declared_size_bytes) FROM evidence_upload_intents
-          WHERE uploader_organization_id=$1 AND status IN ('pending','uploading') AND expires_at>NOW()),0)::bigint AS reserved_bytes`,
+          WHERE uploader_organization_id=$1 AND status IN ('pending','uploading','scanning') AND expires_at>NOW()),0)::bigint AS reserved_bytes`,
       [actor.organizationId],
     );
     const projected = Number(usage.rows[0].stored_bytes) + Number(usage.rows[0].reserved_bytes) + input.fileSizeBytes;
@@ -105,7 +108,7 @@ export async function createUploadIntent(actor: JwtPayload, rawInput: CreateEvid
 }
 
 async function rejectIntent(id: string, reason: string): Promise<void> {
-  await query(`UPDATE evidence_upload_intents SET status='rejected',rejection_reason=$2,updated_at=NOW() WHERE id=$1 AND status IN ('pending','uploading')`, [id, reason]);
+  await query(`UPDATE evidence_upload_intents SET status='rejected',rejection_reason=$2,updated_at=NOW() WHERE id=$1 AND status IN ('pending','uploading','scanning')`, [id, reason]);
 }
 
 export async function completeUploadIntent(intentId: string, expires: number, signature: string, content: Buffer, requestMimeType?: string) {
@@ -132,6 +135,34 @@ export async function completeUploadIntent(intentId: string, expires: number, si
   const storage = evidenceStorage(); let finalObjectKey: string | undefined;
   try {
     await storage.put(intent.quarantine_object_key, content, intent.claimed_mime_type);
+    await query(`UPDATE evidence_upload_intents SET status='scanning',malware_scan_status='scanning',updated_at=NOW() WHERE id=$1 AND status='uploading'`, [intentId]);
+    let scanResult;
+    try {
+      scanResult = await evidenceMalwareScanner().scan(content);
+    } catch (error) {
+      await query(
+        `UPDATE evidence_upload_intents SET status='scan_failed',malware_scan_status='scan_failed',
+          rejection_reason=$2,malware_scanned_at=NOW(),updated_at=NOW() WHERE id=$1 AND status='scanning'`,
+        [intentId, error instanceof Error ? error.message : 'Malware scanner failed'],
+      );
+      await audit.record({ actorUserId: intent.uploader_user_id, actorOrganizationId: intent.uploader_organization_id, action: 'evidence.scan.failed', entityType: 'evidence_upload_intent', entityId: intentId });
+      throw new AppError('Evidence malware scanning is temporarily unavailable; upload the file again later', 503, 'EVIDENCE_SCAN_UNAVAILABLE');
+    }
+    if (scanResult.status === 'infected') {
+      await query(
+        `UPDATE evidence_upload_intents SET status='infected',malware_scan_status='infected',malware_signature=$2,
+          malware_scanner_engine=$3,malware_scanned_at=NOW(),rejection_reason='Malware detected',updated_at=NOW()
+         WHERE id=$1 AND status='scanning'`,
+        [intentId, scanResult.signature, scanResult.engine],
+      );
+      await audit.record({ actorUserId: intent.uploader_user_id, actorOrganizationId: intent.uploader_organization_id, action: 'evidence.scan.infected', entityType: 'evidence_upload_intent', entityId: intentId });
+      throw new AppError('The uploaded file was rejected by malware scanning', 422, 'MALWARE_DETECTED');
+    }
+    await query(
+      `UPDATE evidence_upload_intents SET malware_scan_status='clean',malware_scanner_engine=$2,
+        malware_scanned_at=NOW(),updated_at=NOW() WHERE id=$1 AND status='scanning'`,
+      [intentId, scanResult.engine],
+    );
     const detected = validateEvidenceContent(content, intent.claimed_mime_type as AllowedEvidenceMime);
     finalObjectKey = `evidence/${config.environment}/${crypto.randomUUID()}`;
     await storage.move(intent.quarantine_object_key, finalObjectKey, detected);
@@ -142,13 +173,15 @@ export async function completeUploadIntent(intentId: string, expires: number, si
       const inserted = await client.query(
         `INSERT INTO evidence_items
           (uploader_user_id,uploader_organization_id,type,file_name,file_size_bytes,mime_type,detected_mime_type,
-           sha256_hash,storage_key,storage_provider,validation_status,review_status,linked_entity_type,linked_entity_id,claim_description)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'validated','submitted',$11,$12,$13) RETURNING ${evidenceColumns}`,
+           sha256_hash,storage_key,storage_provider,validation_status,malware_scan_status,malware_scanner_engine,
+           malware_scanned_at,review_status,linked_entity_type,linked_entity_id,claim_description)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'validated','clean',$11,NOW(),'submitted',$12,$13,$14) RETURNING ${evidenceColumns}`,
         [intent.uploader_user_id, intent.uploader_organization_id, intent.evidence_type, intent.original_file_name,
-          content.length, detected, detected, hash, finalObjectKey, storage.provider, intent.linked_entity_type, intent.linked_entity_id, intent.claim_description],
+          content.length, detected, detected, hash, finalObjectKey, storage.provider, scanResult.engine,
+          intent.linked_entity_type, intent.linked_entity_id, intent.claim_description],
       );
       evidence = inserted.rows[0];
-      await client.query(`UPDATE evidence_upload_intents SET status='completed',evidence_item_id=$2,updated_at=NOW() WHERE id=$1 AND status='uploading'`, [intentId, evidence.id]);
+      await client.query(`UPDATE evidence_upload_intents SET status='completed',evidence_item_id=$2,updated_at=NOW() WHERE id=$1 AND status='scanning' AND malware_scan_status='clean'`, [intentId, evidence.id]);
       await client.query('COMMIT');
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
     await audit.record({ actorUserId: intent.uploader_user_id, actorOrganizationId: intent.uploader_organization_id, action: 'evidence.upload.complete', entityType: 'evidence_item', entityId: evidence.id, newStateHash: hash });
