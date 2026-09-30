@@ -19,25 +19,6 @@ services:
       timeout: 5s
       retries: 10
 
-  minio:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
-    container_name: cocoatrace-evidence
-    restart: unless-stopped
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-cocoatrace_demo_access}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-cocoatrace_demo_secret_change_me}
-    ports:
-      - "19000:9000"
-      - "19001:9001"
-    volumes:
-      - cocoatrace_evidence:/data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
   api:
     build:
       context: .
@@ -57,14 +38,11 @@ services:
       COOKIE_SECURE: "false"
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-}
-      EVIDENCE_STORAGE_DRIVER: s3
-      EVIDENCE_STORAGE_ENDPOINT: http://minio:9000
-      EVIDENCE_STORAGE_REGION: us-east-1
-      EVIDENCE_STORAGE_BUCKET: cocoatrace-demo-evidence
-      EVIDENCE_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-cocoatrace_demo_access}
-      EVIDENCE_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-cocoatrace_demo_secret_change_me}
-      EVIDENCE_STORAGE_AUTO_CREATE_BUCKET: "true"
+      EVIDENCE_STORAGE_DRIVER: local
+      EVIDENCE_STORAGE_LOCAL_ROOT: /app/private-evidence
       EVIDENCE_UPLOAD_SIGNING_SECRET: ${EVIDENCE_UPLOAD_SIGNING_SECRET:-cocoatrace_demo_upload_signing_secret}
+    volumes:
+      - cocoatrace_evidence:/app/private-evidence
     healthcheck:
       test: ["CMD-SHELL", "node -e 'require(\"http\").get(\"http://localhost:3001/health/ready\",r=>process.exit(r.statusCode===200?0:1))'"]
       interval: 10s
@@ -73,8 +51,6 @@ services:
       start_period: 10s
     depends_on:
       postgres:
-        condition: service_healthy
-      minio:
         condition: service_healthy
 
   web:

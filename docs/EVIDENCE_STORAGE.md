@@ -6,7 +6,7 @@ Evidence objects are never publicly served. An authenticated, entity-authorized 
 
 Staging and production require an HTTPS S3-compatible endpoint, separate environment-named private buckets, AES-256 server-side encryption, independent credentials, and `EVIDENCE_STORAGE_AUTO_CREATE_BUCKET=false`. Enable bucket encryption, versioning, public-access blocking, lifecycle policies, and backups outside the application.
 
-Configuration is documented in `.env.example`. Demo Docker Compose uses MinIO. After migration 013 and storage startup, migrate existing local evidence with:
+Configuration is documented in `.env.example`. Demo Docker Compose uses a private persistent volume through the local adapter; the integration suite uses Moto to exercise the S3 adapter. After migration 013 and storage startup, migrate existing local evidence with:
 
 ```bash
 npm run evidence:migrate-legacy --workspace=api
