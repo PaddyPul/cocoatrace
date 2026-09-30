@@ -40,7 +40,8 @@ describe('migration integrity manifest', () => {
 
   it('accepts Git-managed CRLF materialization on Windows', () => {
     const migrationPath = path.join(fixtureRoot, 'api', 'src', 'migrations', '009_supplier_paths_and_real_sourcing.ts');
-    fs.writeFileSync(migrationPath, fs.readFileSync(migrationPath, 'utf8').replaceAll('\n', '\r\n'));
+    const canonicalLf = fs.readFileSync(migrationPath, 'utf8').replaceAll('\r\n', '\n');
+    fs.writeFileSync(migrationPath, canonicalLf.replaceAll('\n', '\r\n'));
     const result = runCheck();
     expect(result.status, result.stderr).toBe(0);
   });
