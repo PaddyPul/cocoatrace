@@ -20,6 +20,7 @@ COPY api/uploads/ ./api/uploads/
 COPY api/knexfile.ts ./api/
 COPY db/ ./db/
 COPY api/scripts/ ./api/scripts/
+RUN mkdir -p /app/private-evidence && chown appuser:appgroup /app/private-evidence
 
 USER appuser
 EXPOSE 3001
