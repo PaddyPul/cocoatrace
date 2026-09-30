@@ -1,10 +1,10 @@
 import bcrypt from 'bcryptjs';
-import fs from 'fs';
 import path from 'path';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import app from '../../src/app';
 import { pool, query } from '../../src/db';
+import { evidenceStorage } from '../../src/services/evidenceStorage';
 
 type Tenant = {
   email: string;
@@ -32,7 +32,7 @@ const tenantB: Tenant = {
 };
 
 let networkToken = '';
-const uploadedPaths: string[] = [];
+const uploadedKeys: string[] = [];
 
 async function createTenant(tenant: Tenant, name: string, organizationType: 'exporter' | 'importer'): Promise<void> {
   const organization = await query(
@@ -134,14 +134,14 @@ async function uploadEvidence(
   linkedEntityId: string,
   type = 'weighing_ticket',
 ) {
-  return request(app)
-    .post('/evidence')
+  const content = Buffer.from(`%PDF-1.7\nproof-${tenant.email}-${linkedEntityId}`);
+  const intent = await request(app)
+    .post('/evidence/upload-intents')
     .set('Authorization', `Bearer ${tenant.token}`)
-    .field('type', type)
-    .field('linkedEntityType', linkedEntityType)
-    .field('linkedEntityId', linkedEntityId)
-    .field('claimDescription', 'Integration authorization proof')
-    .attach('file', Buffer.from(`proof-${tenant.email}-${linkedEntityId}`), { filename: `${type}.pdf`, contentType: 'application/pdf' });
+    .send({ type, fileName: `${type}.pdf`, mimeType: 'application/pdf', fileSizeBytes: content.length,
+      linkedEntityType, linkedEntityId, claimDescription: 'Integration authorization proof' });
+  if (intent.status !== 201) return intent;
+  return request(app).put(intent.body.uploadUrl).set('Content-Type', 'application/pdf').send(content);
 }
 
 async function createFarm(tenant: Tenant, name: string): Promise<string> {
@@ -177,8 +177,9 @@ beforeAll(async () => {
   tenantA.contractEvidenceId = contractEvidenceA.body.id;
   tenantB.contractEvidenceId = contractEvidenceB.body.id;
 
-  const stored = await query('SELECT storage_path FROM evidence_items WHERE id=ANY($1::uuid[])', [[tenantA.evidenceId, tenantB.evidenceId, tenantA.contractEvidenceId, tenantB.contractEvidenceId]]);
-  uploadedPaths.push(...stored.rows.map((row) => row.storage_path));
+  const stored = await query('SELECT storage_key,storage_path FROM evidence_items WHERE id=ANY($1::uuid[])', [[tenantA.evidenceId, tenantB.evidenceId, tenantA.contractEvidenceId, tenantB.contractEvidenceId]]);
+  expect(stored.rows.every((row) => row.storage_path === null)).toBe(true);
+  uploadedKeys.push(...stored.rows.map((row) => row.storage_key));
 
   const networkOrg = await query(
     `INSERT INTO organizations (name,type,jurisdiction,verification_status)
@@ -201,7 +202,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await Promise.all(uploadedPaths.map((filePath) => fs.promises.unlink(filePath).catch(() => undefined)));
+  await Promise.all(uploadedKeys.map((key) => evidenceStorage().delete(key).catch(() => undefined)));
   await pool.end();
 });
 
@@ -424,8 +425,7 @@ describe('real PostgreSQL multi-tenant API boundary', () => {
 
   it('rejects evidence attachment and listing across every supported foreign resource family', async () => {
     const before = await query('SELECT COUNT(*)::int AS count FROM evidence_items');
-    const uploadsDirectory = path.dirname(uploadedPaths[0]);
-    const filesBefore = (await fs.promises.readdir(uploadsDirectory)).sort();
+    const intentsBefore = await query('SELECT COUNT(*)::int AS count FROM evidence_upload_intents');
     const foreignResources = [
       ['farm', tenantB.farmId],
       ['certificate', tenantB.certificateId],
@@ -443,13 +443,51 @@ describe('real PostgreSQL multi-tenant API boundary', () => {
       expect(upload.status).toBe(403);
     }
     const after = await query('SELECT COUNT(*)::int AS count FROM evidence_items');
+    const intentsAfter = await query('SELECT COUNT(*)::int AS count FROM evidence_upload_intents');
     expect(after.rows[0].count).toBe(before.rows[0].count);
-    expect((await fs.promises.readdir(uploadsDirectory)).sort()).toEqual(filesBefore);
+    expect(intentsAfter.rows[0].count).toBe(intentsBefore.rows[0].count);
   });
 
   it('does not expose a real stored object through an unauthenticated static route', async () => {
-    expect(uploadedPaths[0]).toBeTruthy();
-    const response = await request(app).get(`/uploads/${path.basename(uploadedPaths[0])}`);
+    expect(uploadedKeys[0]).toBeTruthy();
+    const response = await request(app).get(`/uploads/${path.basename(uploadedKeys[0])}`);
     expect(response.status).toBe(404);
+  });
+
+  it('rejects signature-spoofed evidence and leaves no evidence item', async () => {
+    const content = Buffer.from('this is not a PDF');
+    const intent = await request(app).post('/evidence/upload-intents').set('Authorization', `Bearer ${tenantA.token}`).send({
+      type: 'weighing_ticket', fileName: 'spoof.pdf', mimeType: 'application/pdf', fileSizeBytes: content.length,
+      linkedEntityType: 'batch', linkedEntityId: tenantA.batchId,
+    });
+    expect(intent.status).toBe(201);
+    const upload = await request(app).put(intent.body.uploadUrl).set('Content-Type', 'application/pdf').send(content);
+    expect(upload.status).toBe(400);
+    const stored = await query('SELECT status,evidence_item_id,quarantine_object_key FROM evidence_upload_intents WHERE id=$1', [intent.body.intentId]);
+    expect(stored.rows[0].status).toBe('rejected');
+    expect(stored.rows[0].evidence_item_id).toBeNull();
+    expect(await evidenceStorage().get(stored.rows[0].quarantine_object_key)).toBeNull();
+  });
+
+  it('rejects executable types, extension spoofing and oversized declarations', async () => {
+    const base = { type: 'other', fileSizeBytes: 10, linkedEntityType: 'batch', linkedEntityId: tenantA.batchId };
+    const executable = await request(app).post('/evidence/upload-intents').set('Authorization', `Bearer ${tenantA.token}`).send({ ...base, fileName: 'proof.exe', mimeType: 'application/x-msdownload' });
+    expect(executable.status).toBe(400);
+    const mismatch = await request(app).post('/evidence/upload-intents').set('Authorization', `Bearer ${tenantA.token}`).send({ ...base, fileName: 'proof.png', mimeType: 'application/pdf' });
+    expect(mismatch.status).toBe(400);
+    const oversized = await request(app).post('/evidence/upload-intents').set('Authorization', `Bearer ${tenantA.token}`).send({ ...base, fileName: 'proof.pdf', mimeType: 'application/pdf', fileSizeBytes: 513 });
+    expect(oversized.status).toBe(413);
+  });
+
+  it('reserves tenant quota across pending upload intents', async () => {
+    const create = (size: number) => request(app).post('/evidence/upload-intents').set('Authorization', `Bearer ${tenantA.token}`).send({
+      type: 'other', fileName: `quota-${size}.pdf`, mimeType: 'application/pdf', fileSizeBytes: size,
+      linkedEntityType: 'batch', linkedEntityId: tenantA.batchId,
+    });
+    const reserved = await create(500);
+    expect(reserved.status).toBe(201);
+    const exceeded = await create(100);
+    expect(exceeded.status).toBe(413);
+    expect(exceeded.body.code).toBe('EVIDENCE_QUOTA_EXCEEDED');
   });
 });

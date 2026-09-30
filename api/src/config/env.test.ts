@@ -8,6 +8,13 @@ const deployedBase = {
   PUBLIC_WEB_URL: 'https://app.cocoatrace.example',
   COOKIE_SECURE: 'true',
   APP_VERSION: 'abc1234',
+  EVIDENCE_STORAGE_DRIVER: 's3',
+  EVIDENCE_STORAGE_ENDPOINT: 'https://objects.example.com',
+  EVIDENCE_STORAGE_BUCKET: 'cocoatrace-staging-evidence',
+  EVIDENCE_STORAGE_ACCESS_KEY: 'staging-access-key',
+  EVIDENCE_STORAGE_SECRET_KEY: 'staging-secret-key',
+  EVIDENCE_STORAGE_SSE: 'AES256',
+  EVIDENCE_UPLOAD_SIGNING_SECRET: 'a-separate-upload-secret-with-32-characters',
 };
 
 describe('environment configuration', () => {
@@ -27,6 +34,15 @@ describe('environment configuration', () => {
   it('accepts a secure staging configuration', () => {
     const result = parseConfig({ ...deployedBase, APP_ENV: 'staging' });
     expect(result.isDeployed).toBe(true);
+  });
+
+  it('rejects deployed local evidence storage and insecure object storage', () => {
+    expect(() => parseConfig({ ...deployedBase, APP_ENV: 'staging', EVIDENCE_STORAGE_DRIVER: 'local' })).toThrow(/EVIDENCE_STORAGE_DRIVER/);
+    expect(() => parseConfig({ ...deployedBase, APP_ENV: 'staging', EVIDENCE_STORAGE_ENDPOINT: 'http://objects.example.com' })).toThrow(/EVIDENCE_STORAGE_ENDPOINT/);
+  });
+
+  it('requires environment-isolated evidence buckets', () => {
+    expect(() => parseConfig({ ...deployedBase, APP_ENV: 'production' })).toThrow(/EVIDENCE_STORAGE_BUCKET/);
   });
 
   it.each([

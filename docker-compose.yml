@@ -38,8 +38,13 @@ services:
       COOKIE_SECURE: "false"
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-}
+      EVIDENCE_STORAGE_DRIVER: local
+      EVIDENCE_STORAGE_LOCAL_ROOT: /app/private-evidence
+      EVIDENCE_UPLOAD_SIGNING_SECRET: ${EVIDENCE_UPLOAD_SIGNING_SECRET:-cocoatrace_demo_upload_signing_secret}
+    volumes:
+      - cocoatrace_evidence:/app/private-evidence
     healthcheck:
-      test: ["CMD-SHELL", "node -e 'require(\"http\").get(\"http://localhost:3001/health\",r=>process.exit(r.statusCode===200?0:1))'"]
+      test: ["CMD-SHELL", "node -e 'require(\"http\").get(\"http://localhost:3001/health/ready\",r=>process.exit(r.statusCode===200?0:1))'"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -72,3 +77,4 @@ services:
 
 volumes:
   cocoatrace_pgdata:
+  cocoatrace_evidence:
