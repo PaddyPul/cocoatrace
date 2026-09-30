@@ -8,6 +8,7 @@ import { AppError } from './errors';
 import { verifyBrowserOrigin } from './middleware/security';
 import { config } from './config/env';
 import { evidenceStorage } from './services/evidenceStorage';
+import { evidenceMalwareScanner } from './services/evidenceMalwareScanner';
 
 import authRoutes from './routes/auth';
 import orgRoutes from './routes/organizations';
@@ -50,10 +51,10 @@ app.get('/health', async (_req, res) => {
 app.get('/health/live', (_req, res) => res.json({ status: 'ok', version: config.appVersion, environment: config.environment }));
 app.get('/health/ready', async (_req, res) => {
   try {
-    await Promise.all([query('SELECT 1'), evidenceStorage().healthcheck()]);
-    res.json({ status: 'ready', database: 'connected', evidenceStorage: 'connected', aiNarrative: Boolean(config.openAiApiKey && config.openAiModel) });
+    await Promise.all([query('SELECT 1'), evidenceStorage().healthcheck(), evidenceMalwareScanner().healthcheck()]);
+    res.json({ status: 'ready', database: 'connected', evidenceStorage: 'connected', evidenceScanner: 'connected', aiNarrative: Boolean(config.openAiApiKey && config.openAiModel) });
   } catch {
-    res.status(503).json({ status: 'not_ready', dependency: 'database_or_evidence_storage' });
+    res.status(503).json({ status: 'not_ready', dependency: 'database_storage_or_evidence_scanner' });
   }
 });
 app.get('/health/ready', async (_req, res) => {

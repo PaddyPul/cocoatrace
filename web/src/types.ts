@@ -205,6 +205,9 @@ export interface Evidence {
   mime_type?: string;
   detected_mime_type?: string;
   validation_status?: string;
+  malware_scan_status?: 'legacy_unscanned' | 'clean' | 'infected' | 'scan_failed';
+  malware_scanner_engine?: string;
+  malware_scanned_at?: string;
   created_at: string;
 }
 
