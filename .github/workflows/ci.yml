@@ -5,6 +5,13 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-gate-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -17,26 +24,48 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test --workspace=api
+      - run: npm run typecheck --workspace=api
       - run: npm run build --workspace=api
       - run: npm run build --workspace=web
+      - name: Validate production configuration contract
+        run: |
+          npm run check:production
+          node -e "require('./api/dist/config/env.js')"
+        env:
+          APP_ENV: production
+          NODE_ENV: production
+          DEMO_MODE: "false"
+          DATABASE_URL: postgresql://ci_user:ci_password@database.invalid:5432/cocoatrace
+          JWT_SECRET: ci-only-production-validation-secret-32-characters
+          WEB_URL: https://web.ci.invalid
+          PUBLIC_WEB_URL: https://web.ci.invalid
+          COOKIE_SECURE: "true"
+          APP_VERSION: ${{ github.sha }}
+          EVIDENCE_STORAGE_DRIVER: s3
+          EVIDENCE_STORAGE_ENDPOINT: https://storage.ci.invalid
+          EVIDENCE_STORAGE_REGION: us-east-1
+          EVIDENCE_STORAGE_BUCKET: cocoatrace-production-ci
+          EVIDENCE_STORAGE_ACCESS_KEY: ci-only-access-key
+          EVIDENCE_STORAGE_SECRET_KEY: ci-only-secret-key
+          EVIDENCE_STORAGE_SSE: AES256
+          EVIDENCE_STORAGE_AUTO_CREATE_BUCKET: "false"
+          EVIDENCE_UPLOAD_SIGNING_SECRET: ci-only-upload-signing-secret-32-characters
+          EVIDENCE_SCANNER_DRIVER: clamav
+          EVIDENCE_SCANNER_HOST: scanner.ci.invalid
+
+  container-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build production API image
+        run: docker build --file api/Dockerfile --tag cocoatrace-api:ci .
+      - name: Build production web image
+        run: docker build --file web/Dockerfile --build-arg VITE_DEMO_MODE=false --tag cocoatrace-web:ci .
 
   postgres-integration:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: cocoatrace_test
-          POSTGRES_USER: cocoa_test
-          POSTGRES_PASSWORD: cocoa_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U cocoa_test -d cocoatrace_test"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 30
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -44,6 +73,5 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run test:integration --workspace=api
-        env:
-          TEST_DATABASE_URL: postgresql://cocoa_test:cocoa_test@127.0.0.1:5432/cocoatrace_test
+      - name: Test PostgreSQL, private S3 storage and ClamAV adapters
+        run: npm run test:integration:docker
