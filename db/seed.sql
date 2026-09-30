@@ -241,16 +241,6 @@ UPDATE shipments SET created_at='2026-09-12 08:00:00+00'
 UPDATE payment_requests SET created_at='2026-09-10 11:00:00+00'
   WHERE id='eeeeeeee-eeee-eeee-eeee-eeeeeeeee001';
 
--- Sample evidence
-INSERT INTO evidence_items (id, uploader_user_id, uploader_organization_id, type, file_name, sha256_hash, storage_path, review_status, linked_entity_type, linked_entity_id, claim_description) VALUES
-  ('ffffffff-ffff-ffff-ffff-fffffffffff1', '33333333-3333-3333-3333-333333333002', '11111111-1111-1111-1111-111111111003', 'certificate_pdf', 'OCG-2026-GH-0042.pdf', 'sha256:certready2026', 'evidence/2026/cert-ready.pdf', 'approved', 'batch', '77777777-7777-7777-7777-777777777001', 'Valid EU Organic certificate'),
-  ('ffffffff-ffff-ffff-ffff-fffffffffff2', '33333333-3333-3333-3333-333333333003', '11111111-1111-1111-1111-111111111004', 'weighing_ticket', 'AKC-WT-20260718.pdf', 'sha256:weightready2026', 'evidence/2026/weight-ready.pdf', 'approved', 'batch', '77777777-7777-7777-7777-777777777001', 'Warehouse intake and weighing ticket'),
-  ('ffffffff-ffff-ffff-ffff-fffffffffff3', '33333333-3333-3333-3333-333333333003', '11111111-1111-1111-1111-111111111004', 'transport_document', 'MCL-2026-0942.pdf', 'sha256:bol2026', 'evidence/2026/bol-0942.pdf', 'approved', 'contract', 'cccccccc-cccc-cccc-cccc-ccccccccc001', 'Transport document received from the external provider')
-ON CONFLICT (id) DO UPDATE SET file_name=EXCLUDED.file_name,sha256_hash=EXCLUDED.sha256_hash,
-  storage_path=EXCLUDED.storage_path,review_status=EXCLUDED.review_status,
-  linked_entity_type=EXCLUDED.linked_entity_type,linked_entity_id=EXCLUDED.linked_entity_id,
-  claim_description=EXCLUDED.claim_description;
-
 -- Audit events
 DELETE FROM audit_events WHERE entity_id IN (
   '77777777-7777-7777-7777-777777777001','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaa001',
