@@ -20,6 +20,11 @@ After migration 014, scan every pre-existing evidence record before downloads ar
 npm run evidence:scan-pending --workspace=api
 ```
 
+The command exits unsuccessfully when a database record points to missing
+object bytes. Treat that as an integrity error to reconcile; do not mark the
+record clean or bypass download protection. Migration 015 removes three known
+legacy demo placeholders that never had stored objects.
+
 Staging and production must set `EVIDENCE_SCANNER_DRIVER=clamav` plus the private scanner host, port, timeout and retry values. Application readiness includes a scanner PING, so a deployment does not become ready while the scanner is unavailable. Demo Compose pins the official ClamAV 1.5.4 image and persists its signature database.
 
 ## Operational work still required
