@@ -20,7 +20,7 @@ services:
       retries: 10
 
   minio:
-    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: cocoatrace-evidence
     restart: unless-stopped
     command: server /data --console-address ":9001"
