@@ -135,7 +135,6 @@ export async function completeUploadIntent(intentId: string, expires: number, si
   const storage = evidenceStorage(); let finalObjectKey: string | undefined;
   try {
     await storage.put(intent.quarantine_object_key, content, intent.claimed_mime_type);
-    const detected = validateEvidenceContent(content, intent.claimed_mime_type as AllowedEvidenceMime);
     await query(`UPDATE evidence_upload_intents SET status='scanning',malware_scan_status='scanning',updated_at=NOW() WHERE id=$1 AND status='uploading'`, [intentId]);
     let scanResult;
     try {
@@ -164,6 +163,7 @@ export async function completeUploadIntent(intentId: string, expires: number, si
         malware_scanned_at=NOW(),updated_at=NOW() WHERE id=$1 AND status='scanning'`,
       [intentId, scanResult.engine],
     );
+    const detected = validateEvidenceContent(content, intent.claimed_mime_type as AllowedEvidenceMime);
     finalObjectKey = `evidence/${config.environment}/${crypto.randomUUID()}`;
     await storage.move(intent.quarantine_object_key, finalObjectKey, detected);
     const hash = `sha256:${crypto.createHash('sha256').update(content).digest('hex')}`;

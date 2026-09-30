@@ -2,7 +2,7 @@
 
 Status: private storage and malware-scanning foundation implemented. Staging infrastructure and operational alerting remain required before a customer pilot.
 
-Evidence objects are never publicly served. An authenticated, entity-authorized upload intent reserves organization quota and returns a 15-minute HMAC-signed API URL. Bytes enter an environment-specific quarantine key. PDF/JPEG/PNG signatures must agree with the declared MIME type and filename extension, then the malware scanner must return clean before promotion. Infected and scan-failed uploads are deleted, audited and never receive an evidence record. Downloads require a persisted clean result in addition to the existing tenant and contract-release authorization rules.
+Evidence objects are never publicly served. An authenticated, entity-authorized upload intent reserves organization quota and returns a 15-minute HMAC-signed API URL. Bytes enter an environment-specific quarantine key. Raw bytes are malware-scanned before parsing, then PDF/JPEG/PNG signatures must agree with the declared MIME type and filename extension before promotion. Infected and scan-failed uploads are deleted, audited and never receive an evidence record. Downloads require a persisted clean result in addition to the existing tenant and contract-release authorization rules.
 
 Staging and production require an HTTPS S3-compatible endpoint, separate environment-named private buckets, AES-256 server-side encryption, independent credentials, and `EVIDENCE_STORAGE_AUTO_CREATE_BUCKET=false`. Enable bucket encryption, versioning, public-access blocking, lifecycle policies, and backups outside the application.
 
