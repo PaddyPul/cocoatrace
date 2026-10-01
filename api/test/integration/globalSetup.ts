@@ -69,6 +69,7 @@ export async function setup(): Promise<void> {
   const migrationSource: Knex.MigrationSource<{ name: string; up: Knex.Migration['up']; down?: Knex.Migration['down'] }> = {
     getMigrations: async () => migrationModules,
     getMigrationName: (migration) => migration.name,
+    getMigration: async (migration) => migration,
   };
   const [, appliedForwardMigrations] = await database.migrate.latest({ migrationSource });
   const expectedForward = [...migrationPlan.forward].sort();
