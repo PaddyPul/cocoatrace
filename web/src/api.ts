@@ -55,7 +55,7 @@ export const auth = {
     legalRegistrationNumber?: string;
     adminName: string;
     adminEmail: string;
-  }) => api<{ application: AccessApplication; verificationUrl?: string }>('POST', '/auth/request-access', data),
+  }) => api<{ application: AccessApplication; emailDelivery: 'sent' | 'suppressed' | 'failed'; verificationUrl?: string }>('POST', '/auth/request-access', data),
   verifyAccessRequest: (verificationToken: string) =>
     api<{ id: string; status: 'pending_review'; emailVerifiedAt: string }>('POST', '/auth/request-access/verify', { token: verificationToken }),
   forgotPassword: (email: string) =>
@@ -92,7 +92,7 @@ export const accessApplications = {
   list: () => api<AccessApplication[]>('GET', '/access-applications'),
   get: (id: string) => api<AccessApplication>('GET', `/access-applications/${id}`),
   approve: (id: string, reason?: string) =>
-    api<{ application: AccessApplication; organizationId: string; invitationId: string; invitationExpiresAt: string; inviteUrl?: string }>('POST', `/access-applications/${id}/approve`, reason ? { reason } : {}),
+    api<{ application: AccessApplication; organizationId: string; invitationId: string; invitationExpiresAt: string; emailDelivery: 'sent' | 'suppressed' | 'failed'; inviteUrl?: string }>('POST', `/access-applications/${id}/approve`, reason ? { reason } : {}),
   reject: (id: string, reason?: string) =>
     api<AccessApplication>('POST', `/access-applications/${id}/reject`, reason ? { reason } : {}),
 };

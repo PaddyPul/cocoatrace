@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import logger from '../../logger';
 import { AppError, ConflictError } from '../../errors';
 import { requirePlatformAccessReviewer } from './policy';
 import { OrganizationAccessRepository } from './repository';
@@ -31,6 +32,7 @@ export class OrganizationAccessService {
   async requestAccess(input: RequestOrganizationAccess): Promise<{
     application: OrganizationAccessApplication;
     verificationUrl?: string;
+    emailDelivery: 'sent' | 'suppressed' | 'failed';
   }> {
     const token = createToken();
     const verificationExpiresAt = new Date(Date.now() + verificationLifetimeMs);
@@ -40,20 +42,23 @@ export class OrganizationAccessService {
       verificationExpiresAt,
     });
     const verificationUrl = `${this.publicWebUrl}/verify-access?token=${encodeURIComponent(token)}`;
+    let emailDelivery: 'sent' | 'suppressed' | 'failed';
     try {
-      await this.email.sendAccessVerification({
+      const delivery = await this.email.sendAccessVerification({
         recipientEmail: input.adminEmail,
         recipientName: input.adminName,
         organizationName: input.organizationName,
         verificationUrl,
         expiresAt: verificationExpiresAt,
       });
-    } catch (error) {
-      await this.repository.removeUnverified(application.id);
-      throw error;
+      emailDelivery = delivery.status;
+    } catch {
+      logger.error({ applicationId: application.id }, 'Verification email submission failed; application retained for retry');
+      emailDelivery = 'failed';
     }
     return {
       application,
+      emailDelivery,
       ...(this.exposeRawLinks ? { verificationUrl } : {}),
     };
   }
@@ -87,8 +92,15 @@ export class OrganizationAccessService {
       invitationExpiresAt: new Date(Date.now() + invitationLifetimeMs),
     });
     const inviteUrl = `${this.publicWebUrl}/accept-invite/${encodeURIComponent(invitationToken)}`;
+    const delivery = await this.email.sendFirstAdminInvitation({
+      invitationId: result.invitationId, token: invitationToken,
+      recipientEmail: result.application.adminEmail,
+      recipientName: result.application.adminName,
+      organizationName: result.application.organizationName, invitationUrl: inviteUrl,
+    });
     return {
       ...result,
+      emailDelivery: delivery.status,
       ...(this.exposeRawLinks ? { inviteUrl } : {}),
     };
   }

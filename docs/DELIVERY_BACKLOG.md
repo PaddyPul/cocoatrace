@@ -3,7 +3,7 @@
 **Purpose:** Single source of truth for work required to move CocoaTrace from a passion project to an investor-ready, pilot-safe and production-capable company.  
 **North Star:** [`NORTH_STAR.md`](./NORTH_STAR.md)  
 **Architecture direction:** [`ARCHITECTURE_MODERNIZATION.md`](./ARCHITECTURE_MODERNIZATION.md)  
-**Last triaged:** 2026-09-30
+**Last triaged:** 2026-10-01
 **Next formal review:** Weekly, before selecting new work
 
 ## How to use this file
@@ -133,7 +133,8 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **IDN-005 · P1 · Phase 1:** Manually approve the first pilot organizations and record reviewer/time/reason.
 - [ ] **IDN-006 · P1 · Phase 1:** Create the first organization administrator only after organization approval.
 - [ ] **IDN-007 · P1 · Phase 1:** Keep additional users invitation-only during the pilot.
-- [ ] **IDN-008 · P1 · Phase 1:** Send invitation emails; add resend, revoke and expiry controls.
+- [-] **IDN-008 · P1 · Phase 1:** Send invitation emails; add resend, revoke and expiry controls.
+  - Repository implementation now sends first-admin approval invitations, records invitation submission outcomes, hides bearer links outside demo/test, rotates verification/resend links, and prevents resend from reviving revocation. Local capture inbox and regression tests added. Windows PostgreSQL tests and staging inbox verification remain release gates. Local UI testing previously confirmed delivery was suppressed by the development adapter. Before pilot release, configure SMTP separately for staging/production, and verify recipient inbox delivery for email verification, first-admin invitation, team invitation/resend and password reset. Exercise delivery failure and safe retry; never report an email as sent when suppressed. See `docs/runbooks/IDENTITY_EMAIL_DELIVERY.md`.
 - [ ] **IDN-009 · P0 · Phase 1:** Implement password reset with single-use hashed tokens, uniform responses and rate limits.
 - [ ] **IDN-010 · P1 · Phase 1:** Implement password change and revoke other sessions after sensitive account changes.
 - [ ] **IDN-011 · P1 · Phase 1:** Implement user suspension/deactivation and immediate session revocation.
@@ -146,6 +147,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **IDN-018 · P2 · Phase 2:** Add recovery procedures for lost MFA and locked accounts.
 - [ ] **IDN-019 · P2 · Phase 3:** Add periodic privileged-access review and stale-account reporting.
 - [ ] **IDN-020 · P3 · Phase 4:** Evaluate enterprise SSO only after customer demand is validated.
+- [-] **IDN-021 · P1 · Phase 1:** Complete identity email delivery setup and end-to-end inbox verification. Done when verification, approval invitation, team invitation/resend and password reset arrive in the intended inbox in staging, expired/revoked/reused links are rejected, and delivery failures can be retried without creating duplicate organizations or accounts. Local demo links alone do not close this item.
 
 # 5. Authorization and application security
 

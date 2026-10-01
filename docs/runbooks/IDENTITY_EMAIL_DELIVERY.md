@@ -91,3 +91,49 @@ the focused helpers from `api/src/services/emailSender.ts`:
 The helper must be called only after the corresponding hashed, expiring token is
 persisted. Callers must not log or return the raw token outside explicit demo or
 test behavior.
+
+
+## Implemented submission and retry behavior (2026-10-01)
+
+- Approval commits the organization/invitation before submitting the email. Failed
+  submission does not undo approval; on the Approved applications tab, use
+  **Resend admin invitation** to rotate that invitation, without reapproving.
+- Invitation creation and resend return `emailDelivery`: `sent`, `suppressed`,
+  or `failed`. `sent` means relay acceptance, never proof of inbox delivery.
+  Persistent `email_delivery_status` records the last submission outcome;
+  historical rows start `unknown`. Resend resets it to `pending`.
+- Team creation serializes requests for the same address and rejects duplicates.
+  Failed submission leaves one invitation visible for manual retry.
+- Verification failure leaves the application pending. Resubmit the same details
+  to rotate its token on the same application. Pending-review applications cannot
+  be replaced. Concurrent retries can invalidate the earlier email; use the newest.
+- Resend rotates the token and extends expiry. It can renew an expired invitation,
+  but cannot resurrect a revoked or accepted one. A slow send cannot overwrite
+  a newer token's delivery outcome.
+- Reset submission stays non-enumerating. Internal security events distinguish
+  sent, suppressed and failed submission. Request another reset after provider
+  recovery; old reset tokens are invalidated.
+- No token-bearing email bodies are persisted. There is no automatic background
+  retry worker in this slice. ARC-014 remains the durable outbox follow-up.
+
+## Local inbox test
+
+Use `docker-compose.email-test.yml` alongside the base compose file. It enables
+SMTP only for the existing local demo API and disables the demo login UI.
+The Mailpit inbox is bound to `127.0.0.1:8025`; its SMTP port is not published.
+It captures email locally and **does not deliver to Gmail or other real inboxes**.
+No application data volumes are reset. Do not use this override for deployment.
+Mailpit test authentication flags follow its official SMTP documentation:
+https://mailpit.axllent.org/docs/configuration/smtp/.
+
+See `docs/releases/IDENTITY_EMAIL_DELIVERY_WINDOWS.md` for the complete Windows
+application, testing, push, merge and pull workflow.
+
+## External gates still open
+
+A provider and domain are not provisioned by a bundle. Before calling IDN-021
+complete, record staging SMTP credentials in the secret manager, validate the
+sender domain, use HTTPS/PUBLIC_WEB_URL for staging, and demonstrate inbox arrival
+for every identity email using owned addresses. Record bounced/rejected cases
+and operational alerts. Provider webhooks and the durable outbox are follow-up
+work; do not equate a local capture test with production email readiness.

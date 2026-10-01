@@ -65,13 +65,17 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
   const delivery = await requestPasswordReset(req.body.email);
   if (delivery) {
     try {
-      await sendPasswordResetEmail({
+      const result = await sendPasswordResetEmail({
         to: delivery.email,
         recipientName: delivery.name,
         resetUrl: `${config.publicWebUrl}/reset-password/${encodeURIComponent(delivery.token)}`,
       });
-    } catch (error) {
-      logger.error({ err: error, userId: delivery.userId }, 'Password reset email delivery failed');
+      await recordSecurityEvent({
+        eventType: `password.reset.delivery_${result.status}`, success: result.status === 'sent',
+        actorUserId: delivery.userId, actorOrganizationId: delivery.organizationId,
+      });
+    } catch {
+      logger.error({ userId: delivery.userId }, 'Password reset email delivery failed');
       await recordSecurityEvent({
         eventType: 'password.reset.delivery_failed', success: false,
         actorUserId: delivery.userId, actorOrganizationId: delivery.organizationId,
@@ -79,7 +83,7 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
       });
     }
   }
-  res.status(202).json({ message: 'If an account exists, password reset instructions will be sent.' });
+  res.status(202).json({ message: 'If an active account exists and email submission succeeds, you will receive password reset instructions.' });
 }
 
 export async function completePasswordReset(req: Request, res: Response): Promise<void> {

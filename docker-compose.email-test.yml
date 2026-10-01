@@ -1,0 +1,30 @@
+# Local capture inbox only. Never deploy this override to staging/production.
+services:
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+  api:
+    environment:
+      IDENTITY_EMAIL_ENABLED: "true"
+      EMAIL_DRIVER: smtp
+      EMAIL_FROM: identity@cocoatrace.test
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_USER: local-test
+      SMTP_PASSWORD: local-test
+      SMTP_SECURE: "false"
+      SMTP_REQUIRE_TLS: "false"
+      SMTP_TLS_REJECT_UNAUTHORIZED: "true"
+      PUBLIC_WEB_URL: http://localhost:3000
+    depends_on:
+      mailpit:
+        condition: service_started
+  web:
+    build:
+      args:
+        VITE_DEMO_MODE: "false"

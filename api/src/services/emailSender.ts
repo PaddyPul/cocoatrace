@@ -280,7 +280,7 @@ export class SmtpEmailSender implements EmailSender {
 let sender: EmailSender | undefined;
 
 export function emailSender(): EmailSender {
-  sender ||= config.emailDriver === 'smtp' ? new SmtpEmailSender() : new DevelopmentEmailSender();
+  sender ||= config.identityEmailEnabled && config.emailDriver === 'smtp' ? new SmtpEmailSender() : new DevelopmentEmailSender();
   return sender;
 }
 
