@@ -43,3 +43,5 @@ Do not deploy `docker-compose.yml`. Supply environment-scoped secrets and infras
 Invalid deployed configuration terminates startup before the server accepts traffic. Production additionally rejects demo mode. Seed and demo-reset scripts reject staging and production.
 
 Databases, object-storage buckets, secrets and service identities must be separate for demo, staging and production. Completing that infrastructure is tracked by `ENV-004` and is not implied by this configuration layer.
+
+The evidence-dependency incident and immutable-image rollback sequence is documented in [`runbooks/EVIDENCE_SCANNER_AND_DEPLOYMENT_ROLLBACK.md`](runbooks/EVIDENCE_SCANNER_AND_DEPLOYMENT_ROLLBACK.md). It must be adapted to the selected hosting provider and exercised in staging before it counts as an operational control.

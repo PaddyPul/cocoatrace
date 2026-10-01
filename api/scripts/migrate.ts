@@ -1,8 +1,11 @@
 import knex from 'knex';
 import config from '../knexfile';
 import { config as appConfig } from '../src/config/env';
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
 
 async function migrate(): Promise<void> {
+  execFileSync(process.execPath, [path.join(__dirname, 'check-migration-integrity.mjs')], { stdio: 'inherit' });
   const environment = appConfig.isProduction ? 'production' : 'development';
   const db = knex(config[environment]);
 

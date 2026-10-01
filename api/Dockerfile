@@ -15,9 +15,11 @@ RUN npm ci --workspace=api --include-workspace-root --ignore-scripts \
 COPY api/src/ ./api/src/
 RUN npm run build --workspace=api && rm -f api/dist/migrations/*.d.ts
 
-# Copy runtime assets, knexfile, db scripts, and migration/seed scripts
-COPY api/uploads/ ./api/uploads/
+# Copy runtime configuration, database assets and migration scripts. Evidence
+# objects are stored through the configured private storage adapter; the old
+# ignored api/uploads directory is not a production image dependency.
 COPY api/knexfile.ts ./api/
+COPY api/migrations.manifest.json ./api/
 COPY db/ ./db/
 COPY api/scripts/ ./api/scripts/
 RUN mkdir -p /app/private-evidence && chown appuser:appgroup /app/private-evidence
@@ -26,5 +28,7 @@ USER appuser
 EXPOSE 3001
 ENV NODE_ENV=production
 
-# Apply schema changes on start. Demo data is loaded only by an explicit demo command.
-CMD npx tsx api/scripts/migrate.ts && node api/dist/server.js
+# Apply schema changes on start. Demo data is loaded only by an explicit demo
+# command. exec makes the API process PID 1 after migration so Docker SIGTERM
+# reaches the graceful-shutdown handlers.
+CMD ["sh", "-c", "npx tsx api/scripts/migrate.ts && exec node api/dist/server.js"]

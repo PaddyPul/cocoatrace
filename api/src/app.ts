@@ -9,6 +9,7 @@ import { verifyBrowserOrigin } from './middleware/security';
 import { config } from './config/env';
 import { evidenceStorage } from './services/evidenceStorage';
 import { evidenceMalwareScanner } from './services/evidenceMalwareScanner';
+import { assignRequestId, requestLogContext } from './requestContext';
 
 import authRoutes from './routes/auth';
 import orgRoutes from './routes/organizations';
@@ -32,7 +33,11 @@ import sourcingRoutes from './routes/sourcing';
 
 const app = express();
 
-app.use(pinoHttp({ logger }));
+app.use(pinoHttp({
+  logger,
+  genReqId: assignRequestId,
+  customProps: (req) => requestLogContext(req),
+}));
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: config.webUrl, credentials: true }));
 app.use(express.json());
@@ -57,15 +62,6 @@ app.get('/health/ready', async (_req, res) => {
     res.status(503).json({ status: 'not_ready', dependency: 'database_storage_or_evidence_scanner' });
   }
 });
-app.get('/health/ready', async (_req, res) => {
-  try {
-    await query('SELECT 1');
-    res.json({ status: 'ready', database: 'connected', aiNarrative: Boolean(config.openAiApiKey && config.openAiModel) });
-  } catch {
-    res.status(503).json({ status: 'not_ready', database: 'disconnected' });
-  }
-});
-
 app.use(authRoutes);
 app.use(orgRoutes);
 app.use(farmRoutes);
