@@ -1,3 +1,4 @@
+import type { EmailDeliveryResult } from '../../services/emailSender';
 import { JwtPayload } from '../../middleware/auth';
 
 export type OrganizationAccessType = 'buyer' | 'supplier';
@@ -48,5 +49,9 @@ export type AccessVerificationMessage = {
  * because it contains a bearer verification credential.
  */
 export interface OrganizationAccessEmailPort {
-  sendAccessVerification(message: AccessVerificationMessage): Promise<void>;
+  sendAccessVerification(message: AccessVerificationMessage): Promise<EmailDeliveryResult>;
+  sendFirstAdminInvitation(input: {
+    invitationId: string; token: string; recipientEmail: string;
+    recipientName: string; organizationName: string; invitationUrl: string;
+  }): Promise<{ status: 'sent' | 'suppressed' | 'failed' }>;
 }

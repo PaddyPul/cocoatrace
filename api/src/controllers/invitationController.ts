@@ -4,7 +4,9 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { getClient, query } from '../db';
 import * as audit from '../services/audit';
-import { sendInvitationEmail } from '../services/emailSender';
+import { createPendingInvitation } from '../services/invitationIssuance';
+import { deliverInvitation } from '../services/invitationDelivery';
+const exposeRawLinks = config.environment === 'demo' || config.environment === 'test';
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
@@ -20,20 +22,19 @@ export async function createInvitation(req: Request, res: Response): Promise<voi
   if (existing.rows[0]) { res.status(409).json({ error: 'A user with this email already exists' }); return; }
 
   const token = crypto.randomBytes(32).toString('base64url');
-  const result = await query(
-    `INSERT INTO user_invitations (organization_id,email,role_id,token_hash,invited_by_user_id,expires_at)
-     VALUES ($1,$2,$3,$4,$5,NOW()+INTERVAL '7 days') RETURNING id,email,expires_at,created_at`,
-    [organizationId, req.body.email, role.id, hashToken(token), req.user!.id]
-  );
+  const invitation = await createPendingInvitation({
+    organizationId, email: req.body.email, roleId: role.id,
+    tokenHash: hashToken(token), actorId: req.user!.id,
+  });
   const inviteUrl = `${config.publicWebUrl}/accept-invite/${token}`;
-  await sendInvitationEmail({ to: req.body.email, invitationUrl: inviteUrl, organizationName: org.name });
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'member.invite', entityType: 'user_invitation', entityId: result.rows[0].id, metadata: { invitedOrganizationId: organizationId, role: role.name } });
-  res.status(201).json({ ...result.rows[0], organizationName: org.name, role: role.name, inviteUrl });
+  const delivery = await deliverInvitation({ id: invitation.id, token, to: req.body.email, invitationUrl: inviteUrl, organizationName: org.name });
+  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'member.invite', entityType: 'user_invitation', entityId: invitation.id, metadata: { invitedOrganizationId: organizationId, role: role.name } });
+  res.status(201).json({ ...invitation, organizationName: org.name, role: role.name, emailDelivery: delivery.status, ...(exposeRawLinks ? { inviteUrl } : {}) });
 }
 
 export async function listInvitations(req: Request, res: Response): Promise<void> {
   const rows = await query(
-    `SELECT i.id,i.email,i.expires_at,i.accepted_at,i.revoked_at,i.created_at,o.name AS organization_name,r.name AS role
+    `SELECT i.id,i.email,i.expires_at,i.accepted_at,i.revoked_at,i.created_at,i.email_delivery_status,i.email_attempted_at,o.name AS organization_name,r.name AS role
      FROM user_invitations i JOIN organizations o ON o.id=i.organization_id JOIN roles r ON r.id=i.role_id
      WHERE ($1::boolean OR i.organization_id=$2) ORDER BY i.created_at DESC LIMIT 100`,
     [(req.user!.permissions || []).includes('*'), req.user!.organizationId]
@@ -100,9 +101,9 @@ export async function resendInvitation(req: Request, res: Response): Promise<voi
   const token = crypto.randomBytes(32).toString('base64url');
   const result = await query(
     `UPDATE user_invitations i
-        SET token_hash=$1, expires_at=NOW()+INTERVAL '7 days', revoked_at=NULL
+        SET token_hash=$1, expires_at=NOW()+INTERVAL '7 days', email_delivery_status='pending'
       WHERE i.id=$2
-        AND i.accepted_at IS NULL
+        AND i.accepted_at IS NULL AND i.revoked_at IS NULL
         AND ($3::boolean OR i.organization_id=$4)
       RETURNING i.id,i.email,i.expires_at,i.organization_id,
         (SELECT o.name FROM organizations o WHERE o.id=i.organization_id) AS organization_name`,
@@ -110,11 +111,11 @@ export async function resendInvitation(req: Request, res: Response): Promise<voi
   );
   const invitation = result.rows[0];
   if (!invitation) { res.status(404).json({ error: 'Invitation not found' }); return; }
-  await sendInvitationEmail({
-    to: invitation.email,
+  const delivery = await deliverInvitation({
+    id: invitation.id, token, to: invitation.email,
     invitationUrl: `${config.publicWebUrl}/accept-invite/${token}`,
     organizationName: invitation.organization_name,
   });
   await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'member.invitation_resent', entityType: 'user_invitation', entityId: invitation.id });
-  res.json({ id: invitation.id, email: invitation.email, expires_at: invitation.expires_at, invitationUrl: `${config.publicWebUrl}/accept-invite/${token}` });
+  res.json({ id: invitation.id, email: invitation.email, expires_at: invitation.expires_at, emailDelivery: delivery.status, ...(exposeRawLinks ? { inviteUrl: `${config.publicWebUrl}/accept-invite/${token}` } : {}) });
 }

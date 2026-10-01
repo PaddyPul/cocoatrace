@@ -29,7 +29,7 @@ export const changePasswordSchema = z.object({
 export const createInvitationSchema = z.object({
   email: z.string().email().transform(v => v.toLowerCase()),
   organizationId: z.string().uuid().optional(),
-  role: z.enum(['farmer', 'certifier', 'exporter', 'importer', 'logistics', 'regulator', 'admin']).optional(),
+  role: z.enum(['farmer', 'certifier', 'exporter', 'importer', 'logistics', 'regulator', 'admin', 'buyer_admin', 'supplier_admin']).optional(),
 });
 
 export const acceptInvitationSchema = z.object({

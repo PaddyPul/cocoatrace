@@ -14,7 +14,7 @@ class CapturingSender implements EmailSender {
 }
 
 const changedEnvironment = [
-  'APP_ENV', 'EMAIL_DRIVER', 'EMAIL_FROM', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE',
+  'APP_ENV', 'IDENTITY_EMAIL_ENABLED', 'EMAIL_DRIVER', 'EMAIL_FROM', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE',
   'SMTP_REQUIRE_TLS', 'SMTP_TLS_REJECT_UNAUTHORIZED', 'SMTP_USER', 'SMTP_PASSWORD',
   'PUBLIC_WEB_URL', 'WEB_URL',
 ] as const;
@@ -58,6 +58,17 @@ describe('identity email templates', () => {
     expect(logged).not.toContain('private-person@example.com');
     expect(logged).not.toContain('raw-secret-token');
     expect(logged).toContain('password_reset');
+  });
+
+  it('honors the explicit delivery-off switch even when SMTP is configured', async () => {
+    Object.assign(process.env, {
+      APP_ENV: 'test', IDENTITY_EMAIL_ENABLED: 'false', EMAIL_DRIVER: 'smtp',
+      EMAIL_FROM: 'identity@example.com', SMTP_HOST: '127.0.0.1', SMTP_PORT: '1',
+      SMTP_USER: 'user', SMTP_PASSWORD: 'secret',
+    });
+    vi.resetModules();
+    const { emailSender } = await import('./emailSender');
+    await expect(emailSender().send({ to: 'test@example.com', subject: 'Test', text: 'Test', category: 'invitation' })).resolves.toEqual({ status: 'suppressed' });
   });
 
   it('rejects recipient header injection', async () => {

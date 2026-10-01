@@ -8,14 +8,14 @@ export default function RequestAccessPage() {
   const [form, setForm] = useState({ organizationName: '', organizationType: 'supplier' as 'buyer' | 'supplier', jurisdiction: 'GH', legalRegistrationNumber: '', adminName: '', adminEmail: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [submitted, setSubmitted] = useState<{ email: string; verificationUrl?: string } | null>(null);
+  const [submitted, setSubmitted] = useState<{ email: string; emailDelivery: 'sent' | 'suppressed' | 'failed'; verificationUrl?: string } | null>(null);
   const field = (name: keyof typeof form) => ({ value: form[name], onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm((current) => ({ ...current, [name]: event.target.value })) });
 
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true); setError('');
     try {
       const result = await auth.requestAccess({ ...form, organizationName: form.organizationName.trim(), adminName: form.adminName.trim(), adminEmail: form.adminEmail.trim().toLowerCase(), jurisdiction: form.jurisdiction.trim().toUpperCase(), legalRegistrationNumber: form.legalRegistrationNumber.trim() || undefined });
-      setSubmitted({ email: form.adminEmail.trim().toLowerCase(), verificationUrl: result.verificationUrl });
+      setSubmitted({ email: form.adminEmail.trim().toLowerCase(), emailDelivery: result.emailDelivery, verificationUrl: result.verificationUrl });
     } catch (err: any) { setError(err.message || 'Could not submit the access request'); }
     finally { setBusy(false); }
   };
@@ -24,8 +24,9 @@ export default function RequestAccessPage() {
     {submitted ? <div className="rounded-2xl border border-brand-300/20 bg-brand-300/5 p-5">
       <CheckCircle2 size={30} className="text-brand-300" />
       <h2 className="mt-4 text-lg font-bold">Verify your email address</h2>
-      <p className="mt-2 text-xs leading-5 text-white/50">If the request can proceed, instructions have been sent to <strong className="text-white/75">{submitted.email}</strong>. After verification, the organization enters manual review.</p>
+      <p className="mt-2 text-xs leading-5 text-white/50">{submitted.emailDelivery === 'sent' ? <>Verification instructions were submitted to the email provider for <strong className="text-white/75">{submitted.email}</strong>. Check your inbox and spam folder.</> : submitted.emailDelivery === 'failed' ? 'We saved your application, but could not submit the verification email. Retry with the same details; no new application will be created.' : 'Email delivery is disabled in this local demo. Use the demo verification link below.'} After verification, the organization enters manual review.</p>
       {submitted.verificationUrl && <a href={submitted.verificationUrl} className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border border-brand-300/20 px-4 text-xs font-semibold text-brand-200">Open demo verification link <ArrowRight size={13} /></a>}
+      <button type="button" onClick={() => setSubmitted(null)} className="mt-4 block text-xs font-semibold text-brand-300">Retry verification email with these details</button>
       <Link to="/login" className="mt-5 block text-xs font-semibold text-white/45 hover:text-white">Return to sign in</Link>
     </div> : <form onSubmit={submit} className="space-y-4">
       <Field label="Organization name"><input required minLength={2} className="form-input" autoComplete="organization" {...field('organizationName')} /></Field>

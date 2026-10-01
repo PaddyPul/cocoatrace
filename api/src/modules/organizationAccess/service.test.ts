@@ -41,7 +41,7 @@ function dependencies(exposeRawLinks = false) {
     approve: vi.fn(),
     reject: vi.fn(),
   } as unknown as OrganizationAccessRepository;
-  const email = { sendAccessVerification: vi.fn().mockResolvedValue(undefined) } as OrganizationAccessEmailPort;
+  const email = { sendAccessVerification: vi.fn().mockResolvedValue({ status: 'sent' }), sendFirstAdminInvitation: vi.fn().mockResolvedValue({ status: 'sent' }) } as OrganizationAccessEmailPort;
   return { repository, email, service: new OrganizationAccessService(repository, email, 'https://app.example.com', exposeRawLinks) };
 }
 
@@ -65,12 +65,12 @@ describe('organization access service', () => {
     await expect(service.requestAccess(input)).resolves.toHaveProperty('verificationUrl');
   });
 
-  it('removes a new unverified application when email submission fails', async () => {
+  it('preserves an application for retry and reports failed submission', async () => {
     const { repository, email, service } = dependencies();
     vi.mocked(email.sendAccessVerification).mockRejectedValueOnce(new AppError('Email unavailable', 503, 'EMAIL_UNAVAILABLE'));
 
-    await expect(service.requestAccess(input)).rejects.toMatchObject({ code: 'EMAIL_UNAVAILABLE' });
-    expect(repository.removeUnverified).toHaveBeenCalledWith(application.id);
+    await expect(service.requestAccess(input)).resolves.toMatchObject({ emailDelivery: 'failed', application });
+    expect(repository.removeUnverified).not.toHaveBeenCalled();
   });
 
   it('consumes the hashed verification token and rejects invalid or reused tokens', async () => {
@@ -89,4 +89,18 @@ describe('organization access service', () => {
     await expect(service.list(ordinaryActor)).rejects.toBeInstanceOf(ForbiddenError);
     expect(repository.list).not.toHaveBeenCalled();
   });
+  it.each(['sent', 'suppressed', 'failed'] as const)('delivers first-admin invitation after approval and reports %s', async (status) => {
+    const { repository, email, service } = dependencies(false);
+    vi.mocked(repository.approve).mockResolvedValue({ application, organizationId: 'org', invitationId: 'invite', invitationExpiresAt: new Date() });
+    vi.mocked(email.sendFirstAdminInvitation).mockResolvedValue({ status });
+    const result = await service.approve({ id: 'reviewer', organizationId: 'platform', permissions: ['*'] }, application.id);
+    expect(email.sendFirstAdminInvitation).toHaveBeenCalledWith(expect.objectContaining({
+      invitationId: 'invite', recipientEmail: application.adminEmail,
+      invitationUrl: expect.stringContaining('https://app.example.com/accept-invite/'),
+    }));
+    expect(result.emailDelivery).toBe(status);
+    expect(result).not.toHaveProperty('inviteUrl');
+    expect(repository.approve).toHaveBeenCalledOnce();
+  });
+
 });

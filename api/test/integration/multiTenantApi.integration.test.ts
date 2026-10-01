@@ -621,4 +621,72 @@ describe('real PostgreSQL multi-tenant API boundary', () => {
     );
     expect(events.rows.some((event) => event.event_type === 'password.changed')).toBe(true);
   });
+  it('retries verification on the same application and invalidates the previous link', async () => {
+    const suffix = crypto.randomUUID();
+    const input = { organizationName: `Retry ${suffix}`, organizationType: 'supplier', jurisdiction: 'GH', adminName: 'Retry Admin', adminEmail: `retry-${suffix}@integration.test` };
+    const first = await request(app).post('/auth/request-access').send(input);
+    expect(first.status).toBe(202);
+    const retry = await request(app).post('/auth/request-access').send(input);
+    expect(retry.status).toBe(202);
+    expect(retry.body.application.id).toBe(first.body.application.id);
+    expect(retry.body.emailDelivery).toBe('suppressed');
+    const token = (url: string) => new URL(url).searchParams.get('token');
+    expect((await request(app).post('/auth/request-access/verify').send({ token: token(first.body.verificationUrl) })).status).toBe(410);
+    expect((await request(app).post('/auth/request-access/verify').send({ token: token(retry.body.verificationUrl) })).status).toBe(200);
+    expect((await request(app).post('/auth/request-access').send(input)).status).toBe(409);
+  });
+
+  it('creates one invitation, rotates on resend, enforces tenant isolation and cannot revive revocation', async () => {
+    const owner = await createIdentityFixture('inviter');
+    const outsider = await createIdentityFixture('outsider');
+    await query("UPDATE roles SET permissions=ARRAY['*'] WHERE id=$1", [owner.roleId]);
+    await query("UPDATE roles SET permissions=ARRAY['member.invite'] WHERE id=$1", [outsider.roleId]);
+    const signIn = async (fixture: typeof owner) => (await request(app).post('/auth/login').send({ email: fixture.email, password: fixture.password })).body.accessToken;
+    const ownerToken = await signIn(owner);
+    const outsiderToken = await signIn(outsider);
+    const input = { email: `invite-${crypto.randomUUID()}@integration.test`, role: 'supplier_admin' };
+    const competing = await Promise.all([1, 2].map(() => request(app).post('/invitations').set('Authorization', `Bearer ${ownerToken}`).send(input)));
+    expect(competing.map((response) => response.status).sort()).toEqual([201, 409]);
+    const created = competing.find((response) => response.status === 201)!;
+    expect(created.status).toBe(201);
+    expect(created.body.emailDelivery).toBe('suppressed');
+    expect((await request(app).post('/invitations').set('Authorization', `Bearer ${ownerToken}`).send(input)).status).toBe(409);
+    const id = created.body.id;
+    expect((await request(app).post(`/invitations/${id}/resend`).set('Authorization', `Bearer ${outsiderToken}`)).status).toBe(404);
+    expect((await request(app).post(`/invitations/${id}/revoke`).set('Authorization', `Bearer ${outsiderToken}`)).status).toBe(404);
+    await query("UPDATE user_invitations SET expires_at=NOW()-INTERVAL '1 hour' WHERE id=$1", [id]);
+    expect((await request(app).post(`/auth/invitations/${created.body.inviteUrl.split('/').at(-1)}/accept`).send({ name: 'Expired User', password: 'ValidPassword123!' })).status).toBe(410);
+    const resent = await request(app).post(`/invitations/${id}/resend`).set('Authorization', `Bearer ${ownerToken}`);
+    expect(resent.status).toBe(200);
+    const token = (url: string) => url.split('/').at(-1);
+    expect((await request(app).get(`/auth/invitations/${token(created.body.inviteUrl)}`)).status).toBe(410);
+    expect((await request(app).get(`/auth/invitations/${token(resent.body.inviteUrl)}`)).status).toBe(200);
+    expect((await request(app).post(`/invitations/${id}/revoke`).set('Authorization', `Bearer ${ownerToken}`)).status).toBe(204);
+    expect((await request(app).post(`/invitations/${id}/resend`).set('Authorization', `Bearer ${ownerToken}`)).status).toBe(404);
+    expect((await request(app).post(`/auth/invitations/${token(resent.body.inviteUrl)}/accept`).send({ name: 'Rejected User', password: 'ValidPassword123!' })).status).toBe(410);
+    const stored = await query('SELECT email_delivery_status FROM user_invitations WHERE id=$1', [id]);
+    expect(stored.rows[0].email_delivery_status).toBe('suppressed');
+  });
+
+  it('approves once and submits the first-admin invitation without creating duplicate organizations', async () => {
+    const reviewer = await createIdentityFixture('reviewer');
+    await query("UPDATE roles SET permissions=ARRAY['*'] WHERE id=$1", [reviewer.roleId]);
+    const login = await request(app).post('/auth/login').send({ email: reviewer.email, password: reviewer.password });
+    const suffix = crypto.randomUUID();
+    const input = { organizationName: `Approved ${suffix}`, organizationType: 'buyer', jurisdiction: 'GH', adminName: 'Buyer Admin', adminEmail: `approved-${suffix}@integration.test` };
+    const submitted = await request(app).post('/auth/request-access').send(input);
+    expect(submitted.status).toBe(202);
+    expect((await request(app).post('/auth/request-access/verify').send({ token: new URL(submitted.body.verificationUrl).searchParams.get('token') })).status).toBe(200);
+    const endpoint = `/access-applications/${submitted.body.application.id}/approve`;
+    const approved = await request(app).post(endpoint).set('Authorization', `Bearer ${login.body.accessToken}`).send({});
+    expect(approved.status).toBe(200);
+    expect(approved.body.emailDelivery).toBe('suppressed');
+    expect(approved.body.inviteUrl).toContain('/accept-invite/');
+    const stored = await query('SELECT email_delivery_status FROM user_invitations WHERE id=$1', [approved.body.invitationId]);
+    expect(stored.rows[0].email_delivery_status).toBe('suppressed');
+    expect((await request(app).post(endpoint).set('Authorization', `Bearer ${login.body.accessToken}`).send({})).status).toBe(409);
+    const count = await query('SELECT COUNT(*)::int AS total FROM organizations WHERE name=$1', [input.organizationName]);
+    expect(count.rows[0].total).toBe(1);
+  });
+
 });

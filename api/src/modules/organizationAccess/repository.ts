@@ -88,10 +88,22 @@ export class PostgresOrganizationAccessRepository implements OrganizationAccessR
         `INSERT INTO organization_access_applications
           (organization_name,organization_type,jurisdiction,legal_registration_number,admin_name,admin_email,
            verification_token_hash,verification_expires_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING ${applicationColumns}`,
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+         ON CONFLICT (LOWER(admin_email))
+           WHERE status IN ('pending_email_verification','pending_review')
+         DO UPDATE SET verification_token_hash=EXCLUDED.verification_token_hash,
+           verification_expires_at=EXCLUDED.verification_expires_at,updated_at=NOW()
+         WHERE organization_access_applications.status='pending_email_verification'
+           AND LOWER(organization_access_applications.organization_name)=LOWER(EXCLUDED.organization_name)
+           AND organization_access_applications.organization_type=EXCLUDED.organization_type
+           AND organization_access_applications.jurisdiction=EXCLUDED.jurisdiction
+           AND organization_access_applications.admin_name=EXCLUDED.admin_name
+           AND organization_access_applications.legal_registration_number IS NOT DISTINCT FROM EXCLUDED.legal_registration_number
+         RETURNING ${applicationColumns}`,
         [input.organizationName, input.organizationType, input.jurisdiction, input.legalRegistrationNumber || null,
           input.adminName, input.adminEmail, input.verificationTokenHash, input.verificationExpiresAt],
       );
+      if (!result.rows[0]) throw new ConflictError('An active access application already uses these details');
       return mapApplication(result.rows[0]);
     } catch (error) {
       if ((error as { code?: string }).code === '23505') throw new ConflictError('An active access application already uses these details');
