@@ -100,6 +100,8 @@ export const accessApplications = {
 export const invitations = {
   list: () => api<any[]>('GET', '/invitations'),
   create: (data: { email: string; organizationId?: string; role?: string }) => api<any>('POST', '/invitations', data),
+  resend: (id: string) => api<any>('POST', `/invitations/${id}/resend`),
+  revoke: (id: string) => api<void>('POST', `/invitations/${id}/revoke`),
 };
 
 export const workspace = {
