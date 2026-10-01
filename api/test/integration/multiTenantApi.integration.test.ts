@@ -178,6 +178,13 @@ async function createIdentityFixture(label: string) {
 }
 
 beforeAll(async () => {
+  // Global setup deliberately truncates every application table after applying
+  // migrations, including roles created by migration 017. These identity
+  // scenarios must explicitly provision their required role fixtures rather
+  // than depend on production seed data surviving that reset.
+  await query(`INSERT INTO roles(name,permissions) VALUES
+    ('buyer_admin',ARRAY['member.invite']),
+    ('supplier_admin',ARRAY['member.invite'])`);
   await createTenant(tenantA, 'Independent Tenant A', 'exporter');
   await createTenant(tenantB, 'Independent Tenant B', 'importer');
   tenantA.farmId = await createFarm(tenantA, 'Tenant A Farm');
