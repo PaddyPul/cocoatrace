@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { pathToFileURL } from 'url';
 import knex, { Knex } from 'knex';
 import { requireDisposableTestDatabase } from '../../src/testing/databaseSafety';
 import { planBaselineAndForwardMigrations } from '../../src/testing/migrationBaseline';
@@ -58,12 +57,15 @@ export async function setup(): Promise<void> {
     })),
   );
 
-  const migrationModules = await Promise.all(
-    migrationPlan.forward.map(async (name) => ({
-      name,
-      ...(await import(pathToFileURL(path.join(migrationDirectory, name)).href)),
-    })),
-  );
+  const migrationModulesByPath = import.meta.glob('../../src/migrations/*.ts', { eager: true }) as Record<string, {
+    up: Knex.Migration['up'];
+    down?: Knex.Migration['down'];
+  }>;
+  const migrationModules = migrationPlan.forward.map((name) => {
+    const migration = migrationModulesByPath[`../../src/migrations/${name}`];
+    if (!migration) throw new Error(`Migration module was not loaded by Vitest: ${name}`);
+    return { name, ...migration };
+  });
   const migrationSource: Knex.MigrationSource<{ name: string; up: Knex.Migration['up']; down?: Knex.Migration['down'] }> = {
     getMigrations: async () => migrationModules,
     getMigrationName: (migration) => migration.name,
