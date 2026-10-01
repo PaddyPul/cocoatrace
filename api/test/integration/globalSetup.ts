@@ -61,7 +61,7 @@ export async function setup(): Promise<void> {
     up: Knex.Migration['up'];
     down?: Knex.Migration['down'];
   }>;
-  const migrationModules = migrationPlan.forward.map((name) => {
+  const migrationModules = migrationFiles.map((name) => {
     const migration = migrationModulesByPath[`../../src/migrations/${name}`];
     if (!migration) throw new Error(`Migration module was not loaded by Vitest: ${name}`);
     return { name, ...migration };
