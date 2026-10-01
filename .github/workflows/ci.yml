@@ -99,3 +99,16 @@ jobs:
           path: browser-test-results/safe/
           if-no-files-found: ignore
           retention-days: 7
+
+  migration-startup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Test fresh production startup and data-preserving upgrades
+        run: npm run test:migrations:docker

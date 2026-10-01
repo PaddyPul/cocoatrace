@@ -83,7 +83,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **ENV-004 · P0 · Phase 0:** Create separate databases, storage buckets, secrets and service identities for demo, staging and production.
 - [ ] **ENV-005 · P0 · Phase 0:** Make database ports private outside local development.
 - [ ] **ENV-006 · P0 · Phase 0:** Require HTTPS, secure cookies and exact allowed origins in staging/production.
-- [ ] **ENV-007 · P1 · Phase 0:** Add an ephemeral PostgreSQL service to CI and apply all migrations from zero.
+- [-] **ENV-007 · P1 · Phase 0:** Add an ephemeral PostgreSQL service to CI and apply all migrations from zero. IN PROGRESS: `migration-startup` now builds the API image and runs the normal release command against isolated PostgreSQL 16; native CI evidence is pending.
 - [ ] **ENV-008 · P1 · Phase 0:** Automatically deploy `main` to staging after CI passes.
 - [ ] **ENV-009 · P1 · Phase 1:** Promote the same immutable container artifact from staging to production; do not rebuild it.
 - [ ] **ENV-010 · P0 · Phase 1:** Protect production deployment with a GitHub Environment approval and environment-scoped secrets.
@@ -95,7 +95,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **ENV-016 · P1 · Phase 1:** Add a safe, explicit demo reset job that cannot address staging or production.
 - [ ] **ENV-017 · P1 · Phase 1:** Add deployment concurrency controls so an older release cannot overwrite a newer one.
 - [ ] **ENV-018 · P2 · Phase 2:** Document domain, DNS, TLS, cookie and CORS configuration for every environment.
-- [ ] **ENV-019 · P0 · Phase 1:** Repair empty-database bootstrap and rehearse both fresh startup and existing-database upgrade. Discovered 2026-10-01: migration 001 loads the frozen schema snapshot through 010, then migration 009 attempts to add an existing `batches.source_mode` column. Done when the normal release migration command succeeds from empty PostgreSQL and upgrades an existing ledger without resetting data or changing frozen migrations/checksums. The browser/API test baseline preparation does not close this production release blocker.
+- [-] **ENV-019 · P0 · Phase 1:** Repair empty-database bootstrap and rehearse both fresh startup and existing-database upgrade. Discovered 2026-10-01: migration 001 loads the frozen schema snapshot through 010, then migration 009 attempts to add an existing `batches.source_mode` column. Done when the normal release migration command succeeds from empty PostgreSQL and upgrades an existing ledger without resetting data or changing frozen migrations/checksums. The browser/API test baseline preparation does not close this production release blocker. IN PROGRESS: normal-runner bootstrap repair and production-configured fresh/upgrade regressions are implemented. API build, 144 unit tests, migration integrity and nine nonconcurrent CLI scenarios passed locally against temporary WASM PostgreSQL. Native PostgreSQL/container CI evidence, including concurrency, remains required. See ADR 001 and `docs/runbooks/MIGRATION_STARTUP.md`.
 
 # 3. Architecture and code quality
 
@@ -126,6 +126,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **ARC-025 · P2 · Phase 3:** Remove the unused sessions design or make it the authoritative revocable session system.
 - [ ] **ARC-026 · P3 · Phase 4:** Add commodity policy/configuration interfaces before onboarding the second commodity.
 - [ ] **ARC-027 · P3 · Phase 4:** Add transformation workflow ports and domain types only when a validated customer requires blending/repacking.
+- [ ] **ARC-028 · P2 · Phase 2:** Audit package-script entry points and remove or repair obsolete aliases. Discovered 2026-10-01: `api` scripts `db:migrate:js` and `db:seed:js` reference absent files. Done when documented commands resolve to supported runners and a lightweight script-contract check prevents recurrence.
 
 # 4. Identity, registration and organizations
 
@@ -325,7 +326,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **QLT-002 · P0 · Phase 1:** Add negative authorization tests for every protected resource family.
 - [ ] **QLT-003 · P0 · Phase 1:** Add inventory and offer concurrency tests.
 - [x] **QLT-004 · P0 · Phase 1:** Real-PostgreSQL integration tests cover linked-resource upload authorization, private quarantine, extension/MIME/signature validation, file and tenant quota limits, EICAR rejection and audit, quarantine deletion, scan-clean download gating and unauthenticated `/uploads` denial. The Docker harness additionally exercises S3-compatible storage and ClamAV.
-- [ ] **QLT-005 · P1 · Phase 1:** Test migrations from an empty database and from the current baseline snapshot.
+- [-] **QLT-005 · P1 · Phase 1:** Test migrations from an empty database and from the current baseline snapshot. IN PROGRESS: ten release-command scenarios cover fresh/no-op startup, concurrent startup, preserved upgrade records/history, real forward-failure rollback, occupied schemas, partial/unknown history and stale locks. Nine nonconcurrent scenarios passed against temporary WASM PostgreSQL; the full native Docker suite must pass.
 - [ ] **QLT-006 · P1 · Phase 1:** Add ESLint, formatting and typecheck commands to CI.
 - [ ] **QLT-007 · P1 · Phase 1:** Prohibit new `any` in changed high-risk modules.
 - [ ] **QLT-008 · P1 · Phase 1:** Add regression tests for every confirmed P0 defect before or with the fix.
@@ -493,7 +494,7 @@ An item is complete only when applicable criteria are met:
 | Recall notice does not quarantine affected supply | Critical | Public notice and calculation | RCL-001–010 |
 | Critical audit events can fail after business commit | High | Warning log | ARC-013–014 |
 | Real users lack reset/MFA/revocation lifecycle | High | Invite and password login | IDN-008–014 |
-| Empty production database cannot bootstrap through the frozen migration history | Critical | Browser/API tests explicitly prepare the frozen snapshot and forward migrations; production command remains blocked | ENV-019, ENV-007, QLT-005 |
+| Empty-database bootstrap repair has not yet passed native container/CI validation | Critical | Normal release runner now bootstraps atomically; nine functional CLI scenarios passed against temporary WASM PostgreSQL, with native concurrency still unverified | ENV-019, ENV-007, QLT-005 |
 | Browser regression suite has not yet passed the native Docker/CI gate | High | Six Chromium identity journeys are implemented and passed locally against temporary WASM PostgreSQL/SMTP capture | QLT-021, QLT-009–012 |
 | Large, coupled files slow safe inheritance | Medium | TypeScript build | ARC-004–023 |
 | No restore/monitoring/incident proof | High | Health endpoints and structured logger | OPS-001–012 |
