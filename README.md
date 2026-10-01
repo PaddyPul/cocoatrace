@@ -161,6 +161,15 @@ npm run demo:validate         # verify quantities, dates, evidence and safety ru
 
 ## Testing the workflows
 
+Run `npm run test:browser:docker` from the repository root to exercise six
+identity/email browser journeys against an isolated PostgreSQL/Mailpit stack.
+The runner creates fixtures and cleans up its test containers automatically;
+your normal application database is untouched. See the
+[browser regression runbook](docs/runbooks/BROWSER_REGRESSION.md) for coverage,
+safety guards and sanitized diagnostics. This complements the API unit and
+`npm run test:integration:docker` suites. Demo walkthroughs below are optional
+product checks, not a replacement for automated release gates.
+
 ### Full trade lifecycle (Exporter + Importer)
 
 ```

@@ -1,0 +1,83 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: cocoatrace_browser_test
+      POSTGRES_USER: browser_test
+      POSTGRES_PASSWORD: browser_test
+    ports:
+      - "127.0.0.1:${COCOATRACE_BROWSER_DB_PORT:-15435}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U browser_test -d cocoatrace_browser_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "127.0.0.1:${COCOATRACE_BROWSER_MAIL_PORT:-18025}:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    command: ["sh", "-c", "node --import tsx api/scripts/prepare-browser-tests.ts && exec node api/dist/server.js"]
+    environment:
+      APP_ENV: test
+      NODE_ENV: test
+      DEMO_MODE: "false"
+      BROWSER_TEST_FIXTURES: "true"
+      DATABASE_URL: postgresql://browser_test:browser_test@postgres:5432/cocoatrace_browser_test
+      JWT_SECRET: browser-test-only-jwt-secret-at-least-32-characters
+      WEB_URL: http://127.0.0.1:${COCOATRACE_BROWSER_WEB_PORT:-13000}
+      PUBLIC_WEB_URL: http://127.0.0.1:${COCOATRACE_BROWSER_WEB_PORT:-13000}
+      COOKIE_SECURE: "false"
+      EVIDENCE_STORAGE_DRIVER: local
+      EVIDENCE_STORAGE_LOCAL_ROOT: /app/private-evidence
+      EVIDENCE_UPLOAD_SIGNING_SECRET: browser-test-only-upload-signing-secret-32-characters
+      EVIDENCE_SCANNER_DRIVER: development
+      IDENTITY_EMAIL_ENABLED: "true"
+      EMAIL_DRIVER: smtp
+      EMAIL_FROM: identity@browser.test
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_USER: browser_test
+      SMTP_PASSWORD: browser_test
+      SMTP_SECURE: "false"
+      SMTP_REQUIRE_TLS: "false"
+      SMTP_TLS_REJECT_UNAUTHORIZED: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e 'require(\"http\").get(\"http://localhost:3001/health/ready\",r=>process.exit(r.statusCode===200?0:1))'"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+      args:
+        VITE_DEMO_MODE: "false"
+    ports:
+      - "127.0.0.1:${COCOATRACE_BROWSER_WEB_PORT:-13000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health/ready >/dev/null || exit 1"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    depends_on:
+      api:
+        condition: service_healthy

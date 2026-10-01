@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { createHash } from 'node:crypto';
 import { config } from '../config/env';
 
 type Counter = { count: number; resetAt: number };
@@ -9,10 +10,16 @@ export function sensitiveActionLimit(req: Request, res: Response, next: NextFunc
   // Keep independent buckets per client IP and account/token target. This
   // prevents one user's failed attempts from locking out unrelated users and
   // makes the limiter safe for sequential integration and staging tests.
-  const target = typeof req.body?.email === 'string'
-    ? req.body.email.trim().toLowerCase()
-    : typeof req.params?.token === 'string'
-      ? req.params.token.slice(0, 16)
+  const email = typeof req.body?.email === 'string' ? req.body.email
+    : typeof req.body?.adminEmail === 'string' ? req.body.adminEmail : undefined;
+  const token = typeof req.params?.token === 'string' ? req.params.token
+    : typeof req.body?.token === 'string' ? req.body.token : undefined;
+  // Verification/reset tokens are sent in JSON bodies, not only URL params.
+  // Hash full targets so credentials are not retained and prefixes cannot collide.
+  const target = email !== undefined
+    ? `email:${createHash('sha256').update(email.trim().toLowerCase()).digest('hex')}`
+    : token !== undefined
+      ? `token:${createHash('sha256').update(token).digest('hex')}`
       : 'anonymous';
   const key = `${req.ip}:${req.path}:${target}`;
   const current = attempts.get(key);

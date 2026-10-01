@@ -75,3 +75,27 @@ jobs:
       - run: npm ci
       - name: Test PostgreSQL, private S3 storage and ClamAV adapters
         run: npm run test:integration:docker
+
+  browser-identity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck:browser
+      - name: Install Chromium and Linux browser dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Run isolated browser identity and email journeys
+        run: npm run test:browser:docker
+      - name: Upload sanitized browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-identity-safe-diagnostics
+          path: browser-test-results/safe/
+          if-no-files-found: ignore
+          retention-days: 7
