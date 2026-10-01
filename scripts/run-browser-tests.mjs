@@ -37,6 +37,13 @@ try {
   if (startCode !== 0) {
     process.exitCode = startCode;
     run(docker, [...compose, 'ps', '-a']);
+    // Capture the web startup/probe failure before disposable cleanup removes
+    // the container. These probes contain no session cookies or email tokens.
+    run(docker, [...compose, 'logs', '--no-color', '--tail', '40', 'web']);
+    const webId = spawnSync(docker, [...compose, 'ps', '-a', '-q', 'web'], { cwd: root, encoding: 'utf8' });
+    if (webId.status === 0 && webId.stdout.trim()) {
+      run(docker, ['inspect', '--format', '{{json .State.Health}}', webId.stdout.trim()]);
+    }
   } else {
     const fixtureCode = run(docker, [...compose, 'exec', '-T', 'api', 'npx', 'tsx', 'api/scripts/seed-browser-tests.ts']);
     process.exitCode = fixtureCode || run(process.execPath, [playwright, 'test'], {

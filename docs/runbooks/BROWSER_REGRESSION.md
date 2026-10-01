@@ -82,7 +82,13 @@ Private traces contain cookies, passwords and token-bearing email links. Keep
 them local; never attach them publicly or add them to CI artifacts. For a safe
 diagnostic, share the sanitized summary and inspect the masked screenshot.
 
-Startup failures occur before browser assertions. Read the Docker error output
+The web readiness probe uses explicit IPv4 (`127.0.0.1`) and the proxied
+`/api/health/ready` endpoint, checking that Nginx can reach the API as well as
+listen for HTTP requests. `localhost` can choose IPv6 in Alpine while this
+Nginx server listens on IPv4.
+
+Startup failures occur before browser assertions. The runner prints web logs
+and probe diagnostics before cleanup when startup fails. Read the Docker error output
 first: image download failure, an occupied port or Docker Desktop not running
 requires a local environment correction. Cleanup runs even after startup/test
 failure. If interrupted, this command removes only the dedicated test project:
