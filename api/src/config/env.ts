@@ -21,6 +21,16 @@ const optionalText = z.preprocess(
   z.string().trim().min(1).optional(),
 );
 
+const optionalEmail = z.preprocess(
+  (value) => typeof value === 'string' && value.trim() === '' ? undefined : value,
+  z.string().trim().email().optional(),
+);
+
+const optionalSecret = z.preprocess(
+  (value) => typeof value === 'string' && value.length === 0 ? undefined : value,
+  z.string().min(1).optional(),
+);
+
 function inferredEnvironment(source: NodeJS.ProcessEnv): AppEnvironment {
   const candidate = source.APP_ENV || source.NODE_ENV || 'development';
   if (!(APP_ENVIRONMENTS as readonly string[]).includes(candidate)) {
@@ -67,6 +77,18 @@ export type AppConfig = Readonly<{
   evidenceScannerPort: number;
   evidenceScannerTimeoutMs: number;
   evidenceScannerRetries: number;
+  identityEmailEnabled: boolean;
+  emailDriver: 'development' | 'smtp';
+  emailFrom?: string;
+  smtpHost?: string;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpRequireTls: boolean;
+  smtpTlsRejectUnauthorized: boolean;
+  smtpUser?: string;
+  smtpPassword?: string;
+  smtpAuthMethod: 'plain' | 'login';
+  smtpConnectionTimeoutMs: number;
 }>;
 
 export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
@@ -116,6 +138,18 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     EVIDENCE_SCANNER_PORT: z.coerce.number().int().min(1).max(65_535).default(3310),
     EVIDENCE_SCANNER_TIMEOUT_MS: z.coerce.number().int().min(500).max(120_000).default(15_000),
     EVIDENCE_SCANNER_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
+    IDENTITY_EMAIL_ENABLED: booleanValue.default(false),
+    EMAIL_DRIVER: z.enum(['development', 'smtp']).default('development'),
+    EMAIL_FROM: optionalEmail,
+    SMTP_HOST: optionalText,
+    SMTP_PORT: z.coerce.number().int().min(1).max(65_535).default(587),
+    SMTP_SECURE: booleanValue.default(false),
+    SMTP_REQUIRE_TLS: booleanValue.default(true),
+    SMTP_TLS_REJECT_UNAUTHORIZED: booleanValue.default(true),
+    SMTP_USER: optionalText,
+    SMTP_PASSWORD: optionalSecret,
+    SMTP_AUTH_METHOD: z.enum(['plain', 'login']).default('plain'),
+    SMTP_CONNECTION_TIMEOUT_MS: z.coerce.number().int().min(500).max(120_000).default(10_000),
   }).superRefine((values, context) => {
     const deployed = environment === 'staging' || environment === 'production';
     if (deployed) {
@@ -175,6 +209,20 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     if (values.EVIDENCE_SCANNER_DRIVER === 'clamav' && !values.EVIDENCE_SCANNER_HOST) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_SCANNER_HOST'], message: 'is required when EVIDENCE_SCANNER_DRIVER is clamav' });
     }
+    if (values.EMAIL_DRIVER === 'smtp') {
+      for (const name of ['EMAIL_FROM', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASSWORD'] as const) {
+        if (!values[name]) context.addIssue({ code: z.ZodIssueCode.custom, path: [name], message: 'is required when EMAIL_DRIVER is smtp' });
+      }
+    }
+    if (deployed && values.IDENTITY_EMAIL_ENABLED && values.EMAIL_DRIVER !== 'smtp') {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['EMAIL_DRIVER'], message: 'must be smtp when identity email flows are enabled in staging or production' });
+    }
+    if (deployed && values.IDENTITY_EMAIL_ENABLED && !(values.SMTP_SECURE || values.SMTP_REQUIRE_TLS)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['SMTP_REQUIRE_TLS'], message: 'TLS is required for identity email delivery in staging and production' });
+    }
+    if (deployed && values.IDENTITY_EMAIL_ENABLED && !values.SMTP_TLS_REJECT_UNAUTHORIZED) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['SMTP_TLS_REJECT_UNAUTHORIZED'], message: 'must be true for identity email delivery in staging and production' });
+    }
   });
 
   const result = schema.safeParse(source);
@@ -222,6 +270,18 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     evidenceScannerPort: values.EVIDENCE_SCANNER_PORT,
     evidenceScannerTimeoutMs: values.EVIDENCE_SCANNER_TIMEOUT_MS,
     evidenceScannerRetries: values.EVIDENCE_SCANNER_RETRIES,
+    identityEmailEnabled: values.IDENTITY_EMAIL_ENABLED,
+    emailDriver: values.EMAIL_DRIVER,
+    emailFrom: values.EMAIL_FROM,
+    smtpHost: values.SMTP_HOST,
+    smtpPort: values.SMTP_PORT,
+    smtpSecure: values.SMTP_SECURE,
+    smtpRequireTls: values.SMTP_REQUIRE_TLS,
+    smtpTlsRejectUnauthorized: values.SMTP_TLS_REJECT_UNAUTHORIZED,
+    smtpUser: values.SMTP_USER,
+    smtpPassword: values.SMTP_PASSWORD,
+    smtpAuthMethod: values.SMTP_AUTH_METHOD,
+    smtpConnectionTimeoutMs: values.SMTP_CONNECTION_TIMEOUT_MS,
   });
 }
 

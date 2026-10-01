@@ -34,6 +34,8 @@ const PAGE_TITLES: Record<string, string> = {
   'my-listings': 'My Listings',
   organizations: 'Organizations',
   pilot: 'Pilot Team',
+  'access-applications': 'Access Applications',
+  'account-security': 'Account Security',
 };
 
 const PAGE_DESCRIPTIONS: Record<string, string> = {
@@ -64,6 +66,8 @@ const PAGE_DESCRIPTIONS: Record<string, string> = {
   'my-listings': 'Manage inventory currently offered to buyers.',
   organizations: 'Manage supply-chain participants and platform access.',
   pilot: 'Invite named design partners and track pilot participation.',
+  'access-applications': 'Review verified organization requests before granting workspace access.',
+  'account-security': 'Change your password and protect your active sessions.',
 };
 
 export default function Layout({

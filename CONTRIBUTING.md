@@ -76,12 +76,17 @@ npm run build --workspace=web
 ```
 
 The integration command creates a disposable PostgreSQL 16 database on port
-`15434`, applies the current production schema baseline, executes the API
-integration suite, and then removes the database. It uses the isolated Compose
-project `cocoatrace-integration-tests` and never removes the normal development
-stack. The reset guard refuses any
-database whose name does not contain a standalone `test` segment. Never point it
-at development, staging, or production data.
+`15434`, installs the frozen schema baseline at migration `010`, and asks Knex
+to apply every later migration before executing the API suite. The reset guard
+refuses any database whose name does not contain a standalone `test` segment.
+Never point it at development, staging, or production data.
+
+The baseline is intentional. Historical migration `001` imports the mutable
+`db/schema.sql`, while migration `009` then adds fields already present in that
+schema, so the historical chain cannot reliably reconstruct an empty database.
+This integration suite verifies the current baseline plus all new forward
+migrations; it does **not** satisfy QLT-005's empty-database and previous-release
+migration rehearsal. Do not add a new migration to the frozen baseline list.
 
 To use a dedicated PostgreSQL service that is already running:
 

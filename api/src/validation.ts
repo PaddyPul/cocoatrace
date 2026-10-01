@@ -5,6 +5,27 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password required'),
 });
 
+export const securePasswordSchema = z.string().min(12).max(128)
+  .regex(/[a-z]/, 'Include a lowercase letter')
+  .regex(/[A-Z]/, 'Include an uppercase letter')
+  .regex(/[0-9]/, 'Include a number');
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email().transform(v => v.toLowerCase()),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(32).max(256),
+  password: securePasswordSchema,
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1).max(128),
+  newPassword: securePasswordSchema,
+}).refine((value) => value.currentPassword !== value.newPassword, {
+  path: ['newPassword'], message: 'New password must differ from the current password',
+});
+
 export const createInvitationSchema = z.object({
   email: z.string().email().transform(v => v.toLowerCase()),
   organizationId: z.string().uuid().optional(),
@@ -13,10 +34,7 @@ export const createInvitationSchema = z.object({
 
 export const acceptInvitationSchema = z.object({
   name: z.string().trim().min(2).max(120),
-  password: z.string().min(12).max(128)
-    .regex(/[a-z]/, 'Include a lowercase letter')
-    .regex(/[A-Z]/, 'Include an uppercase letter')
-    .regex(/[0-9]/, 'Include a number'),
+  password: securePasswordSchema,
 });
 
 export const createFarmSchema = z.object({

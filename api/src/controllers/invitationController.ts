@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { getClient, query } from '../db';
 import * as audit from '../services/audit';
+import { sendInvitationEmail } from '../services/emailSender';
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
@@ -25,13 +26,14 @@ export async function createInvitation(req: Request, res: Response): Promise<voi
     [organizationId, req.body.email, role.id, hashToken(token), req.user!.id]
   );
   const inviteUrl = `${config.publicWebUrl}/accept-invite/${token}`;
+  await sendInvitationEmail({ to: req.body.email, invitationUrl: inviteUrl, organizationName: org.name });
   await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'member.invite', entityType: 'user_invitation', entityId: result.rows[0].id, metadata: { invitedOrganizationId: organizationId, role: role.name } });
   res.status(201).json({ ...result.rows[0], organizationName: org.name, role: role.name, inviteUrl });
 }
 
 export async function listInvitations(req: Request, res: Response): Promise<void> {
   const rows = await query(
-    `SELECT i.id,i.email,i.expires_at,i.accepted_at,i.created_at,o.name AS organization_name,r.name AS role
+    `SELECT i.id,i.email,i.expires_at,i.accepted_at,i.revoked_at,i.created_at,o.name AS organization_name,r.name AS role
      FROM user_invitations i JOIN organizations o ON o.id=i.organization_id JOIN roles r ON r.id=i.role_id
      WHERE ($1::boolean OR i.organization_id=$2) ORDER BY i.created_at DESC LIMIT 100`,
     [(req.user!.permissions || []).includes('*'), req.user!.organizationId]
@@ -43,7 +45,7 @@ export async function invitationDetails(req: Request, res: Response): Promise<vo
   const result = await query(
     `SELECT i.email,i.expires_at,i.accepted_at,o.name AS organization_name,o.type AS organization_type,r.name AS role
      FROM user_invitations i JOIN organizations o ON o.id=i.organization_id JOIN roles r ON r.id=i.role_id
-     WHERE i.token_hash=$1`, [hashToken(req.params.token)]
+     WHERE i.token_hash=$1 AND i.revoked_at IS NULL`, [hashToken(req.params.token)]
   );
   const invitation = result.rows[0];
   if (!invitation || invitation.accepted_at || new Date(invitation.expires_at) <= new Date()) { res.status(410).json({ error: 'This invitation is invalid or has expired' }); return; }
@@ -55,7 +57,7 @@ export async function acceptInvitation(req: Request, res: Response): Promise<voi
   try {
     await client.query('BEGIN');
     const invitationResult = await client.query(
-      `SELECT * FROM user_invitations WHERE token_hash=$1 AND accepted_at IS NULL AND expires_at>NOW() FOR UPDATE`,
+      `SELECT * FROM user_invitations WHERE token_hash=$1 AND accepted_at IS NULL AND revoked_at IS NULL AND expires_at>NOW() FOR UPDATE`,
       [hashToken(req.params.token)]
     );
     const invitation = invitationResult.rows[0];
@@ -74,4 +76,45 @@ export async function acceptInvitation(req: Request, res: Response): Promise<voi
     if (error?.code === '23505') { res.status(409).json({ error: 'An account with this email already exists' }); return; }
     throw error;
   } finally { client.release(); }
+}
+
+export async function revokeInvitation(req: Request, res: Response): Promise<void> {
+  const isPlatformAdmin = (req.user!.permissions || []).includes('*');
+  const result = await query(
+    `UPDATE user_invitations
+        SET revoked_at=COALESCE(revoked_at,NOW())
+      WHERE id=$1
+        AND accepted_at IS NULL
+        AND revoked_at IS NULL
+        AND ($2::boolean OR organization_id=$3)
+      RETURNING id`,
+    [req.params.id, isPlatformAdmin, req.user!.organizationId],
+  );
+  if (!result.rows[0]) { res.status(404).json({ error: 'Active invitation not found' }); return; }
+  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'member.invitation_revoked', entityType: 'user_invitation', entityId: req.params.id });
+  res.status(204).send();
+}
+
+export async function resendInvitation(req: Request, res: Response): Promise<void> {
+  const isPlatformAdmin = (req.user!.permissions || []).includes('*');
+  const token = crypto.randomBytes(32).toString('base64url');
+  const result = await query(
+    `UPDATE user_invitations i
+        SET token_hash=$1, expires_at=NOW()+INTERVAL '7 days', revoked_at=NULL
+      WHERE i.id=$2
+        AND i.accepted_at IS NULL
+        AND ($3::boolean OR i.organization_id=$4)
+      RETURNING i.id,i.email,i.expires_at,i.organization_id,
+        (SELECT o.name FROM organizations o WHERE o.id=i.organization_id) AS organization_name`,
+    [hashToken(token), req.params.id, isPlatformAdmin, req.user!.organizationId],
+  );
+  const invitation = result.rows[0];
+  if (!invitation) { res.status(404).json({ error: 'Invitation not found' }); return; }
+  await sendInvitationEmail({
+    to: invitation.email,
+    invitationUrl: `${config.publicWebUrl}/accept-invite/${token}`,
+    organizationName: invitation.organization_name,
+  });
+  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'member.invitation_resent', entityType: 'user_invitation', entityId: invitation.id });
+  res.json({ id: invitation.id, email: invitation.email, expires_at: invitation.expires_at, invitationUrl: `${config.publicWebUrl}/accept-invite/${token}` });
 }

@@ -30,6 +30,7 @@ import workspaceRoutes from './routes/workspace';
 import readinessRoutes from './routes/readiness';
 import invitationRoutes from './routes/invitations';
 import sourcingRoutes from './routes/sourcing';
+import organizationAccessRoutes from './modules/organizationAccess';
 
 const app = express();
 
@@ -81,6 +82,7 @@ app.use(workspaceRoutes);
 app.use(readinessRoutes);
 app.use(invitationRoutes);
 app.use(sourcingRoutes);
+app.use(organizationAccessRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });

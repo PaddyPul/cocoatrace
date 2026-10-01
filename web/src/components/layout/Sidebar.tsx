@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { BadgeCheck, Boxes, Building2, FileCheck2, FileClock, Handshake, Home, Leaf, LogOut, LucideIcon, PackageCheck, QrCode, RefreshCw, ScrollText, ShieldAlert, Ship, ShoppingBag, Store, Trees, WalletCards, X } from 'lucide-react';
+import { BadgeCheck, Boxes, Building2, FileCheck2, FileClock, Handshake, Home, KeyRound, Leaf, LogOut, LucideIcon, PackageCheck, QrCode, RefreshCw, ScrollText, ShieldAlert, Ship, ShoppingBag, Store, Trees, UserCheck, WalletCards, X } from 'lucide-react';
 import { useAuthCtx } from '../auth/AuthProvider';
 import { usePermission } from '../../hooks/usePermission';
 import { workspace } from '../../api';
@@ -36,6 +36,7 @@ const TOOL_NAV: NavGroup[] = [
   { label: 'Administration', items: [
     { icon: FileClock, label: 'Audit log', page: 'audit', orPermissions: ['audit.read'] },
     { icon: Building2, label: 'Organizations', page: 'organizations', orPermissions: ['organization.admin'] },
+    { icon: UserCheck, label: 'Access applications', page: 'access-applications', path: '/access-applications', orPermissions: ['*'] },
   ] },
 ];
 
@@ -68,6 +69,7 @@ export default function Sidebar({ currentPage, onNavigate, className = '' }: { c
     </nav>
     <div className="m-3 rounded-2xl border border-white/10 bg-white/[0.05] p-3.5">
       <button onClick={replayWelcome} className="mb-3 flex w-full items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-left text-[10px] font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"><RefreshCw size={13} /> Replay introduction</button>
+      <button onClick={() => go({ page: 'account-security', path: '/account/security' })} className="mb-3 flex w-full items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-left text-[10px] font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"><KeyRound size={13} /> Account security</button>
       <div className="flex items-center gap-3"><div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-300/15 text-xs font-bold text-emerald-200">{(user?.name || '?').split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()}</div><div className="min-w-0 flex-1"><div className="truncate text-xs font-semibold">{user?.name}</div><div className="truncate text-[10px] text-white/40">{user?.orgName}</div></div><button onClick={logout} className="rounded-lg p-2 text-white/40 hover:bg-white/10 hover:text-white" title="Sign out"><LogOut size={16} /></button></div>
       <div className="mt-3 flex items-center gap-2 border-t border-white/10 pt-3 text-[10px] text-emerald-200/60"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.7)]" />Ghana → Netherlands corridor</div>
     </div>

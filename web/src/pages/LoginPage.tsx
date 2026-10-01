@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { ArrowRight, CheckCircle2, Leaf, QrCode, Route, Search, ShieldCheck, ShoppingBag } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { workspace } from '../api';
 import { webConfig } from '../config';
@@ -110,6 +110,8 @@ export default function LoginPage() {
             <div><label className="mb-2 block text-[10px] font-bold uppercase tracking-[.14em] text-white/40">Password</label><input type="password" className="min-h-12 w-full rounded-xl border border-white/15 bg-white/[.05] px-4 text-sm outline-none transition placeholder:text-white/25 focus:border-brand-400 focus:bg-white/[.08]" placeholder="Enter your password" value={password} onChange={(event) => setPassword(event.target.value)} required /></div>
             <button type="submit" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 text-sm font-bold shadow-xl shadow-brand-900/30 transition hover:bg-brand-400" disabled={submitting}>{submitting ? 'Signing in…' : <>Sign in <ArrowRight size={16} /></>}</button>
           </form>
+
+          {!webConfig.demoMode && <div className="mt-5 flex items-center justify-between gap-3 text-xs"><Link to="/forgot-password" className="font-semibold text-white/45 transition hover:text-white">Forgot password?</Link><Link to="/request-access" className="font-semibold text-brand-300 transition hover:text-brand-200">Request access</Link></div>}
 
           {webConfig.demoMode && <><div className="my-7 flex items-center gap-3"><div className="h-px flex-1 bg-white/10" /><span className="text-[9px] font-bold uppercase tracking-[.16em] text-white/25">More demo access</span><div className="h-px flex-1 bg-white/10" /></div>
           <button type="button" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-4 text-sm font-bold text-emerald-200 transition hover:bg-emerald-300/15" onClick={launchDemo} disabled={submitting}><QrCode size={17} />{submitting ? 'Opening demo…' : 'Launch investor demo'}<ArrowRight size={15} /></button>

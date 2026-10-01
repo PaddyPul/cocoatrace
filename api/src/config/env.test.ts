@@ -73,6 +73,56 @@ describe('environment configuration', () => {
     expect(() => parseConfig({ APP_ENV: 'development', OPENAI_API_KEY: 'secret' })).toThrow(/OPENAI_API_KEY and OPENAI_MODEL/);
   });
 
+  it('keeps identity email delivery disabled by default', () => {
+    const result = parseConfig({ APP_ENV: 'development' });
+    expect(result.identityEmailEnabled).toBe(false);
+    expect(result.emailDriver).toBe('development');
+  });
+
+  it('fails closed when deployed identity email is enabled without SMTP', () => {
+    expect(() => parseConfig({
+      ...deployedBase,
+      APP_ENV: 'staging',
+      IDENTITY_EMAIL_ENABLED: 'true',
+    })).toThrow(/EMAIL_DRIVER/);
+  });
+
+  it('requires complete authenticated SMTP configuration', () => {
+    expect(() => parseConfig({ APP_ENV: 'development', EMAIL_DRIVER: 'smtp' })).toThrow(/EMAIL_FROM.*SMTP_HOST.*SMTP_USER.*SMTP_PASSWORD/);
+  });
+
+  it('accepts encrypted SMTP for deployed identity email', () => {
+    const result = parseConfig({
+      ...deployedBase,
+      APP_ENV: 'staging',
+      IDENTITY_EMAIL_ENABLED: 'true',
+      EMAIL_DRIVER: 'smtp',
+      EMAIL_FROM: 'identity@cocoatrace.example',
+      SMTP_HOST: 'smtp.example.com',
+      SMTP_USER: 'cocoatrace',
+      SMTP_PASSWORD: 'smtp-provider-credential',
+      SMTP_REQUIRE_TLS: 'true',
+      SMTP_TLS_REJECT_UNAUTHORIZED: 'true',
+    });
+    expect(result.identityEmailEnabled).toBe(true);
+    expect(result.emailDriver).toBe('smtp');
+  });
+
+  it('rejects unencrypted or certificate-unverified SMTP in deployed identity email', () => {
+    const smtpBase = {
+      ...deployedBase,
+      APP_ENV: 'staging',
+      IDENTITY_EMAIL_ENABLED: 'true',
+      EMAIL_DRIVER: 'smtp',
+      EMAIL_FROM: 'identity@cocoatrace.example',
+      SMTP_HOST: 'smtp.example.com',
+      SMTP_USER: 'cocoatrace',
+      SMTP_PASSWORD: 'smtp-provider-credential',
+    };
+    expect(() => parseConfig({ ...smtpBase, SMTP_REQUIRE_TLS: 'false' })).toThrow(/SMTP_REQUIRE_TLS/);
+    expect(() => parseConfig({ ...smtpBase, SMTP_TLS_REJECT_UNAUTHORIZED: 'false' })).toThrow(/SMTP_TLS_REJECT_UNAUTHORIZED/);
+  });
+
   it('rejects malformed booleans and fee values', () => {
     expect(() => parseConfig({ COOKIE_SECURE: 'sometimes' })).toThrow(/COOKIE_SECURE/);
     expect(() => parseConfig({ PLATFORM_FEE_BPS: '1001' })).toThrow(/PLATFORM_FEE_BPS/);
