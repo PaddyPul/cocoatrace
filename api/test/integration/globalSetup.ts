@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import knex, { Knex } from 'knex';
 import { requireDisposableTestDatabase } from '../../src/testing/databaseSafety';
-import { up as applyIdentitySessionLifecycle } from '../../src/migrations/016_identity_session_lifecycle';
+import { planBaselineAndForwardMigrations } from '../../src/testing/migrationBaseline';
 
 let database: Knex | undefined;
 
@@ -17,12 +17,58 @@ export async function setup(): Promise<void> {
     client: 'pg',
     connection,
     pool: { min: 0, max: 2 },
+    migrations: {
+      directory: path.resolve(__dirname, '../../src/migrations'),
+      loadExtensions: ['.ts'],
+    },
   });
 
   await database.raw('SELECT 1');
-  const baselineSchema = fs.readFileSync(path.resolve(__dirname, '../../../db/schema.sql'), 'utf8');
+
+  // The database is disposable and name-guarded above. Recreating public makes
+  // repeated local runs deterministic and prevents stale objects hiding a bad
+  // forward migration.
+  await database.raw('DROP SCHEMA public CASCADE; CREATE SCHEMA public');
+
+  const migrationDirectory = path.resolve(__dirname, '../../src/migrations');
+  const migrationFiles = fs.readdirSync(migrationDirectory)
+    .filter((name) => name.endsWith('.ts'))
+    .sort();
+  const migrationPlan = planBaselineAndForwardMigrations(migrationFiles);
+
+  const baselineSchema = fs.readFileSync(
+    path.resolve(__dirname, './baselines/010_schema.sql'),
+    'utf8',
+  );
   await database.raw(baselineSchema);
-  await applyIdentitySessionLifecycle(database);
+
+  await database.schema.createTable('knex_migrations', (table) => {
+    table.increments('id').primary();
+    table.string('name');
+    table.integer('batch');
+    table.timestamp('migration_time');
+  });
+  await database.schema.createTable('knex_migrations_lock', (table) => {
+    table.increments('index').primary();
+    table.integer('is_locked');
+  });
+  await database('knex_migrations_lock').insert({ is_locked: 0 });
+  await database('knex_migrations').insert(
+    migrationPlan.baseline.map((name) => ({
+      name,
+      batch: 1,
+      migration_time: new Date('2026-09-29T00:00:00.000Z'),
+    })),
+  );
+
+  const [, appliedForwardMigrations] = await database.migrate.latest();
+  const expectedForward = [...migrationPlan.forward].sort();
+  const appliedForward = [...appliedForwardMigrations].sort();
+  if (JSON.stringify(appliedForward) !== JSON.stringify(expectedForward)) {
+    throw new Error(
+      `Expected forward migrations [${expectedForward.join(', ')}], but Knex applied [${appliedForward.join(', ')}].`,
+    );
+  }
 
   const tables = await database('pg_tables')
     .select('tablename')
