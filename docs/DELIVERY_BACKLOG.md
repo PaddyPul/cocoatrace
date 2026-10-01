@@ -14,6 +14,7 @@
 4. Add newly discovered work to the appropriate section with an ID, priority, phase and completion test.
 5. Do not hide unfinished scope inside a pull request. Create follow-up items before merging.
 6. At the end of each work session, update checkboxes, the current queue, risks and `Last triaged` if priorities changed.
+7. Automate repeatable browser journeys in each sprint. Bundle handoffs should require automated checks plus a short targeted smoke test, not repeat the entire manual regression suite. Real-provider delivery, usability and new behavior still require focused human verification.
 
 When asked “what needs to be done?”, start with incomplete items in the current execution queue, then the active phase exit criteria, then blocked P0/P1 work.
 
@@ -52,9 +53,10 @@ only the ordered view and deliberately has no duplicate checkboxes.
 
 1. **Repository CI and operations foundation — ENV-007, QLT-005–QLT-006, SEC-013–SEC-014, OPS-003–OPS-006:** run migrations from zero in CI, enforce static quality and supply-chain checks, centralize operational signals and alert on storage/scanner failures.
 2. **Pilot Identity & Access v1 — IDN-002–IDN-011, IDN-013–IDN-015:** request access, verify email, review organizations, create the first administrator only after approval, deliver/revoke invitations, recover passwords, revoke sessions and record policy acceptance.
-3. **Trading Integrity v1 — ARC-005, ARC-012, TRD-001–TRD-009:** make offer acceptance, reservation and every competing inventory mutation transactional, constrained and concurrency-tested.
-4. **DAT-001–DAT-003** — replace optimistic trust-state defaults and preserve the source of every claim.
-5. **RCL-001–RCL-002** — enforce recall holds across listings, offers, transfers and dispatch.
+3. **Browser regression foundation — QLT-021, then QLT-009–QLT-011:** automate identity and invitation flows with isolated fixtures and a captured SMTP inbox; run in CI with failure screenshots/traces. Extend coverage alongside each subsequent feature sprint.
+4. **Trading Integrity v1 — ARC-005, ARC-012, TRD-001–TRD-009:** make offer acceptance, reservation and every competing inventory mutation transactional, constrained and concurrency-tested.
+5. **DAT-001–DAT-003** — replace optimistic trust-state defaults and preserve the source of every claim.
+6. **RCL-001–RCL-002** — enforce recall holds across listings, offers, transfers and dispatch.
 
 The following deployment work is a **parallel external gate**, not repository-complete work: **ENV-004–ENV-006, UPL-002, OPS-001–OPS-002**. A named infrastructure owner must provision isolated staging resources, private encrypted object storage, HTTPS/secrets, managed database recovery and a recorded restore drill. Repository tests and local Docker do not close those items.
 
@@ -147,7 +149,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **IDN-018 · P2 · Phase 2:** Add recovery procedures for lost MFA and locked accounts.
 - [ ] **IDN-019 · P2 · Phase 3:** Add periodic privileged-access review and stale-account reporting.
 - [ ] **IDN-020 · P3 · Phase 4:** Evaluate enterprise SSO only after customer demand is validated.
-- [-] **IDN-021 · P1 · Phase 1:** Complete identity email delivery setup and end-to-end inbox verification. Done when verification, approval invitation, team invitation/resend and password reset arrive in the intended inbox in staging, expired/revoked/reused links are rejected, and delivery failures can be retried without creating duplicate organizations or accounts. Local demo links alone do not close this item.
+- [-] **IDN-021 · P1 · Phase 1:** Complete identity email delivery setup and end-to-end inbox verification. Done when verification, approval invitation, team invitation/resend and password reset arrive in the intended inbox in staging, expired/revoked/reused links are rejected, and delivery failures can be retried without creating duplicate organizations or accounts. Local demo links alone do not close this item. User reports all local identity/email checks passed on 2026-10-01; real provider and staging inbox verification remain open.
 
 # 5. Authorization and application security
 
@@ -338,6 +340,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **QLT-018 · P2 · Phase 3:** Add test data builders/factories rather than coupling tests to the demo seed.
 - [ ] **QLT-019 · P2 · Phase 3:** Add mutation or equivalent fault-injection testing for payment and inventory invariants.
 - [ ] **QLT-020 · P3 · Phase 4:** Add cross-browser and visual-regression coverage for the investor and critical customer flows.
+- [ ] **QLT-021 · P1 · Phase 1:** Add an automated browser identity regression suite covering request access, captured verification/approval emails, invitation create/resend/revoke/accept, reset, password change and session revocation. Done when it runs against a disposable database/inbox in CI and locally through one command, rejects stale/revoked/reused links, and retains failure screenshots/traces without exposing bearer tokens in public artifacts.
 
 # 15. Observability, reliability and operations
 
