@@ -1,29 +1,18 @@
-import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
-import { config } from '../config/env';
+import { authenticateSession, AuthenticatedActor } from '../services/authSessionService';
 
-const jwtSecret = config.jwtSecret;
-
-export interface JwtPayload {
-  id: string;
-  organizationId: string;
-  email: string;
-  name: string;
-  roles: string[];
-  permissions: string[];
-  orgName: string;
-  orgType: string;
-}
+export type JwtPayload = AuthenticatedActor;
 
 declare global {
   namespace Express {
     interface Request {
       user?: JwtPayload;
+      authToken?: string;
     }
   }
 }
 
-function requireAuth(req: Request, res: Response, next: NextFunction): void {
+async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const header = req.headers.authorization;
   const cookieToken = req.headers.cookie?.split(';').map((item) => item.trim()).find((item) => item.startsWith('ct_session='))?.slice('ct_session='.length);
   const token = header?.startsWith('Bearer ') ? header.slice(7) : cookieToken;
@@ -31,13 +20,14 @@ function requireAuth(req: Request, res: Response, next: NextFunction): void {
     res.status(401).json({ error: 'Authentication required' });
     return;
   }
-  try {
-    const payload = jwt.verify(decodeURIComponent(token), jwtSecret) as JwtPayload;
-    req.user = payload;
-    next();
-  } catch {
+  const actor = await authenticateSession(token);
+  if (!actor) {
     res.status(401).json({ error: 'Invalid or expired token' });
+    return;
   }
+  req.user = actor;
+  req.authToken = token;
+  next();
 }
 
 function requirePermission(permission: string) {
@@ -62,8 +52,4 @@ function requireAnyPermission(...permissions: string[]) {
   };
 }
 
-function signToken(payload: object): string {
-  return jwt.sign(payload, jwtSecret, { expiresIn: '24h' });
-}
-
-export { requireAuth, requirePermission, requireAnyPermission, signToken };
+export { requireAuth, requirePermission, requireAnyPermission };

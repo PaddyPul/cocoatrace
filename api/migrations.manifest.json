@@ -20,6 +20,8 @@
     { "path": "api/src/migrations/012_repair_product_profile_slug_constraint.ts", "sha256": "948ec7895f80640ef133bcff821e5bf2dff2eb247b420c1b8ebe916ae686caaf" },
     { "path": "api/src/migrations/013_private_evidence_uploads.ts", "sha256": "4ce057c5ef535980162b6a2a6755739d7b69b27634f5669e8cebeb785f73058a" },
     { "path": "api/src/migrations/014_evidence_malware_scanning.ts", "sha256": "72c8b12606c42343be01a932f8b84b48d0a8634a87790b69ac99274ebe55fe2e" },
-    { "path": "api/src/migrations/015_remove_missing_seed_evidence.ts", "sha256": "15e26906fd9a53f00f88277aa032b6590b305e945bba0f2b7c4706c348a564e5" }
+    { "path": "api/src/migrations/015_remove_missing_seed_evidence.ts", "sha256": "15e26906fd9a53f00f88277aa032b6590b305e945bba0f2b7c4706c348a564e5" },
+    { "path": "api/src/migrations/016_identity_session_lifecycle.ts", "sha256": "f5d15b66bc67711284b208dc75e7ea55e353cdafe9e1f5508f2d1d258f2e57eb" },
+    { "path": "api/src/migrations/017_organization_access_applications.ts", "sha256": "71a97a660b406b6b69554aaa44be7ca332bdb5ee6b94990813ddf0fa8d230c16" }
   ]
 }

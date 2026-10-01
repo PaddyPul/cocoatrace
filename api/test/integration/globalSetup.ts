@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import knex, { Knex } from 'knex';
 import { requireDisposableTestDatabase } from '../../src/testing/databaseSafety';
+import { up as applyIdentitySessionLifecycle } from '../../src/migrations/016_identity_session_lifecycle';
 
 let database: Knex | undefined;
 
@@ -21,6 +22,7 @@ export async function setup(): Promise<void> {
   await database.raw('SELECT 1');
   const baselineSchema = fs.readFileSync(path.resolve(__dirname, '../../../db/schema.sql'), 'utf8');
   await database.raw(baselineSchema);
+  await applyIdentitySessionLifecycle(database);
 
   const tables = await database('pg_tables')
     .select('tablename')

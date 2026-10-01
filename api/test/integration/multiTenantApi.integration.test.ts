@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'node:crypto';
 import path from 'path';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -37,7 +38,7 @@ const uploadedKeys: string[] = [];
 async function createTenant(tenant: Tenant, name: string, organizationType: 'exporter' | 'importer'): Promise<void> {
   const organization = await query(
     `INSERT INTO organizations (name, type, jurisdiction, verification_status)
-     VALUES ($1, $2, 'GH', 'pending') RETURNING id`,
+     VALUES ($1, $2, 'GH', 'verified') RETURNING id`,
     [name, organizationType],
   );
   tenant.organizationId = organization.rows[0].id;
@@ -152,6 +153,28 @@ async function createFarm(tenant: Tenant, name: string): Promise<string> {
 
   expect(response.status).toBe(201);
   return response.body.id;
+}
+
+async function createIdentityFixture(label: string) {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const email = `${label}-${suffix}@integration.test`;
+  const password = 'OriginalPassword123!';
+  const organization = await query(
+    `INSERT INTO organizations(name,type,jurisdiction,verification_status)
+     VALUES ($1,'exporter','GH','verified') RETURNING id`,
+    [`Identity ${label} ${suffix}`],
+  );
+  const user = await query(
+    `INSERT INTO users(organization_id,email,password_hash,name)
+     VALUES ($1,$2,$3,$4) RETURNING id`,
+    [organization.rows[0].id, email, await bcrypt.hash(password, 4), `Identity ${label}`],
+  );
+  const role = await query(
+    `INSERT INTO roles(name,permissions) VALUES ($1,ARRAY['farm.read']) RETURNING id`,
+    [`identity-${label}-${suffix}`],
+  );
+  await query('INSERT INTO user_roles(user_id,role_id) VALUES ($1,$2)', [user.rows[0].id, role.rows[0].id]);
+  return { email, password, userId: user.rows[0].id, organizationId: organization.rows[0].id, roleId: role.rows[0].id };
 }
 
 beforeAll(async () => {
@@ -518,5 +541,84 @@ describe('real PostgreSQL multi-tenant API boundary', () => {
     await query(`UPDATE evidence_items SET malware_scan_status='clean' WHERE id=$1`, [tenantA.evidenceId]);
     const allowed = await request(app).get(`/evidence/${tenantA.evidenceId}/download`).set('Authorization', `Bearer ${tenantA.token}`);
     expect(allowed.status).toBe(200);
+  });
+
+  it('refreshes permissions and immediately enforces logout, user suspension and organization suspension', async () => {
+    const fixture = await createIdentityFixture('session');
+    const first = await request(app).post('/auth/login').send({ email: fixture.email, password: fixture.password });
+    const second = await request(app).post('/auth/login').send({ email: fixture.email, password: fixture.password });
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+
+    await query("UPDATE roles SET permissions=ARRAY['payment.read'] WHERE id=$1", [fixture.roleId]);
+    const refreshed = await request(app).get('/me').set('Authorization', `Bearer ${first.body.accessToken}`);
+    expect(refreshed.status).toBe(200);
+    expect(refreshed.body.permissions).toContain('payment.read');
+    expect(refreshed.body.permissions).not.toContain('farm.read');
+
+    const logout = await request(app).post('/auth/logout').set('Authorization', `Bearer ${first.body.accessToken}`);
+    expect(logout.status).toBe(204);
+    expect((await request(app).get('/me').set('Authorization', `Bearer ${first.body.accessToken}`)).status).toBe(401);
+    expect((await request(app).get('/me').set('Authorization', `Bearer ${second.body.accessToken}`)).status).toBe(200);
+
+    await query('UPDATE users SET active=FALSE WHERE id=$1', [fixture.userId]);
+    expect((await request(app).get('/me').set('Authorization', `Bearer ${second.body.accessToken}`)).status).toBe(401);
+    await query('UPDATE users SET active=TRUE WHERE id=$1', [fixture.userId]);
+    await query("UPDATE organizations SET verification_status='suspended' WHERE id=$1", [fixture.organizationId]);
+    expect((await request(app).get('/me').set('Authorization', `Bearer ${second.body.accessToken}`)).status).toBe(401);
+  });
+
+  it('returns the same forgot-password response without exposing account existence or raw reset tokens', async () => {
+    const fixture = await createIdentityFixture('forgot');
+    const existing = await request(app).post('/auth/password/forgot').send({ email: fixture.email });
+    const missing = await request(app).post('/auth/password/forgot').send({ email: 'missing-account@integration.test' });
+    expect(existing.status).toBe(202);
+    expect(missing.status).toBe(202);
+    expect(existing.body).toEqual(missing.body);
+    expect(JSON.stringify(existing.body)).not.toMatch(/token/i);
+    const stored = await query('SELECT token_hash FROM password_reset_tokens WHERE user_id=$1', [fixture.userId]);
+    expect(stored.rows).toHaveLength(1);
+    expect(stored.rows[0].token_hash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('consumes reset tokens once and revokes every existing session', async () => {
+    const fixture = await createIdentityFixture('reset');
+    const login = await request(app).post('/auth/login').send({ email: fixture.email, password: fixture.password });
+    expect(login.status).toBe(200);
+    const rawToken = crypto.randomBytes(32).toString('base64url');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    await query(
+      `INSERT INTO password_reset_tokens(user_id,token_hash,expires_at)
+       VALUES ($1,$2,NOW()+INTERVAL '1 hour')`,
+      [fixture.userId, tokenHash],
+    );
+    const reset = await request(app).post('/auth/password/reset').send({ token: rawToken, password: 'ResetPassword456!' });
+    expect(reset.status).toBe(204);
+    expect((await request(app).get('/me').set('Authorization', `Bearer ${login.body.accessToken}`)).status).toBe(401);
+    const reused = await request(app).post('/auth/password/reset').send({ token: rawToken, password: 'AnotherPassword789!' });
+    expect(reused.status).toBe(400);
+    expect(reused.body.code).toBe('PASSWORD_RESET_INVALID');
+    expect((await request(app).post('/auth/login').send({ email: fixture.email, password: fixture.password })).status).toBe(401);
+    expect((await request(app).post('/auth/login').send({ email: fixture.email, password: 'ResetPassword456!' })).status).toBe(200);
+  });
+
+  it('changes a password while preserving the current session and revoking other sessions', async () => {
+    const fixture = await createIdentityFixture('change');
+    const current = await request(app).post('/auth/login').send({ email: fixture.email, password: fixture.password });
+    const other = await request(app).post('/auth/login').send({ email: fixture.email, password: fixture.password });
+    const changed = await request(app).post('/auth/password/change')
+      .set('Authorization', `Bearer ${current.body.accessToken}`)
+      .send({ currentPassword: fixture.password, newPassword: 'ChangedPassword456!' });
+    expect(changed.status).toBe(204);
+    expect((await request(app).get('/me').set('Authorization', `Bearer ${current.body.accessToken}`)).status).toBe(200);
+    expect((await request(app).get('/me').set('Authorization', `Bearer ${other.body.accessToken}`)).status).toBe(401);
+    expect((await request(app).post('/auth/login').send({ email: fixture.email, password: fixture.password })).status).toBe(401);
+    expect((await request(app).post('/auth/login').send({ email: fixture.email, password: 'ChangedPassword456!' })).status).toBe(200);
+    const events = await query(
+      `SELECT event_type FROM security_events WHERE actor_user_id=$1
+       AND event_type IN ('password.changed','session.revoked','login.succeeded')`,
+      [fixture.userId],
+    );
+    expect(events.rows.some((event) => event.event_type === 'password.changed')).toBe(true);
   });
 });

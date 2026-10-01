@@ -28,6 +28,12 @@ import CompareOffersPage from './pages/CompareOffersPage';
 import PublishSupplyPage from './pages/PublishSupplyPage';
 import DealRoomPage from './pages/DealRoomPage';
 import DirectInventoryPage from './pages/DirectInventoryPage';
+import RequestAccessPage from './pages/RequestAccessPage';
+import AccessVerificationPage from './pages/AccessVerificationPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
+import AccessApplicationsPage from './pages/AccessApplicationsPage';
 import { webConfig } from './config';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -61,6 +67,12 @@ export default function App() {
         <Routes>
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/request-access" element={<PublicRoute><RequestAccessPage /></PublicRoute>} />
+          <Route path="/verify-access" element={<ErrorBoundary><AccessVerificationPage /></ErrorBoundary>} />
+          <Route path="/verify-access/:token" element={<ErrorBoundary><AccessVerificationPage /></ErrorBoundary>} />
+          <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
+          <Route path="/reset-password" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
+          <Route path="/reset-password/:token" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
           <Route path="/p/:slug" element={<ErrorBoundary><PublicProductPage /></ErrorBoundary>} />
           <Route path="/accept-invite/:token" element={<ErrorBoundary><AcceptInvitationPage /></ErrorBoundary>} />
           <Route path="/dashboard" element={<ProtectedRoute><ControlTowerPage /></ProtectedRoute>} />
@@ -95,6 +107,8 @@ export default function App() {
           <Route path="/certs" element={<ProtectedRoute><CertsPage /></ProtectedRoute>} />
           <Route path="/my-listings" element={<ProtectedRoute><MyListingsPage /></ProtectedRoute>} />
           <Route path="/organizations" element={<ProtectedRoute><OrganizationsPage /></ProtectedRoute>} />
+          <Route path="/access-applications" element={<ProtectedRoute><AccessApplicationsPage /></ProtectedRoute>} />
+          <Route path="/account/security" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
         </ToastProvider>

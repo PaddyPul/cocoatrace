@@ -48,8 +48,53 @@ export const auth = {
     api<{ accessToken: string; user: any }>('POST', '/auth/login', { email, password }),
   me: () => api<any>('GET', '/me'),
   logout: () => api<void>('POST', '/auth/logout'),
+  requestAccess: (data: {
+    organizationName: string;
+    organizationType: 'buyer' | 'supplier';
+    jurisdiction: string;
+    legalRegistrationNumber?: string;
+    adminName: string;
+    adminEmail: string;
+  }) => api<{ application: AccessApplication; verificationUrl?: string }>('POST', '/auth/request-access', data),
+  verifyAccessRequest: (verificationToken: string) =>
+    api<{ id: string; status: 'pending_review'; emailVerifiedAt: string }>('POST', '/auth/request-access/verify', { token: verificationToken }),
+  forgotPassword: (email: string) =>
+    api<{ message: string }>('POST', '/auth/password/forgot', { email }),
+  resetPassword: (resetToken: string, password: string) =>
+    api<void>('POST', '/auth/password/reset', { token: resetToken, password }),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    api<void>('POST', '/auth/password/change', { currentPassword, newPassword }),
   invitation: (token: string) => api<any>('GET', `/auth/invitations/${token}`),
   acceptInvitation: (token: string, data: { name: string; password: string }) => api<any>('POST', `/auth/invitations/${token}/accept`, data),
+};
+
+export interface AccessApplication {
+  id: string;
+  status: 'pending_email_verification' | 'pending_review' | 'approved' | 'rejected' | string;
+  organizationName: string;
+  organizationType: 'buyer' | 'supplier';
+  jurisdiction: string;
+  legalRegistrationNumber?: string | null;
+  adminName: string;
+  adminEmail: string;
+  verificationExpiresAt?: string | null;
+  emailVerifiedAt?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+  reviewReason?: string | null;
+  reviewedAt?: string | null;
+  reviewedByUserId?: string | null;
+  approvedOrganizationId?: string | null;
+  firstAdminInvitationId?: string | null;
+}
+
+export const accessApplications = {
+  list: () => api<AccessApplication[]>('GET', '/access-applications'),
+  get: (id: string) => api<AccessApplication>('GET', `/access-applications/${id}`),
+  approve: (id: string, reason?: string) =>
+    api<{ application: AccessApplication; organizationId: string; invitationId: string; invitationExpiresAt: string; inviteUrl?: string }>('POST', `/access-applications/${id}/approve`, reason ? { reason } : {}),
+  reject: (id: string, reason?: string) =>
+    api<AccessApplication>('POST', `/access-applications/${id}/reject`, reason ? { reason } : {}),
 };
 
 export const invitations = {

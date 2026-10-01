@@ -1,101 +1,99 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { query } from '../db';
-import { signToken, JwtPayload } from '../middleware/auth';
 import { config } from '../config/env';
+import { createSession, revokeSession } from '../services/authSessionService';
+import { changePassword, requestPasswordReset, resetPassword } from '../services/passwordLifecycleService';
+import { recordSecurityEvent, securityIdentifierHash } from '../services/securityEventService';
+import { sendPasswordResetEmail } from '../services/emailSender';
+import logger from '../logger';
+
+const dummyHash = bcrypt.hash('CocoaTrace-Dummy-Password-2026!', 12);
+
+function setSessionCookie(res: Response, token: string): void {
+  res.cookie('ct_session', token, { httpOnly: true, secure: config.cookieSecure, sameSite: 'lax', path: '/', maxAge: 24 * 60 * 60 * 1000 });
+}
+
+function clearSessionCookie(res: Response): void {
+  res.clearCookie('ct_session', { httpOnly: true, secure: config.cookieSecure, sameSite: 'lax', path: '/' });
+}
 
 export async function login(req: Request, res: Response): Promise<void> {
   const { email, password } = req.body;
-
   const { rows } = await query(
-    `SELECT u.*, array_agg(DISTINCT r.name) as role_names, array_agg(DISTINCT p) as permissions
-     FROM users u
-     LEFT JOIN user_roles ur ON ur.user_id = u.id
-     LEFT JOIN roles r ON r.id = ur.role_id
-     LEFT JOIN LATERAL unnest(r.permissions) p ON TRUE
-     WHERE u.email = $1 AND u.active = TRUE
-     GROUP BY u.id`,
-    [email]
+    `SELECT u.id,u.email,u.name,u.organization_id,u.password_hash,u.active,o.verification_status
+       FROM users u JOIN organizations o ON o.id=u.organization_id WHERE u.email=$1`,
+    [email],
   );
-
   const user = rows[0];
-  if (!user) {
+  const valid = await bcrypt.compare(password, user?.password_hash || await dummyHash);
+  if (!user || !valid || !user.active) {
+    await recordSecurityEvent({
+      eventType: 'login.failed', success: false,
+      actorUserId: user?.id, actorOrganizationId: user?.organization_id,
+      reason: !user ? 'unknown_account' : !user.active ? 'inactive_account' : 'invalid_password',
+      metadata: { emailHash: securityIdentifierHash(email) },
+    });
     res.status(401).json({ error: 'Invalid credentials' });
     return;
   }
-
-  const valid = await bcrypt.compare(password, user.password_hash);
-  if (!valid) {
-    res.status(401).json({ error: 'Invalid credentials' });
+  if (user.verification_status !== 'verified') {
+    await recordSecurityEvent({ eventType: 'login.failed', success: false, actorUserId: user.id, actorOrganizationId: user.organization_id, reason: 'organization_not_active' });
+    res.status(403).json({ error: 'This organization is not approved for access', code: 'ORGANIZATION_NOT_ACTIVE' });
     return;
   }
 
-  const orgRes = await query('SELECT name, type FROM organizations WHERE id = $1', [user.organization_id]);
-  const org = orgRes.rows[0];
-
-  const permissions = [...new Set<string>(user.permissions.filter(Boolean))];
-  const roles = user.role_names.filter(Boolean);
-
-  const tokenPayload: JwtPayload = {
-    id: user.id,
-    organizationId: user.organization_id,
-    email: user.email,
-    name: user.name,
-    roles,
-    permissions,
-    orgName: org?.name,
-    orgType: org?.type,
-  };
-
-  const token = signToken(tokenPayload);
-
-  res.cookie('ct_session', token, {
-    httpOnly: true,
-    secure: config.cookieSecure,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 24 * 60 * 60 * 1000,
-  });
-
+  const { token, actor } = await createSession(user.id);
+  await recordSecurityEvent({ eventType: 'login.succeeded', success: true, actorUserId: actor.id, actorOrganizationId: actor.organizationId, sessionId: actor.sessionId });
+  setSessionCookie(res, token);
   res.json({
     accessToken: token,
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      organizationId: user.organization_id,
-      orgName: org?.name,
-      orgType: org?.type,
-      roles,
-      permissions,
-    },
+    user: { id: actor.id, email: actor.email, name: actor.name, organizationId: actor.organizationId,
+      orgName: actor.orgName, orgType: actor.orgType, roles: actor.roles, permissions: actor.permissions },
   });
 }
 
-export async function logout(_req: Request, res: Response): Promise<void> {
-  res.clearCookie('ct_session', { path: '/' });
+export async function logout(req: Request, res: Response): Promise<void> {
+  await revokeSession(req.user!.sessionId, 'logout');
+  await recordSecurityEvent({ eventType: 'session.revoked', success: true, actorUserId: req.user!.id,
+    actorOrganizationId: req.user!.organizationId, sessionId: req.user!.sessionId, reason: 'logout' });
+  clearSessionCookie(res);
+  res.status(204).send();
+}
+
+export async function forgotPassword(req: Request, res: Response): Promise<void> {
+  const delivery = await requestPasswordReset(req.body.email);
+  if (delivery) {
+    try {
+      await sendPasswordResetEmail({
+        to: delivery.email,
+        recipientName: delivery.name,
+        resetUrl: `${config.publicWebUrl}/reset-password/${encodeURIComponent(delivery.token)}`,
+      });
+    } catch (error) {
+      logger.error({ err: error, userId: delivery.userId }, 'Password reset email delivery failed');
+      await recordSecurityEvent({
+        eventType: 'password.reset.delivery_failed', success: false,
+        actorUserId: delivery.userId, actorOrganizationId: delivery.organizationId,
+        reason: 'email_delivery_failed',
+      });
+    }
+  }
+  res.status(202).json({ message: 'If an account exists, password reset instructions will be sent.' });
+}
+
+export async function completePasswordReset(req: Request, res: Response): Promise<void> {
+  await resetPassword(req.body.token, req.body.password);
+  res.status(204).send();
+}
+
+export async function updatePassword(req: Request, res: Response): Promise<void> {
+  await changePassword(req.user!.id, req.user!.organizationId, req.user!.sessionId, req.body.currentPassword, req.body.newPassword);
   res.status(204).send();
 }
 
 export async function me(req: Request, res: Response): Promise<void> {
-  const { rows } = await query(
-    `SELECT u.id, u.email, u.name, u.organization_id, u.mfa_enabled,
-            o.name as org_name, o.type as org_type,
-            array_agg(DISTINCT r.name) as roles,
-            array_agg(DISTINCT p) as permissions
-     FROM users u
-     JOIN organizations o ON o.id = u.organization_id
-     LEFT JOIN user_roles ur ON ur.user_id = u.id
-     LEFT JOIN roles r ON r.id = ur.role_id
-     LEFT JOIN LATERAL unnest(r.permissions) p ON TRUE
-     WHERE u.id = $1
-     GROUP BY u.id, o.name, o.type`,
-    [req.user!.id]
-  );
-  if (!rows[0]) {
-    res.status(404).json({ error: 'User not found' });
-    return;
-  }
-  const u = rows[0];
-  res.json({ ...u, permissions: [...new Set<string>(u.permissions.filter(Boolean))], roles: u.roles.filter(Boolean) });
+  const user = req.user!;
+  res.json({ id: user.id, email: user.email, name: user.name, organization_id: user.organizationId,
+    mfa_enabled: false, org_name: user.orgName, org_type: user.orgType, roles: user.roles, permissions: user.permissions });
 }
