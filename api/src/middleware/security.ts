@@ -6,7 +6,15 @@ const attempts = new Map<string, Counter>();
 
 export function sensitiveActionLimit(req: Request, res: Response, next: NextFunction): void {
   const now = Date.now();
-  const key = `${req.ip}:${req.path}`;
+  // Keep independent buckets per client IP and account/token target. This
+  // prevents one user's failed attempts from locking out unrelated users and
+  // makes the limiter safe for sequential integration and staging tests.
+  const target = typeof req.body?.email === 'string'
+    ? req.body.email.trim().toLowerCase()
+    : typeof req.params?.token === 'string'
+      ? req.params.token.slice(0, 16)
+      : 'anonymous';
+  const key = `${req.ip}:${req.path}:${target}`;
   const current = attempts.get(key);
   const entry = !current || current.resetAt <= now ? { count: 0, resetAt: now + 15 * 60_000 } : current;
   entry.count += 1;
