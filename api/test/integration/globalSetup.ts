@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { pathToFileURL } from 'url';
 import knex, { Knex } from 'knex';
 import { requireDisposableTestDatabase } from '../../src/testing/databaseSafety';
 import { planBaselineAndForwardMigrations } from '../../src/testing/migrationBaseline';
@@ -17,10 +18,6 @@ export async function setup(): Promise<void> {
     client: 'pg',
     connection,
     pool: { min: 0, max: 2 },
-    migrations: {
-      directory: path.resolve(__dirname, '../../src/migrations'),
-      loadExtensions: ['.ts'],
-    },
   });
 
   await database.raw('SELECT 1');
@@ -61,7 +58,17 @@ export async function setup(): Promise<void> {
     })),
   );
 
-  const [, appliedForwardMigrations] = await database.migrate.latest();
+  const migrationModules = await Promise.all(
+    migrationPlan.forward.map(async (name) => ({
+      name,
+      ...(await import(pathToFileURL(path.join(migrationDirectory, name)).href)),
+    })),
+  );
+  const migrationSource: Knex.MigrationSource<{ name: string; up: Knex.Migration['up']; down?: Knex.Migration['down'] }> = {
+    getMigrations: async () => migrationModules,
+    getMigrationName: (migration) => migration.name,
+  };
+  const [, appliedForwardMigrations] = await database.migrate.latest({ migrationSource });
   const expectedForward = [...migrationPlan.forward].sort();
   const appliedForward = [...appliedForwardMigrations].sort();
   if (JSON.stringify(appliedForward) !== JSON.stringify(expectedForward)) {
