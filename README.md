@@ -161,6 +161,11 @@ npm run demo:validate         # verify quantities, dates, evidence and safety ru
 
 ## Testing the workflows
 
+Run `npm run test:migrations:docker` to test the normal release migration
+command against a fresh isolated PostgreSQL database, safe upgrades and
+transactional failure rollback. See the
+[migration startup runbook](docs/runbooks/MIGRATION_STARTUP.md).
+
 Run `npm run test:browser:docker` from the repository root to exercise six
 identity/email browser journeys against an isolated PostgreSQL/Mailpit stack.
 The runner creates fixtures and cleans up its test containers automatically;

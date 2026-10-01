@@ -1,0 +1,46 @@
+services:
+  postgres-migration-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: migration_test
+      POSTGRES_PASSWORD: migration_test
+      POSTGRES_DB: cocoatrace_migration_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U migration_test -d cocoatrace_migration_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  migration-test:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    depends_on:
+      postgres-migration-test:
+        condition: service_healthy
+    command: ["node", "api/scripts/test-migration-startup.mjs"]
+    environment:
+      MIGRATION_TEST_RESET: I_UNDERSTAND_DISPOSABLE_DATABASE
+      APP_ENV: production
+      NODE_ENV: production
+      DEMO_MODE: "false"
+      DATABASE_URL: postgresql://migration_test:migration_test@postgres-migration-test:5432/cocoatrace_migration_test
+      DATABASE_POOL_MAX: "1"
+      JWT_SECRET: isolated-migration-test-jwt-secret-32-characters
+      WEB_URL: https://migration-test.invalid
+      PUBLIC_WEB_URL: https://migration-test.invalid
+      COOKIE_SECURE: "true"
+      APP_VERSION: migration-startup-regression
+      EVIDENCE_STORAGE_DRIVER: s3
+      EVIDENCE_STORAGE_ENDPOINT: https://storage.migration-test.invalid
+      EVIDENCE_STORAGE_REGION: us-east-1
+      EVIDENCE_STORAGE_BUCKET: cocoatrace-production-migration-test
+      EVIDENCE_STORAGE_ACCESS_KEY: isolated-migration-test-access
+      EVIDENCE_STORAGE_SECRET_KEY: isolated-migration-test-secret
+      EVIDENCE_STORAGE_SSE: AES256
+      EVIDENCE_STORAGE_AUTO_CREATE_BUCKET: "false"
+      EVIDENCE_UPLOAD_SIGNING_SECRET: isolated-migration-test-upload-secret-32-characters
+      EVIDENCE_SCANNER_DRIVER: clamav
+      EVIDENCE_SCANNER_HOST: scanner.migration-test.invalid
+      IDENTITY_EMAIL_ENABLED: "false"

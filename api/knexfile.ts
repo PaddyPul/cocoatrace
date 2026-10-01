@@ -11,6 +11,7 @@ const config: { [key: string]: Knex.Config } = {
   development: {
     client: 'pg',
     connection,
+    pool: { min: 0, max: appConfig.databasePoolMax },
     migrations: {
       directory: path.join(__dirname, 'src', 'migrations'),
       extension: 'ts',
@@ -23,6 +24,7 @@ const config: { [key: string]: Knex.Config } = {
   production: {
     client: 'pg',
     connection,
+    pool: { min: 0, max: appConfig.databasePoolMax },
     migrations: {
       // The migration table was originally created by the TypeScript runner,
       // so Knex records names such as 001_initial_schema.ts. The production
