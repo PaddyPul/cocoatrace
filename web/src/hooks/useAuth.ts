@@ -30,19 +30,15 @@ export function useAuth() {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      const data = await auth.login(email, password);
-      // The browser session is held in an HttpOnly cookie. The returned bearer
-      // token remains available for non-browser API clients but is not stored.
-      setAuthToken(null);
-      const u = data.user as User;
-      localStorage.setItem('ct_user', JSON.stringify(u));
-      setUser(u);
-      return u;
-    } finally {
-      setLoading(false);
-    }
+    // Initial-session restoration owns global loading. LoginPage owns its
+    // submitting state; toggling global loading unmounts it and loses errors.
+    const data = await auth.login(email, password);
+    // Keep the session in its HttpOnly cookie, never in browser storage.
+    setAuthToken(null);
+    const u = data.user as User;
+    localStorage.setItem('ct_user', JSON.stringify(u));
+    setUser(u);
+    return u;
   }, []);
 
   const logout = useCallback(() => {

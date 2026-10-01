@@ -51,9 +51,9 @@ Complete these canonical backlog items in order unless a blocker requires
 resequencing. Update their checkbox in the detailed section below; this queue is
 only the ordered view and deliberately has no duplicate checkboxes.
 
-1. **Repository CI and operations foundation — ENV-007, QLT-005–QLT-006, SEC-013–SEC-014, OPS-003–OPS-006:** run migrations from zero in CI, enforce static quality and supply-chain checks, centralize operational signals and alert on storage/scanner failures.
+1. **Empty-database startup repair — ENV-019, then repository CI and operations foundation — ENV-007, QLT-005–QLT-006, SEC-013–SEC-014, OPS-003–OPS-006:** repair the frozen-snapshot bootstrap without editing frozen migrations; run empty-database and upgrade migrations in CI, enforce static quality and supply-chain checks, centralize operational signals and alert on storage/scanner failures.
 2. **Pilot Identity & Access v1 — IDN-002–IDN-011, IDN-013–IDN-015:** request access, verify email, review organizations, create the first administrator only after approval, deliver/revoke invitations, recover passwords, revoke sessions and record policy acceptance.
-3. **Browser regression foundation — QLT-021, then QLT-009–QLT-011:** automate identity and invitation flows with isolated fixtures and a captured SMTP inbox; run in CI with failure screenshots/traces. Extend coverage alongside each subsequent feature sprint.
+3. **Browser regression foundation — QLT-021, then QLT-009–QLT-011:** automate identity and invitation flows with isolated fixtures and a captured SMTP inbox; run in CI with sanitized failure reports/screenshots; keep optional credential-bearing traces private. Extend coverage alongside each subsequent feature sprint.
 4. **Trading Integrity v1 — ARC-005, ARC-012, TRD-001–TRD-009:** make offer acceptance, reservation and every competing inventory mutation transactional, constrained and concurrency-tested.
 5. **DAT-001–DAT-003** — replace optimistic trust-state defaults and preserve the source of every claim.
 6. **RCL-001–RCL-002** — enforce recall holds across listings, offers, transfers and dispatch.
@@ -95,6 +95,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **ENV-016 · P1 · Phase 1:** Add a safe, explicit demo reset job that cannot address staging or production.
 - [ ] **ENV-017 · P1 · Phase 1:** Add deployment concurrency controls so an older release cannot overwrite a newer one.
 - [ ] **ENV-018 · P2 · Phase 2:** Document domain, DNS, TLS, cookie and CORS configuration for every environment.
+- [ ] **ENV-019 · P0 · Phase 1:** Repair empty-database bootstrap and rehearse both fresh startup and existing-database upgrade. Discovered 2026-10-01: migration 001 loads the frozen schema snapshot through 010, then migration 009 attempts to add an existing `batches.source_mode` column. Done when the normal release migration command succeeds from empty PostgreSQL and upgrades an existing ledger without resetting data or changing frozen migrations/checksums. The browser/API test baseline preparation does not close this production release blocker.
 
 # 3. Architecture and code quality
 
@@ -340,7 +341,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **QLT-018 · P2 · Phase 3:** Add test data builders/factories rather than coupling tests to the demo seed.
 - [ ] **QLT-019 · P2 · Phase 3:** Add mutation or equivalent fault-injection testing for payment and inventory invariants.
 - [ ] **QLT-020 · P3 · Phase 4:** Add cross-browser and visual-regression coverage for the investor and critical customer flows.
-- [ ] **QLT-021 · P1 · Phase 1:** Add an automated browser identity regression suite covering request access, captured verification/approval emails, invitation create/resend/revoke/accept, reset, password change and session revocation. Done when it runs against a disposable database/inbox in CI and locally through one command, rejects stale/revoked/reused links, and retains failure screenshots/traces without exposing bearer tokens in public artifacts.
+- [-] **QLT-021 · P1 · Phase 1:** Add an automated browser identity regression suite covering request access, captured verification/approval emails, invitation create/resend/revoke/accept, reset, password change and session revocation. Done when it runs against a disposable database/inbox in CI and locally through one command, rejects stale/revoked/reused links, and retains sanitized failure screenshots/reports without exposing bearer tokens in public artifacts. IN PROGRESS: six real Chromium journeys passed against the app, SMTP capture and temporary WASM PostgreSQL on 2026-10-01; 139 API unit tests, API/web builds and browser typecheck also passed. The isolated Docker/PostgreSQL 16 run and new CI job must still pass before closure. See `docs/runbooks/BROWSER_REGRESSION.md`.
 
 # 15. Observability, reliability and operations
 
@@ -492,7 +493,8 @@ An item is complete only when applicable criteria are met:
 | Recall notice does not quarantine affected supply | Critical | Public notice and calculation | RCL-001–010 |
 | Critical audit events can fail after business commit | High | Warning log | ARC-013–014 |
 | Real users lack reset/MFA/revocation lifecycle | High | Invite and password login | IDN-008–014 |
-| No critical browser E2E suite and migrations are not yet rehearsed from baseline in CI | High | Real-PostgreSQL two-tenant integration suite runs in CI | ENV-007, QLT-005, QLT-009–012 |
+| Empty production database cannot bootstrap through the frozen migration history | Critical | Browser/API tests explicitly prepare the frozen snapshot and forward migrations; production command remains blocked | ENV-019, ENV-007, QLT-005 |
+| Browser regression suite has not yet passed the native Docker/CI gate | High | Six Chromium identity journeys are implemented and passed locally against temporary WASM PostgreSQL/SMTP capture | QLT-021, QLT-009–012 |
 | Large, coupled files slow safe inheritance | Medium | TypeScript build | ARC-004–023 |
 | No restore/monitoring/incident proof | High | Health endpoints and structured logger | OPS-001–012 |
 | Marketing claims exceed implemented transformations | Medium | Demo genealogy | PRD-001, RCL-011, INV-005 |

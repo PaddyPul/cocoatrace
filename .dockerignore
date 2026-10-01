@@ -6,3 +6,7 @@ node_modules
 .env.example
 docker-compose.yml
 setup.sh
+
+browser-test-results
+playwright-report
+test-results

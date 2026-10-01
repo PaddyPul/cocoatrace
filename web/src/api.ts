@@ -27,7 +27,9 @@ export async function api<T = any>(
     opts.body = body;
   }
   const res = await fetch(API_BASE + path, opts);
-  if (res.status === 401) {
+  // Invalid login credentials are a form error, not an expired workspace
+  // session. Redirecting here reloads the form and hides the useful error.
+  if (res.status === 401 && path !== '/auth/login') {
     token = null;
     localStorage.removeItem('ct_token');
     localStorage.removeItem('ct_user');

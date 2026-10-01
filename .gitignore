@@ -37,3 +37,8 @@ api/scripts/*.js
 api/scripts/*.js.map
 api/scripts/*.d.ts
 api/scripts/*.d.ts.map
+
+# disposable browser test reports (may contain private local traces)
+browser-test-results/
+playwright-report/
+test-results/
