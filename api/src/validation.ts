@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+const inventoryQuantitySchema = z.number().finite().positive().max(999999999.999)
+  .refine(value => Math.abs(value * 1000 - Math.round(value * 1000)) < 0.00001, 'Quantity must have at most three decimal places');
+const inventoryPriceSchema = z.number().finite().positive().max(999999.9999)
+  .refine(value => Math.abs(value * 10000 - Math.round(value * 10000)) < 0.00001, 'Price must have at most four decimal places');
+
 export const loginSchema = z.object({
   email: z.string().email().transform(v => v.toLowerCase()),
   password: z.string().min(1, 'Password required'),
@@ -105,33 +110,39 @@ export const createOrganizationSchema = z.object({
 
 export const createHoldingSchema = z.object({
   batchId: z.string().uuid(),
-  quantityKg: z.number().positive(),
+  quantityKg: inventoryQuantitySchema,
   warehouseLocation: z.string().optional(),
 });
 
 export const transferHoldingSchema = z.object({
   toOrganizationId: z.string().uuid(),
-  quantityKg: z.number().positive(),
+  quantityKg: inventoryQuantitySchema,
   reason: z.string().optional(),
 });
 
 export const splitHoldingSchema = z.object({
-  quantities: z.array(z.number().positive()).min(2),
+  quantities: z.array(inventoryQuantitySchema).min(2),
 });
 
 export const createListingSchema = z.object({
   holdingId: z.string().uuid(),
-  availableQuantityKg: z.number().positive(),
-  pricePerKg: z.number().positive(),
+  availableQuantityKg: inventoryQuantitySchema,
+  pricePerKg: inventoryPriceSchema,
   currency: z.string().length(3).default('EUR'),
   incoterm: z.string().default('CIF'),
   originLocation: z.string(),
   destinationLocation: z.string(),
 });
 
+export const updateListingSchema = z.object({
+  availableQuantityKg: inventoryQuantitySchema.optional(),
+  pricePerKg: inventoryPriceSchema.optional(),
+  active: z.boolean().optional(),
+});
+
 export const createOfferSchema = z.object({
-  quantityKg: z.number().positive(),
-  offeredPricePerKg: z.number().positive(),
+  quantityKg: inventoryQuantitySchema,
+  offeredPricePerKg: inventoryPriceSchema,
   currency: z.string().length(3).default('EUR'),
   validUntil: z.string().optional(),
 });
@@ -225,8 +236,8 @@ export const provenanceViewQuerySchema = z.object({ contractId: z.string().uuid(
 export const provenanceExportQuerySchema = provenanceViewQuerySchema.extend({ format: z.literal('json').default('json') });
 
 export const pushToMarketplaceSchema = z.object({
-  quantityKg: z.number().positive('Quantity must be positive'),
-  pricePerKg: z.number().positive('Price must be positive'),
+  quantityKg: inventoryQuantitySchema,
+  pricePerKg: inventoryPriceSchema,
   currency: z.string().length(3).default('EUR'),
   incoterm: z.string().default('CIF'),
   originLocation: z.string().min(1, 'Origin location required'),

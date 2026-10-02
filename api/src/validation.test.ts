@@ -1,5 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import { loginSchema, createFarmSchema, createBatchSchema, createCertificateSchema, createRecallSchema, createInvitationSchema, acceptInvitationSchema, createSourcingRequestSchema, productProfileSchema } from './validation';
+import { loginSchema, createFarmSchema, createBatchSchema, createCertificateSchema, createRecallSchema, createInvitationSchema, acceptInvitationSchema, createSourcingRequestSchema, productProfileSchema, createOfferSchema } from './validation';
+
+describe('offer inventory limits', () => {
+  it('accepts fractional stock and price within database precision', () => {
+    expect(createOfferSchema.safeParse({ quantityKg: 0.001, offeredPricePerKg: 0.0001 }).success).toBe(true);
+  });
+  it('rejects overflow, nonfinite and excess precision before database writes', () => {
+    for (const quantityKg of [Infinity, NaN, 1000000000, 0.0001]) {
+      expect(createOfferSchema.safeParse({ quantityKg, offeredPricePerKg: 5 }).success).toBe(false);
+    }
+    for (const offeredPricePerKg of [Infinity, NaN, 1000000, 0.00001]) {
+      expect(createOfferSchema.safeParse({ quantityKg: 1, offeredPricePerKg }).success).toBe(false);
+    }
+  });
+});
 
 describe('loginSchema', () => {
   it('accepts valid credentials', () => {

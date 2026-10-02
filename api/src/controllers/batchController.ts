@@ -2,58 +2,82 @@ import { Request, Response } from 'express';
 import { query, getClient } from '../db';
 import * as audit from '../services/audit';
 import { ensureSourceMaterialLot } from '../services/materialLot';
+import { lockHoldingListings, pendingTransferQuantity } from '../services/inventoryIntegrity';
+import { recordTradeAudit } from '../modules/trading/transaction';
 import { hasBatchRelationship, hasExplicitPermission } from '../services/resourcePolicy';
 
 export async function pushToMarketplace(req: Request, res: Response): Promise<void> {
   const batchId = req.params.id as string;
   const { quantityKg, pricePerKg, currency, incoterm, originLocation, destinationLocation } = req.body;
 
-  const batchRes = await query('SELECT * FROM harvest_batches WHERE id=$1 AND current_holder_id=$2', [batchId, req.user!.organizationId]);
-  if (!batchRes.rows[0]) {
-    res.status(404).json({ error: 'Batch not found or not yours' });
-    return;
-  }
-  const batch = batchRes.rows[0];
-  if (quantityKg > Number(batch.quantity_kg)) {
-    res.status(400).json({ error: `Quantity exceeds batch total of ${batch.quantity_kg} kg` });
-    return;
-  }
-
   const client = await getClient();
   try {
     await client.query('BEGIN');
-
-    let holdingRes = await client.query(
-      'SELECT id FROM batch_holdings WHERE batch_id=$1 AND holder_organization_id=$2 AND status=$3',
-      [batchId, req.user!.organizationId, 'available']
-    );
-    let holdingId: string;
-    if (holdingRes.rows[0]) {
-      holdingId = holdingRes.rows[0].id;
-    } else {
-      const newHolding = await client.query(
-        'INSERT INTO batch_holdings (batch_id, holder_organization_id, quantity_kg, status) VALUES ($1,$2,$3,$4) RETURNING id',
-        [batchId, req.user!.organizationId, quantityKg, 'available']
-      );
-      holdingId = newHolding.rows[0].id;
-    }
-
-    const availRes = await client.query('SELECT quantity_kg FROM batch_holdings WHERE id=$1', [holdingId]);
-    const listedRes = await client.query('SELECT COALESCE(SUM(available_quantity_kg),0) AS listed_quantity FROM listings WHERE holding_id=$1 AND active=TRUE', [holdingId]);
-    const remainingQuantity = Number(availRes.rows[0].quantity_kg) - Number(listedRes.rows[0].listed_quantity);
-    if (quantityKg > remainingQuantity) {
+    // Existing stock follows the holding -> listings lock order. A key-share lock
+    // protects the source relationship without blocking unrelated batch updates.
+    const batch = (await client.query(
+      'SELECT * FROM harvest_batches WHERE id=$1 AND current_holder_id=$2 FOR KEY SHARE',
+      [batchId, req.user!.organizationId]
+    )).rows[0];
+    if (!batch) {
       await client.query('ROLLBACK');
-      res.status(400).json({ error: `Only ${remainingQuantity} kg remains available to publish` });
+      res.status(404).json({ error: 'Batch not found or not yours' });
       return;
     }
+
+    // Prefer the holding with the largest unpublished, unreserved balance. Recheck its budget after locking.
+    const holdingRes = await client.query(
+      `SELECT h.* FROM batch_holdings h WHERE h.batch_id=$1 AND h.holder_organization_id=$2 AND h.status='available'
+       ORDER BY (h.quantity_kg
+         - COALESCE((SELECT SUM(l.available_quantity_kg) FROM listings l WHERE l.holding_id=h.id AND l.active=TRUE),0)
+         - COALESCE((SELECT SUM(t.quantity_kg) FROM custody_transfers t WHERE t.holding_id=h.id AND t.status='requested'),0)) DESC,h.id
+       LIMIT 1 FOR UPDATE OF h`,
+      [batchId, req.user!.organizationId]
+    );
+    let holding = holdingRes.rows[0];
+    if (!holding) {
+      // Only the allocation path needs the source budget lock. It must not wait
+      // for an existing holding after acquiring this lock.
+      await client.query('SELECT id FROM harvest_batches WHERE id=$1 FOR NO KEY UPDATE', [batchId]);
+      // Reserved and buyer-held inventory still consumes the batch. Never mint it again after a sale.
+      const allocated = (await client.query(
+        "SELECT COALESCE(SUM(quantity_kg),0) AS quantity FROM batch_holdings WHERE batch_id=$1 AND status<>'transferred'",
+        [batchId]
+      )).rows[0];
+      const unallocatedGrams = Math.round(Number(batch.quantity_kg) * 1000) - Math.round(Number(allocated.quantity) * 1000);
+      if (Math.round(quantityKg * 1000) > unallocatedGrams) {
+        await client.query('ROLLBACK');
+        res.status(409).json({ error: 'This batch has no unallocated stock available to publish', code: 'INSUFFICIENT_INVENTORY' });
+        return;
+      }
+      holding = (await client.query(
+        "INSERT INTO batch_holdings (batch_id,holder_organization_id,quantity_kg,status) VALUES ($1,$2,$3,'available') RETURNING *",
+        [batchId, req.user!.organizationId, quantityKg]
+      )).rows[0];
+    }
+
+    await lockHoldingListings(client, holding.id);
+    const reserved = await pendingTransferQuantity(client, holding.id);
+    const listed = (await client.query(
+      'SELECT COALESCE(SUM(available_quantity_kg),0) AS quantity FROM listings WHERE holding_id=$1 AND active=TRUE',
+      [holding.id]
+    )).rows[0];
+    const remainingGrams = Math.round(Number(holding.quantity_kg) * 1000)
+      - Math.round(reserved * 1000) - Math.round(Number(listed.quantity) * 1000);
+    if (Math.round(quantityKg * 1000) > remainingGrams) {
+      await client.query('ROLLBACK');
+      res.status(409).json({ error: `Only ${Math.max(0, remainingGrams) / 1000} kg remains available to publish`, code: 'INSUFFICIENT_INVENTORY' });
+      return;
+    }
+    const holdingId = holding.id;
 
     const listingRes = await client.query(
       'INSERT INTO listings (seller_organization_id, holding_id, available_quantity_kg, price_per_kg, currency, incoterm, origin_location, destination_location) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
       [req.user!.organizationId, holdingId, quantityKg, pricePerKg, currency, incoterm, originLocation, destinationLocation]
     );
 
+    await recordTradeAudit(client, req.user!, 'listing.create', 'listing', listingRes.rows[0].id);
     await client.query('COMMIT');
-    await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'listing.create', entityType: 'listing', entityId: listingRes.rows[0].id });
     res.status(201).json(listingRes.rows[0]);
   } catch (err) {
     await client.query('ROLLBACK');
