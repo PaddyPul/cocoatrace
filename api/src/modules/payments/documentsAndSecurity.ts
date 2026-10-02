@@ -2,11 +2,13 @@ import { evidenceStorage } from '../../services/evidenceStorage';
 import { ConflictError, ValidationError } from '../../errors';
 import { inTradeTransaction, recordTradeAudit, TradeActor } from '../trading/transaction';
 import { lockPayment, requireAgreed } from './locking';
+import { assertNoActivePaymentIssue } from './issueGuard';
 
 export async function presentDocuments(actor: TradeActor, id: string) {
   return inTradeTransaction(async client => {
     const { contract, payment } = await lockPayment(client, actor, id, 'seller');
     requireAgreed(contract);
+    await assertNoActivePaymentIssue(client, payment.id);
     if (payment.documents_presented_at) return payment;
     if (!['deposit_balance', 'documentary_collection', 'bank_secured'].includes(contract.payment_plan)) {
       throw new ConflictError('This plan does not trigger payment through document presentation');
@@ -42,6 +44,7 @@ export async function submitSecurity(actor: TradeActor, id: string, input: { pro
   return inTradeTransaction(async client => {
     const { contract, payment } = await lockPayment(client, actor, id, 'buyer');
     requireAgreed(contract);
+    await assertNoActivePaymentIssue(client, payment.id);
     if (contract.payment_plan !== 'bank_secured') throw new ConflictError('Bank security cannot be submitted for this plan');
     const same = payment.security_provider === input.provider && payment.security_reference === input.reference;
     if (['submitted', 'verified'].includes(payment.security_status) && same) return payment;
@@ -57,6 +60,7 @@ export async function confirmSecurity(actor: TradeActor, id: string) {
   return inTradeTransaction(async client => {
     const { contract, payment } = await lockPayment(client, actor, id, 'seller');
     requireAgreed(contract);
+    await assertNoActivePaymentIssue(client, payment.id);
     if (contract.payment_plan !== 'bank_secured') throw new ConflictError('Bank security cannot be accepted for this plan');
     if (payment.security_status === 'verified') return payment;
     if (payment.security_status !== 'submitted') throw new ConflictError('No submitted bank security is awaiting acceptance');

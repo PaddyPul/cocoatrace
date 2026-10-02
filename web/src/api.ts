@@ -176,6 +176,25 @@ export const contracts = {
   confirmPaymentTerms: (id: string) => api<any>('POST', `/contracts/${id}/payment-terms/confirm`),
 };
 
+export type PaymentIssueType = 'payment_dispute' | 'reference_correction' | 'receipt_reversal';
+export interface PaymentOperationIssue {
+  id: string;
+  issue_type: PaymentIssueType;
+  status: string;
+  installment_id: string | null;
+  reason: string;
+  proposed_reference: string | null;
+  resolution_note: string | null;
+  resolution_proposed_by_organization_id: string | null;
+  created_at: string;
+}
+export interface PaymentOperationsData {
+  timeline: Array<{ id: string; action: string; occurred_at: string; metadata: Record<string, unknown>; actor_name: string | null }>;
+  issues: PaymentOperationIssue[];
+  installments: Array<{ id: string; installment_type: string; status: string; due_at: string | null; dueState: string; amount_due: string | number }>;
+  reminders: Array<{ id: string; created_at: string; installment_id?: string; message?: string }>;
+}
+
 export const payments = {
   list: () => api<import('./types').Payment[]>('GET', '/payment-requests'),
   get: (id: string) => api<any>('GET', `/payment-requests/${id}`),
@@ -187,6 +206,11 @@ export const payments = {
   rejectInstallment: (id: string, reason: string) => api<any>('POST', `/payment-installments/${id}/reject`, { reason }),
   submitSecurity: (id: string, provider: string, reference: string) => api<any>('POST', `/payment-requests/${id}/security`, { provider, reference }),
   confirmSecurity: (id: string) => api<any>('POST', `/payment-requests/${id}/security/confirm`),
+  operations: (id: string) => api<PaymentOperationsData>('GET', `/payment-requests/${id}/operations`),
+  remind: (id: string) => api<{ created: number }>('POST', `/payment-requests/${id}/remind`, {}),
+  raiseIssue: (id: string, data: { issueType: PaymentIssueType; installmentId?: string; reason: string; proposedReference?: string }) => api<PaymentOperationIssue>('POST', `/payment-requests/${id}/issues`, data),
+  proposeIssueResolution: (id: string, note: string) => api<PaymentOperationIssue>('POST', `/payment-issues/${id}/propose-resolution`, { note }),
+  approveIssueResolution: (id: string) => api<PaymentOperationIssue>('POST', `/payment-issues/${id}/approve-resolution`, {}),
 };
 
 export const shipments = {
