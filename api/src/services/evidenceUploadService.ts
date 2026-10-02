@@ -35,7 +35,7 @@ async function requireDocumentRole(actor: JwtPayload, input: CreateEvidenceUploa
   const contract = rows[0];
   if (!contract) throw new ForbiddenError('Only a party to this contract can add documents');
   const sellerDocuments = new Set(['commercial_invoice', 'packing_list', 'quality_certificate', 'inspection_certificate', 'certificate_of_origin', 'insurance_certificate', 'transport_document', 'bill_of_lading', 'export_permit', 'other']);
-  const buyerDocuments = new Set(['payment_proof', 'purchase_order', 'import_permit', 'compliance_document', 'eudr_supporting_document', 'delivery_receipt', 'other']);
+  const buyerDocuments = new Set(['payment_proof', 'purchase_order', 'import_permit', 'compliance_document', 'eudr_supporting_document', 'delivery_receipt', 'delivery_proof', 'inspection_certificate', 'other']);
   const allowedTypes = contract.seller_organization_id === actor.organizationId ? sellerDocuments : buyerDocuments;
   if (!allowedTypes.has(input.type)) throw new ValidationError(`This contract party cannot upload document type: ${input.type}`);
 }

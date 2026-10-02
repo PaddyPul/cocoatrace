@@ -103,6 +103,7 @@ describe('payment plans, protected documents and atomic retries', () => {
       expect((await query('SELECT status FROM sales_contracts WHERE id=$1', [d.contractId])).rows[0].status).toBe('delivered');
       p = await state(d); await pay(d, p.installments[0].id);
     }
+    expect((await post(`/contracts/${d.contractId}/delivery/accept`, buyer, {receivedQuantityKg:4,note:'Inspected the full quantity and condition'})).status).toBe(200);
     await assertCompleted(d);
     p = await state(d);
     for (const installment of p.installments) expect((await post(`/payment-installments/${installment.id}/confirm`, seller)).status).toBe(200);

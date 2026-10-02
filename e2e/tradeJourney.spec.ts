@@ -136,7 +136,31 @@ test('full prepayment trade: offer, verified payment gate, document sharing, del
     await recordProgress(buyer, shipment.id, 'customs_cleared');
     await recordProgress(buyer, shipment.id, 'delivered');
     await buyer.goto(`/deal-room/${contract.id}`);
-    await expect(buyer.getByText('Trade completed', { exact: true })).toBeVisible();
+    // A paid and delivered trade stays committed until the buyer accepts it.
+    const deliveredSnapshot = await tradeSnapshot(contract.id);
+    expect(deliveredSnapshot.contract.status).toBe('delivered');
+    expect(deliveredSnapshot.transfers).toHaveLength(0);
+    await buyer.getByLabel('Actual received quantity (kg)', {exact:true}).fill('3');
+    await buyer.getByLabel('Explain the discrepancy', {exact:true}).fill('One kilogram missing from the received delivery');
+    const deliveryIntent = buyer.waitForResponse(response => response.url().endsWith('/evidence/upload-intents') && response.request().method() === 'POST');
+    await buyer.getByLabel('Delivery evidence (PDF, JPEG or PNG)', {exact:true}).setInputFiles({name:'delivery-inspection.pdf',mimeType:'application/pdf',buffer:emptyPdfFixture()});
+    const createdDeliveryIntent = await deliveryIntent;
+    expect(createdDeliveryIntent.status(), JSON.stringify(await createdDeliveryIntent.json())).toBe(201);
+    await expect(buyer.getByText('Delivery evidence attached.', {exact:true})).toBeVisible();
+    await buyer.getByRole('button',{name:'Report delivery discrepancy',exact:true}).click();
+    await expect(buyer.getByText('Delivery discrepancy hold',{exact:true})).toBeVisible();
+    await supplier.goto(`/deal-room/${contract.id}`);
+    await supplier.getByLabel('Supplier resolution explanation',{exact:true}).fill('Missing goods replaced externally; buyer will inspect all four kilograms');
+    await supplier.getByRole('button',{name:'Propose delivery resolution',exact:true}).click();
+    await buyer.reload();
+    await buyer.getByRole('button',{name:'Approve delivery resolution',exact:true}).click();
+    await expect(buyer.getByText('Delivery discrepancy resolved',{exact:true})).toBeVisible();
+    expect((await tradeSnapshot(contract.id)).transfers).toHaveLength(0);
+    await buyer.getByLabel('Inspected quantity received (kg)', {exact:true}).fill('4');
+      await buyer.getByLabel('Inspection note', {exact:true}).fill('Full quantity and condition inspected and accepted');
+      await buyer.getByLabel('I inspected the full contract quantity and accept its condition.', {exact:true}).check();
+      await buyer.getByRole('button', {name:'Accept full delivery',exact:true}).click();
+      await expect(buyer.getByText('Trade completed', { exact: true })).toBeVisible();
     await supplier.goto(`/deal-room/${contract.id}`);
     await expect(supplier.getByText('Trade completed', { exact: true })).toBeVisible();
 

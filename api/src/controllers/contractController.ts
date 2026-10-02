@@ -84,7 +84,9 @@ export async function getContract(req: Request, res: Response): Promise<void> {
     [id]
   );
   const installments=rows[0].payment_request_id?await query('SELECT * FROM payment_installments WHERE payment_request_id=$1 ORDER BY sequence_number',[rows[0].payment_request_id]):{rows:[]};
-  res.json({ ...rows[0], documents: documents.rows, installments:installments.rows });
+  const acceptance = await query('SELECT accepted_at FROM delivery_acceptances WHERE contract_id=$1', [id]);
+  const discrepancy = await query("SELECT status FROM delivery_discrepancies WHERE contract_id=$1 AND status<>'resolved' LIMIT 1", [id]);
+  res.json({ ...rows[0], delivery_accepted_at: acceptance.rows[0]?.accepted_at || null, delivery_discrepancy_status: discrepancy.rows[0]?.status || null, documents: documents.rows, installments:installments.rows });
 }
 
 export async function updatePaymentTerms(req:Request,res:Response):Promise<void>{

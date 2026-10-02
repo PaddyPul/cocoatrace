@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { requireAuth, requireAnyPermission, requirePermission } from '../middleware/auth';
 import validate from '../middleware/validate';
 import { createOfferSchema, updateComplianceSchema, updateEudrSchema, updatePaymentTermsSchema } from '../validation';
+import { acceptDeliverySchema, deliveryDiscrepancySchema, deliveryResolutionSchema } from '../validation';
+import * as deliveryController from '../controllers/deliveryController';
 import * as contractController from '../controllers/contractController';
 
 const router = Router();
@@ -17,4 +19,9 @@ router.post('/contracts/:id/payment-terms/confirm', requireAuth, requirePermissi
 router.patch('/contracts/:id/eudr', requireAuth, requirePermission('contract.read'), validate(updateEudrSchema), contractController.updateEudrReference);
 router.patch('/contracts/:id/compliance', requireAuth, requirePermission('contract.read'), validate(updateComplianceSchema), contractController.updateComplianceReference);
 
+router.get('/contracts/:id/delivery', requireAuth, requirePermission('contract.read'), deliveryController.get);
+router.post('/contracts/:id/delivery/accept', requireAuth, requirePermission('contract.read'), validate(acceptDeliverySchema), deliveryController.accept);
+router.post('/contracts/:id/delivery/discrepancy', requireAuth, requirePermission('contract.read'), validate(deliveryDiscrepancySchema), deliveryController.report);
+router.post('/contracts/:id/delivery/resolution', requireAuth, requirePermission('contract.read'), validate(deliveryResolutionSchema), deliveryController.propose);
+router.post('/contracts/:id/delivery/resolution/approve', requireAuth, requirePermission('contract.read'), deliveryController.approve);
 export = router;

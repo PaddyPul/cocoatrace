@@ -305,3 +305,8 @@ export const acknowledgeRecallSchema = z.object({note:recallResponseNote});
 export const contactRecallSchema = z.object({status:z.enum(['contacted','unreachable','escalated']),note:recallResponseNote});
 export const recallRecoverySchema = z.object({quarantinedKg:recoveryQuantity,returnedKg:recoveryQuantity,destroyedKg:recoveryQuantity,correctedKg:recoveryQuantity,releasedKg:recoveryQuantity,note:recallResponseNote});
 export const resolveRecallSchema = z.object({reason:recallResponseNote,evidenceIds:z.array(z.string().uuid()).min(1).max(20)});
+
+const deliveryQuantity = z.number().finite().min(0).max(1_000_000_000).refine(value => Math.abs(value*1000-Math.round(value*1000)) < 0.00001, 'Use at most three decimal places');
+export const acceptDeliverySchema = z.object({ receivedQuantityKg: deliveryQuantity, note: z.string().trim().min(5).max(2000) }).strict();
+export const deliveryDiscrepancySchema = z.object({ kind: z.enum(['shortage','damage','rejection']), receivedQuantityKg: deliveryQuantity, reason: z.string().trim().min(10).max(2000), evidenceIds: z.array(z.string().uuid()).min(1).max(10) }).strict();
+export const deliveryResolutionSchema = z.object({ note: z.string().trim().min(10).max(2000) }).strict();
