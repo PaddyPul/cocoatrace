@@ -99,10 +99,56 @@ describe('real PostgreSQL trading inventory integrity', () => {
 
   it('keeps a sellable residual holding after partial acceptance and conserves decimal quantities', async () => {
     const s = await supply(1000.125); const id = await offer(await listing(s, 1000.125), 333.333);
-    expect((await accept(id)).status).toBe(200);
+    const accepted = await accept(id);
+    expect(accepted.status).toBe(200);
+    expect(Number(accepted.body.remainingListing.available_quantity_kg)).toBe(666.792);
     const holdings = await query('SELECT quantity_kg,status FROM batch_holdings WHERE batch_id=$1 ORDER BY status', [s.batchId]);
     expect(holdings.rows).toEqual([{ quantity_kg: '666.792', status: 'available' }, { quantity_kg: '333.333', status: 'committed' }]);
     await conserved(s, 1000.125);
+  });
+
+  it('keeps the unsold 6 kg visible in the marketplace after accepting 4 kg from a 10 kg listing', async () => {
+    const s = await supply(10); const originalId = await listing(s, 10);
+    const accepted = await accept(await offer(originalId, 4));
+    expect(accepted.status).toBe(200);
+    const remaining = accepted.body.remainingListing;
+    expect(remaining.id).not.toBe(originalId);
+    expect(remaining.holding_id).toBe(s.holdingId);
+    expect(Number(remaining.available_quantity_kg)).toBe(6);
+    expect(remaining).toMatchObject({ active: true, price_per_kg: '5.0000', currency: 'EUR', incoterm: 'FOB', origin_location: 'Tema', destination_location: 'Rotterdam' });
+    const marketplace = await request(app).get('/listings').set('Authorization', `Bearer ${buyer.token}`);
+    expect(marketplace.status).toBe(200);
+    expect(marketplace.body.find((item: { id: string }) => item.id === remaining.id)).toMatchObject({ available_quantity_kg: '6.000', active: true });
+    expect(marketplace.body.some((item: { id: string }) => item.id === originalId)).toBe(false);
+    const original = (await query('SELECT holding_id,active,available_quantity_kg FROM listings WHERE id=$1', [originalId])).rows[0];
+    expect(original.active).toBe(false);
+    expect(original.holding_id).toBe(accepted.body.contract.holding_id);
+    expect(Number(original.available_quantity_kg)).toBe(4);
+    await conserved(s, 10);
+  });
+
+  it('creates no continuation listing when the advertised quantity is fully accepted', async () => {
+    const s = await supply(10); const originalId = await listing(s, 4);
+    const accepted = await accept(await offer(originalId, 4));
+    expect(accepted.status).toBe(200);
+    expect(accepted.body.remainingListing).toBeNull();
+    const published = await query('SELECT id FROM listings WHERE holding_id=$1 AND active', [s.holdingId]);
+    expect(published.rows).toHaveLength(0);
+    await conserved(s, 10);
+  });
+
+  it('reserves continuation stock ahead of legacy siblings and pending transfer reservations', async () => {
+    const s = await supply(10); const originalId = await listing(s, 10);
+    const siblingId = await listing(s, 8); // Historical overpublication must not double-sell.
+    await transfer(s, 2);
+    const accepted = await accept(await offer(originalId, 4));
+    expect(accepted.status).toBe(200);
+    expect(Number(accepted.body.remainingListing.available_quantity_kg)).toBe(4);
+    const sibling = (await query('SELECT active,available_quantity_kg FROM listings WHERE id=$1', [siblingId])).rows[0];
+    expect(sibling.active).toBe(false);
+    const published = (await query('SELECT COALESCE(SUM(available_quantity_kg),0) AS quantity FROM listings WHERE holding_id=$1 AND active', [s.holdingId])).rows[0];
+    expect(Number(published.quantity) + 2).toBe(6);
+    await conserved(s, 10);
   });
 
   it('refuses expired offers, deactivated listings and foreign seller acceptance without allocating inventory', async () => {

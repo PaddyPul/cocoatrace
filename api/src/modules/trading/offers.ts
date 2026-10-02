@@ -16,7 +16,8 @@ async function lockOfferInventory(client: PoolClient, offerId: string) {
   await client.query(`SELECT o.id FROM trade_offers o JOIN listings l ON l.id=o.listing_id
     WHERE l.holding_id=$1 ORDER BY o.id FOR UPDATE OF o`, [holdingId]);
   const result = await client.query(`SELECT o.*, l.holding_id, l.seller_organization_id,l.active,
-    l.available_quantity_kg,l.incoterm,l.origin_location,l.destination_location,
+    l.available_quantity_kg,l.price_per_kg AS listing_price_per_kg,l.currency AS listing_currency,
+    l.incoterm,l.origin_location,l.destination_location,
     o.valid_until>clock_timestamp() AS valid_now
     FROM trade_offers o JOIN listings l ON l.id=o.listing_id WHERE o.id=$1`, [offerId]);
   const offer = result.rows[0];
@@ -64,12 +65,34 @@ export async function acceptTradeOffer(actor: TradeActor, offerId: string) {
     await client.query(`UPDATE listings SET active=FALSE,holding_id=$1,available_quantity_kg=$2 WHERE id=$3`,
       [committedHoldingId, quantity, offer.listing_id]);
     await client.query("UPDATE trade_offers SET status='rejected' WHERE listing_id=$1 AND id<>$2 AND status='pending'", [offer.listing_id, offerId]);
-    await reconcileHoldingListings(client, holding.id, residual - reserved);
+    // The accepted listing is immutable deal history on the committed slice.
+    // Continue publishing only its unsold advertised stock, reserving that budget
+    // before resizing sibling listings (including legacy overpublished inventory).
+    const remainingListingGrams = Math.max(0, Math.min(
+      Math.round(Number(offer.available_quantity_kg) * 1000) - Math.round(quantity * 1000),
+      Math.round(residual * 1000) - Math.round(reserved * 1000),
+    ));
+    await reconcileHoldingListings(client, holding.id,
+      (Math.round(residual * 1000) - Math.round(reserved * 1000) - remainingListingGrams) / 1000);
+    let remainingListing: QueryResultRow | null = null;
+    if (remainingListingGrams > 0) {
+      const continuation = await client.query(`INSERT INTO listings
+        (seller_organization_id,holding_id,available_quantity_kg,price_per_kg,currency,incoterm,origin_location,destination_location)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+      [actor.organizationId, holding.id, remainingListingGrams / 1000,
+        offer.listing_price_per_kg, offer.listing_currency, offer.incoterm,
+        offer.origin_location, offer.destination_location]);
+      const publishedRemainder: QueryResultRow = continuation.rows[0];
+      remainingListing = publishedRemainder;
+      await recordTradeAudit(client, actor, 'listing.continue', 'listing', publishedRemainder.id, {
+        acceptedListingId: offer.listing_id, offerId, quantityKg: remainingListingGrams / 1000,
+      });
+    }
     const fulfillment = await createFulfillment(client, actor, offer, committedHoldingId);
     await recordTradeAudit(client, actor, 'offer.accept', 'trade_offer', offerId, {
       sourceHoldingId: holding.id, committedHoldingId, quantityKg: quantity, residualQuantityKg: residual,
     });
-    return { offer: accepted.rows[0], ...fulfillment };
+    return { offer: accepted.rows[0], remainingListing, ...fulfillment };
   });
 }
 

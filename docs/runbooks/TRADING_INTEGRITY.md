@@ -13,7 +13,10 @@ cannot be accepted. A repeated acceptance cannot create another agreement.
   plus pending custody transfers must fit its available quantity.
 - Acceptance commits only the accepted quantity. A partial acceptance creates a
   committed slice and leaves the residual available. Incompatible listings are
-  resized or deactivated; incompatible pending offers are rejected.
+  resized or deactivated; incompatible pending offers are rejected. The unsold
+  advertised portion continues as a new listing on the residual holding, at the
+  original listing terms. Accepted listings remain deal history. Previously
+  unadvertised inventory is not automatically published.
 - A requested custody transfer reserves quantity until its state changes.
   Committed inventory cannot be transferred or split. A holding with a pending
   transfer cannot be split.
