@@ -75,19 +75,36 @@ async function smoke() {
  }
  console.log('PASS: local preview readiness, frontend and synthetic buyer/supplier identity checks');
 }
-export function isEmailGate(status,location,body) {
+export function isEmailGate(status,location,body,origin) {
  if([401,403].includes(status)) return true;
  if(status>=300&&status<400&&location) {
-  try {const url=new URL(location);return url.protocol==='https:'&&(url.hostname.endsWith('.cloudflareaccess.com')||url.pathname.startsWith('/cdn-cgi/access/'));}catch{return false;}
+  try {const url=new URL(location,origin);const sameOrigin=origin&&url.origin===new URL(origin).origin;return url.protocol==='https:'&&(url.hostname.endsWith('.cloudflareaccess.com')||(sameOrigin&&url.pathname.startsWith('/cdn-cgi/access/')));}catch{return false;}
  }
  return status===200&&!body.includes('id="root"')&&/cloudflare/i.test(body)&&/one.time|verification code|email/i.test(body);
 }
-async function verifyEmailGate(url) {
- const response=await fetch(url,{redirect:'manual',signal:AbortSignal.timeout(20000)});
- const body=(await response.text()).slice(0,100000);
- if(!isEmailGate(response.status,response.headers.get('location'),body))
-  throw new Error('Could not prove unauthenticated requests are denied or reach the email gate; stopping public sharing');
+export async function verifyEmailGate(url,{fetchImpl=fetch,pauseImpl=pause,attempts=6,log=console.log}={}) {
+ let observed='no response';
+ for(let attempt=0;attempt<attempts;attempt++) {
+  try {
+   const response=await fetchImpl(url,{redirect:'manual',signal:AbortSignal.timeout(10000)});
+   const body=(await response.text()).slice(0,100000);
+   const location=response.headers.get('location');
+   let redirectOrigin='none';
+   if(location) {try {redirectOrigin=new URL(location,url).origin;}catch{redirectOrigin='invalid';}}
+   // Never print response bodies, query strings, PINs, cookies or access tokens.
+   observed=`HTTP ${response.status}; redirect origin ${redirectOrigin}; app HTML ${body.includes('id="root"')}; provider marker ${/cloudflare/i.test(body)}; email marker ${/one.time|verification code|email/i.test(body)}`;
+   if(isEmailGate(response.status,location,body,url)) {log('PASS: anonymous external request denied or sent to provider email gate');return;}
+   if(body.includes('id="root"')) throw new Error('EXPOSED_APP');
+  } catch(error) {
+   if(error.message==='EXPOSED_APP') throw new Error('Anonymous request reached the application; stopping sharing immediately');
+   observed=error.name==='TimeoutError'?'probe timed out':'probe request failed';
+  }
+  log(`External access check ${attempt+1}/${attempts}: ${observed}`);
+  if(attempt+1<attempts) await pauseImpl(3000);
+ }
+ throw new Error(`Could not confirm provider email gate after retries (${observed}); stopping public sharing`);
 }
+
 async function main() {
  const action=process.argv[2];
  if(!['start','share','stop','status','check'].includes(action)) throw new Error('Use demo:preview:start|share|stop|status|check');

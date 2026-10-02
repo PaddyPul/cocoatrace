@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {sharingEmails,validateEmails,parseTunnelUrl,validateState,isEmailGate} from './demo-preview.mjs';
+import {verifyEmailGate,sharingEmails,validateEmails,parseTunnelUrl,validateState,isEmailGate} from './demo-preview.mjs';
 test('sharing requires exact emails, rejects wildcards, missing values and shell-like input',()=>{
  assert.equal(validateEmails('Albert@example.com,guest@example.com,albert@example.com'),'albert@example.com,guest@example.com');
  for(const v of ['', '*@example.com','a@example.com,bad','x;echo pwned','--url','x@example.com\n--url http://evil']) assert.throws(()=>validateEmails(v));
@@ -27,4 +27,24 @@ test('email arguments work with Windows npm forwarding and direct Node invocatio
  assert.equal(sharingEmails(['owner@example.com']),'owner@example.com');
  assert.equal(sharingEmails(['--emails','owner@example.com,guest@example.com']),'owner@example.com,guest@example.com');
  for(const args of [[],['--emails'],['--emails','a@example.com','extra'],['--url','https://evil.example']]) assert.throws(()=>sharingEmails(args));
+});
+
+test('relative provider login redirects are allowed only on the issued HTTPS origin',()=>{
+ assert.equal(isEmailGate(302,'/cdn-cgi/access/login','', 'https://abc.trycloudflare.com'),true);
+ assert.equal(isEmailGate(302,'https://evil.example/cdn-cgi/access/login','', 'https://abc.trycloudflare.com'),false);
+});
+test('external probe retries tunnel warmup and accepts a subsequent protected redirect',async()=>{
+ let calls=0;const logs=[];
+ await verifyEmailGate('https://abc.trycloudflare.com',{fetchImpl:async()=>++calls===1?new Response('starting',{status:503}):new Response('',{status:302,headers:{location:'/cdn-cgi/access/login?token=secret'}}),pauseImpl:async()=>{},log:v=>logs.push(v)});
+ assert.equal(calls,2);assert.ok(logs.every(v=>!v.includes('secret')));
+});
+test('external probe rejects exposed app immediately and never prints body',async()=>{
+ let calls=0;const logs=[];
+ await assert.rejects(verifyEmailGate('https://abc.trycloudflare.com',{fetchImpl:async()=>{calls++;return new Response('<div id="root">private-data</div>');},pauseImpl:async()=>{},log:v=>logs.push(v)}),/reached the application/);
+ assert.equal(calls,1);assert.ok(logs.every(v=>!v.includes('private-data')));
+});
+test('unrecognized external response remains blocked after bounded retries',async()=>{
+ let calls=0;
+ await assert.rejects(verifyEmailGate('https://abc.trycloudflare.com',{fetchImpl:async()=>{calls++;return new Response('unknown',{status:200});},pauseImpl:async()=>{},attempts:2,log:()=>{}}),/after retries/);
+ assert.equal(calls,2);
 });
