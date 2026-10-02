@@ -1,11 +1,17 @@
 import { query } from '../db';
 import { TraceGraph } from './recallTrace';
+import { activeBatchRecallSql } from '../modules/recall/safety';
 
-export async function loadTraceGraph(): Promise<TraceGraph> {
+type TraceQuery = (sql: string, params?: any[]) => Promise<{ rows: any[] }>;
+
+export async function loadTraceGraph(runQuery: TraceQuery = query): Promise<TraceGraph> {
   const [lotsResult, edgesResult, distributionsResult] = await Promise.all([
-    query(
+    runQuery(
       `SELECT ml.id, ml.lot_code, ml.lot_type, ml.product_name, ml.quantity_kg,
-              ml.batch_id, ml.owner_organization_id, ml.status, ml.produced_at,
+              ml.batch_id, ml.owner_organization_id, CASE WHEN ${activeBatchRecallSql('ml.batch_id')} OR EXISTS (
+                SELECT 1 FROM recall_safety_holds safety JOIN recall_notices recall ON recall.id=safety.recall_id
+                WHERE safety.entity_type='lot' AND safety.entity_id=ml.id AND recall.status='active'
+              ) THEN 'held' ELSE ml.status END AS status, ml.produced_at,
               o.name AS owner_name, b.source_mode,
               COALESCE(f.name, b.source_name, b.source_region, b.source_country) AS source_label,
               (SELECT COUNT(*)::int FROM lot_genealogy_edges ge WHERE ge.source_lot_id=ml.id) AS downstream_lot_count,
@@ -16,7 +22,7 @@ export async function loadTraceGraph(): Promise<TraceGraph> {
        LEFT JOIN farms f ON f.id=b.farm_id
        ORDER BY ml.produced_at, ml.lot_code`
     ),
-    query(
+    runQuery(
       `SELECT ge.id, ge.source_lot_id, ge.destination_lot_id,
               ge.allocated_input_kg, ge.allocation_method,
               te.event_code, te.event_type, te.occurred_at
@@ -24,7 +30,7 @@ export async function loadTraceGraph(): Promise<TraceGraph> {
        JOIN transformation_events te ON te.id = ge.transformation_event_id
        ORDER BY te.occurred_at, ge.id`
     ),
-    query(
+    runQuery(
       `SELECT ld.id, ld.lot_id, ld.recipient_organization_id,
               o.name AS recipient_name, ld.quantity_kg,
               ld.distribution_reference, ld.shipment_id, ld.dispatched_at
@@ -74,12 +80,12 @@ export async function loadTraceGraph(): Promise<TraceGraph> {
   };
 }
 
-export async function accessibleTraceLotIds(organizationId: string, seeAll = false): Promise<Set<string>> {
+export async function accessibleTraceLotIds(organizationId: string, seeAll = false, runQuery: TraceQuery = query): Promise<Set<string>> {
   if (seeAll) {
-    const result = await query('SELECT id FROM material_lots');
+    const result = await runQuery('SELECT id FROM material_lots');
     return new Set(result.rows.map((row: any) => row.id));
   }
-  const result = await query(
+  const result = await runQuery(
     `SELECT DISTINCT ml.id
        FROM material_lots ml
        LEFT JOIN batch_holdings h ON h.batch_id=ml.batch_id

@@ -73,7 +73,7 @@ export default function RecallCenterPage() {
     try {
       await recallsApi.create({ referenceCode, title, reason, instructions, severity, lots: [{ lotId: recallLotId, quantityKg: quantity }] });
       setShowCreate(false); setReferenceCode(''); setTitle(''); setReason(''); setRecallQuantity('');
-      toast('success', 'Recall activated — affected public profiles now show the notice');
+      toast('success', 'Recall activated — affected material is on hold');
       await refresh();
     } catch (err: any) { setError(err.message); } finally { setBusy(false); }
   };
@@ -82,14 +82,14 @@ export default function RecallCenterPage() {
     setBusy(true);
     try {
       await recallsApi.resolve(id);
-      toast('success', 'Recall resolved');
+      toast('success', 'Recall resolved. Review withdrawn listings before publishing again.');
       await refresh();
     } catch (err: any) { setError(err.message); } finally { setBusy(false); }
   };
 
   return <Layout currentPage="recalls" actions={canManageRecalls ? <button className="btn btn-sm btn-danger" disabled={!lots.length} onClick={() => { setError(''); setShowCreate(true); }}><Plus size={13} /> Activate recall</button> : <span className="badge badge-blue">Investigation access</span>}>
     <div className="mb-5 rounded border border-yellow-500/20 bg-yellow-500/5 p-4 text-xs text-yellow-200">
-      <div className="flex items-start gap-3"><AlertTriangle size={18} className="shrink-0 text-yellow-400" /><div><strong className="block text-sm text-yellow-300">Investigate first. Activate with confidence.</strong><p className="mt-1 text-text-secondary">Trace any lot backward to its sources or forward to every descendant and recipient. {canManageRecalls ? 'When the scope is verified, activate a notice that immediately updates affected product profiles.' : 'Your role has investigation access; an authorized recall manager controls public notices.'}</p></div></div>
+      <div className="flex items-start gap-3"><AlertTriangle size={18} className="shrink-0 text-yellow-400" /><div><strong className="block text-sm text-yellow-300">Investigate first. Activate with confidence.</strong><p className="mt-1 text-text-secondary">Trace any lot backward to its sources or forward to every descendant and recipient. {canManageRecalls ? 'When the scope is verified, activate a notice that immediately updates affected product profiles and blocks offers, dispatch and custody transfers for affected material.' : 'Your role has investigation access; an authorized recall manager controls public notices.'}</p></div></div>
     </div>
     <section className="mb-5 rounded border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex items-center gap-2 text-sm font-semibold"><GitBranch size={16} className="text-brand-400" /> Lot genealogy calculator</div><p className="mt-1 text-xs text-text-secondary">Calculate exact declared mass flow backward to source lots or forward to every descendant and recipient.</p></div><span className="badge badge-blue">quantity-aware</span></div>
@@ -115,7 +115,7 @@ export default function RecallCenterPage() {
           <div className="mb-3 text-xs text-text-secondary">To produce <strong>{traceResult.queryQuantityKg.toLocaleString()} kg</strong> of {traceResult.targetLot.lotCode}, these source quantities are required:</div>
           <div className="overflow-x-auto"><table className="data-table"><thead><tr><th>Source lot</th><th>Product</th><th>Required quantity</th><th>Share of source lot</th><th>Confidence</th></tr></thead><tbody>{traceResult.sourceLots.map((lot) => <tr key={lot.id}><td className="font-mono text-xs">{lot.lotCode}</td><td>{lot.productName}</td><td className="font-semibold">{Number(lot.quantityRequiredKg).toLocaleString()} kg</td><td>{lot.percentOfLot}%</td><td>{lot.allocationConfidence}</td></tr>)}</tbody></table></div>
         </>}
-        <details className="mt-4 text-[10px] text-text-muted"><summary className="cursor-pointer">Calculation assumptions</summary><ul className="mt-2 list-disc space-y-1 pl-5">{traceResult.assumptions.map((assumption) => <li key={assumption}>{assumption}</li>)}</ul></details>
+        <details className="mt-4 text-[10px] text-text-muted"><summary className="cursor-pointer">Recorded allocation assumptions</summary><ul className="mt-2 list-disc space-y-1 pl-5">{traceResult.assumptions.map((assumption) => <li key={assumption}>{assumption}</li>)}</ul></details>
       </div>}</> : <div className="mt-5 rounded-2xl border border-dashed border-border p-8 text-center"><GitBranch size={28} className="mx-auto text-text-muted" /><h3 className="mt-4 text-base font-semibold">No traceable material records yet</h3><p className="mx-auto mt-2 max-w-xl text-xs leading-5 text-text-muted">Trace & Recall starts from inventory created by your organization or received through a completed trade. Create material first; CocoaTrace will generate its source lot automatically.</p><div className="mt-5 flex flex-wrap justify-center gap-2">{canDo('listing.create') ? <><button className="btn btn-primary" onClick={() => navigate('/farms')}><Sprout size={14} />Organic / origin-verified</button><button className="btn" onClick={() => navigate('/inventory/new')}><PackagePlus size={14} />Conventional inventory</button></> : <button className="btn btn-primary" onClick={() => navigate(canDo('offer.create') ? '/source/new' : '/home')}>Continue to workspace <ArrowRight size={14} /></button>}</div></div>}
     </section>
     {error && !showCreate && <div className="mb-4 rounded-sm border border-red-500/30 bg-red-900/10 px-3 py-2 text-xs text-red-400">{error}</div>}
@@ -123,12 +123,12 @@ export default function RecallCenterPage() {
       {items.map((recall) => <article key={recall.id} className={`rounded border p-5 ${recall.status === 'active' ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-border bg-surface'}`}>
         <div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex items-center gap-2"><StatusBadge status={recall.status} /><span className={`badge ${recall.severity === 'critical' ? 'badge-red' : recall.severity === 'warning' ? 'badge-amber' : 'badge-blue'}`}>{recall.severity}</span><span className="font-mono text-[10px] text-text-muted">{recall.reference_code}</span></div><h2 className="mt-3 text-base font-semibold">{recall.title}</h2><p className="mt-1 text-xs text-text-secondary">{recall.reason}</p></div>{recall.status === 'active' && <button className="btn btn-sm" disabled={busy} onClick={() => resolve(recall.id)}><CheckCircle2 size={13} /> Resolve</button>}</div>
         <div className="mt-4 rounded-sm bg-surface-darker p-3 text-xs"><span className="font-semibold">Instructions: </span>{recall.instructions}</div>
-        <div className="mt-3 flex flex-wrap gap-4 text-[10px] text-text-muted"><span>{recall.affected_lots?.length || 0} affected lot{recall.affected_lots?.length === 1 ? '' : 's'}</span><span>{recall.batch_ids.length} source batch{recall.batch_ids.length === 1 ? '' : 'es'}</span><span>Issued by {recall.issued_by}</span><span>{fmtDate(recall.initiated_at)}</span></div>
+        <p className="mt-3 text-xs text-text-secondary">{recall.status === 'active' ? 'Affected material is on hold. Follow the instructions above; new offers, dispatch and custody transfers are blocked.' : 'This notice is resolved. Listings withdrawn by the recall remain unpublished; review material and publish again deliberately when appropriate.'}</p><div className="mt-3 flex flex-wrap gap-4 text-[10px] text-text-muted"><span>{recall.affected_lots?.length || 0} affected lot{recall.affected_lots?.length === 1 ? '' : 's'}</span><span>{recall.batch_ids.length} source batch{recall.batch_ids.length === 1 ? '' : 'es'}</span><span>Issued by {recall.issued_by}</span><span>{fmtDate(recall.initiated_at)}</span></div>
       </article>)}
     </div>}
 
     {showCreate && <div className="modal-overlay" onClick={() => !busy && setShowCreate(false)}><div className="modal" onClick={(event) => event.stopPropagation()}>
-      <div className="mb-5 flex items-start justify-between"><div><div className="modal-title">Activate recall</div><p className="modal-sub mb-0">This change is immediately visible on published product pages.</p></div><button className="btn btn-sm" onClick={() => setShowCreate(false)}><X size={14} /></button></div>
+      <div className="mb-5 flex items-start justify-between"><div><div className="modal-title">Activate recall</div><p className="modal-sub mb-0">This change updates public product pages and puts affected material on hold. Existing trades remain recorded; unsafe movement is blocked.</p></div><button className="btn btn-sm" onClick={() => setShowCreate(false)}><X size={14} /></button></div>
       <div className="space-y-3">
         <input className="form-input" placeholder="Reference code *" value={referenceCode} onChange={(event) => setReferenceCode(event.target.value)} />
         <input className="form-input" placeholder="Public notice title *" value={title} onChange={(event) => setTitle(event.target.value)} />

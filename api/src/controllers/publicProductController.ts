@@ -4,8 +4,7 @@ import QRCode from 'qrcode';
 import { getClient, query } from '../db';
 import * as audit from '../services/audit';
 import { buildJourney, deriveSafetyStatus, JourneyEvent } from '../services/publicProduct';
-import { calculateTraceForward } from '../services/recallTrace';
-import { accessibleTraceLotIds, loadTraceGraph } from '../services/traceGraphRepository';
+import { activateRecall, resolveRecallRecord } from '../modules/recall/lifecycle';
 import { config } from '../config/env';
 import { hasBatchRelationship, hasExplicitPermission } from '../services/resourcePolicy';
 
@@ -353,73 +352,12 @@ export async function listRecalls(req: Request, res: Response): Promise<void> {
 }
 
 export async function createRecall(req: Request, res: Response): Promise<void> {
-  const { referenceCode, title, reason, instructions, severity, batchIds, lots: requestedLots } = req.body;
-  const canManageAll = (req.user!.permissions || []).some((permission) => permission === '*' || permission === 'recall.manage.all');
-  const graph = await loadTraceGraph();
-  const seeds = [...requestedLots];
-  for (const batchId of batchIds) {
-    const sourceLot = graph.lots.find((lot) => lot.batchId === batchId);
-    if (!sourceLot) {
-      res.status(400).json({ error: `Batch ${batchId} has no source material lot and cannot be quantity-traced` });
-      return;
-    }
-    if (!seeds.some((seed: any) => seed.lotId === sourceLot.id)) seeds.push({ lotId: sourceLot.id });
-  }
-  if (!canManageAll) {
-    const accessible = await accessibleTraceLotIds(req.user!.organizationId, false);
-    const unauthorized = seeds.find((seed: any) => !accessible.has(seed.lotId));
-    if (unauthorized) {
-      res.status(403).json({ error: 'You can only initiate recalls from lots connected to your organization’s inventory, custody or trade records' });
-      return;
-    }
-  }
-  const impact = calculateTraceForward(graph, seeds);
-  const affectedBatchIds = [...new Set(impact.impactedLots.map((lot) => lot.batchId).filter(Boolean))] as string[];
-  const client = await getClient();
-  let recall: any;
-  try {
-    await client.query('BEGIN');
-    const result = await client.query(
-      `INSERT INTO recall_notices (reference_code,title,reason,instructions,severity,status,initiated_by_user_id,initiated_by_organization_id)
-       VALUES ($1,$2,$3,$4,$5,'active',$6,$7) RETURNING *`,
-      [referenceCode, title, reason, instructions, severity, req.user!.id, req.user!.organizationId]
-    );
-    recall = result.rows[0];
-    if (affectedBatchIds.length) {
-      await client.query(
-        'INSERT INTO recall_affected_batches (recall_id,batch_id) SELECT $1, unnest($2::uuid[])',
-        [recall.id, affectedBatchIds]
-      );
-    }
-    for (const lot of impact.impactedLots) {
-      await client.query(
-        `INSERT INTO recall_affected_lots
-           (recall_id,lot_id,source_equivalent_kg,recall_quantity_kg,relationship_depth)
-         VALUES ($1,$2,$3,$4,$5)`,
-        [recall.id, lot.id, lot.sourceEquivalentKg, lot.recallQuantityKg, lot.relationshipDepth]
-      );
-    }
-    await client.query('COMMIT');
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'recall.activate', entityType: 'recall_notice', entityId: recall.id, reason });
-  res.status(201).json({ ...recall, batch_ids: affectedBatchIds, affected_lots: impact.impactedLots, impact: impact.totals });
+  const canManageAll = (req.user!.permissions || []).some(permission => permission === '*' || permission === 'recall.manage.all');
+  res.status(201).json(await activateRecall(req.user!,canManageAll,req.body));
 }
 
 export async function resolveRecall(req: Request, res: Response): Promise<void> {
-  const canManageAll = (req.user!.permissions || []).some((permission) => permission === '*' || permission === 'recall.manage.all');
-  const result = await query(
-    "UPDATE recall_notices SET status='resolved', resolved_at=NOW() WHERE id=$1 AND status='active' AND ($2::boolean OR initiated_by_organization_id=$3) RETURNING *",
-    [req.params.id, canManageAll, req.user!.organizationId]
-  );
-  if (!result.rows[0]) {
-    res.status(404).json({ error: 'Active recall not found' });
-    return;
-  }
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'recall.resolve', entityType: 'recall_notice', entityId: result.rows[0].id });
-  res.json(result.rows[0]);
+  const canManageAll = (req.user!.permissions || []).some(permission => permission === '*' || permission === 'recall.manage.all');
+  const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim().slice(0,2000) : undefined;
+  res.json(await resolveRecallRecord(req.user!,canManageAll,req.params.id as string,reason));
 }
