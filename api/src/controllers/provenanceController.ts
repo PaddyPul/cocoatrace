@@ -1,3 +1,4 @@
+import { loadBatchTrust, legacyOrganicStatus, hasGeolocation } from '../modules/trust/assessment';
 import { Request, Response } from 'express';
 import { query } from '../db';
 import * as audit from '../services/audit';
@@ -68,24 +69,27 @@ export async function getProvenancePack(req: Request, res: Response): Promise<vo
   }
   const { contract, shipment } = contractContext;
   const [farmRes, evidenceRes] = await Promise.all([
-    query('SELECT * FROM farm_plots WHERE farm_id IN (SELECT farm_id FROM harvest_batches WHERE id=$1)', [batchId]),
+    query('SELECT p.* FROM farm_plots p JOIN harvest_batches b ON b.farm_id=p.farm_id WHERE b.id=$1 AND p.id=ANY(b.plot_ids)', [batchId]),
     query(`SELECT ${evidenceProjection} FROM evidence_items WHERE linked_entity_type='batch' AND linked_entity_id=$1`, [batchId]),
   ]);
   const plots = farmRes.rows;
+  const trust = (await loadBatchTrust([batchId])).get(batchId)!;
+  batch.organic_claim_status = legacyOrganicStatus(trust);
 
   const policyChecks = [
-    { rule: 'Batch has organic attestation', passed: !!batch.attestation_id, warning: false },
-    { rule: 'Certificate active on harvest date', passed: batch.attestation_id && new Date(batch.harvest_date) >= new Date(batch.valid_from) && new Date(batch.harvest_date) <= new Date(batch.valid_to), warning: false },
-    { rule: 'Plot geolocation present', passed: plots.some((p: any) => p.gps_lat), warning: !plots.some((p: any) => p.gps_lat) },
-    { rule: 'EUDR cutoff checked', passed: plots.length > 0 && plots.every((p: any) => p.eudr_cutoff_checked), warning: plots.length === 0 || !plots.every((p: any) => p.eudr_cutoff_checked) },
+    { rule: 'Batch has organic attestation', passed: trust.organic.status === 'reviewed', warning: trust.organic.status !== 'reviewed' },
+    { rule: 'Certificate active on harvest date', passed: trust.organic.status === 'reviewed', warning: trust.organic.status !== 'reviewed' },
+    { rule: 'Plot geolocation present', passed: plots.length > 0 && plots.every(hasGeolocation), warning: !(plots.length > 0 && plots.every(hasGeolocation)) },
+    { rule: 'EUDR independently reviewed', passed: trust.eudr.status === 'reviewed', warning: trust.eudr.status !== 'reviewed' },
     { rule: 'Route permitted', passed: !shipment || !!shipment.origin_port, warning: !shipment },
     { rule: 'EUDR due-diligence reference', passed: !!(contract?.eudr_due_diligence_reference), warning: !(contract?.eudr_due_diligence_reference) },
   ];
 
-  const completenessChecks = [!!batch.attestation_id, plots.length > 0, plots.some((p: any) => p.gps_lat), evidenceRes.rows.some((e: any) => e.type === 'certificate_pdf'), evidenceRes.rows.some((e: any) => e.type === 'weighing_ticket'), !!(contract?.eudr_due_diligence_reference)];
+  const completenessChecks = [trust.organic.status === 'reviewed', plots.length > 0, plots.length > 0 && plots.every(hasGeolocation), evidenceRes.rows.some((e: any) => e.type === 'certificate_pdf'), evidenceRes.rows.some((e: any) => e.type === 'weighing_ticket'), !!(contract?.eudr_due_diligence_reference)];
   const completeness = Math.round((completenessChecks.filter(Boolean).length / completenessChecks.length) * 100);
 
   res.json({
+    trust,
     batchId,
     contractId: contractId || null,
     generatedAt: new Date().toISOString(),
@@ -98,11 +102,11 @@ export async function getProvenancePack(req: Request, res: Response): Promise<vo
     evidenceItems: evidenceRes.rows,
     policyCheckResults: policyChecks,
     eudrReadiness: {
-      plotGeolocationPresent: plots.some((p: any) => p.gps_lat),
-      deforestationCutoffChecked: plots.length > 0 && plots.every((p: any) => p.eudr_cutoff_checked),
+      plotGeolocationPresent: plots.length > 0 && plots.every(hasGeolocation),
+      deforestationCutoffChecked: (plots.length > 0 && plots.every((p: any) => p.eudr_cutoff_checked)),
       dueDiligenceReferenceNumber: contract?.eudr_due_diligence_reference || null,
-      riskAssessmentStatus: plots.length > 0 && plots.every((p: any) => p.deforestation_risk_status === 'clear') ? 'clear' : 'unknown',
-      ready: plots.some((p: any) => p.gps_lat) && plots.every((p: any) => p.eudr_cutoff_checked) && !!(contract?.eudr_due_diligence_reference),
+      riskAssessmentStatus: trust.eudr.status === 'reviewed' ? 'reviewed' : 'unknown',
+      ready: trust.eudr.status === 'reviewed' && !!contract?.eudr_due_diligence_reference,
     },
   });
 }
@@ -140,22 +144,24 @@ export async function exportProvenancePack(req: Request, res: Response): Promise
   }
   const { contract, shipment } = contractContext;
   const [farmRes, evidenceRes] = await Promise.all([
-    query('SELECT * FROM farm_plots WHERE farm_id IN (SELECT farm_id FROM harvest_batches WHERE id=$1)', [batchId]),
+    query('SELECT p.* FROM farm_plots p JOIN harvest_batches b ON b.farm_id=p.farm_id WHERE b.id=$1 AND p.id=ANY(b.plot_ids)', [batchId]),
     query(`SELECT ${evidenceProjection} FROM evidence_items WHERE linked_entity_type='batch' AND linked_entity_id=$1`, [batchId]),
   ]);
   const plots = farmRes.rows;
+  const trust = (await loadBatchTrust([batchId])).get(batchId)!;
+  batch.organic_claim_status = legacyOrganicStatus(trust);
 
   const policyChecks = [
-    { rule: 'Batch has organic attestation', passed: !!batch.attestation_id, warning: false },
-    { rule: 'Certificate active on harvest date', passed: !!batch.attestation_id && new Date(batch.harvest_date) >= new Date(batch.valid_from) && new Date(batch.harvest_date) <= new Date(batch.valid_to), warning: false },
-    { rule: 'Plot geolocation present', passed: plots.some((p: any) => p.gps_lat), warning: !plots.some((p: any) => p.gps_lat) },
-    { rule: 'EUDR cutoff checked', passed: plots.every((p: any) => p.eudr_cutoff_checked), warning: !plots.every((p: any) => p.eudr_cutoff_checked) },
+    { rule: 'Batch has organic attestation', passed: trust.organic.status === 'reviewed', warning: trust.organic.status !== 'reviewed' },
+    { rule: 'Certificate active on harvest date', passed: trust.organic.status === 'reviewed', warning: trust.organic.status !== 'reviewed' },
+    { rule: 'Plot geolocation present', passed: plots.length > 0 && plots.every(hasGeolocation), warning: !(plots.length > 0 && plots.every(hasGeolocation)) },
+    { rule: 'EUDR independently reviewed', passed: trust.eudr.status === 'reviewed', warning: trust.eudr.status !== 'reviewed' },
     { rule: 'Route permitted', passed: !shipment || !!shipment.origin_port, warning: !shipment },
     { rule: 'EUDR due-diligence reference', passed: !!contract?.eudr_due_diligence_reference, warning: !contract?.eudr_due_diligence_reference },
   ];
 
   const completenessChecks = [
-    !!batch.attestation_id, plots.length > 0, plots.some((p: any) => p.gps_lat),
+    trust.organic.status === 'reviewed', plots.length > 0, plots.length > 0 && plots.every(hasGeolocation),
     evidenceRes.rows.some((e: any) => e.type === 'certificate_pdf'),
     evidenceRes.rows.some((e: any) => e.type === 'weighing_ticket'),
     !!contract?.eudr_due_diligence_reference,
@@ -164,6 +170,7 @@ export async function exportProvenancePack(req: Request, res: Response): Promise
   const completenessPercent = Math.round((completenessChecks.filter(Boolean).length / completenessChecks.length) * 100);
 
   const exportPayload: Record<string, any> = {
+    trust,
     exportType: 'TraceOrigin Provenance Pack',
     version: '1.0',
     generatedAt: new Date().toISOString(),
@@ -173,11 +180,11 @@ export async function exportProvenancePack(req: Request, res: Response): Promise
     batch, plots, contract, shipment, evidenceItems: evidenceRes.rows,
     policyCheckResults: policyChecks,
     eudrReadiness: {
-      plotGeolocationPresent: plots.some((p: any) => p.gps_lat),
-      deforestationCutoffChecked: plots.every((p: any) => p.eudr_cutoff_checked),
+      plotGeolocationPresent: plots.length > 0 && plots.every(hasGeolocation),
+      deforestationCutoffChecked: (plots.length > 0 && plots.every((p: any) => p.eudr_cutoff_checked)),
       dueDiligenceReferenceNumber: contract?.eudr_due_diligence_reference || null,
-      riskAssessmentStatus: plots.every((p: any) => p.deforestation_risk_status === 'clear') ? 'clear' : 'unknown',
-      ready: plots.some((p: any) => p.gps_lat) && plots.every((p: any) => p.eudr_cutoff_checked) && !!contract?.eudr_due_diligence_reference,
+      riskAssessmentStatus: trust.eudr.status === 'reviewed' ? 'reviewed' : 'unknown',
+      ready: trust.eudr.status === 'reviewed' && !!contract?.eudr_due_diligence_reference,
     },
   };
 

@@ -80,7 +80,7 @@ export default function FarmDetailPage() {
           <div className="bg-surface border border-border rounded overflow-hidden">
             <div className="h-40 bg-surface-darker flex items-center justify-center text-5xl relative">
               🏡
-              <div className="absolute top-3 right-3"><StatusBadge status={farm.verification_status} /></div>
+              <div className="absolute top-3 right-3"><span className="badge badge-amber">{farm.verification_status === 'verified' ? 'Legacy status · review details unavailable' : farm.verification_status === 'self_declared' ? 'Supplier declared' : 'Review pending'}</span></div>
             </div>
             <div className="p-5">
               <h1 className="text-xl font-bold text-text-primary mb-1">{farm.name}</h1>

@@ -4,6 +4,7 @@ import {
   AlertTriangle, CheckCircle2, FileCheck2, Leaf, MapPin, PackageCheck,
   ShieldCheck, Sprout, Truck, UsersRound,
 } from 'lucide-react';
+import TrustClaims, { trustLabel } from '../components/shared/TrustClaims';
 import { publicProducts } from '../api';
 import { JourneyEvent, PublicProduct } from '../types';
 
@@ -30,7 +31,7 @@ function EventCard({ event, last }: { event: JourneyEvent; last: boolean }) {
       <div className="min-w-0 pt-0.5">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="font-semibold text-stone-900 capitalize">{event.title}</h3>
-          {event.verified && <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700"><CheckCircle2 size={12} /> verified</span>}
+          {event.verified && <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700"><CheckCircle2 size={12} /> recorded</span>}
         </div>
         <p className="mt-1 text-sm text-stone-600">{event.summary}</p>
         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-400">
@@ -50,13 +51,26 @@ export default function PublicProductPage() {
   const [tab, setTab] = useState<'journey' | 'proof'>('journey');
 
   useEffect(() => {
-    publicProducts.get(slug)
-      .then((product) => {
-        setData(product);
-        publicProducts.recordScan(slug).catch(() => undefined);
-        document.title = `${product.profile.displayName} — CocoaTrace`;
-      })
-      .catch((err) => setError(err.message));
+    let alive = true;
+    let refreshing = false;
+    const refresh = async () => {
+      if (refreshing || document.visibilityState === 'hidden') return;
+      refreshing = true;
+      try {
+        const product = await publicProducts.get(slug);
+        if (alive) { setData(product); setError(''); document.title = `${product.profile.displayName} — CocoaTrace`; }
+      } catch (err) {
+        if (alive) setError(err instanceof Error ? err.message : 'Unable to refresh product record');
+      } finally { refreshing = false; }
+    };
+    setData(null);
+    void refresh();
+    publicProducts.recordScan(slug).catch(() => undefined);
+    const visible = () => { if (document.visibilityState === 'visible') void refresh(); };
+    const interval = window.setInterval(visible, 15_000);
+    window.addEventListener('focus', visible);
+    document.addEventListener('visibilitychange', visible);
+    return () => { alive = false; window.clearInterval(interval); window.removeEventListener('focus', visible); document.removeEventListener('visibilitychange', visible); };
   }, [slug]);
 
   if (error) return <main className="min-h-screen bg-[#f6f4ee] text-stone-900 grid place-items-center p-6"><div className="max-w-md text-center"><div className="text-5xl mb-4">🌱</div><h1 className="text-2xl font-bold">Profile not found</h1><p className="mt-2 text-stone-500">{error}</p></div></main>;
@@ -69,7 +83,7 @@ export default function PublicProductPage() {
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2 font-bold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-900 text-white"><Leaf size={17} /></span>CocoaTrace</div>
           <div className={`rounded-full px-3 py-1.5 text-xs font-semibold ${unsafe ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900'}`}>
-            {unsafe ? `${data.safety.status.toUpperCase()} NOTICE` : 'NO ACTIVE RECALL'}
+            {unsafe ? `${data.safety.status.toUpperCase()} NOTICE` : 'No active recalls recorded'}
           </div>
         </div>
       </header>
@@ -89,10 +103,10 @@ export default function PublicProductPage() {
               <div className="h-24 bg-gradient-to-br from-emerald-900 via-emerald-800 to-lime-700" />
               <div className="px-5 pb-5">
                 <div className="-mt-10 grid h-20 w-20 place-items-center rounded-2xl border-4 border-white bg-amber-100 text-4xl shadow-sm">🍫</div>
-                <div className="mt-3 flex items-start justify-between gap-3"><div><h1 className="text-xl font-bold leading-tight">{data.profile.displayName}</h1><p className="mt-1 text-sm text-stone-400">@{data.profile.slug}</p></div><ShieldCheck className="shrink-0 text-emerald-700" size={22} /></div>
+                <div className="mt-3 flex items-start justify-between gap-3"><div><h1 className="text-xl font-bold leading-tight">{data.profile.displayName}</h1><p className="mt-1 text-sm text-stone-400">@{data.profile.slug}</p></div><PackageCheck className="shrink-0 text-stone-500" size={22} /></div>
                 {data.profile.brandName && <p className="mt-3 text-sm font-semibold text-stone-700">{data.profile.brandName}</p>}
                 <p className="mt-2 text-sm leading-relaxed text-stone-600">{data.profile.description}</p>
-                <div className="mt-4 flex flex-wrap gap-2 text-xs"><span className="rounded-full bg-stone-100 px-2.5 py-1 font-mono">LOT {data.profile.lotCode}</span><span className="rounded-full bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-800">{data.product.organicClaimStatus.replace(/_/g, ' ')}</span></div>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs"><span className="rounded-full bg-stone-100 px-2.5 py-1 font-mono">LOT {data.profile.lotCode}</span><span className="rounded-full bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-800">{`Organic: ${trustLabel(data.trust?.organic)}`}</span></div>
                 <div className="mt-5 border-t border-stone-100 pt-4 text-xs text-stone-500"><span className="inline-flex items-center gap-1.5"><MapPin size={13} />{data.origin.region}, {data.origin.country}</span><span className="mt-2 flex items-center gap-1.5"><Sprout size={13} />Harvested {formatDate(data.product.harvestDate)}</span></div>
               </div>
             </div>
@@ -110,12 +124,12 @@ export default function PublicProductPage() {
 
             <div className="p-5 sm:p-7">
               {tab === 'journey' ? <>
-                <div className="mb-6"><div className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">Farm to fork</div><h2 className="mt-1 text-2xl font-bold">This product's journey</h2><p className="mt-2 text-sm text-stone-500">Events are shown in time order. Verified entries are backed by an authenticated supply-chain record.</p></div>
+                <div className="mb-6"><div className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">Farm to fork</div><h2 className="mt-1 text-2xl font-bold">This product's journey</h2><p className="mt-2 text-sm text-stone-500">Events are shown in time order. Entries describe recorded supply-chain activity. Authentication of a record does not independently verify a product claim.</p></div>
                 {data.journey.map((event, index) => <EventCard key={`${event.type}-${event.occurredAt}-${index}`} event={event} last={index === data.journey.length - 1} />)}
               </> : <>
                 <div className="mb-6"><div className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">Evidence</div><h2 className="mt-1 text-2xl font-bold">Claims with receipts</h2></div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl border border-stone-200 p-4"><ShieldCheck className="text-emerald-700" /><h3 className="mt-3 font-bold">Origin verified</h3><p className="mt-1 text-sm text-stone-500">{data.origin.farmName} · {data.origin.officialTraceabilityId || 'Platform identity'}</p><p className="mt-3 text-xs text-stone-400">Geolocation {data.origin.geolocation_complete ? 'complete' : 'requires review'} · EUDR cutoff {data.origin.eudr_cutoff_checked ? 'checked' : 'not complete'}</p></div>
+                <TrustClaims trust={data.trust} light /><div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-stone-200 p-4"><ShieldCheck className="text-emerald-700" /><h3 className="mt-3 font-bold">Origin: {trustLabel(data.trust?.origin)}</h3><p className="mt-1 text-sm text-stone-500">{data.origin.farmName} · {data.origin.officialTraceabilityId || 'Platform identity'}</p><p className="mt-3 text-xs text-stone-400">Geolocation {data.origin.geolocation_complete ? 'complete' : 'requires review'} · EUDR cutoff {data.origin.eudr_cutoff_checked ? 'checked' : 'not complete'}</p></div>
                   {data.certificate && <div className="rounded-xl border border-stone-200 p-4"><FileCheck2 className="text-emerald-700" /><h3 className="mt-3 font-bold">{data.certificate.standard.replace(/_/g, ' ')}</h3><p className="mt-1 text-sm text-stone-500">{data.certificate.certifier_name}</p><p className="mt-3 text-xs text-stone-400">Reference {data.certificate.accreditation_reference}</p></div>}
                 </div>
                 <div className="mt-5 space-y-2">{data.evidence.map((item) => <div key={item.sha256_hash} className="flex items-center gap-3 rounded-xl bg-stone-50 p-3"><FileCheck2 size={18} className="shrink-0 text-emerald-700" /><div className="min-w-0"><div className="truncate text-sm font-semibold">{item.claim_description || item.file_name}</div><div className="truncate font-mono text-[10px] text-stone-400">{item.sha256_hash}</div></div></div>)}</div>
@@ -123,7 +137,7 @@ export default function PublicProductPage() {
             </div>
           </section>
         </div>
-        <footer className="py-8 text-center text-xs text-stone-400"><p>Live product record · Safety checked {new Date(data.safety.checkedAt).toLocaleTimeString()}</p><p className="mt-1">CocoaTrace shows recorded evidence; it does not replace regulator or manufacturer recall instructions.</p></footer>
+        <footer className="py-8 text-center text-xs text-stone-400"><p>Live product record · Recall records checked {new Date(data.safety.checkedAt).toLocaleTimeString()}</p><p className="mt-1">CocoaTrace shows recorded evidence; it does not replace regulator or manufacturer recall instructions.</p></footer>
       </div>
     </main>
   );

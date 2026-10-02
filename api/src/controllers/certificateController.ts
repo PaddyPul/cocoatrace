@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { query } from '../db';
-import * as audit from '../services/audit';
+import { issueCertificateRecord, changeCertificateStatusRecord } from '../modules/trust/certification';
 import { hasCertificateRelationship, hasExplicitPermission } from '../services/resourcePolicy';
 
 export async function listCertificates(req: Request, res: Response): Promise<void> {
@@ -46,33 +46,9 @@ export async function getCertificate(req: Request, res: Response): Promise<void>
 }
 
 export async function issueCertificate(req: Request, res: Response): Promise<void> {
-  const { farmerOrganizationId, farmId, standard, cropScope, validFrom, validTo, issuingAuthority, accreditationReference } = req.body;
-  const farm = await query('SELECT id FROM farms WHERE id=$1 AND farmer_organization_id=$2', [farmId, farmerOrganizationId]);
-  if (!farm.rows[0]) {
-    res.status(400).json({ error: 'Farm does not belong to the supplied farmer organization' });
-    return;
-  }
-  const { rows } = await query(
-    'INSERT INTO organic_certificates (certifier_organization_id, farmer_organization_id, farm_id, standard, crop_scope, valid_from, valid_to, issuing_authority, accreditation_reference) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *',
-    [req.user!.organizationId, farmerOrganizationId, farmId, standard, cropScope, validFrom, validTo, issuingAuthority, accreditationReference]
-  );
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'certificate.issue', entityType: 'organic_certificate', entityId: rows[0].id });
-  res.status(201).json(rows[0]);
+  res.status(201).json(await issueCertificateRecord(req.user!, req.body));
 }
 
 export async function updateCertificateStatus(req: Request, res: Response): Promise<void> {
-  const id = req.params.id as string;
-  const action = req.params.action as string;
-  const validActions: Record<string, string> = { suspend: 'suspended', revoke: 'revoked', reinstate: 'active' };
-  if (!validActions[action]) {
-    res.status(400).json({ error: 'Invalid action' });
-    return;
-  }
-  const { rows } = await query('UPDATE organic_certificates SET status = $1 WHERE id = $2 AND certifier_organization_id = $3 RETURNING *', [validActions[action], id, req.user!.organizationId]);
-  if (!rows[0]) {
-    res.status(404).json({ error: 'Certificate not found or not yours' });
-    return;
-  }
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: `certificate.${action}`, entityType: 'organic_certificate', entityId: id, reason: req.body.reason });
-  res.json(rows[0]);
+  res.json(await changeCertificateStatusRecord(req.user!, req.params.id as string, req.params.action as string, req.body.reason));
 }

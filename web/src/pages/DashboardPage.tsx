@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { batches, contracts, shipments, farms, audit, listings, offers as offersApi, certificates as certsApi } from '../api';
 import { Batch, Contract, Shipment, Farm, AuditEvent, Listing, Offer } from '../types';
+import { isReviewed } from '../components/shared/TrustClaims';
 import Layout from '../components/layout/Layout';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { ArrowRight, Route, ShieldCheck } from 'lucide-react';
@@ -152,7 +153,7 @@ function FarmerDash({ data, navigate, canDo }: { data: any; navigate: any; canDo
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         <div className="stat-card stat-card-accent"><div className="stat-label">My Farms</div><div className="stat-value">{farms.length}</div></div>
         <div className="stat-card"><div className="stat-label">Batches</div><div className="stat-value">{batches.length}</div></div>
-        <div className="stat-card"><div className="stat-label">Attested</div><div className="stat-value text-brand-400">{batches.filter((b) => b.organic_claim_status === 'attested').length}</div></div>
+        <div className="stat-card"><div className="stat-label">Organic reviewed</div><div className="stat-value text-brand-400">{batches.filter((b) => isReviewed(b.trust?.organic)).length}</div></div>
         <div className="stat-card"><div className="stat-label">My Listings</div><div className="stat-value">{myListings.length}</div></div>
       </div>
 
@@ -170,7 +171,7 @@ function FarmerDash({ data, navigate, canDo }: { data: any; navigate: any; canDo
 function CertifierDash({ data, navigate }: { data: any; navigate: any }) {
   const batches: Batch[] = data.batches || [];
   const pending = batches.filter((b) => b.organic_claim_status === 'pending_attestation');
-  const attested = batches.filter((b) => b.organic_claim_status === 'attested');
+  const attested = batches.filter((b) => isReviewed(b.trust?.organic));
   const certs: any[] = data.certs || [];
   const activeCerts = certs.filter((c: any) => c.status === 'active');
 
@@ -178,7 +179,7 @@ function CertifierDash({ data, navigate }: { data: any; navigate: any }) {
     <>
       <div className="grid grid-cols-3 gap-3 mb-5">
         <div className="stat-card stat-card-accent"><div className="stat-label">Awaiting Attestation</div><div className={`stat-value ${pending.length > 0 ? 'text-yellow-400' : 'text-brand-400'}`}>{pending.length}</div></div>
-        <div className="stat-card"><div className="stat-label">Attested</div><div className="stat-value text-brand-400">{attested.length}</div></div>
+        <div className="stat-card"><div className="stat-label">Organic reviewed</div><div className="stat-value text-brand-400">{attested.length}</div></div>
         <div className="stat-card"><div className="stat-label">Active Certs</div><div className="stat-value text-brand-400">{activeCerts.length}</div></div>
       </div>
 

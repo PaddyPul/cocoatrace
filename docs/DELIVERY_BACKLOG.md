@@ -55,7 +55,7 @@ only the ordered view and deliberately has no duplicate checkboxes.
 2. **Pilot Identity & Access v1 — IDN-002–IDN-011, IDN-013–IDN-015:** request access, verify email, review organizations, create the first administrator only after approval, deliver/revoke invitations, recover passwords, revoke sessions and record policy acceptance.
 3. **Browser regression foundation — QLT-021, then QLT-009–QLT-011:** automate identity and invitation flows with isolated fixtures and a captured SMTP inbox; run in CI with sanitized failure reports/screenshots; keep optional credential-bearing traces private. Extend coverage alongside each subsequent feature sprint.
 4. **Trading Integrity v1 — ARC-005, ARC-012, TRD-001–TRD-009:** implementation and 24 trading integration regressions are present; require native migration/integration/browser CI and the short smoke test before closing this wave. See `docs/runbooks/TRADING_INTEGRITY.md` and `docs/releases/TRADING_INTEGRITY_WINDOWS.md`.
-5. **DAT-001–DAT-003** — replace optimistic trust-state defaults and preserve the source of every claim.
+5. **Trust-state Accuracy v1 — DAT-001–DAT-003:** implementation, audited correction report and eleven new integration regressions are present. Native migration/integration/browser tests and a short UI smoke test remain release gates. See `docs/runbooks/TRUST_STATE_ACCURACY.md` and `docs/releases/TRUST_STATE_ACCURACY_WINDOWS.md`.
 6. **RCL-001–RCL-002** — enforce recall holds across listings, offers, transfers and dispatch.
 
 The following deployment work is a **parallel external gate**, not repository-complete work: **ENV-004–ENV-006, UPL-002, OPS-001–OPS-002**. A named infrastructure owner must provision isolated staging resources, private encrypted object storage, HTTPS/secrets, managed database recovery and a recorded restore drill. Repository tests and local Docker do not close those items.
@@ -199,15 +199,15 @@ The following deployment work is a **parallel external gate**, not repository-co
 
 # 7. Trust, certification and compliance data
 
-- [ ] **DAT-001 · P0 · Phase 1:** Replace verified/approved/clear/EUDR-checked defaults with pending, self-declared or unknown states.
-- [ ] **DAT-002 · P0 · Phase 1:** Migrate existing non-seed records to an honest trust state with an audit report.
-- [ ] **DAT-003 · P1 · Phase 1:** Record claim source, reviewer, method, timestamp and expiry.
+- [-] **DAT-001 · P0 · Phase 1 — IN PROGRESS:** Forward migration 021 replaces optimistic defaults with pending/self-declared/unknown. Workspace approval remains separate from independent verification. Native release validation pending.
+- [-] **DAT-002 · P0 · Phase 1 — IN PROGRESS:** Migration 021 downgrades unsupported legacy farm/plot/evidence decisions with a per-field correction ledger and read-only `trust:report`. Seed flags cannot grant effective verification. Native upgrade validation pending.
+- [-] **DAT-003 · P1 · Phase 1 — IN PROGRESS:** Independent certificate issuance/attestation records source, actual reviewer, method, time, expiry and audit atomically. Customer-facing trust summaries expose review provenance without private document URLs. A general origin/EUDR/evidence review workflow remains future work; native release validation pending.
 - [x] **DAT-004 · P1 · Phase 1:** Certificate issue and attestation validate farmer organization against farm ownership, with a real-PostgreSQL cross-tenant regression.
 - [-] **DAT-005 · P1 · Phase 1 — IN PROGRESS:** Attestation validates certificate subject, crop scope and harvest-date coverage. PostgreSQL regressions cover mismatched subject and crop; add an out-of-validity harvest-date regression before closing this item.
 - [ ] **DAT-006 · P1 · Phase 1:** Prevent contradictory duplicate active certificates.
-- [ ] **DAT-007 · P1 · Phase 2:** Cascade certificate suspension/revocation into affected claims, listings, deals and alerts.
-- [ ] **DAT-008 · P1 · Phase 2:** Recalculate marketplace and product-profile trust labels from current source data.
-- [ ] **DAT-009 · P1 · Phase 2:** Show whether information is self-declared, document-supported or independently verified.
+- [-] **DAT-007 · P1 · Phase 2:** Live batch/listing/passport/provenance trust now reflects suspension/revocation/expiry. Audited reinstatement applies only to valid suspended certificates. Deal protections and proactive alerts remain open.
+- [-] **DAT-008 · P1 · Phase 2:** Marketplace and public product labels derive from current scoped certificates and documented reviews; API/UI regressions implemented. Native validation pending.
+- [-] **DAT-009 · P1 · Phase 2:** Shared claim presentation distinguishes declaration, independent review, expiry, revocation and unknown; details include source and reviewer. Native validation pending.
 - [ ] **DAT-010 · P1 · Phase 2:** Add evidence requirements by claim type rather than accepting arbitrary labels.
 - [ ] **DAT-011 · P2 · Phase 2:** Introduce configurable assurance schemes rather than hard-coded organic/EUDR assumptions.
 - [ ] **DAT-012 · P2 · Phase 3:** Add history/effective dates so past decisions remain explainable after claim changes.
