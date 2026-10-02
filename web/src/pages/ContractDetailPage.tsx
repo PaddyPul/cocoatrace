@@ -21,6 +21,7 @@ const SELLER_DOCUMENTS = [
 ] as const;
 
 const BUYER_DOCUMENTS = [
+  ['payment_proof', 'Payment proof'],
   ['purchase_order', 'Purchase order'],
   ['import_permit', 'Import/customs document'],
   ['compliance_document', 'Compliance/due-diligence document'],
@@ -30,7 +31,7 @@ const BUYER_DOCUMENTS = [
 
 const PAYMENT_PLANS = [
   ['pay_before_dispatch', 'Full payment before dispatch'],
-  ['deposit_balance', 'Deposit before dispatch, balance on delivery'],
+  ['deposit_balance', 'Deposit before dispatch, balance against documents'],
   ['bank_secured', 'Verified bank security before dispatch'],
   ['documentary_collection', 'Documents against payment'],
   ['pay_after_delivery', 'Approved credit after delivery'],
@@ -58,6 +59,7 @@ export default function ContractDetailPage() {
   const [uploadError, setUploadError] = useState('');
   const [presenting, setPresenting] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const [paymentEvidenceRequired, setPaymentEvidenceRequired] = useState(false);
   const [paymentPlan, setPaymentPlan] = useState('deposit_balance');
   const [depositPercentage, setDepositPercentage] = useState(20);
   const [creditDays, setCreditDays] = useState(30);
@@ -70,6 +72,7 @@ export default function ContractDetailPage() {
     setData(result);
     setComplianceScheme(result.compliance_scheme || (result.eudr_due_diligence_reference ? 'EUDR' : ''));
     setComplianceRef(result.compliance_reference || result.eudr_due_diligence_reference || '');
+    setPaymentEvidenceRequired(Boolean(result.payment_evidence_required));
     setPaymentPlan(result.payment_plan || 'deposit_balance');
     setDepositPercentage(Number(result.deposit_percentage || 20));
     setCreditDays(Number(result.credit_days || 30));
@@ -92,7 +95,7 @@ export default function ContractDetailPage() {
     if (['CIF', 'CIP'].includes(String(data?.incoterm || '').toUpperCase())) required.push('insurance_certificate');
     return required;
   }, [data?.incoterm]);
-  const presentDocumentTypes = new Set((data?.documents || []).map((doc: any) => doc.type));
+  const presentDocumentTypes = new Set((data?.documents || []).filter((doc: any) => doc.validation_status === 'validated' && doc.malware_scan_status === 'clean' && doc.review_status !== 'rejected').map((doc: any) => doc.type));
   const missingDocuments = requiredDocuments.filter((type) => !presentDocumentTypes.has(type));
   const shipmentLoaded = ['handed_over', 'loaded', 'departed', 'arrived', 'customs_cleared', 'delivered'].includes(data?.current_milestone);
   const transportDocumentsReady = shipmentLoaded && Boolean(data?.transport_document_reference);
@@ -130,7 +133,7 @@ export default function ContractDetailPage() {
     if (!id) return;
     setTermsLoading(true);
     try {
-      await contracts.updatePaymentTerms(id, { paymentPlan, depositPercentage, creditDays, note: termsNote });
+      await contracts.updatePaymentTerms(id, { paymentPlan, depositPercentage, creditDays, note: termsNote, paymentEvidenceRequired });
       await loadContract(); setShowTerms(false); toast('success', 'Payment terms proposed to the buyer');
     } catch (e: any) { toast('error', e.message); } finally { setTermsLoading(false); }
   };
@@ -165,7 +168,7 @@ export default function ContractDetailPage() {
   else if (isTransportCoordinator && !c.service_provider_name && !c.booking_reference) nextAction = `Open the transport workspace and record the external arrangement. Your organization coordinates transport under ${c.incoterm}.`;
   else if (isSeller && missingDocuments.length > 0) nextAction = `Upload the remaining trade documents (${missingDocuments.length} missing).`;
   else if (isTransportCoordinator && !transportDocumentsReady) nextAction = 'Update transport progress and record the applicable transport-document reference.';
-  else if (isSeller && c.payment_status === 'awaiting_documents') nextAction = 'Present the complete document set to make payment due.';
+  else if (isSeller && ['deposit_balance','documentary_collection','bank_secured'].includes(c.payment_plan) && !c.documents_presented_at && c.payment_terms_status === 'agreed') nextAction = 'Present the complete document set to make payment due.';
   else if (isBuyer && c.payment_status === 'requested') nextAction = 'Settle through your bank, then record the transaction reference.';
   else if (c.payment_status === 'settled' && c.current_milestone !== 'delivered') nextAction = 'Track the shipment through delivery.';
   else if (c.status === 'settled') nextAction = 'Trade complete: payment and delivery are both recorded.';
@@ -183,7 +186,7 @@ export default function ContractDetailPage() {
 
           <div className="bg-surface border border-border rounded p-5">
             <div className="flex items-center justify-between gap-3 mb-4"><h3 className="text-sm font-semibold flex items-center gap-2"><ShieldCheck size={16} className="text-brand-400" /> Payment protection</h3><StatusBadge status={c.payment_terms_status} /></div>
-            <div className="grid grid-cols-2 gap-4"><Field label="Plan" value={String(c.payment_plan || 'not selected').split('_').join(' ')} /><Field label="Required before dispatch" value={fmtMoney(Number(c.dispatch_required_amount || 0), c.currency)} /><Field label="Seller-confirmed receipt" value={fmtMoney(Number(c.amount_confirmed || 0), c.currency)} /><Field label="Platform fee (seller)" value={fmtMoney(Number(c.platform_fee_amount || 0), c.currency)} /></div>
+            <div className="grid grid-cols-2 gap-4"><Field label="Payment proof" value={c.payment_evidence_required ? 'Required for each installment' : 'Optional'} /><Field label="Plan" value={String(c.payment_plan || 'not selected').split('_').join(' ')} /><Field label="Required before dispatch" value={fmtMoney(Number(c.dispatch_required_amount || 0), c.currency)} /><Field label="Seller-confirmed receipt" value={fmtMoney(Number(c.amount_confirmed || 0), c.currency)} /><Field label="Platform fee (seller)" value={fmtMoney(Number(c.platform_fee_amount || 0), c.currency)} /></div>
             <p className="text-[11px] text-text-muted mt-3">CocoaTrace records references and confirmations but does not custody funds. Dispatch is blocked server-side until the selected protection condition is verified.</p>
           </div>
 
@@ -204,7 +207,7 @@ export default function ContractDetailPage() {
           {isSeller && c.payment_terms_status !== 'agreed' && <button className="btn btn-primary w-full justify-center text-xs" onClick={() => setShowTerms(true)}><ShieldCheck size={14} /> Set payment protection</button>}
           {isBuyer && c.payment_terms_status === 'proposed' && <button className="btn btn-primary w-full justify-center text-xs" onClick={confirmTerms} disabled={termsLoading}><ShieldCheck size={14} /> {termsLoading ? 'Confirming…' : 'Confirm payment terms'}</button>}
           {c.shipment_id && <button className={`btn ${isTransportCoordinator && !c.service_provider_name ? 'btn-primary' : ''} w-full justify-center text-xs`} onClick={() => navigate(`/shipments/${c.shipment_id}`)}><Ship size={14} /> {isTransportCoordinator ? 'Manage transport' : 'View transport'}</button>}
-          {isSeller && c.payment_status === 'awaiting_documents' && <button className="btn btn-primary w-full justify-center text-xs" onClick={handlePresentDocuments} disabled={presenting || missingDocuments.length > 0 || !transportDocumentsReady}><Euro size={14} /> {presenting ? 'Presenting…' : 'Present documents for payment'}</button>}
+          {isSeller && ['deposit_balance','documentary_collection','bank_secured'].includes(c.payment_plan) && !c.documents_presented_at && c.payment_terms_status === 'agreed' && <button className="btn btn-primary w-full justify-center text-xs" onClick={handlePresentDocuments} disabled={presenting || missingDocuments.length > 0 || !transportDocumentsReady}><Euro size={14} /> {presenting ? 'Presenting…' : 'Present documents for payment'}</button>}
           {c.payment_request_id && <button className="btn w-full justify-center text-xs" onClick={() => navigate(`/payments/${c.payment_request_id}`)}><Euro size={14} /> {isBuyer && c.payment_status === 'requested' ? 'Record bank payment' : 'View payment workflow'}</button>}
           <button className="btn w-full justify-center text-xs" onClick={() => downloadContract(c, toast)}><FileText size={14} /> Download contract</button>
         </div></div></div>
@@ -212,7 +215,7 @@ export default function ContractDetailPage() {
 
       {showCompliance && <Modal title="Compliance Reference" onClose={() => !complianceLoading && setShowCompliance(false)}><div className="space-y-3"><p className="text-[11px] text-text-muted">Use this only when a regulation, certification scheme or buyer policy applies to the material. Examples include EUDR, conflict-minerals due diligence or an import permit.</p><div><label className="form-label">Scheme or requirement</label><input className="form-input" placeholder="e.g. EUDR, OECD Due Diligence, Import Permit" value={complianceScheme} onChange={(e) => setComplianceScheme(e.target.value)} /></div><div><label className="form-label">Reference</label><input className="form-input" placeholder="Reference issued by the applicable system or authority" value={complianceRef} onChange={(e) => setComplianceRef(e.target.value)} /></div><ErrorBox message={complianceError} /><ModalButtons busy={complianceLoading} onCancel={() => setShowCompliance(false)} onConfirm={handleComplianceUpdate} confirmLabel="Save reference" /></div></Modal>}
       {showUpload && <Modal title="Share Trade Document" onClose={() => !uploading && setShowUpload(false)}><div className="space-y-3"><div><label className="form-label">Document type</label><select className="form-select" value={documentType} onChange={(e) => setDocumentType(e.target.value)}>{uploadChoices.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div><div><label className="form-label">File</label><input type="file" className="form-input" onChange={(e) => setDocumentFile(e.target.files?.[0] || null)} /></div><div><label className="form-label">Note (optional)</label><input className="form-input" value={documentNote} onChange={(e) => setDocumentNote(e.target.value)} placeholder="Document number or short explanation" /></div><ErrorBox message={uploadError} /><ModalButtons busy={uploading} onCancel={() => setShowUpload(false)} onConfirm={handleUpload} confirmLabel="Share document" /></div></Modal>}
-      {showTerms && <Modal title="Payment Protection Plan" onClose={() => !termsLoading && setShowTerms(false)}><div className="space-y-3"><p className="text-[11px] text-text-muted">Select the commercial payment condition. The buyer must confirm it before fulfilment proceeds.</p><div><label className="form-label">Plan</label><select className="form-select" value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)}>{PAYMENT_PLANS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div>{paymentPlan === 'deposit_balance' && <div><label className="form-label">Deposit percentage</label><input type="number" min="1" max="99" className="form-input" value={depositPercentage} onChange={(e) => setDepositPercentage(Number(e.target.value))} /></div>}{paymentPlan === 'pay_after_delivery' && <div><label className="form-label">Credit days after delivery</label><input type="number" min="0" max="180" className="form-input" value={creditDays} onChange={(e) => setCreditDays(Number(e.target.value))} /></div>}<div><label className="form-label">Commercial note (optional)</label><textarea className="form-input" rows={3} value={termsNote} onChange={(e) => setTermsNote(e.target.value)} /></div><ModalButtons busy={termsLoading} onCancel={() => setShowTerms(false)} onConfirm={saveTerms} confirmLabel="Propose terms" /></div></Modal>}
+      {showTerms && <Modal title="Payment Protection Plan" onClose={() => !termsLoading && setShowTerms(false)}><div className="space-y-3"><p className="text-[11px] text-text-muted">Select the commercial payment condition. The buyer must confirm it before fulfilment proceeds.</p><div><label className="form-label">Plan</label><select className="form-select" value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)}>{PAYMENT_PLANS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div>{paymentPlan === 'deposit_balance' && <div><label className="form-label">Deposit percentage</label><input type="number" min="5" max="90" className="form-input" value={depositPercentage} onChange={(e) => setDepositPercentage(Number(e.target.value))} /></div>}{paymentPlan === 'pay_after_delivery' && <div><label className="form-label">Credit days after delivery</label><input type="number" min="0" max="365" className="form-input" value={creditDays} onChange={(e) => setCreditDays(Number(e.target.value))} /></div>}<label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={paymentEvidenceRequired} onChange={e => setPaymentEvidenceRequired(e.target.checked)} /> Require payment proof for every installment</label><div><label className="form-label">Commercial note (optional)</label><textarea className="form-input" rows={3} value={termsNote} onChange={(e) => setTermsNote(e.target.value)} /></div><ModalButtons busy={termsLoading} onCancel={() => setShowTerms(false)} onConfirm={saveTerms} confirmLabel="Propose terms" /></div></Modal>}
     </Layout>
   );
 }

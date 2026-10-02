@@ -68,8 +68,9 @@ export async function downloadEvidence(req: Request, res: Response): Promise<voi
             c.buyer_organization_id,
             p.release_status
        FROM evidence_items e
+       LEFT JOIN shipments sh ON e.linked_entity_type='shipment' AND e.linked_entity_id=sh.id
        LEFT JOIN sales_contracts c
-         ON e.linked_entity_type='contract' AND e.linked_entity_id=c.id
+         ON (e.linked_entity_type='contract' AND e.linked_entity_id=c.id) OR sh.contract_id=c.id
        LEFT JOIN LATERAL (
          SELECT release_status FROM payment_requests
           WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1
@@ -92,7 +93,7 @@ export async function downloadEvidence(req: Request, res: Response): Promise<voi
     return;
   }
 
-  if (item.malware_scan_status !== 'clean') {
+  if (item.validation_status !== 'validated' || item.review_status === 'rejected' || item.malware_scan_status !== 'clean') {
     res.status(423).json({ error: 'This document is unavailable until malware scanning completes', code: 'EVIDENCE_NOT_SCAN_CLEAN' });
     return;
   }

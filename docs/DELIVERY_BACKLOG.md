@@ -18,7 +18,7 @@
 
 When asked “what needs to be done?”, start with incomplete items in the current execution queue, then the active phase exit criteria, then blocked P0/P1 work.
 
-Current zero-budget implementation: **BST-001** supervised synthetic preview runner and email-restricted temporary HTTPS. See [`runbooks/ZERO_COST_DEMO_PREVIEW.md`](runbooks/ZERO_COST_DEMO_PREVIEW.md). Native preview and real visitor-gate validation remain pending; live staging remains separate.
+Current zero-budget implementation: **BST-001** supervised synthetic preview runner and email-restricted temporary HTTPS. See [`runbooks/ZERO_COST_DEMO_PREVIEW.md`](runbooks/ZERO_COST_DEMO_PREVIEW.md). Founder confirmed native preview startup and allowed-email PIN access on 2026-10-02; anonymous probe denial passed. Live staging and an independently tested unlisted visitor remain separate.
 
 ## Bootstrap budget and expansion constraints
 
@@ -267,13 +267,13 @@ The following deployment work is a **parallel external gate**, not repository-co
 
 # 9. Payments, fees and financial boundaries
 
-- [ ] **PAY-001 · P0 · Phase 1:** Keep server-enforced dispatch gates and add integration tests for every payment plan.
-- [ ] **PAY-002 · P1 · Phase 1:** Display prominently that CocoaTrace records references and confirmations but does not hold funds or provide escrow.
-- [ ] **PAY-003 · P1 · Phase 2:** Require payment evidence attachment or structured proof where the selected plan requires it.
+- [-] **PAY-001 · P0 · Phase 1:** IMPLEMENTED: every-plan integration coverage, pickup/handover/loading/departure gates, scan-clean documents and five actual browser journeys. Authoring checks pass; native PostgreSQL concurrency and complete release gate confirmation pending.
+- [x] **PAY-002 · P1 · Phase 1:** Explicit no-funds/no-escrow copy in the deal room and payment schedule; external bank security is seller-accepted, not platform-authenticated. Browser journeys pass in authoring.
+- [-] **PAY-003 · P1 · Phase 2:** IMPLEMENTED: supplier-selected, buyer-confirmed per-installment proof requirement, private scanned buyer uploads, contract/tenant/type checks, stored-file checks and proof reuse prevention. Existing agreed terms are preserved. Native release confirmation pending.
 - [ ] **PAY-004 · P1 · Phase 2:** Separate buyer submission, seller confirmation, rejection and dispute histories.
-- [ ] **PAY-005 · P1 · Phase 2:** Add idempotency to payment submission and confirmation.
+- [-] **PAY-005 · P1 · Phase 2:** IMPLEMENTED: state-based retry safety for submission, confirmation, rejection, document presentation and bank security; atomic audits, contract-first locking and exact NUMERIC receipt totals. Native simultaneous-request regression remains pending execution.
 - [ ] **PAY-006 · P1 · Phase 2:** Prevent one party from unilaterally satisfying incompatible payment and delivery conditions.
-- [ ] **PAY-007 · P1 · Phase 2:** Define document-release behavior for each payment plan.
+- [-] **PAY-007 · P1 · Phase 2:** IMPLEMENTED: five-plan policy in [`runbooks/PAYMENT_DOCUMENT_RULES.md`](runbooks/PAYMENT_DOCUMENT_RULES.md), contract/shipment download gating and safe document-presentation checks. Native release confirmation pending.
 - [ ] **PAY-008 · P1 · Phase 2:** Add overdue installment calculation and reminders.
 - [ ] **PAY-009 · P1 · Phase 2:** Add correction/reversal procedure without deleting history.
 - [ ] **PAY-010 · P1 · Phase 2:** Define how bank guarantees/LC references are independently checked or explicitly marked seller-accepted only.
@@ -360,7 +360,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **QLT-008 · P1 · Phase 1:** Add regression tests for every confirmed P0 defect before or with the fix.
 - [ ] **QLT-009 · P1 · Phase 2:** Add Playwright buyer onboarding and sourcing journey.
 - [ ] **QLT-010 · P1 · Phase 2:** Add Playwright supplier organic and conventional publishing journeys.
-- [-] **QLT-011 · P1 · Phase 2:** Real prepayment browser journey implemented: offer/acceptance, terms, unverified-payment dispatch rejection, receipt, documents, FOB arrangement, delivery, quantity ownership and fees. Native execution pending for this new test; deposit/balance, bank security, documentary collection and credit plans remain open.
+- [-] **QLT-011 · P1 · Phase 2:** IMPLEMENTED: real browser journeys for all five payment plans, including deposit/balance proof, security acceptance, trade documents, dispatch, delivery and exact settlement/fees. Five authoring journeys passed; prepayment also previously confirmed on founder Docker. Native execution of the four new journeys remains pending.
 - [-] **QLT-012 · P1 · Phase 2:** Real recall response browser journey implemented and user reports passing; delivery exceptions and additional recovery scenarios remain open.
 - [ ] **QLT-013 · P1 · Phase 2:** Add API idempotency and retry tests.
 - [ ] **QLT-014 · P1 · Phase 2:** Add contract tests for storage, email, scanner and future provider adapters.
@@ -527,3 +527,5 @@ An item is complete only when applicable criteria are met:
 | Large, coupled files slow safe inheritance | Medium | TypeScript build | ARC-004–023 |
 | No restore/monitoring/incident proof | High | Health endpoints and structured logger | OPS-001–012 |
 | Marketing claims exceed implemented transformations | Medium | Demo genealogy | PRD-001, RCL-011, INV-005 |
+
+Payment/document hardening wave: apply [`releases/PAYMENT_DOCUMENT_HARDENING_WINDOWS.md`](releases/PAYMENT_DOCUMENT_HARDENING_WINDOWS.md), then record native release results before closing the pending payment checks. Subsequent payment work is PAY-004/PAY-008/PAY-009 (visible histories, overdue behavior and correction/dispute handling), followed by fee invoicing/collection; real-provider integration remains deferred.

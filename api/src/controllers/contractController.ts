@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { query, getClient } from '../db';
 import * as audit from '../services/audit';
+import { recordTradeAudit } from '../modules/trading/transaction';
 import { buildInstallments, PaymentPlan, requiredBeforeDispatch } from '../services/paymentProtection';
 import { acceptTradeOffer, createTradeOffer, rejectTradeOffer } from '../modules/trading/offers';
 
@@ -75,7 +76,7 @@ export async function getContract(req: Request, res: Response): Promise<void> {
   }
   const documents = await query(
     `SELECT e.id, e.type, e.file_name, e.file_size_bytes, e.mime_type, e.sha256_hash,
-            e.claim_description, e.review_status, e.created_at, o.name as uploader_name
+            e.claim_description, e.review_status, e.validation_status, e.malware_scan_status, e.created_at, o.name as uploader_name
      FROM evidence_items e
      JOIN organizations o ON o.id=e.uploader_organization_id
      WHERE e.linked_entity_type='contract' AND e.linked_entity_id=$1
@@ -87,7 +88,7 @@ export async function getContract(req: Request, res: Response): Promise<void> {
 }
 
 export async function updatePaymentTerms(req:Request,res:Response):Promise<void>{
-  const id=req.params.id as string; const {paymentPlan,depositPercentage=20,creditDays=30,note}=req.body as {paymentPlan:PaymentPlan;depositPercentage?:number;creditDays?:number;note?:string};
+  const id=req.params.id as string; const {paymentPlan,depositPercentage=20,creditDays=30,note,paymentEvidenceRequired=false}=req.body as {paymentPlan:PaymentPlan;depositPercentage?:number;creditDays?:number;note?:string;paymentEvidenceRequired?:boolean};
   const client=await getClient();
   try{await client.query('BEGIN'); const r=await client.query(`SELECT c.*,p.id payment_request_id,p.amount_total FROM sales_contracts c JOIN payment_requests p ON p.contract_id=c.id
     WHERE c.id=$1 AND c.seller_organization_id=$2 FOR UPDATE OF c,p`,[id,req.user!.organizationId]); const c=r.rows[0];
@@ -98,9 +99,10 @@ export async function updatePaymentTerms(req:Request,res:Response):Promise<void>
     const total=Number(c.amount_total),required=requiredBeforeDispatch(paymentPlan,total,depositPercentage),security=paymentPlan==='bank_secured'?'awaiting_submission':'not_required';
     await client.query(`UPDATE sales_contracts SET payment_plan=$1,deposit_percentage=$2,credit_days=$3,payment_terms_note=$4,payment_terms_status='proposed',payment_terms_confirmed_at=NULL,payment_terms_confirmed_by_user_id=NULL WHERE id=$5`,[paymentPlan,depositPercentage,creditDays,note||null,id]);
     await client.query(`UPDATE payment_requests SET status='awaiting_terms',payment_method=$1,dispatch_required_amount=$2,amount_confirmed=0,security_status=$3,security_provider=NULL,security_reference=NULL,security_submitted_at=NULL,security_verified_at=NULL,security_verified_by_user_id=NULL,release_status='locked',updated_at=NOW() WHERE id=$4`,[paymentPlan,required,security,c.payment_request_id]);
+    await client.query('UPDATE sales_contracts SET payment_evidence_required=$1 WHERE id=$2',[paymentEvidenceRequired,id]);
     await client.query('DELETE FROM payment_installments WHERE payment_request_id=$1',[c.payment_request_id]);
     for(const i of buildInstallments(paymentPlan,total,depositPercentage)) await client.query(`INSERT INTO payment_installments(payment_request_id,installment_type,sequence_number,amount_due,due_trigger,status) VALUES($1,$2,$3,$4,$5,'awaiting_trigger')`,[c.payment_request_id,i.installmentType,i.sequenceNumber,i.amountDue,i.dueTrigger]);
-    await client.query('COMMIT'); await audit.record({actorUserId:req.user!.id,actorOrganizationId:req.user!.organizationId,action:'payment.terms.propose',entityType:'sales_contract',entityId:id}); res.json({ok:true});
+    await recordTradeAudit(client,req.user!,'payment.terms.propose','sales_contract',id,{paymentPlan,paymentEvidenceRequired}); await client.query('COMMIT'); res.json({ok:true});
   }catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
 }
 
@@ -114,7 +116,7 @@ export async function confirmPaymentTerms(req:Request,res:Response):Promise<void
     await client.query("UPDATE payment_installments SET status='due',updated_at=NOW() WHERE payment_request_id=$1 AND due_trigger='terms_agreed'",[c.payment_request_id]);
     const status=c.payment_plan==='bank_secured'?'awaiting_security':c.payment_plan==='pay_after_delivery'?'awaiting_delivery':c.payment_plan==='documentary_collection'?'awaiting_documents':'payment_due';
     await client.query(`UPDATE payment_requests SET status=$1,release_status=CASE WHEN $2='pay_after_delivery' THEN 'authorized' ELSE release_status END,updated_at=NOW() WHERE id=$3`,[status,c.payment_plan,c.payment_request_id]);
-    await client.query('COMMIT');await audit.record({actorUserId:req.user!.id,actorOrganizationId:req.user!.organizationId,action:'payment.terms.confirm',entityType:'sales_contract',entityId:id});res.json({ok:true});
+    await recordTradeAudit(client,req.user!,'payment.terms.confirm','sales_contract',id);await client.query('COMMIT');res.json({ok:true});
   }catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
 }
 

@@ -28,6 +28,7 @@
     { "path": "api/src/migrations/020_trade_integrity_constraints.ts", "sha256": "60ab56645d752d171c31afe9f35e7152eb9426b809e34c70d159448c1a4d1728" },
     { "path": "api/src/migrations/021_trust_state_accuracy.ts", "sha256": "26fa27b61c6b5fe336e3c32f8c1b4b1abdc6f0d29866b3f484502afc4e5fe60d" },
     { "path": "api/src/migrations/022_recall_safety_holds.ts", "sha256": "c74808f0cb611d6bfbe56e0e78be97ddbc0a35e16a3599ac30d141114cc29b9d" },
-    { "path": "api/src/migrations/023_recall_response.ts", "sha256": "bce0befd5415899462a0b1b97c9d470490a3a0cee9cba3f5f9f40edb83495ac6" }
+    { "path": "api/src/migrations/023_recall_response.ts", "sha256": "bce0befd5415899462a0b1b97c9d470490a3a0cee9cba3f5f9f40edb83495ac6" },
+    {"path": "api/src/migrations/024_payment_evidence_terms.ts", "sha256": "80797d5c04399188c84d3a93bbab14669f5ee2abc56f85d8db25ab25288b6d51"}
   ]
 }
