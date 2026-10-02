@@ -4,6 +4,8 @@ const inventoryQuantitySchema = z.number().finite().positive().max(999999999.999
   .refine(value => Math.abs(value * 1000 - Math.round(value * 1000)) < 0.00001, 'Quantity must have at most three decimal places');
 const inventoryPriceSchema = z.number().finite().positive().max(999999.9999)
   .refine(value => Math.abs(value * 10000 - Math.round(value * 10000)) < 0.00001, 'Price must have at most four decimal places');
+const calendarDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine(value => Number.isFinite(new Date(value).getTime()) && new Date(value).toISOString().slice(0,10) === value, 'Use a valid calendar date');
 
 export const loginSchema = z.object({
   email: z.string().email().transform(v => v.toLowerCase()),
@@ -56,10 +58,10 @@ export const createPlotSchema = z.object({
   plotCode: z.string().min(1),
   areaHectares: z.number().positive(),
   crops: z.array(z.string()).default(['cocoa']),
-  gpsLat: z.number().optional(),
-  gpsLng: z.number().optional(),
+  gpsLat: z.number().finite().min(-90).max(90).optional(),
+  gpsLng: z.number().finite().min(-180).max(180).optional(),
   geolocationSource: z.string().default('farmer_submitted'),
-});
+}).refine(value => (value.gpsLat === undefined) === (value.gpsLng === undefined), 'Provide both latitude and longitude');
 
 export const createBatchSchema = z.object({
   farmId: z.string().uuid(),
@@ -95,11 +97,11 @@ export const createCertificateSchema = z.object({
   farmId: z.string().uuid(),
   standard: z.string().default('EU_ORGANIC'),
   cropScope: z.array(z.string()).default(['cocoa']),
-  validFrom: z.string(),
-  validTo: z.string(),
-  issuingAuthority: z.string(),
-  accreditationReference: z.string(),
-});
+  validFrom: calendarDateSchema,
+  validTo: calendarDateSchema,
+  issuingAuthority: z.string().trim().min(1),
+  accreditationReference: z.string().trim().min(1),
+}).refine(value => value.validFrom <= value.validTo, 'Certificate end date must follow its start date');
 
 export const createOrganizationSchema = z.object({
   name: z.string().min(1),

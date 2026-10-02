@@ -5,6 +5,8 @@ import { ensureSourceMaterialLot } from '../services/materialLot';
 import { lockHoldingListings, pendingTransferQuantity } from '../services/inventoryIntegrity';
 import { recordTradeAudit } from '../modules/trading/transaction';
 import { hasBatchRelationship, hasExplicitPermission } from '../services/resourcePolicy';
+import { loadBatchTrust, legacyOrganicStatus } from '../modules/trust/assessment';
+import { attestBatchRecord } from '../modules/trust/certification';
 
 export async function pushToMarketplace(req: Request, res: Response): Promise<void> {
   const batchId = req.params.id as string;
@@ -106,7 +108,8 @@ export async function listBatches(req: Request, res: Response): Promise<void> {
   }
   sql += ' ORDER BY b.harvest_date DESC';
   const { rows } = await query(sql, params);
-  res.json(rows);
+  const trust = await loadBatchTrust(rows.map(row => row.id));
+  res.json(rows.map(row => ({ ...row, recorded_organic_claim_status: row.organic_claim_status, organic_claim_status: trust.has(row.id) ? legacyOrganicStatus(trust.get(row.id)!) : 'self_declared', trust: trust.get(row.id) })));
 }
 
 export async function getBatch(req: Request, res: Response): Promise<void> {
@@ -137,7 +140,8 @@ export async function getBatch(req: Request, res: Response): Promise<void> {
        FROM evidence_items WHERE linked_entity_type='batch' AND linked_entity_id=$1`,
     [req.params.id],
   );
-  res.json({ batch: rows[0], evidence: evidenceRes.rows });
+  const trust = (await loadBatchTrust([rows[0].id])).get(rows[0].id);
+  res.json({ batch: { ...rows[0], recorded_organic_claim_status: rows[0].organic_claim_status, organic_claim_status: trust ? legacyOrganicStatus(trust) : 'self_declared', trust }, evidence: evidenceRes.rows });
 }
 
 export async function createBatch(req: Request, res: Response): Promise<void> {
@@ -207,77 +211,5 @@ export async function createDirectInventory(req: Request, res: Response): Promis
 }
 
 export async function attestBatch(req: Request, res: Response): Promise<void> {
-  const id = req.params.id as string;
-  const { certificateId, notes } = req.body;
-  const batchRes = await query('SELECT * FROM harvest_batches WHERE id = $1', [id]);
-  const batch = batchRes.rows[0];
-  if (!batch) {
-    res.status(404).json({ error: 'Batch not found' });
-    return;
-  }
-  if (batch.attestation_id) {
-    res.status(400).json({ error: 'Batch already attested' });
-    return;
-  }
-  if (batch.source_mode === 'direct_inventory' || !batch.farm_id) {
-    res.status(400).json({ error: 'Direct conventional inventory cannot be presented as farm-attested organic supply' });
-    return;
-  }
-
-  const certRes = await query('SELECT * FROM organic_certificates WHERE id = $1 AND status = $2', [certificateId, 'active']);
-  const cert = certRes.rows[0];
-  if (!cert) {
-    res.status(400).json({ error: 'Certificate not found or not active' });
-    return;
-  }
-  if (cert.certifier_organization_id !== req.user!.organizationId) {
-    res.status(403).json({ error: 'Certificate not issued by your organization' });
-    return;
-  }
-  if (cert.farm_id !== batch.farm_id) {
-    res.status(400).json({ error: 'Certificate does not cover this farm' });
-    return;
-  }
-  const farm = await query('SELECT farmer_organization_id FROM farms WHERE id=$1', [batch.farm_id]);
-  if (!farm.rows[0] || cert.farmer_organization_id !== farm.rows[0].farmer_organization_id) {
-    res.status(400).json({ error: 'Certificate farmer organization does not match the farm owner' });
-    return;
-  }
-  if (!Array.isArray(cert.crop_scope) || !cert.crop_scope.includes(batch.crop)) {
-    res.status(400).json({ error: 'Certificate does not cover this crop' });
-    return;
-  }
-
-  const harvestDate = new Date(batch.harvest_date);
-  if (harvestDate < new Date(cert.valid_from) || harvestDate > new Date(cert.valid_to)) {
-    res.status(400).json({ error: 'Harvest date outside certificate validity window' });
-    return;
-  }
-
-  const provenanceHash = audit.hashObject({ batchId: batch.id, farmId: batch.farm_id, crop: batch.crop, harvestDate: batch.harvest_date, certId: cert.id, attestedAt: new Date().toISOString() });
-
-  const client = await getClient();
-  try {
-    await client.query('BEGIN');
-    const attRes = await client.query(
-      'INSERT INTO batch_attestations (batch_id, certificate_id, certifier_user_id, certifier_organization_id, provenance_hash, notes) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-      [batch.id, cert.id, req.user!.id, req.user!.organizationId, provenanceHash, notes || null]
-    );
-    await client.query(
-      "UPDATE harvest_batches SET attestation_id=$1, organic_claim_status='attested', provenance_hash=$2 WHERE id=$3",
-      [attRes.rows[0].id, provenanceHash, batch.id]
-    );
-    await client.query('COMMIT');
-    await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'batch.attest', entityType: 'harvest_batch', entityId: batch.id, newStateHash: provenanceHash });
-    res.status(201).json({ attestation: attRes.rows[0], policyChecks: [
-      { rule: 'Certificate active on harvest date', passed: true },
-      { rule: 'Certificate covers this farm', passed: true },
-      { rule: 'Certifier is issuing organization', passed: true },
-    ]});
-  } catch (err) {
-    await client.query('ROLLBACK');
-    throw err;
-  } finally {
-    client.release();
-  }
+  res.status(201).json(await attestBatchRecord(req.user!, req.params.id as string, req.body));
 }

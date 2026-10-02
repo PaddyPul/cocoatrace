@@ -5,6 +5,7 @@ import {
   AlertTriangle, ArrowRight, Boxes, CheckCircle2, CircleDot, FileCheck2,
   GitBranch, Globe2, MapPin, PackageCheck, QrCode, ShieldCheck, Ship, Sparkles,
 } from 'lucide-react';
+import { isReviewed } from '../components/shared/TrustClaims';
 import Layout from '../components/layout/Layout';
 import { batches, evidence, productProfiles, recalls, shipments, traceability } from '../api';
 import { Batch, Evidence, MaterialLot, ProductProfileSummary, RecallNotice, Shipment } from '../types';
@@ -52,7 +53,7 @@ export default function ControlTowerPage() {
   }, [user?.id]);
 
   const metrics = useMemo(() => {
-    const attested = data.batches.filter((batch) => batch.organic_claim_status === 'attested').length;
+    const attested = data.batches.filter((batch) => isReviewed(batch.trust?.organic)).length;
     const published = data.products.filter((product) => product.visibility === 'published').length;
     const unsafe = data.products.filter((product) => product.safety_status !== 'clear').length;
     const sourceVolume = data.lots.filter((lot) => lot.lotType === 'source').reduce((sum, lot) => sum + Number(lot.quantityKg), 0);
@@ -105,7 +106,7 @@ export default function ControlTowerPage() {
 
       <div className="rounded-3xl border border-border bg-surface p-5 sm:p-6">
         <div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">Corridor pulse</div><h3 className="mt-1 text-lg font-bold">From origin to market</h3>
-        <div className="mt-6 space-y-1"><FlowStep icon={MapPin} title="Origin captured" value={`${data.batches.length} batches`} done={data.batches.length > 0} /><FlowLine /><FlowStep icon={ShieldCheck} title="Verified" value={`${metrics.attested} attested`} done={metrics.attested > 0} /><FlowLine /><FlowStep icon={QrCode} title="Products live" value={`${metrics.published} passports`} done={metrics.published > 0} /><FlowLine /><FlowStep icon={Ship} title="Moving to market" value={`${data.shipments.length} shipments`} done={data.shipments.length > 0} /></div>
+        <div className="mt-6 space-y-1"><FlowStep icon={MapPin} title="Origin captured" value={`${data.batches.length} batches`} done={data.batches.length > 0} /><FlowLine /><FlowStep icon={ShieldCheck} title="Organic review" value={`${metrics.attested} reviewed`} done={metrics.attested > 0} /><FlowLine /><FlowStep icon={QrCode} title="Products live" value={`${metrics.published} passports`} done={metrics.published > 0} /><FlowLine /><FlowStep icon={Ship} title="Moving to market" value={`${data.shipments.length} shipments`} done={data.shipments.length > 0} /></div>
       </div>
     </section>
 

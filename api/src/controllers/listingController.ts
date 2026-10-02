@@ -1,3 +1,4 @@
+import { loadBatchTrust, legacyOrganicStatus } from '../modules/trust/assessment';
 import { Request, Response } from 'express';
 import { query, getClient } from '../db';
 import { lockHoldingListings, pendingTransferQuantity, reconcileHoldingListings } from '../services/inventoryIntegrity';
@@ -5,7 +6,7 @@ import { recordTradeAudit } from '../modules/trading/transaction';
 
 export async function listListings(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT l.*, o.name as seller_name, b.crop, b.organic_claim_status, b.grade, b.harvest_date,
+    `SELECT l.*, o.name as seller_name, h.batch_id, b.crop, b.organic_claim_status, b.grade, b.harvest_date,
             b.source_mode, b.source_name, b.source_country, b.source_region,
             f.name as farm_name, f.region as farm_region, f.country as farm_country
      FROM listings l
@@ -16,12 +17,13 @@ export async function listListings(req: Request, res: Response): Promise<void> {
      WHERE l.active = TRUE AND h.status='available' AND h.holder_organization_id=l.seller_organization_id
      ORDER BY l.created_at DESC`
   );
-  res.json(rows);
+  const trust = await loadBatchTrust(rows.map(row => row.batch_id));
+  res.json(rows.map(row => ({ ...row, trust: trust.get(row.batch_id), organic_claim_status: legacyOrganicStatus(trust.get(row.batch_id)!) })));
 }
 
 export async function getListing(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT l.*, o.name as seller_name, b.crop, b.organic_claim_status, b.grade, b.harvest_date,
+    `SELECT l.*, o.name as seller_name, h.batch_id, b.crop, b.organic_claim_status, b.grade, b.harvest_date,
             b.source_mode, b.source_name, b.source_country, b.source_region,
             f.name as farm_name, f.region as farm_region, f.country as farm_country,
             h.batch_id
@@ -37,7 +39,8 @@ export async function getListing(req: Request, res: Response): Promise<void> {
     res.status(404).json({ error: 'Listing not found' });
     return;
   }
-  res.json(rows[0]);
+  const trust = (await loadBatchTrust([rows[0].batch_id])).get(rows[0].batch_id)!;
+  res.json({ ...rows[0], trust, organic_claim_status: legacyOrganicStatus(trust) });
 }
 
 export async function createListing(req: Request, res: Response): Promise<void> {

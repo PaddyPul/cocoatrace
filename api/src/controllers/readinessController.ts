@@ -1,3 +1,4 @@
+import { loadBatchTrust } from '../modules/trust/assessment';
 import { Request, Response } from 'express';
 import { query } from '../db';
 import { adviseReadiness, ReadinessFacts } from '../services/readinessAdvisor';
@@ -20,7 +21,7 @@ export async function getReadiness(req: Request, res: Response): Promise<void> {
        (SELECT COUNT(*) FROM scoped_products)::int AS products_total,
        (SELECT COUNT(*) FROM scoped_products WHERE visibility='published')::int AS products_published,
        (SELECT COUNT(*) FROM scoped_products pp WHERE EXISTS (
-         SELECT 1 FROM evidence_items e WHERE e.linked_entity_type='batch' AND e.linked_entity_id=pp.batch_id AND e.review_status='approved'
+         SELECT 1 FROM evidence_items e WHERE e.linked_entity_type='batch' AND e.linked_entity_id=pp.batch_id AND e.review_status='approved' AND EXISTS (SELECT 1 FROM trust_claim_reviews tr JOIN users ru ON ru.id=tr.reviewer_user_id AND ru.organization_id=tr.reviewer_organization_id WHERE tr.entity_type='evidence' AND tr.entity_id=e.id AND tr.claim_key='evidence_review' AND tr.status='reviewed' AND tr.reviewer_organization_id<>e.uploader_organization_id AND tr.reviewed_at<=NOW() AND (tr.expires_at IS NULL OR tr.expires_at>NOW()))
        ))::int AS products_with_evidence,
        (SELECT COUNT(*) FROM recall_notices r WHERE r.status='active' AND ($1::boolean OR r.initiated_by_organization_id=$2))::int AS active_recalls,
        (SELECT COUNT(*) FROM shipments s JOIN sales_contracts c ON c.id=s.contract_id
@@ -28,6 +29,9 @@ export async function getReadiness(req: Request, res: Response): Promise<void> {
     [networkScope, req.user!.organizationId]
   );
   const row = result.rows[0];
+  const batches = await query('SELECT id FROM harvest_batches WHERE $1::boolean OR current_holder_id=$2', [networkScope, req.user!.organizationId]);
+  const trusts = await loadBatchTrust(batches.rows.map(b => b.id));
+  row.batches_attested = [...trusts.values()].filter(trust => trust.organic.status === 'reviewed').length;
   const facts: ReadinessFacts = {
     batchesTotal: row.batches_total, batchesAttested: row.batches_attested,
     productsTotal: row.products_total, productsPublished: row.products_published,

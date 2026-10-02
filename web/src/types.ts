@@ -1,3 +1,15 @@
+export type TrustStatus = 'not_claimed' | 'self_declared' | 'reviewed' | 'expired' | 'revoked' | 'unknown';
+export interface TrustClaim {
+  status: TrustStatus;
+  claimSource?: string | null;
+  sourceReference?: string | null;
+  reviewMethod?: string | null;
+  reviewedAt?: string | null;
+  expiresAt?: string | null;
+  reviewerName?: string | null;
+}
+export interface TrustSummary { organic: TrustClaim; origin: TrustClaim; eudr: TrustClaim; }
+
 export interface User {
   id: string;
   email: string;
@@ -32,6 +44,7 @@ export interface Farm {
 }
 
 export interface Batch {
+  trust?: TrustSummary;
   id: string;
   farm_id?: string | null;
   farm_name?: string;
@@ -58,6 +71,7 @@ export interface Batch {
 }
 
 export interface Listing {
+  trust?: TrustSummary;
   id: string;
   seller_name?: string;
   seller_organization_id: string;
@@ -161,6 +175,7 @@ export interface Shipment {
 }
 
 export interface Holding {
+  trust?: TrustSummary;
   id: string;
   batch_id: string;
   crop: string;
@@ -299,6 +314,7 @@ export interface JourneyEvent {
 }
 
 export interface PublicProduct {
+  trust?: TrustSummary;
   profile: {
     slug: string;
     displayName: string;

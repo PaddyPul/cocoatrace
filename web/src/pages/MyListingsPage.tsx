@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listings } from '../api';
 import { Listing } from '../types';
-import { StatusBadge, fmtMoney } from '../components/shared/helpers';
+import { fmtMoney } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
+import { trustLabel } from '../components/shared/TrustClaims';
 import Layout from '../components/layout/Layout';
 import { Search, Package, Euro, MapPin } from 'lucide-react';
 import { SkeletonTable } from '../components/shared/Skeleton';
@@ -49,7 +50,7 @@ export default function MyListingsPage() {
               <div key={l.id} className="bg-surface border border-border rounded overflow-hidden cursor-pointer hover:border-brand-500/30 transition-all group" onClick={() => navigate(`/listing/${l.id}`)}>
                 <div className="h-28 bg-surface-darker flex items-center justify-center text-3xl relative">
                   🏷
-                  <div className="absolute top-2 right-2"><StatusBadge status={l.organic_claim_status === 'attested' ? 'organic' : l.organic_claim_status} /></div>
+                  <div className="absolute top-2 right-2"><span className="badge badge-amber">Organic: {trustLabel(l.trust?.organic)}</span></div>
                 </div>
                 <div className="p-3.5 space-y-2">
                   <div className="flex items-start justify-between gap-2">

@@ -87,7 +87,7 @@ export function FarmsPage() {
         <div className="text-xs text-text-muted">{filtered.length} farm{filtered.length !== 1 ? 's' : ''}</div>
         {canDo('farm.create') && <button className="btn btn-sm btn-primary" onClick={() => setShowCreate(true)}>+ Create Farm</button>}
       </div>
-      <table><thead><tr><th>Name</th><th>Region</th><th>Country</th><th>District</th><th>COCOBOD ID</th><th>Status</th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((f) => <tr key={f.id} className="cursor-pointer hover:bg-brand-500/5" onClick={() => navigate(`/farms/${f.id}`)}><td className="text-text-primary font-medium">{f.name}</td><td>{f.region}</td><td>{f.country}</td><td>{f.district}</td><td className="font-mono text-[11px]">{f.official_traceability_id || '—'}</td><td><StatusBadge status={f.verification_status} /></td></tr>) : (data as Farm[]).length === 0 ? <tr><td colSpan={99}><EmptyState icon="🏡" title="No farms registered" description="Register your first farm to start tracing cocoa from plot to port." action={canDo('farm.create') ? <button className="btn btn-sm btn-primary" onClick={() => setShowCreate(true)}>+ Create Farm</button> : undefined} /></td></tr> : <tr><td colSpan={99}><EmptyState icon="🔍" title="No farms match" description="Try adjusting your search." /></td></tr>}</tbody></table></div>}
+      <table><thead><tr><th>Name</th><th>Region</th><th>Country</th><th>District</th><th>COCOBOD ID</th><th>Status</th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((f) => <tr key={f.id} className="cursor-pointer hover:bg-brand-500/5" onClick={() => navigate(`/farms/${f.id}`)}><td className="text-text-primary font-medium">{f.name}</td><td>{f.region}</td><td>{f.country}</td><td>{f.district}</td><td className="font-mono text-[11px]">{f.official_traceability_id || '—'}</td><td><span className="badge badge-amber">{f.verification_status === 'verified' ? 'Legacy status · review details unavailable' : f.verification_status === 'self_declared' ? 'Supplier declared' : 'Review pending'}</span></td></tr>) : (data as Farm[]).length === 0 ? <tr><td colSpan={99}><EmptyState icon="🏡" title="No farms registered" description="Register your first farm to start tracing cocoa from plot to port." action={canDo('farm.create') ? <button className="btn btn-sm btn-primary" onClick={() => setShowCreate(true)}>+ Create Farm</button> : undefined} /></td></tr> : <tr><td colSpan={99}><EmptyState icon="🔍" title="No farms match" description="Try adjusting your search." /></td></tr>}</tbody></table></div>}
 
     {showCreate && (
       <div className="modal-overlay" onClick={() => !cfLoading && setShowCreate(false)}>
@@ -693,10 +693,10 @@ export function OrganizationsPage() {
         <div className="relative flex-1 min-w-[180px]"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input type="text" placeholder="Search organizations…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
         <div className="text-xs text-text-muted">{filtered.length} organization{filtered.length !== 1 ? 's' : ''}</div>
       </div>
-      <table><thead><tr><th>Name</th><th>Type</th><th>Country</th><th></th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((o: any) => <tr key={o.id} className="hover:bg-brand-500/5">
+      <table><thead><tr><th>Name</th><th>Type</th><th>Country</th><th>Workspace access</th><th></th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((o: any) => <tr key={o.id} className="hover:bg-brand-500/5">
         <td className="text-text-primary font-medium">{o.name}</td>
         <td><span className="badge badge-blue">{o.type}</span></td>
-        <td>{o.country || '—'}</td>
+        <td>{o.country || '—'}</td><td>{o.verification_status === 'verified' ? 'Workspace approved' : 'Approval pending'}</td>
         <td><button className="btn btn-sm" onClick={() => handleViewMembers(o)}>Members →</button></td>
       </tr>) : orgs.length === 0 ? <tr><td colSpan={99}><EmptyState icon="🏢" title="No organizations" description="Organizations represent all entities on the platform." /></td></tr> : <tr><td colSpan={99}><EmptyState icon="🔍" title="No organizations match" description="Try adjusting your search." /></td></tr>}</tbody></table>
     </div>}

@@ -1,3 +1,4 @@
+import { loadBatchTrust, legacyOrganicStatus } from '../modules/trust/assessment';
 import { Request, Response } from 'express';
 import QRCode from 'qrcode';
 import { getClient, query } from '../db';
@@ -40,7 +41,7 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
               BOOL_AND(gps_lat IS NOT NULL AND gps_lng IS NOT NULL) AS geolocation_complete,
               BOOL_AND(eudr_cutoff_checked) AS eudr_cutoff_checked,
               BOOL_AND(deforestation_risk_status = 'clear') AS deforestation_risk_clear
-       FROM farm_plots WHERE farm_id = (SELECT farm_id FROM harvest_batches WHERE id=$1)`,
+       FROM farm_plots p JOIN harvest_batches b ON b.farm_id=p.farm_id WHERE b.id=$1 AND p.id=ANY(b.plot_ids)`,
       [product.batch_id]
     ),
     query(
@@ -49,13 +50,14 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
        FROM batch_attestations a
        JOIN organic_certificates c ON c.id = a.certificate_id
        JOIN organizations o ON o.id = c.certifier_organization_id
-       WHERE a.batch_id=$1`,
+       WHERE a.id=(SELECT attestation_id FROM harvest_batches WHERE id=$1)`,
       [product.batch_id]
     ),
     query(
       `SELECT type, file_name, sha256_hash, review_status, claim_description, created_at
        FROM evidence_items
        WHERE linked_entity_type='batch' AND linked_entity_id=$1 AND review_status='approved'
+         AND EXISTS (SELECT 1 FROM trust_claim_reviews tr JOIN users ru ON ru.id=tr.reviewer_user_id AND ru.organization_id=tr.reviewer_organization_id WHERE tr.entity_type='evidence' AND tr.entity_id=evidence_items.id AND tr.claim_key='evidence_review' AND tr.status='reviewed' AND tr.reviewer_organization_id<>evidence_items.uploader_organization_id AND tr.reviewed_at<=NOW() AND (tr.expires_at IS NULL OR tr.expires_at>NOW()))
        ORDER BY created_at`,
       [product.batch_id]
     ),
@@ -93,7 +95,8 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
     ),
   ]);
 
-  const certificate = certRes.rows[0] || null;
+  const trust = (await loadBatchTrust([product.batch_id])).get(product.batch_id)!;
+  const certificate = certRes.rows[0] ? { ...certRes.rows[0], trust: trust.organic } : null;
   const recallEvents: JourneyEvent[] = recallRes.rows.map((recall: any) => ({
     type: 'recall',
     title: recall.status === 'active' ? `Safety notice: ${recall.title}` : `Resolved: ${recall.title}`,
@@ -110,15 +113,15 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
       occurredAt: product.harvest_date,
       location: [product.community, product.district, product.region, product.country].filter(Boolean).join(', '),
       organization: product.farmer_name,
-      verified: product.source_mode !== 'direct_inventory' && product.farm_verification_status === 'verified',
+      verified: trust.origin.status === 'reviewed',
     }],
     certificate ? [{
       type: 'verification',
-      title: `${certificate.standard.replace(/_/g, ' ')} verified`,
+      title: `${certificate.standard.replace(/_/g, ' ')} · ${trust.organic.status}`,
       summary: certificate.notes || `Certificate ${certificate.accreditation_reference}`,
       occurredAt: certificate.attested_at,
       organization: certificate.certifier_name,
-      verified: certificate.status === 'active',
+      verified: trust.organic.status === 'reviewed',
     }] : [],
     transferRes.rows.map((transfer: any) => ({
       type: 'custody' as const,
@@ -142,8 +145,9 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
   ]);
 
   const recalls = recallRes.rows;
-  res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+  res.set('Cache-Control', 'no-store');
   res.json({
+    trust,
     profile: {
       slug: product.slug,
       displayName: product.display_name,
@@ -162,7 +166,7 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
       quantityKg: Number(product.quantity_kg),
       moisturePercent: product.moisture_percent == null ? null : Number(product.moisture_percent),
       grade: product.grade,
-      organicClaimStatus: product.organic_claim_status,
+      organicClaimStatus: legacyOrganicStatus(trust),
       provenanceHash: product.provenance_hash,
       currentHolderName: product.current_holder_name,
     },
@@ -174,7 +178,7 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
       district: product.district,
       community: product.community,
       officialTraceabilityId: product.official_traceability_id,
-      verificationStatus: product.farm_verification_status,
+      verificationStatus: trust.origin.status === 'reviewed' ? 'verified' : trust.origin.status,
       ...plotRes.rows[0],
     },
     certificate,
@@ -257,8 +261,11 @@ export async function listProductProfiles(req: Request, res: Response): Promise<
      ORDER BY pp.updated_at DESC`,
     [seeAll, req.user!.organizationId]
   );
+  const trusts = await loadBatchTrust(result.rows.map(row => row.batch_id));
   res.json(result.rows.map((profile: any) => ({
     ...profile,
+    trust: trusts.get(profile.batch_id),
+    organic_claim_status: legacyOrganicStatus(trusts.get(profile.batch_id)!),
     safety_status: profile.safety_status || 'clear',
     profileUrl: publicProductUrl(profile.slug),
     qrSvgUrl: `/public/products/${profile.slug}/qr.svg`,

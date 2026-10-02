@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { query } from '../db';
-import * as audit from '../services/audit';
+import { inTradeTransaction as inTransaction, recordTradeAudit } from '../modules/trading/transaction';
 import { hasExplicitPermission, hasFarmRelationship } from '../services/resourcePolicy';
 
 export async function listFarms(req: Request, res: Response): Promise<void> {
@@ -39,24 +39,29 @@ export async function getFarm(req: Request, res: Response): Promise<void> {
 
 export async function createFarm(req: Request, res: Response): Promise<void> {
   const { name, country, region, district, community, officialTraceabilityId, cooperativeOrganizationId } = req.body;
-  const { rows } = await query(
-    'INSERT INTO farms (farmer_organization_id, name, country, region, district, community, official_traceability_id, cooperative_organization_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
-    [req.user!.organizationId, name, country, region, district, community || null, officialTraceabilityId || null, cooperativeOrganizationId || null]
-  );
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'farm.create', entityType: 'farm', entityId: rows[0].id });
-  res.status(201).json(rows[0]);
+  const farm = await inTransaction(async client => {
+    const created = (await client.query(
+      'INSERT INTO farms (farmer_organization_id,name,country,region,district,community,official_traceability_id,cooperative_organization_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
+      [req.user!.organizationId,name,country,region,district,community || null,officialTraceabilityId || null,cooperativeOrganizationId || null]
+    )).rows[0];
+    await recordTradeAudit(client,req.user!,'farm.create','farm',created.id,{claimSource:'supplier_declaration'});
+    return created;
+  });
+  res.status(201).json(farm);
 }
 
 export async function createPlot(req: Request, res: Response): Promise<void> {
   const { plotCode, areaHectares, crops, gpsLat, gpsLng, geolocationSource } = req.body;
-  const farmRes = await query('SELECT id FROM farms WHERE id=$1 AND farmer_organization_id=$2', [req.params.id, req.user!.organizationId]);
-  if (!farmRes.rows[0]) {
-    res.status(404).json({ error: 'Farm not found' });
-    return;
-  }
-  const { rows } = await query(
-    'INSERT INTO farm_plots (farm_id, plot_code, area_hectares, crops, gps_lat, gps_lng, geolocation_source) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
-    [req.params.id, plotCode, areaHectares, crops, gpsLat || null, gpsLng || null, geolocationSource]
-  );
-  res.status(201).json(rows[0]);
+  const plot = await inTransaction(async client => {
+    const farm = await client.query('SELECT id FROM farms WHERE id=$1 AND farmer_organization_id=$2 FOR SHARE',[req.params.id,req.user!.organizationId]);
+    if (!farm.rows[0]) return null;
+    const created = (await client.query(
+      'INSERT INTO farm_plots (farm_id,plot_code,area_hectares,crops,gps_lat,gps_lng,geolocation_source) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+      [req.params.id,plotCode,areaHectares,crops,gpsLat ?? null,gpsLng ?? null,geolocationSource]
+    )).rows[0];
+    await recordTradeAudit(client,req.user!,'plot.create','plot',created.id,{claimSource:'supplier_declaration',geolocationSource});
+    return created;
+  });
+  if (!plot) { res.status(404).json({error:'Farm not found'}); return; }
+  res.status(201).json(plot);
 }

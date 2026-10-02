@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { loginSchema, createFarmSchema, createBatchSchema, createCertificateSchema, createRecallSchema, createInvitationSchema, acceptInvitationSchema, createSourcingRequestSchema, productProfileSchema, createOfferSchema } from './validation';
+import { loginSchema, createFarmSchema, createPlotSchema, createBatchSchema, createCertificateSchema, createRecallSchema, createInvitationSchema, acceptInvitationSchema, createSourcingRequestSchema, productProfileSchema, createOfferSchema } from './validation';
 
 describe('offer inventory limits', () => {
   it('accepts fractional stock and price within database precision', () => {
@@ -84,6 +84,12 @@ describe('createBatchSchema', () => {
 });
 
 describe('createCertificateSchema', () => {
+  it('rejects impossible and reversed certificate dates', () => {
+    const input = {farmerOrganizationId:'550e8400-e29b-41d4-a716-446655440001',farmId:'550e8400-e29b-41d4-a716-446655440002',validFrom:'2026-01-01',validTo:'2027-01-01',issuingAuthority:'Issuer',accreditationReference:'REFERENCE'};
+    expect(createCertificateSchema.safeParse({...input,validFrom:'2026-02-30'}).success).toBe(false);
+    expect(createCertificateSchema.safeParse({...input,validTo:'2025-12-31'}).success).toBe(false);
+    expect(createCertificateSchema.safeParse({...input,issuingAuthority:' '}).success).toBe(false);
+  });
   it('accepts valid certificate data', () => {
     const result = createCertificateSchema.parse({
       farmerOrganizationId: '550e8400-e29b-41d4-a716-446655440001',
@@ -94,6 +100,16 @@ describe('createCertificateSchema', () => {
       accreditationReference: 'EU-2024-001',
     });
     expect(result.standard).toBe('EU_ORGANIC');
+  });
+});
+
+describe('plot geolocation', () => {
+  it('preserves zero coordinates and rejects partial or impossible coordinate pairs', () => {
+    const input = {plotCode:'ZERO',areaHectares:1,gpsLat:0,gpsLng:0};
+    expect(createPlotSchema.parse(input).gpsLat).toBe(0);
+    expect(createPlotSchema.safeParse({...input,gpsLng:undefined}).success).toBe(false);
+    expect(createPlotSchema.safeParse({...input,gpsLat:91}).success).toBe(false);
+    expect(createPlotSchema.safeParse({...input,gpsLng:Infinity}).success).toBe(false);
   });
 });
 
