@@ -33,7 +33,9 @@ try {
   // Also clean up a partially failed Compose startup, not just a successful one.
   started = true;
   if (run(docker, [...compose, 'down', '--volumes', '--remove-orphans']) !== 0) throw new Error('Could not reset the dedicated browser test containers.');
-  const startCode = run(docker, [...compose, 'up', '-d', '--build', '--wait', '--wait-timeout', '180']);
+  // Older Docker Desktop builds support --wait but not --wait-timeout. Keep
+  // health-gated startup using the same compatible flag as the integration runner.
+  const startCode = run(docker, [...compose, 'up', '-d', '--build', '--wait']);
   if (startCode !== 0) {
     process.exitCode = startCode;
     run(docker, [...compose, 'ps', '-a']);

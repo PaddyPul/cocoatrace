@@ -24,7 +24,8 @@
     "test:browser": "playwright test",
     "test:browser:docker": "node scripts/run-browser-tests.mjs",
     "typecheck:browser": "tsc --noEmit -p e2e/tsconfig.json",
-    "test:migrations:docker": "node scripts/run-migration-tests.mjs"
+    "test:migrations:docker": "node scripts/run-migration-tests.mjs",
+    "trade:reconcile": "tsx api/scripts/reconcile-trades.ts"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",

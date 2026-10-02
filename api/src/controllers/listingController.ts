@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
-import { query } from '../db';
-import * as audit from '../services/audit';
+import { query, getClient } from '../db';
+import { lockHoldingListings, pendingTransferQuantity, reconcileHoldingListings } from '../services/inventoryIntegrity';
+import { recordTradeAudit } from '../modules/trading/transaction';
 
 export async function listListings(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
@@ -12,7 +13,7 @@ export async function listListings(req: Request, res: Response): Promise<void> {
      JOIN batch_holdings h ON h.id = l.holding_id
      JOIN harvest_batches b ON b.id = h.batch_id
      LEFT JOIN farms f ON f.id = b.farm_id
-     WHERE l.active = TRUE
+     WHERE l.active = TRUE AND h.status='available' AND h.holder_organization_id=l.seller_organization_id
      ORDER BY l.created_at DESC`
   );
   res.json(rows);
@@ -41,41 +42,93 @@ export async function getListing(req: Request, res: Response): Promise<void> {
 
 export async function createListing(req: Request, res: Response): Promise<void> {
   const { holdingId, availableQuantityKg, pricePerKg, currency, incoterm, originLocation, destinationLocation } = req.body;
-  const holdingRes = await query('SELECT * FROM batch_holdings WHERE id=$1 AND holder_organization_id=$2 AND status=$3', [holdingId, req.user!.organizationId, 'available']);
-  if (!holdingRes.rows[0]) {
-    res.status(400).json({ error: 'Holding not found or not available' });
-    return;
-  }
-  const listedRes = await query('SELECT COALESCE(SUM(available_quantity_kg),0) AS listed_quantity FROM listings WHERE holding_id=$1 AND active=TRUE', [holdingId]);
-  const remainingQuantity = Number(holdingRes.rows[0].quantity_kg) - Number(listedRes.rows[0].listed_quantity);
-  if (availableQuantityKg > remainingQuantity) {
-    res.status(400).json({ error: `Only ${remainingQuantity} kg remains available to publish` });
-    return;
-  }
-  const { rows } = await query(
-    'INSERT INTO listings (seller_organization_id, holding_id, available_quantity_kg, price_per_kg, currency, incoterm, origin_location, destination_location) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
-    [req.user!.organizationId, holdingId, availableQuantityKg, pricePerKg, currency, incoterm, originLocation, destinationLocation]
-  );
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'listing.create', entityType: 'listing', entityId: rows[0].id });
-  res.status(201).json(rows[0]);
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    const holding = (await client.query('SELECT * FROM batch_holdings WHERE id=$1 AND holder_organization_id=$2 FOR UPDATE', [holdingId, req.user!.organizationId])).rows[0];
+    if (!holding || holding.status !== 'available') {
+      await client.query('ROLLBACK');
+      res.status(409).json({ error: 'Holding not available', code: 'INVENTORY_UNAVAILABLE' }); return;
+    }
+    await lockHoldingListings(client, holdingId);
+    const listed = await client.query('SELECT COALESCE(SUM(available_quantity_kg),0) AS quantity FROM listings WHERE holding_id=$1 AND active=TRUE', [holdingId]);
+    const remainingGrams = Math.round(Number(holding.quantity_kg) * 1000)
+      - Math.round(Number(listed.rows[0].quantity) * 1000)
+      - Math.round(await pendingTransferQuantity(client, holdingId) * 1000);
+    const remaining = remainingGrams / 1000;
+    if (Math.round(availableQuantityKg * 1000) > remainingGrams) {
+      await client.query('ROLLBACK');
+      res.status(409).json({ error: `Only ${Math.max(0, remaining)} kg remains available to publish`, code: 'INSUFFICIENT_INVENTORY' }); return;
+    }
+    const { rows } = await client.query(
+      'INSERT INTO listings (seller_organization_id, holding_id, available_quantity_kg, price_per_kg, currency, incoterm, origin_location, destination_location) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
+      [req.user!.organizationId, holdingId, availableQuantityKg, pricePerKg, currency, incoterm, originLocation, destinationLocation]
+    );
+    await recordTradeAudit(client, req.user!, 'listing.create', 'listing', rows[0].id);
+    await client.query('COMMIT');
+    res.status(201).json(rows[0]);
+  } catch (err) { await client.query('ROLLBACK'); throw err; }
+  finally { client.release(); }
 }
 
 export async function updateListing(req: Request, res: Response): Promise<void> {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const { pricePerKg, availableQuantityKg, active } = req.body;
-  const { rows } = await query(
-    'UPDATE listings SET price_per_kg=COALESCE($1,price_per_kg), available_quantity_kg=COALESCE($2,available_quantity_kg), active=COALESCE($3,active) WHERE id=$4 AND seller_organization_id=$5 RETURNING *',
-    [pricePerKg, availableQuantityKg, active, id, req.user!.organizationId]
-  );
-  if (!rows[0]) { res.status(404).json({ error: 'Listing not found or not yours' }); return; }
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'listing.update', entityType: 'listing', entityId: id });
-  res.json(rows[0]);
+  if ((pricePerKg !== undefined && (typeof pricePerKg !== 'number' || !Number.isFinite(pricePerKg) || pricePerKg <= 0)) ||
+      (availableQuantityKg !== undefined && (typeof availableQuantityKg !== 'number' || !Number.isFinite(availableQuantityKg) || availableQuantityKg <= 0)) ||
+      (active !== undefined && typeof active !== 'boolean')) {
+    res.status(400).json({ error: 'Price and quantity must be positive numbers; active must be boolean' }); return;
+  }
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    const discovered = (await client.query('SELECT holding_id FROM listings WHERE id=$1 AND seller_organization_id=$2', [id, req.user!.organizationId])).rows[0];
+    if (!discovered) { await client.query('ROLLBACK'); res.status(404).json({ error: 'Listing not found' }); return; }
+    const holding = (await client.query('SELECT * FROM batch_holdings WHERE id=$1 FOR UPDATE', [discovered.holding_id])).rows[0];
+    await lockHoldingListings(client, discovered.holding_id);
+    const listing = (await client.query('SELECT * FROM listings WHERE id=$1 AND seller_organization_id=$2', [id, req.user!.organizationId])).rows[0];
+    // Acceptance may have moved the listing while this request waited for its original holding.
+    if (!listing || listing.holding_id !== discovered.holding_id || holding.holder_organization_id !== req.user!.organizationId || holding.status !== 'available') {
+      await client.query('ROLLBACK'); res.status(409).json({ error: 'Inventory changed; refresh before editing', code: 'INVENTORY_UNAVAILABLE' }); return;
+    }
+    const nextActive = active ?? listing.active;
+    const nextQuantity = availableQuantityKg ?? Number(listing.available_quantity_kg);
+    const sibling = (await client.query('SELECT COALESCE(SUM(available_quantity_kg),0) AS quantity FROM listings WHERE holding_id=$1 AND active=TRUE AND id<>$2', [holding.id, id])).rows[0];
+    const freeGrams = Math.round(Number(holding.quantity_kg) * 1000)
+      - Math.round(Number(sibling.quantity) * 1000)
+      - Math.round(await pendingTransferQuantity(client, holding.id) * 1000);
+    const free = freeGrams / 1000;
+    if (nextActive && Math.round(nextQuantity * 1000) > freeGrams) {
+      await client.query('ROLLBACK'); res.status(409).json({ error: `Only ${Math.max(0, free)} kg is available`, code: 'INSUFFICIENT_INVENTORY' }); return;
+    }
+    const { rows } = await client.query('UPDATE listings SET price_per_kg=COALESCE($1,price_per_kg),available_quantity_kg=$2,active=$3 WHERE id=$4 RETURNING *', [pricePerKg, nextQuantity, nextActive, id]);
+    await reconcileHoldingListings(client, holding.id, Number(holding.quantity_kg) - await pendingTransferQuantity(client, holding.id));
+    await recordTradeAudit(client, req.user!, 'listing.update', 'listing', id);
+    await client.query('COMMIT');
+    res.json(rows[0]);
+  } catch (err) { await client.query('ROLLBACK'); throw err; }
+  finally { client.release(); }
 }
 
 export async function deleteListing(req: Request, res: Response): Promise<void> {
-  const { id } = req.params;
-  const { rows } = await query('DELETE FROM listings WHERE id=$1 AND seller_organization_id=$2 AND active=TRUE RETURNING id', [id, req.user!.organizationId]);
-  if (!rows[0]) { res.status(404).json({ error: 'Listing not found or not yours' }); return; }
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'listing.delete', entityType: 'listing', entityId: id });
-  res.json({ deleted: true });
+  const id = req.params.id as string;
+  // Retain listings referenced by offers/contracts; "delete" withdraws publication.
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    const discovered = (await client.query('SELECT holding_id FROM listings WHERE id=$1 AND seller_organization_id=$2', [id, req.user!.organizationId])).rows[0];
+    if (!discovered) { await client.query('ROLLBACK'); res.status(404).json({ error: 'Listing not found' }); return; }
+    const holding = (await client.query('SELECT * FROM batch_holdings WHERE id=$1 FOR UPDATE', [discovered.holding_id])).rows[0];
+    await lockHoldingListings(client, discovered.holding_id);
+    const listing = (await client.query('SELECT * FROM listings WHERE id=$1 AND seller_organization_id=$2', [id, req.user!.organizationId])).rows[0];
+    if (!listing || listing.holding_id !== discovered.holding_id || holding.status !== 'available' || holding.holder_organization_id !== req.user!.organizationId) {
+      await client.query('ROLLBACK'); res.status(409).json({ error: 'Inventory changed; refresh before withdrawing', code: 'INVENTORY_UNAVAILABLE' }); return;
+    }
+    await client.query('UPDATE listings SET active=FALSE WHERE id=$1', [id]);
+    await reconcileHoldingListings(client, holding.id, Number(holding.quantity_kg) - await pendingTransferQuantity(client, holding.id));
+    await recordTradeAudit(client, req.user!, 'listing.delete', 'listing', id);
+    await client.query('COMMIT');
+    res.json({ deleted: true });
+  } catch (err) { await client.query('ROLLBACK'); throw err; }
+  finally { client.release(); }
 }

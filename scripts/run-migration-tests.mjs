@@ -16,7 +16,9 @@ let started = false;
 try {
   started = true;
   if (run(['down', '--volumes', '--remove-orphans']) !== 0) throw new Error('Could not clean the isolated migration test project');
-  if (run(['up', '-d', '--wait', '--wait-timeout', '90', 'postgres-migration-test']) !== 0) throw new Error('Disposable PostgreSQL failed startup');
+  // Match the integration runner's Compose flags. Older Docker Desktop builds
+  // support --wait but not --wait-timeout; service health checks still gate readiness.
+  if (run(['up', '-d', '--wait', 'postgres-migration-test']) !== 0) throw new Error('Disposable PostgreSQL failed startup');
   process.exitCode = run(['run', '--build', '--rm', 'migration-test']);
 } catch (error) {
   console.error(error.message); process.exitCode = 1;

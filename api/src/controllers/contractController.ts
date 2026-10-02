@@ -2,9 +2,7 @@ import { Request, Response } from 'express';
 import { query, getClient } from '../db';
 import * as audit from '../services/audit';
 import { buildInstallments, PaymentPlan, requiredBeforeDispatch } from '../services/paymentProtection';
-import { config } from '../config/env';
-
-const configuredFeeBps = config.platformFeeBps;
+import { acceptTradeOffer, createTradeOffer, rejectTradeOffer } from '../modules/trading/offers';
 
 export async function listOffers(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
@@ -22,115 +20,16 @@ export async function listOffers(req: Request, res: Response): Promise<void> {
 }
 
 export async function makeOffer(req: Request, res: Response): Promise<void> {
-  const listingId = req.params.id as string;
-  const { quantityKg, offeredPricePerKg, currency, validUntil } = req.body;
-  const listingRes = await query('SELECT * FROM listings WHERE id=$1 AND active=TRUE', [listingId]);
-  if (!listingRes.rows[0]) {
-    res.status(404).json({ error: 'Listing not found' });
-    return;
-  }
-  if (quantityKg > listingRes.rows[0].available_quantity_kg) {
-    res.status(400).json({ error: 'Quantity exceeds listing' });
-    return;
-  }
-  const { rows } = await query(
-    'INSERT INTO trade_offers (listing_id, buyer_organization_id, quantity_kg, offered_price_per_kg, currency, valid_until) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-    [listingId, req.user!.organizationId, quantityKg, offeredPricePerKg, currency, validUntil || new Date(Date.now() + 7 * 86400000)]
-  );
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'offer.create', entityType: 'trade_offer', entityId: rows[0].id });
-  res.status(201).json(rows[0]);
+  const offer = await createTradeOffer(req.user!, req.params.id as string, req.body);
+  res.status(201).json(offer);
 }
 
 export async function acceptOffer(req: Request, res: Response): Promise<void> {
-  const offerId = req.params.id as string;
-  const client = await getClient();
-  try {
-    await client.query('BEGIN');
-    const offRes = await client.query(`
-      SELECT o.*, l.holding_id, l.seller_organization_id, l.incoterm,
-             l.origin_location, l.destination_location,
-             h.batch_id, h.quantity_kg as holding_quantity, h.warehouse_location
-      FROM trade_offers o
-      JOIN listings l ON l.id=o.listing_id
-      JOIN batch_holdings h ON h.id=l.holding_id
-      WHERE o.id=$1 AND o.status=$2
-      FOR UPDATE OF o, l, h`, [offerId, 'pending']);
-    const offer = offRes.rows[0];
-    if (!offer) {
-      await client.query('ROLLBACK');
-      res.status(404).json({ error: 'Offer not found or not pending' });
-      return;
-    }
-    if (offer.seller_organization_id !== req.user!.organizationId) {
-      await client.query('ROLLBACK');
-      res.status(403).json({ error: 'Not your listing' });
-      return;
-    }
-
-    await client.query("UPDATE trade_offers SET status='accepted' WHERE id=$1", [offerId]);
-    await client.query("UPDATE trade_offers SET status='rejected' WHERE listing_id=$1 AND id<>$2 AND status='pending'", [offer.listing_id, offerId]);
-    const residualQuantity = Number(offer.holding_quantity) - Number(offer.quantity_kg);
-    if (residualQuantity > 0) {
-      await client.query(
-        "INSERT INTO batch_holdings (batch_id, holder_organization_id, quantity_kg, warehouse_location, status) VALUES ($1,$2,$3,$4,'available')",
-        [offer.batch_id, req.user!.organizationId, residualQuantity, offer.warehouse_location]
-      );
-    }
-    await client.query("UPDATE batch_holdings SET quantity_kg=$1, status='committed' WHERE id=$2", [offer.quantity_kg, offer.holding_id]);
-    await client.query("UPDATE listings SET active=FALSE WHERE id=$1", [offer.listing_id]);
-
-    const contractRes = await client.query(
-      `INSERT INTO sales_contracts (listing_id,offer_id,seller_organization_id,buyer_organization_id,holding_id,quantity_kg,price_per_kg,currency,incoterm,payment_plan,deposit_percentage,payment_terms_status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'deposit_balance',20,'draft') RETURNING *`,
-      [offer.listing_id, offer.id, req.user!.organizationId, offer.buyer_organization_id, offer.holding_id, offer.quantity_kg, offer.offered_price_per_kg, offer.currency, offer.incoterm]
-    );
-    const contractValue=Number(offer.quantity_kg)*Number(offer.offered_price_per_kg);
-    const paymentRes=await client.query(`INSERT INTO payment_requests(contract_id,requested_by_organization_id,amount_total,currency,status,payment_method,due_trigger,dispatch_required_amount,security_status)
-      VALUES($1,$2,$3,$4,'awaiting_terms','deposit_balance','terms_agreed',$5,'not_required') RETURNING *`,
-      [contractRes.rows[0].id,req.user!.organizationId,contractValue,offer.currency,requiredBeforeDispatch('deposit_balance',contractValue,20)]);
-    for(const installment of buildInstallments('deposit_balance',contractValue,20)) await client.query(
-      `INSERT INTO payment_installments(payment_request_id,installment_type,sequence_number,amount_due,due_trigger,status) VALUES($1,$2,$3,$4,$5,'awaiting_trigger')`,
-      [paymentRes.rows[0].id,installment.installmentType,installment.sequenceNumber,installment.amountDue,installment.dueTrigger]);
-    await client.query(`INSERT INTO platform_fee_invoices(contract_id,fee_payer,rate_bps,amount_total,currency) VALUES($1,'seller',$2,$3,$4)`,
-      [contractRes.rows[0].id,configuredFeeBps,Math.round(contractValue*configuredFeeBps/100)/100,offer.currency]);
-    const buyerArrangesCarriage = ['EXW', 'FCA', 'FAS', 'FOB'].includes(String(offer.incoterm).toUpperCase());
-    const coordinatorOrganizationId = buyerArrangesCarriage ? offer.buyer_organization_id : req.user!.organizationId;
-    const shipmentRes = await client.query(
-      `INSERT INTO shipments (
-         contract_id, transport_coordinator_organization_id, origin_port, destination_port,
-         current_milestone, transport_mode
-       ) VALUES ($1,$2,$3,$4,'planning','unspecified') RETURNING *`,
-      [contractRes.rows[0].id, coordinatorOrganizationId, offer.origin_location, offer.destination_location]
-    );
-    await client.query('COMMIT');
-    await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'contract.create', entityType: 'sales_contract', entityId: contractRes.rows[0].id });
-    await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'payment.prepare', entityType: 'payment_request', entityId: paymentRes.rows[0].id });
-    await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'transport.workspace.create', entityType: 'shipment', entityId: shipmentRes.rows[0].id });
-    res.json({ offer, contract: contractRes.rows[0], paymentRequest: paymentRes.rows[0], shipment: shipmentRes.rows[0] });
-  } catch (err) {
-    await client.query('ROLLBACK');
-    throw err;
-  } finally {
-    client.release();
-  }
+  res.json(await acceptTradeOffer(req.user!, req.params.id as string));
 }
 
 export async function rejectOffer(req: Request, res: Response): Promise<void> {
-  const offerId = req.params.id as string;
-  const offerRes = await query(
-    'SELECT o.id, l.seller_organization_id FROM trade_offers o JOIN listings l ON l.id=o.listing_id WHERE o.id=$1',
-    [offerId]
-  );
-  if (!offerRes.rows[0]) {
-    res.status(404).json({ error: 'Offer not found' });
-    return;
-  }
-  if (offerRes.rows[0].seller_organization_id !== req.user!.organizationId) {
-    res.status(403).json({ error: 'Access denied' });
-    return;
-  }
-  const { rows } = await query("UPDATE trade_offers SET status='rejected' WHERE id=$1 RETURNING *", [offerId]);
-  res.json(rows[0]);
+  res.json(await rejectTradeOffer(req.user!, req.params.id as string));
 }
 
 export async function listContracts(req: Request, res: Response): Promise<void> {
