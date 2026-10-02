@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validateEmails,parseTunnelUrl,validateState,isEmailGate} from './demo-preview.mjs';
+import {sharingEmails,validateEmails,parseTunnelUrl,validateState,isEmailGate} from './demo-preview.mjs';
 test('sharing requires exact emails, rejects wildcards, missing values and shell-like input',()=>{
  assert.equal(validateEmails('Albert@example.com,guest@example.com,albert@example.com'),'albert@example.com,guest@example.com');
  for(const v of ['', '*@example.com','a@example.com,bad','x;echo pwned','--url','x@example.com\n--url http://evil']) assert.throws(()=>validateEmails(v));
@@ -21,4 +21,10 @@ test('public gate check rejects exposed app and generic failure pages',()=>{
  assert.equal(isEmailGate(302,'https://team.cloudflareaccess.com/login',''),true);
  assert.equal(isEmailGate(200,null,'Cloudflare: enter email and verification code'),true);
  assert.equal(isEmailGate(403,null,''),true);
+});
+
+test('email arguments work with Windows npm forwarding and direct Node invocation',()=>{
+ assert.equal(sharingEmails(['owner@example.com']),'owner@example.com');
+ assert.equal(sharingEmails(['--emails','owner@example.com,guest@example.com']),'owner@example.com,guest@example.com');
+ for(const args of [[],['--emails'],['--emails','a@example.com','extra'],['--url','https://evil.example']]) assert.throws(()=>sharingEmails(args));
 });

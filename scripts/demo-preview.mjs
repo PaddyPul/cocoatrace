@@ -13,6 +13,16 @@ export function validateEmails(value) {
   throw new Error('Supply 1–10 exact email addresses separated by commas; wildcard domains are not allowed.');
  return [...new Set(emails)].join(',');
 }
+export function sharingEmails(args) {
+ const flag=args.indexOf('--emails');
+ // Some Windows npm versions consume the unknown flag and forward only its value.
+ if(flag>=0) {
+  if(args.length!==2||flag!==0) throw new Error('Supply one --emails value');
+  return validateEmails(args[1]);
+ }
+ if(args.length===1) return validateEmails(args[0]);
+ throw new Error('Supply one comma-separated email list');
+}
 export function parseTunnelUrl(log) {
  const found=String(log).match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com\b/g);
  return found?.at(-1)||null;
@@ -91,9 +101,7 @@ async function main() {
   compose(['up','-d','--build','--wait','postgres','clamav','api','web'],state);
   await smoke();console.log('Open http://127.0.0.1:14000 — synthetic demo only; nothing is publicly shared.');return;
  }
- const arg=process.argv.indexOf('--emails');
- if(arg<0) throw new Error('Use npm run demo:preview:share -- --emails "you@example.com,guest@example.com"');
- state.PREVIEW_ALLOWED_EMAILS=validateEmails(process.argv[arg+1]);
+ state.PREVIEW_ALLOWED_EMAILS=sharingEmails(process.argv.slice(3));
  compose(['stop','tunnel'],state);
  compose(['rm','-f','tunnel'],state);
  // Fail closed when the downloaded version lacks the documented email gate.
