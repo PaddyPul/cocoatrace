@@ -56,7 +56,9 @@ only the ordered view and deliberately has no duplicate checkboxes.
 3. **Browser regression foundation — QLT-021, then QLT-009–QLT-011:** automate identity and invitation flows with isolated fixtures and a captured SMTP inbox; run in CI with sanitized failure reports/screenshots; keep optional credential-bearing traces private. Extend coverage alongside each subsequent feature sprint.
 4. **Trading Integrity v1 — ARC-005, ARC-012, TRD-001–TRD-009:** implementation and 24 trading integration regressions are present; require native migration/integration/browser CI and the short smoke test before closing this wave. See `docs/runbooks/TRADING_INTEGRITY.md` and `docs/releases/TRADING_INTEGRITY_WINDOWS.md`.
 5. **Trust-state Accuracy v1 — DAT-001–DAT-003:** implementation, audited correction report and eleven new integration regressions are present. Native migration/integration/browser tests and a short UI smoke test remain release gates. See `docs/runbooks/TRUST_STATE_ACCURACY.md` and `docs/releases/TRUST_STATE_ACCURACY_WINDOWS.md`.
-6. **Recall Safety v1 — RCL-001–RCL-002:** transactional safety holds now quarantine affected lots/holdings, withdraw listings, block offers/transfers/splits/physical dispatch, preserve receipt containment, and provide read-only reconciliation. Native Docker integration and browser gates remain required. See `docs/releases/RECALL_SAFETY_V1_WINDOWS.md`.
+6. **Recall Safety v1 — RCL-001–RCL-002 (user reports local tests passed; merge/CI evidence pending):** transactional safety holds now quarantine affected lots/holdings, withdraw listings, block offers/transfers/splits/physical dispatch, preserve receipt containment, and provide read-only reconciliation. Native Docker integration and browser gates remain required. See `docs/releases/RECALL_SAFETY_V1_WINDOWS.md`.
+
+7. **Recall Response v1 — RCL-003–RCL-007:** durable recipient emails, own-organization acknowledgement, manager contact/escalation logs, holder recovery snapshots and evidence-backed closure are implemented. Retained disposal holds remain enforced after resolution. Native Docker and real browser gates pending; see `docs/runbooks/RECALL_RESPONSE.md`.
 
 The following deployment work is a **parallel external gate**, not repository-complete work: **ENV-004–ENV-006, UPL-002, OPS-001–OPS-002**. A named infrastructure owner must provision isolated staging resources, private encrypted object storage, HTTPS/secrets, managed database recovery and a recorded restore drill. Repository tests and local Docker do not close those items.
 
@@ -273,11 +275,11 @@ The following deployment work is a **parallel external gate**, not repository-co
 
 - [-] **RCL-001 · P0 · Phase 2 — IN PROGRESS:** Migration 022 backfills active notices into explicit lot/holding safety holds; activation is atomic and quantities/ownership remain unchanged. Native validation pending.
 - [-] **RCL-002 · P0 · Phase 2 — IN PROGRESS:** Active recalled supply is withdrawn and server-gated across publication, offers, custody transfers/splits and physical dispatch, including payment-exception and milestone-skip attempts. Receipt containment remains available; resolution never auto-republishes. Native validation pending.
-- [ ] **RCL-003 · P1 · Phase 2:** Generate recipient notifications from the quantity-aware impact calculation.
-- [ ] **RCL-004 · P1 · Phase 2:** Add recipient acknowledgement, contact status and escalation.
-- [ ] **RCL-005 · P1 · Phase 2:** Track quarantined, returned, destroyed, corrected and released quantities.
-- [ ] **RCL-006 · P1 · Phase 2:** Require resolution reason, authorized approver and supporting evidence.
-- [ ] **RCL-007 · P1 · Phase 2:** Preserve resolved public notices and resolution history.
+- [-] **RCL-003 · P1 · Phase 2 — IN PROGRESS:** Actual owners, holders, contract counterparties and distribution recipients enter a durable leased email outbox. Native validation pending; SMTP acceptance is separate from acknowledgement. External nonmember recipients and delivery webhooks remain open.
+- [-] **RCL-004 · P1 · Phase 2 — IN PROGRESS:** Own-organization acknowledgement and manager contacted/unreachable/escalated records implemented with transactional audit. Native validation pending; automated deadlines remain open.
+- [-] **RCL-005 · P1 · Phase 2 — IN PROGRESS:** Holder-only recovery snapshots validate three-decimal quantities against current holdings, excluding transferred history. Returned/destroyed stock keeps the batch blocked after closure. Native validation and separate physical segregation/write-off workflow remain open.
+- [-] **RCL-006 · P1 · Phase 2 — IN PROGRESS:** Closure requires authorized manager, reason, exact-recall clean evidence, all acknowledgements and complete nonquarantined accounting. Native validation pending.
+- [-] **RCL-007 · P1 · Phase 2 — IN PROGRESS:** Closed response records, decision proof references and public notice history retained; public pages reflect remaining safety holds. Native validation pending.
 - [ ] **RCL-008 · P1 · Phase 2:** Add tabletop recall tests covering partial, commingled and distributed material.
 - [ ] **RCL-009 · P1 · Phase 2:** Add reconciliation warnings as actionable blocking tasks where safety is uncertain.
 - [ ] **RCL-010 · P1 · Phase 2:** Define who can investigate versus activate versus resolve recalls.
@@ -491,7 +493,7 @@ An item is complete only when applicable criteria are met:
 | Staging evidence infrastructure is not yet independently provisioned or operationally monitored | Critical | Private upload, quarantine, scanning and controlled-download behavior is implemented and Docker-tested | ENV-004, UPL-002, OPS-006 |
 | Self-entered records appear verified/approved | Critical | Organic attestation on batches only | DAT-001–010 |
 | Same inventory can underpin inconsistent contracts | Critical | Some application quantity checks | TRD-001–009 |
-| Recall notice does not quarantine affected supply | Critical | Public notice and calculation | RCL-001–010 |
+| Recall deployment and recovery scope not yet fully evidenced | High | User-tested safety gates; response implementation awaits native CI; segregation and external-recipient recovery remain open | RCL-001–010 |
 | Critical audit events can fail after business commit | High | Warning log | ARC-013–014 |
 | Real users lack reset/MFA/revocation lifecycle | High | Invite and password login | IDN-008–014 |
 | Empty-database bootstrap repair has not yet passed native container/CI validation | Critical | Normal release runner now bootstraps atomically; nine functional CLI scenarios passed against temporary WASM PostgreSQL, with native concurrency still unverified | ENV-019, ENV-007, QLT-005 |

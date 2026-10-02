@@ -4,7 +4,7 @@ import { JwtPayload } from '../middleware/auth';
 export type Actor = Pick<JwtPayload, 'organizationId' | 'permissions'>;
 
 export const EVIDENCE_ENTITY_TYPES = [
-  'batch', 'certificate', 'contract', 'farm', 'product_profile', 'shipment',
+  'batch', 'certificate', 'contract', 'farm', 'product_profile', 'shipment', 'recall',
 ] as const;
 export type EvidenceEntityType = (typeof EVIDENCE_ENTITY_TYPES)[number];
 
@@ -115,6 +115,9 @@ export async function canAccessEvidenceEntity(
 ): Promise<boolean> {
   if (networkPermission && hasExplicitPermission(actor, networkPermission)) return true;
   switch (entityType) {
+    case 'recall': return policyExists(`SELECT 1 FROM recall_notices notice WHERE notice.id=$1 AND
+      (notice.initiated_by_organization_id=$2 OR $3::boolean OR EXISTS(SELECT 1 FROM recall_participants p WHERE p.recall_id=notice.id AND p.organization_id=$2))`,
+      [entityId,actor.organizationId,hasExplicitPermission(actor,'recall.manage.all')]);
     case 'farm': return hasFarmRelationship(actor, entityId);
     case 'batch': return hasBatchRelationship(actor, entityId);
     case 'certificate': return hasCertificateRelationship(actor, entityId);

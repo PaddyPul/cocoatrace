@@ -7,17 +7,19 @@ import app from '../../src/app';
 import { getClient, pool, query } from '../../src/db';
 import { up as backfillRecallHolds } from '../../src/migrations/022_recall_safety_holds';
 import { reconcileRecallSafety } from '../../src/modules/recall/reconciliation';
+import { evidenceStorage } from '../../src/services/evidenceStorage';
 
 type Actor = { id: string; organizationId: string; token: string };
 type Supply = { batchId: string; holdingId: string; lotId: string; listingId: string };
 let seller: Actor, buyer: Actor, outsider: Actor, unprivileged: Actor;
+const resolutionEvidence = new Map<string, string>();
 
 async function actor(type: 'exporter' | 'importer', permissions = true): Promise<Actor> {
   const suffix = crypto.randomUUID();
   const organization = (await query("INSERT INTO organizations(name,type,jurisdiction,verification_status) VALUES($1,$2,'GH','verified') RETURNING id", [`Recall regression ${suffix}`, type])).rows[0];
   const email = `recall-${suffix}@integration.test`, password = 'RecallRegressionPassword123!';
   const user = (await query('INSERT INTO users(organization_id,email,password_hash,name) VALUES($1,$2,$3,$4) RETURNING id', [organization.id, email, await bcrypt.hash(password, 4), 'Recall Regression'])).rows[0];
-  const role = (await query('INSERT INTO roles(name,permissions) VALUES($1,$2) RETURNING id', [`recall-${suffix}`, permissions ? ['batch.create', 'batch.read', 'holding.read', 'holding.create', 'custody.transfer.request', 'custody.transfer.accept', 'listing.read', 'listing.create', 'offer.create', 'offer.respond', 'contract.read', 'shipment.read', 'shipment.update', 'recall.manage'] : []])).rows[0];
+  const role = (await query('INSERT INTO roles(name,permissions) VALUES($1,$2) RETURNING id', [`recall-${suffix}`, permissions ? ['batch.create', 'batch.read', 'holding.read', 'holding.create', 'custody.transfer.request', 'custody.transfer.accept', 'listing.read', 'listing.create', 'offer.create', 'offer.respond', 'contract.read', 'shipment.read', 'shipment.update', 'recall.manage', 'evidence.read', 'evidence.upload'] : []])).rows[0];
   await query('INSERT INTO user_roles(user_id,role_id) VALUES($1,$2)', [user.id, role.id]);
   const login = await request(app).post('/auth/login').send({ email, password });
   expect(login.status).toBe(200);
@@ -36,9 +38,33 @@ async function supply(quantity = 10): Promise<Supply> {
 function recall(s: Supply, principal = seller) {
   return request(app).post('/recalls').set('Authorization', `Bearer ${principal.token}`).send({ referenceCode: `R-${crypto.randomUUID()}`, title: 'Possible product contamination', reason: 'Investigate a reported contaminant', instructions: 'Stop dispatch and isolate affected inventory', severity: 'critical', batchIds: [s.batchId] });
 }
-function resolve(id: string, principal = seller) {
-  return request(app).post(`/recalls/${id}/resolve`).set('Authorization', `Bearer ${principal.token}`).send({ reason: 'Investigation complete; source records reviewed' });
+async function resolve(id: string, principal = seller) {
+  let evidenceId = resolutionEvidence.get(id);
+  if (!evidenceId) {
+    const content = Buffer.from('%PDF-1.7\nCompleted recall investigation.');
+    const intent = await request(app).post('/evidence/upload-intents').set('Authorization', `Bearer ${seller.token}`).send({ type: 'investigation_report', fileName: 'resolution.pdf', mimeType: 'application/pdf', fileSizeBytes: content.length, linkedEntityType: 'recall', linkedEntityId: id });
+    expect(intent.status).toBe(201);
+    const uploaded = await request(app).put(intent.body.uploadUrl).set('Content-Type', 'application/pdf').send(content);
+    expect(uploaded.status).toBe(201);
+    evidenceId = uploaded.body.id;
+    resolutionEvidence.set(id, evidenceId!);
+    const participants = (await query('SELECT organization_id FROM recall_participants WHERE recall_id=$1 AND acknowledged_at IS NULL', [id])).rows;
+    for (const participant of participants) {
+      const owner = [seller, buyer, outsider].find(actor => actor.organizationId === participant.organization_id)!;
+      expect(owner).toBeDefined();
+      expect((await request(app).post(`/recalls/${id}/acknowledge`).set('Authorization', `Bearer ${owner.token}`).send({ note: 'Notice received and affected inventory investigated' })).status).toBe(200);
+    }
+    const holdings = (await query("SELECT h.* FROM recall_safety_holds hold JOIN batch_holdings h ON h.id=hold.entity_id WHERE hold.recall_id=$1 AND hold.entity_type='holding' AND h.status<>'transferred' AND h.quantity_kg>0", [id])).rows;
+    for (const holding of holdings) {
+      const owner = [seller, buyer, outsider].find(actor => actor.organizationId === holding.holder_organization_id)!;
+      expect(owner).toBeDefined();
+      const recovered = await request(app).put(`/recalls/${id}/recovery/${holding.id}`).set('Authorization', `Bearer ${owner.token}`).send({ quarantinedKg: 0, returnedKg: 0, destroyedKg: 0, correctedKg: 0, releasedKg: Number(holding.quantity_kg), note: 'Investigation cleared this inventory for release' });
+      expect(recovered.status).toBe(200);
+    }
+  }
+  return request(app).post(`/recalls/${id}/resolve`).set('Authorization', `Bearer ${principal.token}`).send({ reason: 'Investigation complete; source records reviewed', evidenceIds: [evidenceId] });
 }
+
 function makeOffer(s: Supply, quantity = 4) {
   return request(app).post(`/listings/${s.listingId}/offers`).set('Authorization', `Bearer ${buyer.token}`).send({ quantityKg: quantity, offeredPricePerKg: 5, currency: 'EUR' });
 }
@@ -55,7 +81,14 @@ function blocked(response: { status: number; body: { code?: string } }) {
 }
 
 beforeAll(async () => { seller = await actor('exporter'); buyer = await actor('importer'); outsider = await actor('exporter'); unprivileged = await actor('exporter', false); });
-afterAll(async () => { await pool.end(); });
+afterAll(async () => {
+  const ids = [...resolutionEvidence.values()];
+  if (ids.length) {
+    const rows = (await query('SELECT storage_key FROM evidence_items WHERE id=ANY($1::uuid[])', [ids])).rows;
+    await Promise.all(rows.filter(row => row.storage_key).map(row => evidenceStorage().delete(row.storage_key)));
+  }
+  await pool.end();
+});
 
 describe('real PostgreSQL recall containment', () => {
   it('requires authentication, recall permission and an actual inventory relationship', async () => {
@@ -104,7 +137,7 @@ describe('real PostgreSQL recall containment', () => {
     expect((await resolve(first.body.id)).status).toBe(200);
     expect((await publish(s)).status).toBe(409);
     expect((await resolve(second.body.id)).status).toBe(200);
-    expect((await resolve(second.body.id)).status).toBe(404);
+    expect((await resolve(second.body.id)).status).toBe(409);
     expect((await query('SELECT active FROM listings WHERE id=$1', [s.listingId])).rows[0].active).toBe(false);
     expect(await snapshot(s)).toEqual(before);
     expect((await publish(s)).status).toBe(201);

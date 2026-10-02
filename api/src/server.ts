@@ -1,3 +1,4 @@
+import {startRecallEmailWorker} from './modules/recall/notifications';
 import logger from './logger';
 import { config } from './config/env';
 import { pool } from './db';
@@ -10,6 +11,8 @@ async function start(): Promise<void> {
   const server = app.listen(config.port, () => {
     logger.info({ port: config.port, environment: config.environment, demoMode: config.demoMode }, `CocoaTrace API running on port ${config.port}`);
   });
+  const stopRecallEmails=startRecallEmailWorker();
+  server.on('close',stopRecallEmails);
   registerGracefulShutdown(server, pool, logger);
 }
 

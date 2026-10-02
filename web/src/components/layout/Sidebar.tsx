@@ -14,7 +14,7 @@ const PRIMARY_NAV: NavGroup[] = [{ label: 'Workspace', items: [
   { icon: Handshake, label: 'Offers', page: 'offers', orPermissions: ['offer.respond', 'offer.create'] },
   { icon: ScrollText, label: 'Orders & deals', page: 'contracts', orPermissions: ['contract.read', 'offer.respond', 'offer.create'] },
   { icon: QrCode, label: 'Products', page: 'products', orPermissions: ['batch.read'] },
-  { icon: ShieldAlert, label: 'Trace & recall', page: 'recalls', orPermissions: ['batch.read', 'recall.manage'], emphasis: 'safety' },
+  { icon: ShieldAlert, label: 'Trace & recall', page: 'recalls', orPermissions: [], emphasis: 'safety' },
 ] }];
 
 const TRADE_NAV: NavGroup = { label: 'Active trade', items: [

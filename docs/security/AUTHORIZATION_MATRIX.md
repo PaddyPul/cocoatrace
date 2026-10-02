@@ -190,3 +190,18 @@ SEC-006 must choose one documented convention per endpoint class and update the 
 ## Completion boundaries
 
 SEC-001 is complete when this matrix is maintained in the repository. SEC-002 through SEC-005 and UPL-001 remain in progress until the implemented real-PostgreSQL regressions pass. SEC-006 remains open until the response policy is decided and tested.
+
+## Recall response boundary (RCL-003–RCL-007)
+
+| Operation | Permission and relationship |
+| --- | --- |
+| List/open notice | Signed-in initiator or registered affected organization; unrelated callers receive 404 on direct lookup |
+| Read response inventory | Manager sees affected holdings; ordinary participants see only their own holdings and responses |
+| Acknowledge | Actual signed-in member of the affected organization; managers cannot acknowledge another organization |
+| Record contact/escalation | Initiating organization with `recall.manage`, or explicit `recall.manage.all` |
+| Record recovery snapshot | Current holder of that affected, non-transferred holding; manager permission does not bypass ownership |
+| Upload/download recall proof | Existing `evidence.upload` / `evidence.read` permission plus a recall relationship; recall evidence is intentionally shared among affected parties |
+| Read proof metadata in response | Requires `evidence.read`, `evidence.read.all` or wildcard; relationship alone does not expose filenames |
+| Resolve | Initiating manager or explicit network manager, reason, exact-recall clean evidence, all acknowledgements and fully accounted nonquarantined stock |
+
+Every response mutation is recorded through the strict transactional trade audit. Resolved responses are read-only. The safety gate derives disposal blocks from recovery history as well as retained hold rows, so an accidentally removed hold does not make disposed stock tradable.

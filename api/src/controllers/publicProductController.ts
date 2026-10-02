@@ -4,7 +4,8 @@ import QRCode from 'qrcode';
 import { getClient, query } from '../db';
 import * as audit from '../services/audit';
 import { buildJourney, deriveSafetyStatus, JourneyEvent } from '../services/publicProduct';
-import { activateRecall, resolveRecallRecord } from '../modules/recall/lifecycle';
+import {activeBatchRecallSql} from '../modules/recall/safety';
+import { activateRecall } from '../modules/recall/lifecycle';
 import { config } from '../config/env';
 import { hasBatchRelationship, hasExplicitPermission } from '../services/resourcePolicy';
 
@@ -144,6 +145,7 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
   ]);
 
   const recalls = recallRes.rows;
+  const inventoryHeld=Boolean((await query(`SELECT ${activeBatchRecallSql('$1::uuid')} AS held`,[product.batch_id])).rows[0].held);
   res.set('Cache-Control', 'no-store');
   res.json({
     trust,
@@ -184,7 +186,8 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
     evidence: evidenceRes.rows,
     journey,
     safety: {
-      status: deriveSafetyStatus(recalls),
+      status: inventoryHeld && deriveSafetyStatus(recalls)==='clear' ? 'warning' : deriveSafetyStatus(recalls),
+      inventoryHeld,
       activeRecalls: recalls.filter((recall: any) => recall.status === 'active'),
       resolvedRecalls: recalls.filter((recall: any) => recall.status === 'resolved'),
       checkedAt: new Date().toISOString(),
@@ -344,7 +347,7 @@ export async function listRecalls(req: Request, res: Response): Promise<void> {
             WHERE al.recall_id=r.id), '[]'::json) AS affected_lots
      FROM recall_notices r
      JOIN organizations o ON o.id=r.initiated_by_organization_id
-     WHERE ($1::boolean OR r.initiated_by_organization_id=$2)
+     WHERE ($1::boolean OR r.initiated_by_organization_id=$2 OR EXISTS(SELECT 1 FROM recall_participants p WHERE p.recall_id=r.id AND p.organization_id=$2))
      ORDER BY r.initiated_at DESC`,
     [canManageAll, req.user!.organizationId]
   );
@@ -354,10 +357,4 @@ export async function listRecalls(req: Request, res: Response): Promise<void> {
 export async function createRecall(req: Request, res: Response): Promise<void> {
   const canManageAll = (req.user!.permissions || []).some(permission => permission === '*' || permission === 'recall.manage.all');
   res.status(201).json(await activateRecall(req.user!,canManageAll,req.body));
-}
-
-export async function resolveRecall(req: Request, res: Response): Promise<void> {
-  const canManageAll = (req.user!.permissions || []).some(permission => permission === '*' || permission === 'recall.manage.all');
-  const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim().slice(0,2000) : undefined;
-  res.json(await resolveRecallRecord(req.user!,canManageAll,req.params.id as string,reason));
 }

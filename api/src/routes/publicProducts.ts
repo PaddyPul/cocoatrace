@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth';
 import validate from '../middleware/validate';
-import { createRecallSchema, productProfileSchema } from '../validation';
+import { createRecallSchema, productProfileSchema, acknowledgeRecallSchema, contactRecallSchema, recallRecoverySchema, resolveRecallSchema } from '../validation';
 import * as controller from '../controllers/publicProductController';
 
+import * as recallResponse from '../controllers/recallResponseController';
 const router = Router();
 
 router.get('/public/products/:slug', controller.getPublicProduct);
@@ -15,8 +16,12 @@ router.get('/product-profiles/batch/:batchId', requireAuth, requirePermission('b
 router.post('/product-profiles', requireAuth, requirePermission('batch.create'), validate(productProfileSchema), controller.upsertProfile);
 router.post('/product-profiles/:id/publish', requireAuth, requirePermission('batch.create'), controller.publishProfile);
 
-router.get('/recalls', requireAuth, requirePermission('recall.manage'), controller.listRecalls);
+router.get('/recalls', requireAuth, controller.listRecalls);
 router.post('/recalls', requireAuth, requirePermission('recall.manage'), validate(createRecallSchema), controller.createRecall);
-router.post('/recalls/:id/resolve', requireAuth, requirePermission('recall.manage'), controller.resolveRecall);
+router.get('/recalls/:id/response', requireAuth, recallResponse.response);
+router.post('/recalls/:id/acknowledge', requireAuth, validate(acknowledgeRecallSchema), recallResponse.acknowledge);
+router.patch('/recalls/:id/participants/:organizationId/contact', requireAuth, validate(contactRecallSchema), recallResponse.contact);
+router.put('/recalls/:id/recovery/:holdingId', requireAuth, validate(recallRecoverySchema), recallResponse.recovery);
+router.post('/recalls/:id/resolve', requireAuth, validate(resolveRecallSchema), recallResponse.resolve);
 
 export = router;

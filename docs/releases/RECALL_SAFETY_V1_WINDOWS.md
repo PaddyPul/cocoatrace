@@ -32,7 +32,7 @@ npm run test:integration:docker
 npm run test:browser:docker
 ```
 
-Expected native integration coverage is 76 tests after the existing suites and this wave are combined; native Docker/PostgreSQL is the release gate. Browser coverage is 16 tests: identity, marketplace, trust and recall presentation. Authoring validation passed 159 unit tests, both builds, browser type checks, migration integrity and eight recall integration tests in a supplemental PostgreSQL emulator; three emulator-only tests are intentionally native-only because they exercise receipt containment, audit rollback timing and the real activation/acceptance race. Do not merge until native Docker and GitHub CI pass.
+Expected native integration coverage is 76 tests after the existing suites and this wave are combined; native Docker/PostgreSQL is the release gate. Browser coverage is 17 tests: identity, marketplace, trust and recall presentation. Authoring validation passed 159 unit tests, both builds, browser type checks, migration integrity and eight recall integration tests in a supplemental PostgreSQL emulator; three emulator-only tests are intentionally native-only because they exercise receipt containment, audit rollback timing and the real activation/acceptance race. Do not merge until native Docker and GitHub CI pass.
 
 ## Start and inspect
 
