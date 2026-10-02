@@ -45,3 +45,5 @@ Invalid deployed configuration terminates startup before the server accepts traf
 Databases, object-storage buckets, secrets and service identities must be separate for demo, staging and production. Completing that infrastructure is tracked by `ENV-004` and is not implied by this configuration layer.
 
 The evidence-dependency incident and immutable-image rollback sequence is documented in [`runbooks/EVIDENCE_SCANNER_AND_DEPLOYMENT_ROLLBACK.md`](runbooks/EVIDENCE_SCANNER_AND_DEPLOYMENT_ROLLBACK.md). It must be adapted to the selected hosting provider and exercised in staging before it counts as an operational control.
+
+Provider-independent staging preparation is documented in [`runbooks/STAGING_PREPARATION.md`](runbooks/STAGING_PREPARATION.md). Use `.env.staging.example` as a secret-key inventory and run `npm run check:staging` only with the selected host's staging variables injected. `npm run verify:release` runs the isolated repository release gates through one command. Neither command provisions cloud infrastructure.

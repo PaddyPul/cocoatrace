@@ -89,7 +89,7 @@ jobs:
       - run: npm run typecheck:browser
       - name: Install Chromium and Linux browser dependencies
         run: npx playwright install --with-deps chromium
-      - name: Run isolated browser identity and email journeys
+      - name: Run isolated identity, trade and recall browser journeys
         run: npm run test:browser:docker
       - name: Upload sanitized browser diagnostics
         if: failure()
@@ -112,3 +112,17 @@ jobs:
       - run: npm ci
       - name: Test fresh production startup and data-preserving upgrades
         run: npm run test:migrations:docker
+
+  recovery-rehearsal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: node --test scripts/run-release-checks.test.mjs
+      - name: Rehearse isolated PostgreSQL backup and restore
+        run: npm run test:recovery:docker

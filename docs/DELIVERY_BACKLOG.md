@@ -18,6 +18,28 @@
 
 When asked “what needs to be done?”, start with incomplete items in the current execution queue, then the active phase exit criteria, then blocked P0/P1 work.
 
+## Bootstrap budget and expansion constraints
+
+Hosting budget is **USD 0/month** until the founder explicitly changes it. Do not activate paid plans, auto-upgrades, metered overages or trial-dependent infrastructure. See [`runbooks/FREE_STAGING_PLAN.md`](runbooks/FREE_STAGING_PLAN.md). Provider signup and account verification belong to the founder; repository configuration and automation belong to the implementation work. Free hosting does not waive private uploads, malware scanning, tenant isolation or restore gates.
+
+Hosting follow-ups **BST-001–003** and their completion tests are maintained in the linked free-staging runbook; include them when counting the backlog.
+
+### Multi-currency
+
+- [ ] **CUR-001 · P1 · Phase 2:** Agree pilot currencies and document a currency policy. One explicit ISO currency per listing, offer and accepted contract; distinguish trade currency from display preferences. Completion: approved supported-currency matrix and mismatch rules.
+- [ ] **CUR-002 · P1 · Phase 2:** Carry contract currency through payment installments, fees, invoices, refunds and reconciliation; API rejects incompatible offers/payments. Preserve existing recorded currencies during migration. Completion: end-to-end tests prove no silent currency changes.
+- [ ] **CUR-003 · P1 · Phase 2:** Centralize exact monetary arithmetic and rounding by currency minor units; never use floating-point money calculations. Completion: boundary tests cover two-decimal and zero-decimal currencies, installments and fee totals.
+- [ ] **CUR-004 · P2 · Phase 3:** Add user display-currency preferences with explicitly indicative FX quotes including source, timestamp and rate snapshot. Original contractual amounts remain visible. Completion: stale/missing-rate and historical-quote tests pass.
+- [ ] **CUR-005 · P2 · Phase 3:** Specify actual FX conversion/settlement separately with provider support, fees, consent and audit records before enabling it. Completion: approved design and sandbox reconciliation; display conversion never moves funds.
+
+### Multi-language
+
+- [ ] **LNG-001 · P1 · Phase 2:** Select pilot languages with users; introduce translation catalogs, English fallback and persisted user language preference. Completion: no hard-coded customer-facing strings in the first translated trade journey.
+- [ ] **LNG-002 · P1 · Phase 2:** Translate onboarding, sourcing, offers, guided dashboard, payment and delivery actions plus actionable API errors using stable error codes. Completion: buyer and supplier browser journeys pass in two selected locales.
+- [ ] **LNG-003 · P1 · Phase 2:** Localize recipient emails and notifications and format dates, quantities and currency using locale-aware helpers. Validate localized number input without changing commercial units. Completion: decimal/date ambiguity and fallback tests pass.
+- [ ] **LNG-004 · P2 · Phase 3:** Define authoritative contract/document languages, reviewed translations and clearly labeled translated summaries; preserve original evidence and user-entered text. Completion: versioned language policy and review workflow, with no automatic replacement of legal records.
+- [ ] **LNG-005 · P2 · Phase 3:** Human-review pilot translations and test keyboard access, longer text and missing keys; design for later RTL support. Completion: translation QA checklist and automated overflow/fallback coverage.
+
 ## Status and priority legend
 
 - `[ ]` not started
@@ -56,9 +78,11 @@ only the ordered view and deliberately has no duplicate checkboxes.
 3. **Browser regression foundation — QLT-021, then QLT-009–QLT-011:** automate identity and invitation flows with isolated fixtures and a captured SMTP inbox; run in CI with sanitized failure reports/screenshots; keep optional credential-bearing traces private. Extend coverage alongside each subsequent feature sprint.
 4. **Trading Integrity v1 — ARC-005, ARC-012, TRD-001–TRD-009:** implementation and 24 trading integration regressions are present; require native migration/integration/browser CI and the short smoke test before closing this wave. See `docs/runbooks/TRADING_INTEGRITY.md` and `docs/releases/TRADING_INTEGRITY_WINDOWS.md`.
 5. **Trust-state Accuracy v1 — DAT-001–DAT-003:** implementation, audited correction report and eleven new integration regressions are present. Native migration/integration/browser tests and a short UI smoke test remain release gates. See `docs/runbooks/TRUST_STATE_ACCURACY.md` and `docs/releases/TRUST_STATE_ACCURACY_WINDOWS.md`.
-6. **Recall Safety v1 — RCL-001–RCL-002 (user reports local tests passed; merge/CI evidence pending):** transactional safety holds now quarantine affected lots/holdings, withdraw listings, block offers/transfers/splits/physical dispatch, preserve receipt containment, and provide read-only reconciliation. Native Docker integration and browser gates remain required. See `docs/releases/RECALL_SAFETY_V1_WINDOWS.md`.
+6. **Recall Safety v1 — RCL-001–RCL-002 (user reports tested and merged):** transactional safety holds now quarantine affected lots/holdings, withdraw listings, block offers/transfers/splits/physical dispatch, preserve receipt containment, and provide read-only reconciliation. Native Docker integration and browser gates remain required. See `docs/releases/RECALL_SAFETY_V1_WINDOWS.md`.
 
-7. **Recall Response v1 — RCL-003–RCL-007:** durable recipient emails, own-organization acknowledgement, manager contact/escalation logs, holder recovery snapshots and evidence-backed closure are implemented. Retained disposal holds remain enforced after resolution. Native Docker and real browser gates pending; see `docs/runbooks/RECALL_RESPONSE.md`.
+7. **Recall Response v1 — RCL-003–RCL-007:** durable recipient emails, own-organization acknowledgement, manager contact/escalation logs, holder recovery snapshots and evidence-backed closure are implemented. Retained disposal holds remain enforced after resolution. User reports browser checks and main synchronization completed on 2026-10-02; CI run links have not been independently recorded. See `docs/runbooks/RECALL_RESPONSE.md`.
+
+8. **Staging rehearsal v1 — ENV-004–ENV-006, OPS-002, QLT-011:** provider-independent staging preflight, one-command release verification, isolated recovery rehearsal and full prepayment trade browser regression. Live infrastructure remains unprovisioned; user confirmed no providers selected on 2026-10-02.
 
 The following deployment work is a **parallel external gate**, not repository-complete work: **ENV-004–ENV-006, UPL-002, OPS-001–OPS-002**. A named infrastructure owner must provision isolated staging resources, private encrypted object storage, HTTPS/secrets, managed database recovery and a recorded restore drill. Repository tests and local Docker do not close those items.
 
@@ -133,16 +157,16 @@ The following deployment work is a **parallel external gate**, not repository-co
 # 4. Identity, registration and organizations
 
 - [ ] **IDN-001 · P0 · Phase 1:** Remove every shared demo account from staging and production.
-- [ ] **IDN-002 · P1 · Phase 1:** Implement “Request access” for buyer and supplier organizations.
-- [ ] **IDN-003 · P1 · Phase 1:** Add organization states: application pending, review pending, verified, rejected and suspended.
-- [ ] **IDN-004 · P1 · Phase 1:** Require email verification before an organization application can proceed.
-- [ ] **IDN-005 · P1 · Phase 1:** Manually approve the first pilot organizations and record reviewer/time/reason.
-- [ ] **IDN-006 · P1 · Phase 1:** Create the first organization administrator only after organization approval.
-- [ ] **IDN-007 · P1 · Phase 1:** Keep additional users invitation-only during the pilot.
+- [x] **IDN-002 · P1 · Phase 1:** Implement “Request access” for buyer and supplier organizations. Verified by implemented API/browser regressions and user-reported local testing; identity/email branches reported merged.
+- [-] **IDN-003 · P1 · Phase 1:** Add organization states: application pending, review pending, verified, rejected and suspended. IN PROGRESS: application approval/rejection and reviewer auditing implemented; full suspension lifecycle and real pilot enrollment remain open.
+- [x] **IDN-004 · P1 · Phase 1:** Require email verification before an organization application can proceed. Verified by implemented API/browser regressions and user-reported local testing; identity/email branches reported merged.
+- [-] **IDN-005 · P1 · Phase 1:** Manually approve the first pilot organizations and record reviewer/time/reason. IN PROGRESS: approval/rejection and reviewer auditing are implemented; real pilot enrollment remains open.
+- [x] **IDN-006 · P1 · Phase 1:** Create the first organization administrator only after organization approval. Verified by implemented API/browser regressions and user-reported local testing; identity/email branches reported merged.
+- [x] **IDN-007 · P1 · Phase 1:** Keep additional users invitation-only during the pilot. Verified by implemented API/browser regressions and user-reported local testing; identity/email branches reported merged.
 - [-] **IDN-008 · P1 · Phase 1:** Send invitation emails; add resend, revoke and expiry controls.
   - Repository implementation now sends first-admin approval invitations, records invitation submission outcomes, hides bearer links outside demo/test, rotates verification/resend links, and prevents resend from reviving revocation. Local capture inbox and regression tests added. Windows PostgreSQL tests and staging inbox verification remain release gates. Local UI testing previously confirmed delivery was suppressed by the development adapter. Before pilot release, configure SMTP separately for staging/production, and verify recipient inbox delivery for email verification, first-admin invitation, team invitation/resend and password reset. Exercise delivery failure and safe retry; never report an email as sent when suppressed. See `docs/runbooks/IDENTITY_EMAIL_DELIVERY.md`.
-- [ ] **IDN-009 · P0 · Phase 1:** Implement password reset with single-use hashed tokens, uniform responses and rate limits.
-- [ ] **IDN-010 · P1 · Phase 1:** Implement password change and revoke other sessions after sensitive account changes.
+- [x] **IDN-009 · P0 · Phase 1:** Implement password reset with single-use hashed tokens, uniform responses and rate limits. Verified by implemented API/browser regressions and user-reported local testing; identity/email branches reported merged.
+- [x] **IDN-010 · P1 · Phase 1:** Implement password change and revoke other sessions after sensitive account changes. Verified by implemented API/browser regressions and user-reported local testing; identity/email branches reported merged.
 - [ ] **IDN-011 · P1 · Phase 1:** Implement user suspension/deactivation and immediate session revocation.
 - [ ] **IDN-012 · P1 · Phase 2:** Require MFA for platform admins, certifiers, regulators and organization admins.
 - [ ] **IDN-013 · P1 · Phase 1:** Replace process-memory login throttling with shared, account-aware and IP-aware limits.
@@ -273,13 +297,13 @@ The following deployment work is a **parallel external gate**, not repository-co
 
 # 11. Traceability and recall
 
-- [-] **RCL-001 · P0 · Phase 2 — IN PROGRESS:** Migration 022 backfills active notices into explicit lot/holding safety holds; activation is atomic and quantities/ownership remain unchanged. Native validation pending.
-- [-] **RCL-002 · P0 · Phase 2 — IN PROGRESS:** Active recalled supply is withdrawn and server-gated across publication, offers, custody transfers/splits and physical dispatch, including payment-exception and milestone-skip attempts. Receipt containment remains available; resolution never auto-republishes. Native validation pending.
+- [-] **RCL-001 · P0 · Phase 2 — IN PROGRESS:** Migration 022 backfills active notices into explicit lot/holding safety holds; activation is atomic and quantities/ownership remain unchanged. User reports successful testing and merge on 2026-10-02; CI artifacts are not independently archived.
+- [-] **RCL-002 · P0 · Phase 2 — IN PROGRESS:** Active recalled supply is withdrawn and server-gated across publication, offers, custody transfers/splits and physical dispatch, including payment-exception and milestone-skip attempts. Receipt containment remains available; resolution never auto-republishes. User reports successful testing and merge on 2026-10-02; CI artifacts are not independently archived.
 - [-] **RCL-003 · P1 · Phase 2 — IN PROGRESS:** Actual owners, holders, contract counterparties and distribution recipients enter a durable leased email outbox. Native validation pending; SMTP acceptance is separate from acknowledgement. External nonmember recipients and delivery webhooks remain open.
 - [-] **RCL-004 · P1 · Phase 2 — IN PROGRESS:** Own-organization acknowledgement and manager contacted/unreachable/escalated records implemented with transactional audit. Native validation pending; automated deadlines remain open.
 - [-] **RCL-005 · P1 · Phase 2 — IN PROGRESS:** Holder-only recovery snapshots validate three-decimal quantities against current holdings, excluding transferred history. Returned/destroyed stock keeps the batch blocked after closure. Native validation and separate physical segregation/write-off workflow remain open.
-- [-] **RCL-006 · P1 · Phase 2 — IN PROGRESS:** Closure requires authorized manager, reason, exact-recall clean evidence, all acknowledgements and complete nonquarantined accounting. Native validation pending.
-- [-] **RCL-007 · P1 · Phase 2 — IN PROGRESS:** Closed response records, decision proof references and public notice history retained; public pages reflect remaining safety holds. Native validation pending.
+- [-] **RCL-006 · P1 · Phase 2 — IN PROGRESS:** Closure requires authorized manager, reason, exact-recall clean evidence, all acknowledgements and complete nonquarantined accounting. User reports successful testing and merge on 2026-10-02; CI artifacts are not independently archived.
+- [-] **RCL-007 · P1 · Phase 2 — IN PROGRESS:** Closed response records, decision proof references and public notice history retained; public pages reflect remaining safety holds. User reports successful testing and merge on 2026-10-02; CI artifacts are not independently archived.
 - [ ] **RCL-008 · P1 · Phase 2:** Add tabletop recall tests covering partial, commingled and distributed material.
 - [ ] **RCL-009 · P1 · Phase 2:** Add reconciliation warnings as actionable blocking tasks where safety is uncertain.
 - [ ] **RCL-010 · P1 · Phase 2:** Define who can investigate versus activate versus resolve recalls.
@@ -334,8 +358,8 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **QLT-008 · P1 · Phase 1:** Add regression tests for every confirmed P0 defect before or with the fix.
 - [ ] **QLT-009 · P1 · Phase 2:** Add Playwright buyer onboarding and sourcing journey.
 - [ ] **QLT-010 · P1 · Phase 2:** Add Playwright supplier organic and conventional publishing journeys.
-- [ ] **QLT-011 · P1 · Phase 2:** Add Playwright offer-to-settlement journey for each supported payment-plan class.
-- [ ] **QLT-012 · P1 · Phase 2:** Add Playwright delivery exception and recall journey.
+- [-] **QLT-011 · P1 · Phase 2:** Real prepayment browser journey implemented: offer/acceptance, terms, unverified-payment dispatch rejection, receipt, documents, FOB arrangement, delivery, quantity ownership and fees. Native execution pending for this new test; deposit/balance, bank security, documentary collection and credit plans remain open.
+- [-] **QLT-012 · P1 · Phase 2:** Real recall response browser journey implemented and user reports passing; delivery exceptions and additional recovery scenarios remain open.
 - [ ] **QLT-013 · P1 · Phase 2:** Add API idempotency and retry tests.
 - [ ] **QLT-014 · P1 · Phase 2:** Add contract tests for storage, email, scanner and future provider adapters.
 - [ ] **QLT-015 · P2 · Phase 3:** Establish critical-domain coverage reporting; focus on meaningful branch and failure coverage rather than a vanity percentage.
@@ -349,7 +373,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 # 15. Observability, reliability and operations
 
 - [ ] **OPS-001 · P0 · Phase 1:** Use managed PostgreSQL for staging/production with encryption, automated backups and point-in-time recovery.
-- [ ] **OPS-002 · P0 · Phase 1:** Complete and record a successful database restore drill.
+- [-] **OPS-002 · P0 · Phase 1:** Disposable PostgreSQL custom-format dump/restore rehearsal implemented with schema, migration history, relational fixtures and evidence metadata verification. Native execution pending. Managed-provider staging restore and private object-byte restoration remain open; local rehearsal does not close this item.
 - [ ] **OPS-003 · P0 · Phase 1:** Add centralized structured logs with request/correlation IDs and secret redaction.
 - [ ] **OPS-004 · P0 · Phase 1:** Add backend and frontend error monitoring with release version and environment.
 - [ ] **OPS-005 · P1 · Phase 1:** Add uptime checks for web, API liveness and API readiness.
@@ -497,7 +521,7 @@ An item is complete only when applicable criteria are met:
 | Critical audit events can fail after business commit | High | Warning log | ARC-013–014 |
 | Real users lack reset/MFA/revocation lifecycle | High | Invite and password login | IDN-008–014 |
 | Empty-database bootstrap repair has not yet passed native container/CI validation | Critical | Normal release runner now bootstraps atomically; nine functional CLI scenarios passed against temporary WASM PostgreSQL, with native concurrency still unverified | ENV-019, ENV-007, QLT-005 |
-| Browser regression suite has not yet passed the native Docker/CI gate | High | Six Chromium identity journeys are implemented and passed locally against temporary WASM PostgreSQL/SMTP capture | QLT-021, QLT-009–012 |
+| Full payment-plan and exception coverage remains incomplete | High | User reports the existing browser suite passed; new full prepayment trade journey requires native validation; CI run links not independently archived | QLT-021, QLT-009–012 |
 | Large, coupled files slow safe inheritance | Medium | TypeScript build | ARC-004–023 |
 | No restore/monitoring/incident proof | High | Health endpoints and structured logger | OPS-001–012 |
 | Marketing claims exceed implemented transformations | Medium | Demo genealogy | PRD-001, RCL-011, INV-005 |

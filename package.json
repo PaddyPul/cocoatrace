@@ -25,10 +25,13 @@
     "test:browser:docker": "node scripts/run-browser-tests.mjs",
     "typecheck:browser": "tsc --noEmit -p e2e/tsconfig.json",
     "test:migrations:docker": "node scripts/run-migration-tests.mjs",
+    "test:recovery:docker": "node scripts/run-recovery-tests.mjs",
     "trade:reconcile": "tsx api/scripts/reconcile-trades.ts",
     "trust:report": "tsx api/scripts/report-trust-corrections.ts",
     "recall:check": "tsx api/scripts/reconcile-recall-safety.ts",
-    "recall:deliver": "tsx api/scripts/deliver-recall-notifications.ts"
+    "recall:deliver": "tsx api/scripts/deliver-recall-notifications.ts",
+    "check:staging": "tsx api/scripts/check-staging-config.ts",
+    "verify:release": "node scripts/run-release-checks.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",
