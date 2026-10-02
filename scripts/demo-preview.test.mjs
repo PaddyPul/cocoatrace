@@ -48,3 +48,10 @@ test('unrecognized external response remains blocked after bounded retries',asyn
  await assert.rejects(verifyEmailGate('https://abc.trycloudflare.com',{fetchImpl:async()=>{calls++;return new Response('unknown',{status:200});},pauseImpl:async()=>{},attempts:2,log:()=>{}}),/after retries/);
  assert.equal(calls,2);
 });
+
+test('accepts the observed Quick Tunnel email-login host and rejects lookalikes',()=>{
+ assert.equal(isEmailGate(302,'https://login.trycloudflare.com/login?token=private','', 'https://abc.trycloudflare.com'),true);
+ for(const location of ['http://login.trycloudflare.com/login','https://login.trycloudflare.com.evil.example/login','https://other.trycloudflare.com/login','https://login.trycloudflare.com:444/login']) {
+  assert.equal(isEmailGate(302,location,'','https://abc.trycloudflare.com'),false);
+ }
+});

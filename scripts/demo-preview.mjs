@@ -78,7 +78,7 @@ async function smoke() {
 export function isEmailGate(status,location,body,origin) {
  if([401,403].includes(status)) return true;
  if(status>=300&&status<400&&location) {
-  try {const url=new URL(location,origin);const sameOrigin=origin&&url.origin===new URL(origin).origin;return url.protocol==='https:'&&(url.hostname.endsWith('.cloudflareaccess.com')||(sameOrigin&&url.pathname.startsWith('/cdn-cgi/access/')));}catch{return false;}
+  try {const url=new URL(location,origin);const sameOrigin=origin&&url.origin===new URL(origin).origin;return url.protocol==='https:'&&(url.origin==='https://login.trycloudflare.com'||url.hostname.endsWith('.cloudflareaccess.com')||(sameOrigin&&url.pathname.startsWith('/cdn-cgi/access/')));}catch{return false;}
  }
  return status===200&&!body.includes('id="root"')&&/cloudflare/i.test(body)&&/one.time|verification code|email/i.test(body);
 }
