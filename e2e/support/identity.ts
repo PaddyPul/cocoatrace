@@ -1,7 +1,12 @@
 import { baseURL } from './environment';
 import crypto from 'node:crypto';
-import { expect, type Browser, type Page } from '@playwright/test';
+import { expect, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { emailLink } from './inbox';
+
+// In-memory, per-browser fixture state only: no credential-bearing file artifacts.
+// Each workspace still has an isolated reviewer context, but does not consume a
+// fresh login from the same administrator's production rate-limit bucket.
+const reviewerSessions = new WeakMap<Browser, Awaited<ReturnType<BrowserContext['storageState']>>>();
 
 export const accountPassword = 'BrowserCustomerPassword123!';
 export function freshIdentity(role: 'buyer' | 'supplier' = 'supplier') {
@@ -23,7 +28,10 @@ export async function signIn(page: Page, email: string, password: string): Promi
   await page.goto('/login');
   await page.getByLabel('Email address', { exact: true }).fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
+  const loginEvent = page.waitForResponse(response => new URL(response.url()).pathname.endsWith('/api/auth/login') && response.request().method() === 'POST');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  const login = await loginEvent;
+  expect(login.status(), 'Fixture sign-in must return HTTP 200; HTTP 429 indicates an exhausted login bucket').toBe(200);
   await expect(page).toHaveURL(/\/(home|onboarding)(\?|$)/);
 }
 
@@ -55,10 +63,16 @@ export async function createWorkspace(page: Page, browser: Browser, role: 'buyer
   // verification page's in-memory React StrictMode request cache.
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Verification unavailable' })).toBeVisible();
-  const reviewer = await browser.newContext({ baseURL });
+  const reviewer = await browser.newContext({ baseURL, storageState: reviewerSessions.get(browser) });
   try {
     const reviewPage = await reviewer.newPage();
-    await signIn(reviewPage, 'platform-admin@browser.test', 'BrowserAdminPassword123!');
+    const session = await reviewer.request.get('/api/me');
+    if (session.status() === 401) {
+      await signIn(reviewPage, 'platform-admin@browser.test', 'BrowserAdminPassword123!');
+      reviewerSessions.set(browser, await reviewer.storageState());
+    } else {
+      expect(session.status(), 'Cached reviewer session must remain valid').toBe(200);
+    }
     await reviewPage.goto('/access-applications');
     await reviewPage.locator('article').filter({ hasText: identity.organization }).getByRole('button', { name: 'Review', exact: true }).click();
     await reviewPage.getByLabel('Review reason or note').fill('Browser regression fixture approval');
