@@ -7,6 +7,8 @@ RUN npm ci --workspace=web --include-workspace-root --ignore-scripts
 COPY web/ ./web/
 ARG VITE_DEMO_MODE=false
 ENV VITE_DEMO_MODE=$VITE_DEMO_MODE
+ARG VITE_DEMO_PREVIEW=false
+ENV VITE_DEMO_PREVIEW=$VITE_DEMO_PREVIEW
 RUN npm run build --workspace=web
 
 # Stage 2: Serve via Nginx

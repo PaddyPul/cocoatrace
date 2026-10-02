@@ -31,7 +31,12 @@
     "recall:check": "tsx api/scripts/reconcile-recall-safety.ts",
     "recall:deliver": "tsx api/scripts/deliver-recall-notifications.ts",
     "check:staging": "tsx api/scripts/check-staging-config.ts",
-    "verify:release": "node scripts/run-release-checks.mjs"
+    "verify:release": "node scripts/run-release-checks.mjs",
+    "demo:preview:start": "node scripts/demo-preview.mjs start",
+    "demo:preview:share": "node scripts/demo-preview.mjs share",
+    "demo:preview:stop": "node scripts/demo-preview.mjs stop",
+    "demo:preview:status": "node scripts/demo-preview.mjs status",
+    "demo:preview:check": "node scripts/demo-preview.mjs check"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",

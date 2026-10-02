@@ -10,3 +10,6 @@ setup.sh
 browser-test-results
 playwright-report
 test-results
+
+.demo-preview
+release-test-results

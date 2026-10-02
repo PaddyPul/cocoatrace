@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const releaseChecks = [
-  ['Runner checks', ['--test', 'scripts/run-release-checks.test.mjs', 'scripts/compose-compatibility.test.mjs'], true],
+  ['Runner checks', ['--test', 'scripts/run-release-checks.test.mjs', 'scripts/compose-compatibility.test.mjs', 'scripts/demo-preview.test.mjs'], true],
   ['API unit tests', ['run', 'test', '--workspace=api']],
   ['API build', ['run', 'build', '--workspace=api']],
   ['Web build', ['run', 'build', '--workspace=web']],

@@ -1,0 +1,90 @@
+# Dedicated synthetic demo. Only the web port binds to the host, on loopback.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: cocoatrace_demo_preview
+      POSTGRES_USER: preview
+      POSTGRES_PASSWORD: ${PREVIEW_DB_PASSWORD:?Use npm run demo:preview:start}
+    volumes:
+      - preview_database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U preview -d cocoatrace_demo_preview"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  clamav:
+    image: clamav/clamav:1.5.4-debian13-slim
+    volumes:
+      - preview_signatures:/var/lib/clamav
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    command: ["sh", "-c", "npx tsx api/scripts/migrate.ts && npx tsx api/scripts/seed-demo-preview.ts && exec node api/dist/server.js"]
+    environment:
+      APP_ENV: demo
+      NODE_ENV: production
+      DEMO_MODE: "true"
+      DEMO_PREVIEW_ENABLED: "true"
+      DATABASE_URL: postgresql://preview:${PREVIEW_DB_PASSWORD}@postgres:5432/cocoatrace_demo_preview
+      JWT_SECRET: ${PREVIEW_JWT_SECRET:?Use preview runner}
+      WEB_URL: ${PREVIEW_WEB_URL:-http://127.0.0.1:14000}
+      PUBLIC_WEB_URL: ${PREVIEW_WEB_URL:-http://127.0.0.1:14000}
+      COOKIE_SECURE: ${PREVIEW_COOKIE_SECURE:-false}
+      EVIDENCE_STORAGE_DRIVER: local
+      EVIDENCE_STORAGE_LOCAL_ROOT: /app/private-evidence
+      EVIDENCE_UPLOAD_SIGNING_SECRET: ${PREVIEW_UPLOAD_SECRET:?Use preview runner}
+      EVIDENCE_SCANNER_DRIVER: clamav
+      EVIDENCE_SCANNER_HOST: clamav
+      EVIDENCE_SCANNER_TIMEOUT_MS: "30000"
+      EVIDENCE_SCANNER_RETRIES: "2"
+      IDENTITY_EMAIL_ENABLED: "false"
+      EMAIL_DRIVER: development
+      # Paid AI calls are disabled by omitting all provider keys.
+    volumes:
+      - preview_evidence:/app/private-evidence
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e 'require(\"http\").get(\"http://localhost:3001/health/ready\",r=>process.exit(r.statusCode===200?0:1))'"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+      args:
+        VITE_DEMO_MODE: "true"
+        VITE_DEMO_PREVIEW: "true"
+    ports:
+      - "127.0.0.1:14000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health/ready >/dev/null || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    profiles: [share]
+    command: ["tunnel", "--no-autoupdate", "--url", "http://web:3000", "--allowed-mail", "${PREVIEW_ALLOWED_EMAILS:-disabled@invalid.example}"]
+    depends_on:
+      web:
+        condition: service_healthy
+volumes:
+  preview_database:
+  preview_evidence:
+  preview_signatures:
