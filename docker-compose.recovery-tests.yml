@@ -1,0 +1,48 @@
+services:
+  postgres-recovery-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: cocoatrace_recovery_source
+      POSTGRES_USER: recovery_test
+      POSTGRES_PASSWORD: recovery_test
+    ports:
+      - "127.0.0.1:${COCOATRACE_RECOVERY_DB_PORT:-15436}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recovery_test -d cocoatrace_recovery_source"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  recovery-migrate:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    depends_on:
+      postgres-recovery-test:
+        condition: service_healthy
+    command: ["npx", "tsx", "api/scripts/migrate.ts"]
+    environment:
+      APP_ENV: production
+      NODE_ENV: production
+      DEMO_MODE: "false"
+      DATABASE_URL: postgresql://recovery_test:recovery_test@postgres-recovery-test:5432/cocoatrace_recovery_source
+      DATABASE_POOL_MAX: "1"
+      JWT_SECRET: isolated-recovery-test-jwt-secret-32-characters
+      WEB_URL: https://recovery-test.invalid
+      PUBLIC_WEB_URL: https://recovery-test.invalid
+      COOKIE_SECURE: "true"
+      APP_VERSION: recovery-rehearsal
+      EVIDENCE_STORAGE_DRIVER: s3
+      EVIDENCE_STORAGE_ENDPOINT: https://storage.recovery-test.invalid
+      EVIDENCE_STORAGE_REGION: us-east-1
+      EVIDENCE_STORAGE_BUCKET: cocoatrace-production-recovery-test
+      EVIDENCE_STORAGE_ACCESS_KEY: isolated-recovery-test-access
+      EVIDENCE_STORAGE_SECRET_KEY: isolated-recovery-test-secret
+      EVIDENCE_STORAGE_SSE: AES256
+      EVIDENCE_STORAGE_AUTO_CREATE_BUCKET: "false"
+      EVIDENCE_UPLOAD_SIGNING_SECRET: isolated-recovery-test-upload-secret-32-characters
+      EVIDENCE_SCANNER_DRIVER: clamav
+      EVIDENCE_SCANNER_HOST: scanner.recovery-test.invalid
+      IDENTITY_EMAIL_ENABLED: "false"

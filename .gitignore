@@ -42,3 +42,6 @@ api/scripts/*.d.ts.map
 browser-test-results/
 playwright-report/
 test-results/
+
+# Automated release summaries
+release-test-results/
