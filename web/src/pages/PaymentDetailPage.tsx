@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import PaymentProof from '../components/payments/PaymentProof';
-import { payments, evidence } from '../api';
+import PaymentOperations, { hasActivePaymentIssue } from '../components/payments/PaymentOperations';
+import { payments, evidence, type PaymentOperationsData } from '../api';
 import { StatusBadge, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
 import { ArrowLeft, Building2, CheckCircle2, FileText, ShieldCheck, User } from 'lucide-react';
@@ -17,6 +18,7 @@ export default function PaymentDetailPage() {
   const { user } = useAuthCtx();
   const { toast } = useToast();
   const [data, setData] = useState<any>(null);
+  const [operations, setOperations] = useState<PaymentOperationsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [reference, setReference] = useState('');
@@ -24,7 +26,11 @@ export default function PaymentDetailPage() {
   const [provider, setProvider] = useState('');
   const [busy, setBusy] = useState('');
 
-  const refresh = useCallback(async () => { if (id) setData(await payments.get(id)); }, [id]);
+  const refresh = useCallback(async () => {
+    if (!id) return;
+    const [payment, operationData] = await Promise.all([payments.get(id), payments.operations(id)]);
+    setData(payment); setOperations(operationData);
+  }, [id]);
   useEffect(() => { refresh().catch((e) => setError(e.message)).finally(() => setLoading(false)); }, [refresh]);
   const act = async (name: string, action: () => Promise<unknown>, message: string) => {
     setBusy(name);
@@ -38,6 +44,7 @@ export default function PaymentDetailPage() {
   const isBuyer = p.buyer_organization_id === user?.organizationId;
   const isSeller = p.seller_organization_id === user?.organizationId;
   const installments = p.installments || [];
+  const held = hasActivePaymentIssue(operations);
 
   return <Layout currentPage="payments" actions={<button className="btn btn-sm" onClick={() => navigate('/payments')}><ArrowLeft size={14} /> Back</button>}>
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -51,16 +58,17 @@ export default function PaymentDetailPage() {
 
         <div className="bg-surface border border-border rounded p-5"><h3 className="text-sm font-semibold mb-4">Payment schedule</h3><div className="space-y-3">{installments.map((item: any) => <div key={item.id} className="border border-border rounded p-4"><div className="flex justify-between gap-3"><div><div className="text-sm font-semibold">{pretty(item.installment_type)}</div><div className="text-[11px] text-text-muted">Due: {pretty(item.due_trigger)}</div></div><div className="text-right"><div className="font-mono text-sm">{fmtMoney(item.amount_due, p.currency)}</div><StatusBadge status={item.status} /></div></div>{item.payment_reference_external && <div className="mt-2 text-[11px] font-mono">Reference: {item.payment_reference_external}</div>}
           {item.payment_evidence_id && <button className="btn text-xs mt-2" onClick={() => act('download-proof', () => evidence.download(item.payment_evidence_id, item.payment_evidence_file_name || 'payment-proof'), 'Proof downloaded')}>Download payment proof</button>}
-          {isBuyer && item.status === 'due' && p.payment_evidence_required && <PaymentProof contractId={p.contract_id} disabled={Boolean(busy)} onUploaded={proof => setProofs(current => ({ ...current, [item.id]: proof }))} />}
-          {isBuyer && item.status === 'due' && <div className="mt-3 flex gap-2"><input className="form-input" placeholder="Bank transaction reference" value={reference} onChange={(e) => setReference(e.target.value)} /><button className="btn btn-primary text-xs shrink-0" disabled={reference.trim().length < 3 || Boolean(busy) || (p.payment_evidence_required && !proofs[item.id])} onClick={() => act(`submit-${item.id}`, () => payments.submitInstallment(item.id, reference, proofs[item.id]), 'Payment submitted for seller verification')}>{busy === `submit-${item.id}` ? 'Submitting…' : 'Submit payment'}</button></div>}
-          {isSeller && item.status === 'payment_submitted' && <div className="mt-3 flex gap-2"><button className="btn btn-primary text-xs" disabled={Boolean(busy)} onClick={() => act(`confirm-${item.id}`, () => payments.confirmInstallment(item.id), 'Receipt verified')}>Confirm funds received</button><button className="btn text-xs" disabled={Boolean(busy)} onClick={() => { const reason = window.prompt('Why are you rejecting this payment reference?'); if (reason) act(`reject-${item.id}`, () => payments.rejectInstallment(item.id, reason), 'Payment returned to buyer'); }}>Reject reference</button></div>}
+          {!held && isBuyer && item.status === 'due' && p.payment_evidence_required && <PaymentProof contractId={p.contract_id} disabled={Boolean(busy)} onUploaded={proof => setProofs(current => ({ ...current, [item.id]: proof }))} />}
+          {!held && isBuyer && item.status === 'due' && <div className="mt-3 flex gap-2"><input className="form-input" placeholder="Bank transaction reference" value={reference} onChange={(e) => setReference(e.target.value)} /><button className="btn btn-primary text-xs shrink-0" disabled={reference.trim().length < 3 || Boolean(busy) || (p.payment_evidence_required && !proofs[item.id])} onClick={() => act(`submit-${item.id}`, () => payments.submitInstallment(item.id, reference, proofs[item.id]), 'Payment submitted for seller verification')}>{busy === `submit-${item.id}` ? 'Submitting…' : 'Submit payment'}</button></div>}
+          {!held && isSeller && item.status === 'payment_submitted' && <div className="mt-3 flex gap-2"><button className="btn btn-primary text-xs" disabled={Boolean(busy)} onClick={() => act(`confirm-${item.id}`, () => payments.confirmInstallment(item.id), 'Receipt verified')}>Confirm funds received</button><button className="btn text-xs" disabled={Boolean(busy)} onClick={() => { const reason = window.prompt('Why are you rejecting this payment reference?'); if (reason) act(`reject-${item.id}`, () => payments.rejectInstallment(item.id, reason), 'Payment returned to buyer'); }}>Reject reference</button></div>}
         </div>)}</div></div>
+        {operations && <PaymentOperations payment={p} operations={operations} organizationId={user?.organizationId || ''} isBuyer={isBuyer} isSeller={isSeller} busy={Boolean(busy)} onAction={act} />}
       </div>
 
       <div><div className="bg-surface border border-border rounded p-5 sticky top-6"><h4 className="text-xs font-semibold mb-3">Workflow actions</h4><div className="space-y-2">
-        {isBuyer && p.payment_plan === 'bank_secured' && ['awaiting_submission', 'rejected'].includes(p.security_status) && <><input className="form-input" placeholder="Bank / provider" value={provider} onChange={(e) => setProvider(e.target.value)} /><input className="form-input" placeholder="Guarantee or LC reference" value={reference} onChange={(e) => setReference(e.target.value)} /><button className="btn btn-primary w-full justify-center text-xs" disabled={!provider || !reference || Boolean(busy)} onClick={() => act('security', () => payments.submitSecurity(p.id, provider, reference), 'Bank security submitted')}>Submit bank security</button></>}
-        {isSeller && p.security_status === 'submitted' && <button className="btn btn-primary w-full justify-center text-xs" disabled={Boolean(busy)} onClick={() => act('confirm-security', () => payments.confirmSecurity(p.id), 'External bank security accepted by seller')}>Accept externally checked bank security</button>}
-        {isSeller && ['documentary_collection','deposit_balance','bank_secured'].includes(p.payment_plan) && !p.documents_presented_at && <button className="btn btn-primary w-full justify-center text-xs" disabled={Boolean(busy)} onClick={() => act('documents', () => payments.submitDocuments(p.id), 'Documents presented for payment')}><FileText size={14} /> Present document set</button>}
+        {!held && isBuyer && p.payment_plan === 'bank_secured' && ['awaiting_submission', 'rejected'].includes(p.security_status) && <><input className="form-input" placeholder="Bank / provider" value={provider} onChange={(e) => setProvider(e.target.value)} /><input className="form-input" placeholder="Guarantee or LC reference" value={reference} onChange={(e) => setReference(e.target.value)} /><button className="btn btn-primary w-full justify-center text-xs" disabled={!provider || !reference || Boolean(busy)} onClick={() => act('security', () => payments.submitSecurity(p.id, provider, reference), 'Bank security submitted')}>Submit bank security</button></>}
+        {!held && isSeller && p.security_status === 'submitted' && <button className="btn btn-primary w-full justify-center text-xs" disabled={Boolean(busy)} onClick={() => act('confirm-security', () => payments.confirmSecurity(p.id), 'External bank security accepted by seller')}>Accept externally checked bank security</button>}
+        {!held && isSeller && ['documentary_collection','deposit_balance','bank_secured'].includes(p.payment_plan) && !p.documents_presented_at && <button className="btn btn-primary w-full justify-center text-xs" disabled={Boolean(busy)} onClick={() => act('documents', () => payments.submitDocuments(p.id), 'Documents presented for payment')}><FileText size={14} /> Present document set</button>}
         {p.status === 'settled' && <div className="text-center py-3"><CheckCircle2 className="text-green-400 mx-auto mb-1" size={20} /><div className="text-xs font-semibold text-green-400">Payment fully verified</div></div>}
         <button className="btn w-full justify-center text-xs" onClick={() => navigate(`/contracts/${p.contract_id}`)}><FileText size={14} /> View contract</button>
       </div></div></div>

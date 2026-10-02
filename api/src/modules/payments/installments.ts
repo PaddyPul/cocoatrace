@@ -3,6 +3,7 @@ import { AppError, ConflictError, NotFoundError } from '../../errors';
 import { inTradeTransaction, recordTradeAudit, TradeActor } from '../trading/transaction';
 import { completeTradeIfReady } from '../../services/tradeSettlement';
 import { lockPayment, requireAgreed } from './locking';
+import { assertNoActivePaymentIssue } from './issueGuard';
 
 export type PaymentSubmission = { transactionReference: string; evidenceId?: string };
 
@@ -10,6 +11,7 @@ export async function submitPayment(actor: TradeActor, id: string, input: Paymen
   return inTradeTransaction(async client => {
     const { contract, payment } = await lockPayment(client, actor, id, 'buyer', !legacyRequest);
     requireAgreed(contract);
+    await assertNoActivePaymentIssue(client, payment.id);
     const item = (await client.query(legacyRequest
       ? "SELECT * FROM payment_installments WHERE payment_request_id=$1 AND (payment_reference_external=$2 OR status IN('due','payment_submitted')) ORDER BY (payment_reference_external=$2) DESC NULLS LAST,sequence_number LIMIT 1 FOR UPDATE"
       : 'SELECT * FROM payment_installments WHERE id=$1 FOR UPDATE', legacyRequest ? [id,input.transactionReference] : [id])).rows[0];
@@ -45,6 +47,7 @@ export async function confirmReceipt(actor: TradeActor, id: string) {
   return inTradeTransaction(async client => {
     const { contract, payment } = await lockPayment(client, actor, id, 'seller', true);
     requireAgreed(contract);
+    await assertNoActivePaymentIssue(client, payment.id);
     const item = (await client.query('SELECT * FROM payment_installments WHERE id=$1 FOR UPDATE', [id])).rows[0];
     if (!item) throw new NotFoundError('Installment');
     if (item.status === 'paid') return item;
@@ -75,6 +78,7 @@ export async function rejectReceipt(actor: TradeActor, id: string, reason: strin
   return inTradeTransaction(async client => {
     const { contract, payment } = await lockPayment(client, actor, id, 'seller', true);
     requireAgreed(contract);
+    await assertNoActivePaymentIssue(client, payment.id);
     const item = (await client.query('SELECT * FROM payment_installments WHERE id=$1 FOR UPDATE', [id])).rows[0];
     if (!item) throw new NotFoundError('Installment');
     if (item.status === 'due' && item.rejection_reason === reason) return item;
