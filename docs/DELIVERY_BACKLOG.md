@@ -18,6 +18,28 @@
 
 When asked “what needs to be done?”, start with incomplete items in the current execution queue, then the active phase exit criteria, then blocked P0/P1 work.
 
+## Bootstrap budget and expansion constraints
+
+Hosting budget is **USD 0/month** until the founder explicitly changes it. Do not activate paid plans, auto-upgrades, metered overages or trial-dependent infrastructure. See [`runbooks/FREE_STAGING_PLAN.md`](runbooks/FREE_STAGING_PLAN.md). Provider signup and account verification belong to the founder; repository configuration and automation belong to the implementation work. Free hosting does not waive private uploads, malware scanning, tenant isolation or restore gates.
+
+Hosting follow-ups **BST-001–003** and their completion tests are maintained in the linked free-staging runbook; include them when counting the backlog.
+
+### Multi-currency
+
+- [ ] **CUR-001 · P1 · Phase 2:** Agree pilot currencies and document a currency policy. One explicit ISO currency per listing, offer and accepted contract; distinguish trade currency from display preferences. Completion: approved supported-currency matrix and mismatch rules.
+- [ ] **CUR-002 · P1 · Phase 2:** Carry contract currency through payment installments, fees, invoices, refunds and reconciliation; API rejects incompatible offers/payments. Preserve existing recorded currencies during migration. Completion: end-to-end tests prove no silent currency changes.
+- [ ] **CUR-003 · P1 · Phase 2:** Centralize exact monetary arithmetic and rounding by currency minor units; never use floating-point money calculations. Completion: boundary tests cover two-decimal and zero-decimal currencies, installments and fee totals.
+- [ ] **CUR-004 · P2 · Phase 3:** Add user display-currency preferences with explicitly indicative FX quotes including source, timestamp and rate snapshot. Original contractual amounts remain visible. Completion: stale/missing-rate and historical-quote tests pass.
+- [ ] **CUR-005 · P2 · Phase 3:** Specify actual FX conversion/settlement separately with provider support, fees, consent and audit records before enabling it. Completion: approved design and sandbox reconciliation; display conversion never moves funds.
+
+### Multi-language
+
+- [ ] **LNG-001 · P1 · Phase 2:** Select pilot languages with users; introduce translation catalogs, English fallback and persisted user language preference. Completion: no hard-coded customer-facing strings in the first translated trade journey.
+- [ ] **LNG-002 · P1 · Phase 2:** Translate onboarding, sourcing, offers, guided dashboard, payment and delivery actions plus actionable API errors using stable error codes. Completion: buyer and supplier browser journeys pass in two selected locales.
+- [ ] **LNG-003 · P1 · Phase 2:** Localize recipient emails and notifications and format dates, quantities and currency using locale-aware helpers. Validate localized number input without changing commercial units. Completion: decimal/date ambiguity and fallback tests pass.
+- [ ] **LNG-004 · P2 · Phase 3:** Define authoritative contract/document languages, reviewed translations and clearly labeled translated summaries; preserve original evidence and user-entered text. Completion: versioned language policy and review workflow, with no automatic replacement of legal records.
+- [ ] **LNG-005 · P2 · Phase 3:** Human-review pilot translations and test keyboard access, longer text and missing keys; design for later RTL support. Completion: translation QA checklist and automated overflow/fallback coverage.
+
 ## Status and priority legend
 
 - `[ ]` not started

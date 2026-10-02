@@ -160,7 +160,8 @@ try {
   requireSuccess(composeRun(['up', '-d', '--wait', service], {
     stdio: 'inherit', env: { ...process.env, COCOATRACE_RECOVERY_DB_PORT: dbPort },
   }), 'Disposable recovery PostgreSQL failed startup');
-  requireSuccess(composeRun(['run', '--build', '--rm', 'recovery-migrate'], { stdio: 'inherit' }), 'Forward migrations failed in the source rehearsal database');
+  requireSuccess(composeRun(['build', 'recovery-migrate'], { stdio: 'inherit' }), 'Recovery migration image build failed');
+  requireSuccess(composeRun(['run', '--rm', 'recovery-migrate'], { stdio: 'inherit' }), 'Forward migrations failed in the source rehearsal database');
 
   assert.equal(psql(sourceDatabase, 'SELECT current_database();', true), sourceDatabase);
   const expectedMigrations = migrationNames();

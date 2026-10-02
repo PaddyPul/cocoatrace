@@ -19,7 +19,8 @@ try {
   // Match the integration runner's Compose flags. Older Docker Desktop builds
   // support --wait but not --wait-timeout; service health checks still gate readiness.
   if (run(['up', '-d', '--wait', 'postgres-migration-test']) !== 0) throw new Error('Disposable PostgreSQL failed startup');
-  process.exitCode = run(['run', '--build', '--rm', 'migration-test']);
+  if (run(['build', 'migration-test']) !== 0) throw new Error('Migration test image build failed');
+  process.exitCode = run(['run', '--rm', 'migration-test']);
 } catch (error) {
   console.error(error.message); process.exitCode = 1;
 } finally {
