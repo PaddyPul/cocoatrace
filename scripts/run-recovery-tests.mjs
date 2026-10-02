@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { recoverySchemaSql } from './recovery-schema.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -130,20 +131,20 @@ function migrationNames() {
     .filter((name) => name.endsWith('.ts')).sort();
 }
 
-function databaseFingerprint(database) {
-  return psql(database, String.raw`
-    WITH parts AS (
-      SELECT 'relation:'||c.relname::text||':'||c.relkind::text AS value
-      FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
-      WHERE n.nspname='public' AND c.relkind IN ('r','p','v','m','S')
-      UNION ALL
-      SELECT 'column:'||table_name||':'||ordinal_position||':'||column_name||':'||data_type||':'||is_nullable||':'||COALESCE(column_default,'')
-      FROM information_schema.columns WHERE table_schema='public'
-      UNION ALL
-      SELECT 'constraint:'||table_name||':'||constraint_name||':'||constraint_type
-      FROM information_schema.table_constraints WHERE table_schema='public'
-    ) SELECT md5(string_agg(value,E'\n' ORDER BY value)) FROM parts;
-  `, true);
+function databaseSchema(database) {
+  // Fix search_path for consistent rendered defaults and constraint references.
+  return psql(database, `SET search_path TO public; ${recoverySchemaSql}`, true)
+    .split(/\r?\n/).filter((line) => line && line !== 'SET');
+}
+
+function assertRestoredSchema(source, restored) {
+  if (JSON.stringify(source) !== JSON.stringify(restored)) {
+    const missing = source.filter((value) => !restored.includes(value));
+    const unexpected = restored.filter((value) => !source.includes(value));
+    console.error('Schema definitions missing after restore:', missing.slice(0, 20));
+    console.error('Unexpected restored schema definitions:', unexpected.slice(0, 20));
+    throw new Error(`Restored logical schema differs: ${missing.length} missing, ${unexpected.length} unexpected definitions`);
+  }
 }
 
 function assertMigrationLedger(database, expected) {
@@ -168,7 +169,7 @@ try {
   assertMigrationLedger(sourceDatabase, expectedMigrations);
   psql(sourceDatabase, fixtureSql);
   psql(sourceDatabase, verifyFixtureSql);
-  const sourceFingerprint = databaseFingerprint(sourceDatabase);
+  const sourceSchema = databaseSchema(sourceDatabase);
 
   requireSuccess(postgresTool('pg_dump', [
     '--format=custom', '--no-owner', '--no-privileges', '--file', archive,
@@ -188,7 +189,7 @@ try {
   assert.equal(psql(restoredDatabase, 'SELECT current_database();', true), restoredDatabase);
   assertMigrationLedger(restoredDatabase, expectedMigrations);
   psql(restoredDatabase, verifyFixtureSql);
-  assert.equal(databaseFingerprint(restoredDatabase), sourceFingerprint, 'Restored public schema fingerprint differs from the migrated source');
+  assertRestoredSchema(sourceSchema, databaseSchema(restoredDatabase));
   console.log('PASS: forward-migrated schema, migration history, linked fixtures, evidence metadata and audit history restored into a separate fresh database');
   console.log('NOTE: this rehearsal validates PostgreSQL only; private evidence object bytes and provider-managed backup automation are outside its scope.');
 } catch (error) {
