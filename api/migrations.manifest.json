@@ -108,6 +108,10 @@
     {
       "path": "api/src/migrations/025_payment_operations.ts",
       "sha256": "88539982c1e4b39dc85a286354dce37767eb0e634e25bd3a9738e9c739983dab"
+    },
+    {
+      "path": "api/src/migrations/026_delivery_acceptance.ts",
+      "sha256": "e41d8ffbd5651e8c8efe6b3f1cc502bd237de4dcb199b1dfb711e0cd32ce3104"
     }
   ]
 }

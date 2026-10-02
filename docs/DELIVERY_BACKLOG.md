@@ -71,7 +71,7 @@ and independent-review evidence becomes available.
 
 ## Progress snapshot — 2026-10-02
 
-Interpreting the founder's latest “done” as completion of the prescribed release checks and merge/pull, the canonical backlog contains **310 items: 56 complete (18.1%), 16 in progress (5.2%), and 238 not started (76.8%)**. Items are counted equally, with no fractional completion credit. Started work is **23.2%**; that is not a completion measure.
+Interpreting the founder's latest “done” as completion of the prescribed release checks and merge/pull, the canonical backlog contains **310 items: 58 complete (18.7%), 20 in progress (6.5%), and 232 not started (74.8%)**. Items are counted equally, with no fractional completion credit. Started work is **25.2%**; that is not a completion measure.
 
 The denominator includes engineering, operations, design-partner validation, fundraising evidence, multi-currency, multi-language and later expansion. It measures the exhaustive roadmap, not usability of the existing app or a percentage of an $8M valuation. Native/CI completion here is founder-reported; independent CI URL archival remains open. Partially implemented suspension, real email delivery, hosted restore, disposal/segregation and recall deadline/external-recipient workflows stay open.
 
@@ -79,8 +79,8 @@ The denominator includes engineering, operations, design-partner validation, fun
 
 Select the next coherent batch from this queue. Completed-wave history and evidence are maintained in [`RELEASE_EVIDENCE.md`](RELEASE_EVIDENCE.md), rather than occupying the active queue.
 
-1. **Trade exceptions and payment operations v1 — PAY-004, PAY-008, PAY-009:** visible submission/receipt/rejection history; correctly calculated due/overdue status and retry-safe reminders; audited correction/dispute handling without deleting payment history. Keep these three engineering concerns coordinated in one feature bundle with automated API/browser coverage.
-2. **Delivery consent and discrepancies — PAY-006, LOG-005–LOG-006:** buyer confirmation distinct from a reported delivery milestone, shortages/damage/rejection and settlement safeguards. Specify inventory, fee and custody consequences before implementation.
+1. **Delivery acceptance release — PAY-006, LOG-005–LOG-006:** run native automated release gates for explicit buyer acceptance, evidence-backed discrepancies and separate resolution approval. Full-quantity performance is supported; partial settlement/refunds/returns remain open.
+2. **Remaining payment timing — PAY-008:** activate agreed document/terms-based due dates consistently and complete scheduled notification delivery; visible histories and correction/dispute handling are already merged.
 3. **Repository maintainability gate — QLT-006 and targeted ARC items:** introduce lint/format/type checks incrementally, then extract modules when changing their behavior. Avoid a broad rewrite that delays tested customer flows.
 4. **Commercial operations — PAY-011–PAY-013:** explicit fee payer/invoice/collection rules and reconciled finance exports; real tax/business policy needs founder input.
 5. **Controlled pilot and live environment gates — IDN-005, IDN-021, ENV-004–ENV-006, OPS-001–OPS-002, BST-002–BST-003:** actual approved design partners, real email delivery, private storage and a verified hosted restore under the zero-budget constraint. Provider eligibility and customer participation remain external dependencies.
@@ -269,12 +269,12 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [x] **PAY-001 · P0 · Phase 1:** IMPLEMENTED: every-plan integration coverage, pickup/handover/loading/departure gates, scan-clean documents and five actual browser journeys. Authoring checks pass; native PostgreSQL concurrency and complete release gate confirmation pending. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
 - [x] **PAY-002 · P1 · Phase 1:** Explicit no-funds/no-escrow copy in the deal room and payment schedule; external bank security is seller-accepted, not platform-authenticated. Browser journeys pass in authoring.
 - [x] **PAY-003 · P1 · Phase 2:** IMPLEMENTED: supplier-selected, buyer-confirmed per-installment proof requirement, private scanned buyer uploads, contract/tenant/type checks, stored-file checks and proof reuse prevention. Existing agreed terms are preserved. Native release confirmation pending. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
-- [ ] **PAY-004 · P1 · Phase 2:** Separate buyer submission, seller confirmation, rejection and dispute histories.
+- [x] **PAY-004 · P1 · Phase 2:** Separate buyer submission, seller confirmation, rejection and dispute histories. CLOSED 2026-10-02: payment operations wave tested and merged per founder confirmation; correction 7b2d5ce fixed the settlement SQL ambiguity.
 - [x] **PAY-005 · P1 · Phase 2:** IMPLEMENTED: state-based retry safety for submission, confirmation, rejection, document presentation and bank security; atomic audits, contract-first locking and exact NUMERIC receipt totals. Native simultaneous-request regression remains pending execution. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
-- [ ] **PAY-006 · P1 · Phase 2:** Prevent one party from unilaterally satisfying incompatible payment and delivery conditions.
+- [-] **PAY-006 · P1 · Phase 2:** Prevent one party from unilaterally satisfying incompatible payment and delivery conditions. IMPLEMENTED: physical delivery no longer settles; buyer acceptance and seller receipt verification are both required. Native release/merge pending.
 - [x] **PAY-007 · P1 · Phase 2:** IMPLEMENTED: five-plan policy in [`runbooks/PAYMENT_DOCUMENT_RULES.md`](runbooks/PAYMENT_DOCUMENT_RULES.md), contract/shipment download gating and safe document-presentation checks. Native release confirmation pending. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
-- [ ] **PAY-008 · P1 · Phase 2:** Add overdue installment calculation and reminders.
-- [ ] **PAY-009 · P1 · Phase 2:** Add correction/reversal procedure without deleting history.
+- [-] **PAY-008 · P1 · Phase 2:** Add overdue installment calculation and reminders. IN PROGRESS: date calculation and duplicate-safe in-app reminders delivered; ensure terms/document-triggered installments receive due dates and add worker/email delivery before closing this item.
+- [x] **PAY-009 · P1 · Phase 2:** Add correction/reversal procedure without deleting history. CLOSED 2026-10-02: bilateral reference/receipt corrections and durable audit events tested and merged per founder confirmation; this records external payments and does not refund funds.
 - [x] **PAY-010 · P1 · Phase 2:** Define how bank guarantees/LC references are independently checked or explicitly marked seller-accepted only. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
 - [ ] **PAY-011 · P1 · Phase 2:** Define platform fee payer, tax treatment, invoice timing and collection process.
 - [ ] **PAY-012 · P1 · Phase 2:** Implement platform fee invoice delivery and paid/write-off status.
@@ -287,8 +287,8 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **LOG-002 · P1 · Phase 2:** Define which party may record each milestone and which may only observe it.
 - [ ] **LOG-003 · P1 · Phase 2:** Require essential arrangement fields before departure-relevant milestones.
 - [ ] **LOG-004 · P1 · Phase 2:** Decide whether milestone skipping is allowed; encode required predecessors explicitly.
-- [ ] **LOG-005 · P1 · Phase 2:** Add buyer delivery confirmation distinct from a reported delivery milestone.
-- [ ] **LOG-006 · P1 · Phase 2:** Add shortages, damage, rejection and delivery-dispute flows.
+- [-] **LOG-005 · P1 · Phase 2:** Add buyer delivery confirmation distinct from a reported delivery milestone. IMPLEMENTED: separate buyer inspection/acceptance, exact quantity, retry-safe auditable acceptance and settlement guard. Native release/merge pending. See runbooks/DELIVERY_ACCEPTANCE.md.
+- [-] **LOG-006 · P1 · Phase 2:** Add shortages, damage, rejection and delivery-dispute flows. IN PROGRESS: evidence-backed reports, supplier proposal and buyer approval with settlement hold implemented; partial settlement, refunds, cancellation and returned inventory remain explicit follow-up scope.
 - [ ] **LOG-007 · P1 · Phase 2:** Prevent automatic settlement while a delivery dispute is open.
 - [ ] **LOG-008 · P1 · Phase 2:** Require reason, acknowledgement and notification for exceptional dispatch.
 - [ ] **LOG-009 · P1 · Phase 2:** Attach transport documents through the controlled evidence workflow.
@@ -527,4 +527,4 @@ An item is complete only when applicable criteria are met:
 | No restore/monitoring/incident proof | High | Health endpoints and structured logger | OPS-001–012 |
 | Marketing claims exceed implemented transformations | Medium | Demo genealogy | PRD-001, RCL-011, INV-005 |
 
-Payment/document hardening wave: apply [`releases/PAYMENT_DOCUMENT_HARDENING_WINDOWS.md`](releases/PAYMENT_DOCUMENT_HARDENING_WINDOWS.md), then record native release results before closing the pending payment checks. Subsequent payment work is PAY-004/PAY-008/PAY-009 (visible histories, overdue behavior and correction/dispute handling), followed by fee invoicing/collection; real-provider integration remains deferred.
+Payment/document hardening wave: apply [`releases/PAYMENT_DOCUMENT_HARDENING_WINDOWS.md`](releases/PAYMENT_DOCUMENT_HARDENING_WINDOWS.md), then record native release results before closing the pending payment checks. Subsequent payment work is the remaining PAY-008 due-date activation and scheduled notification delivery, followed by fee invoicing/collection; real-provider integration remains deferred.

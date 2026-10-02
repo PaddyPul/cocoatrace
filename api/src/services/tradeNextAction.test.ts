@@ -25,3 +25,15 @@ describe('role-aware trade next actions',()=>{
     expect(buildTradeActions([offer],[],buyer)[0]).toMatchObject({kind:'offer_waiting',requiresAction:false});
   });
 });
+
+describe('delivery consent', () => {
+  it('prompts the buyer to inspect delivered goods independently of payment', () => {
+    const delivered=deal({payment_terms_status:'agreed',current_milestone:'delivered',payment_status:'settled'});
+    expect(buildTradeActions([], [delivered], buyer)[0]).toMatchObject({kind:'delivery',requiresAction:true,title:'Inspect and accept delivered goods'});
+    expect(buildTradeActions([], [delivered], seller)[0].requiresAction).toBe(false);
+  });
+  it('prioritizes supplier resolution and buyer approval during a discrepancy', () => {
+    expect(buildTradeActions([], [deal({delivery_discrepancy_status:'open'})], seller)[0].requiresAction).toBe(true);
+    expect(buildTradeActions([], [deal({delivery_discrepancy_status:'resolution_proposed'})], buyer)[0].requiresAction).toBe(true);
+  });
+});

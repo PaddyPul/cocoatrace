@@ -62,7 +62,9 @@ export async function getTradeActions(req: Request, res: Response): Promise<void
     query(`SELECT c.id,c.status,c.seller_organization_id,c.buyer_organization_id,c.payment_terms_status,c.payment_plan,c.currency,
       seller.name seller_name,buyer.name buyer_name,p.id payment_request_id,p.status payment_status,p.security_status,
       i.id installment_id,i.status installment_status,i.installment_type,i.amount_due,
-      sh.id shipment_id,sh.transport_coordinator_organization_id,sh.current_milestone
+      sh.id shipment_id,sh.transport_coordinator_organization_id,sh.current_milestone,
+      (SELECT accepted_at FROM delivery_acceptances WHERE contract_id=c.id) AS delivery_accepted_at,
+      (SELECT status FROM delivery_discrepancies WHERE contract_id=c.id AND status<>'resolved' LIMIT 1) AS delivery_discrepancy_status
       FROM sales_contracts c JOIN organizations seller ON seller.id=c.seller_organization_id JOIN organizations buyer ON buyer.id=c.buyer_organization_id
       LEFT JOIN LATERAL(SELECT * FROM payment_requests WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1)p ON TRUE
       LEFT JOIN LATERAL(SELECT * FROM payment_installments WHERE payment_request_id=p.id AND status IN('payment_submitted','due') ORDER BY CASE status WHEN 'payment_submitted' THEN 0 ELSE 1 END,sequence_number LIMIT 1)i ON TRUE

@@ -108,6 +108,10 @@ for (const plan of ['deposit_balance', 'bank_secured', 'documentary_collection',
       await progress(buyer, shipment.id, 'delivered');
       if (plan === 'pay_after_delivery') await submitAndVerify(buyer, seller, contract.id);
       await buyer.goto(`/deal-room/${contract.id}`);
+      await buyer.getByLabel('Inspected quantity received (kg)', {exact:true}).fill('4');
+      await buyer.getByLabel('Inspection note', {exact:true}).fill('Full quantity and condition inspected and accepted');
+      await buyer.getByLabel('I inspected the full contract quantity and accept its condition.', {exact:true}).check();
+      await buyer.getByRole('button', {name:'Accept full delivery',exact:true}).click();
       await expect(buyer.getByText('Trade completed', { exact: true })).toBeVisible();
       const snapshot = await tradeSnapshot(contract.id);
       expect(snapshot.contract.status).toBe('settled'); expect(Number(snapshot.payment.amount_confirmed)).toBe(20);

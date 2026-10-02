@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { contracts, evidence, payments } from '../api';
+import DeliveryAcceptance from '../components/delivery/DeliveryAcceptance';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
 import { ArrowLeft, CheckCircle2, ChevronRight, Circle, Download, Euro, FileText, ShieldCheck, Ship, Tag, Upload, X } from 'lucide-react';
@@ -158,7 +159,7 @@ export default function ContractDetailPage() {
     { label: 'Buyer and seller assemble the applicable trade documents', done: missingDocuments.length === 0 },
     { label: 'Cargo dispatched and transport document issued', done: transportDocumentsReady },
     { label: 'Buyer sends payment and seller verifies receipt', done: c.payment_status === 'settled' },
-    { label: 'Cargo delivered and contract closed', done: c.status === 'settled' },
+    { label: 'Buyer accepts inspected goods and contract closes', done: c.status === 'settled' },
   ];
   const uploadChoices = isSeller ? SELLER_DOCUMENTS : BUYER_DOCUMENTS;
 
@@ -171,12 +172,13 @@ export default function ContractDetailPage() {
   else if (isSeller && ['deposit_balance','documentary_collection','bank_secured'].includes(c.payment_plan) && !c.documents_presented_at && c.payment_terms_status === 'agreed') nextAction = 'Present the complete document set to make payment due.';
   else if (isBuyer && c.payment_status === 'requested') nextAction = 'Settle through your bank, then record the transaction reference.';
   else if (c.payment_status === 'settled' && c.current_milestone !== 'delivered') nextAction = 'Track the shipment through delivery.';
-  else if (c.status === 'settled') nextAction = 'Trade complete: payment and delivery are both recorded.';
+  else if (c.status === 'settled') nextAction = 'Trade complete: payment verified and delivered goods accepted.';
 
   return (
     <Layout currentPage="contracts" actions={<button className="btn btn-sm" onClick={() => navigate('/contracts')}><ArrowLeft size={14} /> Back</button>}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-5">
+          <DeliveryAcceptance contractId={c.id} organizationId={user?.organizationId || ''} onChanged={loadContract} />
           <div className="bg-brand-500/10 border border-brand-500/30 rounded p-4"><div className="text-[10px] text-brand-400 uppercase tracking-wider mb-1">Your next action</div><div className="text-sm font-semibold">{nextAction}</div></div>
 
           <div className="bg-surface border border-border rounded p-5">

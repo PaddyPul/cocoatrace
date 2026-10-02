@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BadgeCheck, Check, Circle, Download, FileText, Landmark, LockKeyhole, PackageCheck, Settings, ShieldCheck, Ship, WalletCards } from 'lucide-react';
 import PaymentProof from '../components/payments/PaymentProof';
+import DeliveryAcceptance from '../components/delivery/DeliveryAcceptance';
 import Layout from '../components/layout/Layout';
 import { contracts, payments } from '../api';
 import { fmtMoney, StatusBadge } from '../components/shared/helpers';
@@ -68,7 +69,11 @@ export default function DealRoomPage() {
   let nextTitle = 'Review the shared deal record';
   let nextCopy = 'The agreement, payment, documents and transport state are synchronized here.';
   let nextAction: React.ReactNode = null;
-  if (deal.payment_terms_status === 'draft' && isSeller) {
+  if (!settled && delivered && deal.delivery_discrepancy_status) {
+    nextTitle = 'Resolve the delivery discrepancy'; nextCopy = 'Trade completion remains paused. Review the evidence and resolution below.';
+  } else if (!settled && delivered && !deal.delivery_accepted_at && deal.payment_status === 'settled') {
+    nextTitle = isBuyer ? 'Inspect and accept delivered goods' : 'Awaiting buyer delivery acceptance'; nextCopy = 'Reported delivery is separate from acceptance of the contracted quantity and condition. Review delivery below.';
+  } else if (deal.payment_terms_status === 'draft' && isSeller) {
     nextTitle = 'Set the payment protection plan'; nextCopy = 'Choose when payment or bank security must be verified before dispatch.';
     nextAction = <button className="btn btn-primary" onClick={() => navigate(`/contracts/${deal.id}`)}><ShieldCheck size={14} />Configure protection</button>;
   } else if (deal.payment_terms_status === 'draft' && isBuyer) {
@@ -101,7 +106,7 @@ export default function DealRoomPage() {
     nextTitle = 'Continue transport progress'; nextCopy = `The current milestone is ${pretty(deal.current_milestone)}.`;
     nextAction = <button className="btn btn-primary" onClick={() => navigate(`/shipments/${deal.shipment_id}`)}><Ship size={14} />Record progress</button>;
   } else if (!settled) {
-    nextTitle = 'Complete the remaining payment'; nextCopy = 'Delivery is recorded; the deal closes automatically when all installments are seller-verified.';
+    nextTitle = 'Complete the remaining payment'; nextCopy = 'Delivery is recorded. Buyer acceptance and seller-verified payments are both required to close the deal.';
     nextAction = deal.payment_request_id ? <button className="btn btn-primary" onClick={() => navigate(`/payments/${deal.payment_request_id}`)}><WalletCards size={14} />Open payment schedule</button> : null;
   } else {
     nextTitle = 'Trade completed'; nextCopy = 'Delivery and seller-verified settlement are recorded, and custody has transferred to the buyer.';
@@ -121,6 +126,7 @@ export default function DealRoomPage() {
 
     <section className="mt-5 rounded-3xl border border-brand-400/25 bg-brand-400/5 p-5 sm:p-6"><div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-300">Best next action</div><h3 className="mt-1 text-lg font-bold">{nextTitle}</h3><p className="mt-1 max-w-2xl text-xs leading-5 text-text-muted">{nextCopy}</p></div><div className="w-full lg:w-auto lg:min-w-[310px]">{nextAction}</div></div></section>
 
+    {delivered && <div className="mt-5"><DeliveryAcceptance contractId={deal.id} organizationId={user?.organizationId || ''} onChanged={refresh} /></div>}
     <div className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]">
       <section className="space-y-5">
         <div className="rounded-3xl border border-border bg-surface p-5 sm:p-6"><div className="flex items-center justify-between gap-3"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">Dispatch release</div><h3 className="mt-1 text-lg font-bold">What must be true before goods leave</h3></div><span className={`badge ${dispatchReady ? 'badge-green' : 'badge-amber'}`}>{dispatchReady ? 'Cleared' : 'Blocked'}</span></div><div className="mt-5 space-y-2"><Condition icon={FileText} title="Payment terms agreed" copy={PLAN_LABELS[deal.payment_plan] || pretty(deal.payment_plan)} done={termsReady} /><Condition icon={WalletCards} title="Required funds seller-verified" copy={`${fmtMoney(Number(deal.amount_confirmed || 0), deal.currency)} confirmed of ${fmtMoney(Number(deal.dispatch_required_amount || 0), deal.currency)} required before dispatch`} done={moneyReady} /><Condition icon={BadgeCheck} title="External bank security accepted by seller" copy={deal.payment_plan === 'bank_secured' ? `Security status: ${pretty(deal.security_status)}` : 'Not required for this payment plan'} done={securityReady} /></div>{termsReady && Number(deal.dispatch_required_amount || 0) === 0 && deal.payment_plan !== 'bank_secured' && <div className="mt-4 rounded-2xl border border-blue-400/20 bg-blue-400/5 p-3 text-[11px] leading-5 text-blue-200">This plan intentionally permits dispatch before cash receipt. Payment becomes due {deal.payment_plan === 'pay_after_delivery' ? 'after delivery' : 'against the agreed trade documents'}.</div>}{deal.dispatch_exception && <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-400/5 p-3 text-[11px] text-amber-200">Exceptional dispatch was authorized: {deal.dispatch_exception_reason}</div>}</div>

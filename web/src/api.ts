@@ -163,6 +163,11 @@ export const sourcing = {
 };
 
 export const contracts = {
+  delivery: (id: string) => api<any>('GET', `/contracts/${id}/delivery`),
+  acceptDelivery: (id: string, data: {receivedQuantityKg: number; note: string}) => api<any>('POST', `/contracts/${id}/delivery/accept`, data),
+  reportDiscrepancy: (id: string, data: {kind: string;receivedQuantityKg:number;reason:string;evidenceIds:string[]}) => api<any>('POST', `/contracts/${id}/delivery/discrepancy`, data),
+  proposeDeliveryResolution: (id: string, note: string) => api<any>('POST', `/contracts/${id}/delivery/resolution`, {note}),
+  approveDeliveryResolution: (id: string) => api<any>('POST', `/contracts/${id}/delivery/resolution/approve`, {}),
   list: () => api<import('./types').Contract[]>('GET', '/contracts'),
   get: (id: string) => api<any>('GET', `/contracts/${id}`),
   requestPayment: (id: string, data: { amountTotal: number; currency?: string }) =>

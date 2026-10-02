@@ -18,7 +18,7 @@ type DealFact = {
   id:string; seller_organization_id:string; buyer_organization_id:string; seller_name:string; buyer_name:string;
   payment_terms_status:string; payment_plan:string; payment_request_id?:string; payment_status?:string; security_status?:string;
   installment_id?:string; installment_status?:string; installment_type?:string; amount_due?:number; currency?:string;
-  shipment_id?:string; transport_coordinator_organization_id?:string; current_milestone?:string; status:string;
+  delivery_accepted_at?:string; delivery_discrepancy_status?:string; shipment_id?:string; transport_coordinator_organization_id?:string; current_milestone?:string; status:string;
 };
 
 const money = (amount: unknown, currency = 'EUR') => new Intl.NumberFormat('en', { style:'currency', currency }).format(Number(amount || 0));
@@ -38,6 +38,13 @@ export function buildTradeActions(offers:OfferFact[],deals:DealFact[],organizati
     const room=`/deal-room/${deal.id}`,payment=deal.payment_request_id?`/payments/${deal.payment_request_id}`:room;
     if(deal.status==='settled'){
       actions.push({id:`deal:${deal.id}:complete`,kind:'complete',priority:100,requiresAction:false,title:'Trade completed',description:`Delivery and settlement with ${seller?deal.buyer_name:deal.seller_name} are recorded.`,actionLabel:'View completed deal',actionPath:room,contractId:deal.id});continue;
+    }
+    if(deal.delivery_discrepancy_status){
+      const actor=deal.delivery_discrepancy_status==='open'?seller:buyer;
+      actions.push({id:`deal:${deal.id}:discrepancy`,kind:'delivery',priority:12,requiresAction:actor,title:actor?(seller?'Propose a delivery resolution':'Review delivery resolution'):'Delivery discrepancy awaiting the other party',description:'Trade completion is paused. Review the evidence and agree a resolution before accepting delivery.',actionLabel:'Review delivery',actionPath:room,contractId:deal.id});continue;
+    }
+    if(deal.current_milestone==='delivered'&&!deal.delivery_accepted_at){
+      actions.push({id:`deal:${deal.id}:acceptance`,kind:buyer?'delivery':'waiting',priority:18,requiresAction:buyer,title:buyer?'Inspect and accept delivered goods':'Awaiting buyer delivery acceptance',description:'Physical delivery is reported. The buyer must inspect the quantity and condition; report any discrepancy before acceptance.',actionLabel:'Review delivery',actionPath:room,contractId:deal.id});continue;
     }
     if(deal.payment_terms_status==='draft'){
       actions.push({id:`deal:${deal.id}:terms`,kind:seller?'configure_terms':'waiting',priority:seller?15:75,requiresAction:seller,
