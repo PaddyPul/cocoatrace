@@ -133,7 +133,7 @@ function migrationNames() {
 function databaseFingerprint(database) {
   return psql(database, String.raw`
     WITH parts AS (
-      SELECT 'relation:'||c.relname||':'||c.relkind AS value
+      SELECT 'relation:'||c.relname::text||':'||c.relkind::text AS value
       FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
       WHERE n.nspname='public' AND c.relkind IN ('r','p','v','m','S')
       UNION ALL
