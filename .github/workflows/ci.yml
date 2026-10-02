@@ -126,3 +126,25 @@ jobs:
       - run: node --test scripts/run-release-checks.test.mjs
       - name: Rehearse isolated PostgreSQL backup and restore
         run: npm run test:recovery:docker
+
+  synthetic-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Validate preview runner access boundaries
+        run: node --test scripts/demo-preview.test.mjs
+      - name: Start synthetic preview and check readiness and identities
+        run: npm run demo:preview:start
+      - name: Repeat start without overwriting the synthetic workspace
+        run: npm run demo:preview:start
+      - name: Check synthetic preview
+        run: npm run demo:preview:check
+      - name: Stop only the synthetic preview project
+        if: always()
+        run: npm run demo:preview:stop

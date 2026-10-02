@@ -18,6 +18,8 @@
 
 When asked “what needs to be done?”, start with incomplete items in the current execution queue, then the active phase exit criteria, then blocked P0/P1 work.
 
+Current zero-budget implementation: **BST-001** supervised synthetic preview runner and email-restricted temporary HTTPS. See [`runbooks/ZERO_COST_DEMO_PREVIEW.md`](runbooks/ZERO_COST_DEMO_PREVIEW.md). Native preview and real visitor-gate validation remain pending; live staging remains separate.
+
 ## Bootstrap budget and expansion constraints
 
 Hosting budget is **USD 0/month** until the founder explicitly changes it. Do not activate paid plans, auto-upgrades, metered overages or trial-dependent infrastructure. See [`runbooks/FREE_STAGING_PLAN.md`](runbooks/FREE_STAGING_PLAN.md). Provider signup and account verification belong to the founder; repository configuration and automation belong to the implementation work. Free hosting does not waive private uploads, malware scanning, tenant isolation or restore gates.

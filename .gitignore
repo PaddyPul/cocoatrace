@@ -45,3 +45,6 @@ test-results/
 
 # Automated release summaries
 release-test-results/
+
+# Private local synthetic preview state
+.demo-preview/

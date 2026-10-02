@@ -62,6 +62,9 @@ function RootRedirect() {
 export default function App() {
   return (
     <BrowserRouter>
+      {webConfig.demoPreview && <div role="note" className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-950">
+        Supervised demo: synthetic records and simulated payments. Do not enter personal data or upload real documents.
+      </div>}
       <AuthProvider>
         <ToastProvider>
         <Routes>

@@ -21,7 +21,7 @@ A hosted VM also needs an evidence-store and email design: free compute alone do
 
 ## Tracked implementation work
 
-- [ ] **BST-001 · P1 · Phase 1:** Automate a synthetic-data HTTPS preview with demo-only credentials, public URL configuration, tenant-safe uploads and start/stop instructions; automated external smoke check. Do not expose the current desktop app with real customer data.
+- [-] **BST-001 · P1 · Phase 1:** IN PROGRESS: [`ZERO_COST_DEMO_PREVIEW.md`](ZERO_COST_DEMO_PREVIEW.md) implements a synthetic-data HTTPS preview with demo-only credentials, public URL configuration, tenant-safe uploads and start/stop instructions; automated external smoke check. Do not expose the current desktop app with real customer data.
 - [ ] **BST-002 · P1 · Phase 1:** Verify actual Always Free eligibility, capacity, architecture, email/storage compatibility and spending boundaries. Completion: recorded provider decision under DEC-001, or explicit unavailability blocker.
 - [ ] **BST-003 · P1 · Phase 1:** Prepare reproducible zero-cost staging deployment and secret handoff; preserve ENV-004–006, UPL-002 and OPS-002 requirements. Completion: isolated live environment, hosted tests, private evidence proof and restore report. Do not mark complete from local Docker tests.
 
