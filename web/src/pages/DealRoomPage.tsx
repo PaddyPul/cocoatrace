@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BadgeCheck, Check, Circle, Download, FileText, Landmark, LockKeyhole, PackageCheck, Settings, ShieldCheck, Ship, WalletCards } from 'lucide-react';
+import PaymentProof from '../components/payments/PaymentProof';
 import Layout from '../components/layout/Layout';
 import { contracts, payments } from '../api';
 import { fmtMoney, StatusBadge } from '../components/shared/helpers';
@@ -8,11 +9,11 @@ import { SkeletonDetail } from '../components/shared/Skeleton';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
 
-const TRANSPORT_ORDER = ['planning', 'booked', 'cargo_ready', 'handed_over', 'loaded', 'departed', 'arrived', 'customs_cleared', 'delivered'];
+const TRANSPORT_ORDER = ['planning', 'booked', 'requested', 'accepted', 'cargo_ready', 'picked_up', 'warehouse_received', 'handed_over', 'port_received', 'loaded', 'departed', 'arrived', 'customs_cleared', 'delivered'];
 const PLAN_LABELS: Record<string, string> = {
   pay_before_dispatch: 'Full payment before dispatch',
   deposit_balance: 'Deposit before dispatch; balance against documents',
-  bank_secured: 'Verified bank security before dispatch',
+  bank_secured: 'Seller-accepted external bank security before dispatch',
   documentary_collection: 'Documents against payment',
   pay_after_delivery: 'Approved credit after delivery',
 };
@@ -24,6 +25,7 @@ export default function DealRoomPage() {
   const { toast } = useToast();
   const [deal, setDeal] = useState<any>(null);
   const [error, setError] = useState('');
+  const [proofs, setProofs] = useState<Record<string, string | undefined>>({});
   const [reference, setReference] = useState('');
   const [busy, setBusy] = useState('');
 
@@ -47,7 +49,7 @@ export default function DealRoomPage() {
   const moneyReady = Number(deal.amount_confirmed || 0) + 0.005 >= Number(deal.dispatch_required_amount || 0);
   const dispatchReady = termsReady && securityReady && moneyReady;
   const currentTransportIndex = TRANSPORT_ORDER.indexOf(deal.current_milestone || 'planning');
-  const dispatched = currentTransportIndex >= TRANSPORT_ORDER.indexOf('loaded');
+  const dispatched = currentTransportIndex >= TRANSPORT_ORDER.indexOf('picked_up');
   const delivered = deal.current_milestone === 'delivered';
   const settled = deal.status === 'settled';
   const dueInstallment = (deal.installments || []).find((item: any) => item.status === 'due');
@@ -72,16 +74,24 @@ export default function DealRoomPage() {
   } else if (deal.payment_terms_status === 'draft' && isBuyer) {
     nextTitle = 'Offer accepted—supplier preparing payment terms'; nextCopy = `${deal.seller_name} must select and propose the payment protection plan before you can review it.`;
   } else if (deal.payment_terms_status === 'proposed' && isBuyer) {
-    nextTitle = 'Confirm the payment terms'; nextCopy = `${deal.seller_name} proposed “${PLAN_LABELS[deal.payment_plan] || deal.payment_plan}”.`;
+    nextTitle = 'Confirm the payment terms'; nextCopy = `${deal.seller_name} proposed “${PLAN_LABELS[deal.payment_plan] || deal.payment_plan}”. ${deal.payment_evidence_required ? 'Payment proof is required for every installment.' : 'Payment proof is optional.'}`;
     nextAction = <button className="btn btn-primary" disabled={Boolean(busy)} onClick={() => run('terms', () => contracts.confirmPaymentTerms(deal.id), 'Payment terms confirmed')}><Check size={14} />{busy === 'terms' ? 'Confirming…' : 'Confirm terms'}</button>;
   } else if (deal.payment_terms_status === 'proposed' && isSeller) {
     nextTitle = 'Payment terms sent—awaiting buyer confirmation'; nextCopy = `${deal.buyer_name} can now review and confirm the proposed plan.`;
   } else if (dueInstallment && isBuyer) {
     nextTitle = 'Submit the payment reference'; nextCopy = `${fmtMoney(dueInstallment.amount_due, deal.currency)} is now due. Record the reference from your regulated payment provider.`;
-    nextAction = <div className="flex w-full flex-col gap-2 sm:flex-row"><input className="form-input min-w-0 flex-1" placeholder="Bank transaction reference" value={reference} onChange={(event) => setReference(event.target.value)} /><button className="btn btn-primary shrink-0" disabled={!reference.trim() || Boolean(busy)} onClick={() => run('submit', () => payments.submitInstallment(dueInstallment.id, reference.trim()), 'Payment submitted for seller verification')}><WalletCards size={14} />{busy === 'submit' ? 'Submitting…' : 'Submit payment'}</button></div>;
+    nextAction = <div className="w-full space-y-3">{deal.payment_evidence_required && <PaymentProof key={dueInstallment.id} contractId={deal.id} onUploaded={proof => setProofs(current => ({ ...current, [dueInstallment.id]: proof }))} disabled={Boolean(busy)} />}<div className="flex w-full flex-col gap-2 sm:flex-row"><input className="form-input min-w-0 flex-1" placeholder="Bank transaction reference" value={reference} onChange={(event) => setReference(event.target.value)} /><button className="btn btn-primary shrink-0" disabled={reference.trim().length < 3 || Boolean(busy) || (deal.payment_evidence_required && !proofs[dueInstallment.id])} onClick={() => run('submit', () => payments.submitInstallment(dueInstallment.id, reference.trim(), proofs[dueInstallment.id]), 'Payment submitted for seller verification')}><WalletCards size={14} />{busy === 'submit' ? 'Submitting…' : 'Submit payment'}</button></div></div>;
   } else if (submittedInstallment && isSeller) {
     nextTitle = 'Verify receipt of funds'; nextCopy = `The buyer submitted reference ${submittedInstallment.payment_reference_external}. Confirm only after checking the receiving account.`;
     nextAction = <div className="flex gap-2"><button className="btn btn-primary" disabled={Boolean(busy)} onClick={() => run('verify', () => payments.confirmInstallment(submittedInstallment.id), 'Funds marked as received')}><Check size={14} />Confirm funds received</button><button className="btn" disabled={Boolean(busy)} onClick={() => { const reason = window.prompt('Why is this payment reference being rejected?'); if (reason) run('reject', () => payments.rejectInstallment(submittedInstallment.id, reason), 'Reference returned to buyer'); }}>Reject reference</button></div>;
+  } else if (termsReady && !securityReady && deal.payment_plan === 'bank_secured') {
+    nextTitle = isBuyer ? 'Submit external bank security' : 'Check and accept external bank security';
+    nextCopy = 'The seller checks the bank instrument outside CocoaTrace. Acceptance does not confirm payment receipt.';
+    nextAction = <button className="btn btn-primary" onClick={() => navigate(`/payments/${deal.payment_request_id}`)}>Open bank security</button>;
+  } else if (dispatched && !deal.documents_presented_at && (deal.installments || []).some((item: any) => item.status === 'awaiting_trigger' && item.due_trigger === 'documents_presented')) {
+    nextTitle = isSeller ? 'Present the trade document set' : 'Awaiting supplier trade documents';
+    nextCopy = 'Validated, scan-clean invoice, packing list and transport documents make the remaining payment due. CIF/CIP also require insurance evidence.';
+    nextAction = <button className="btn btn-primary" onClick={() => navigate(`/contracts/${deal.id}`)}>Open trade documents</button>;
   } else if (!dispatchReady) {
     nextTitle = 'Dispatch remains blocked'; nextCopy = 'The selected payment protection condition has not yet been verified.';
   } else if (!dispatched && deal.shipment_id) {
@@ -113,7 +123,7 @@ export default function DealRoomPage() {
 
     <div className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]">
       <section className="space-y-5">
-        <div className="rounded-3xl border border-border bg-surface p-5 sm:p-6"><div className="flex items-center justify-between gap-3"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">Dispatch release</div><h3 className="mt-1 text-lg font-bold">What must be true before goods leave</h3></div><span className={`badge ${dispatchReady ? 'badge-green' : 'badge-amber'}`}>{dispatchReady ? 'Cleared' : 'Blocked'}</span></div><div className="mt-5 space-y-2"><Condition icon={FileText} title="Payment terms agreed" copy={PLAN_LABELS[deal.payment_plan] || pretty(deal.payment_plan)} done={termsReady} /><Condition icon={WalletCards} title="Required funds seller-verified" copy={`${fmtMoney(Number(deal.amount_confirmed || 0), deal.currency)} confirmed of ${fmtMoney(Number(deal.dispatch_required_amount || 0), deal.currency)} required before dispatch`} done={moneyReady} /><Condition icon={BadgeCheck} title="Required bank security verified" copy={deal.payment_plan === 'bank_secured' ? `Security status: ${pretty(deal.security_status)}` : 'Not required for this payment plan'} done={securityReady} /></div>{termsReady && Number(deal.dispatch_required_amount || 0) === 0 && deal.payment_plan !== 'bank_secured' && <div className="mt-4 rounded-2xl border border-blue-400/20 bg-blue-400/5 p-3 text-[11px] leading-5 text-blue-200">This plan intentionally permits dispatch before cash receipt. Payment becomes due {deal.payment_plan === 'pay_after_delivery' ? 'after delivery' : 'against the agreed trade documents'}.</div>}{deal.dispatch_exception && <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-400/5 p-3 text-[11px] text-amber-200">Exceptional dispatch was authorized: {deal.dispatch_exception_reason}</div>}</div>
+        <div className="rounded-3xl border border-border bg-surface p-5 sm:p-6"><div className="flex items-center justify-between gap-3"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">Dispatch release</div><h3 className="mt-1 text-lg font-bold">What must be true before goods leave</h3></div><span className={`badge ${dispatchReady ? 'badge-green' : 'badge-amber'}`}>{dispatchReady ? 'Cleared' : 'Blocked'}</span></div><div className="mt-5 space-y-2"><Condition icon={FileText} title="Payment terms agreed" copy={PLAN_LABELS[deal.payment_plan] || pretty(deal.payment_plan)} done={termsReady} /><Condition icon={WalletCards} title="Required funds seller-verified" copy={`${fmtMoney(Number(deal.amount_confirmed || 0), deal.currency)} confirmed of ${fmtMoney(Number(deal.dispatch_required_amount || 0), deal.currency)} required before dispatch`} done={moneyReady} /><Condition icon={BadgeCheck} title="External bank security accepted by seller" copy={deal.payment_plan === 'bank_secured' ? `Security status: ${pretty(deal.security_status)}` : 'Not required for this payment plan'} done={securityReady} /></div>{termsReady && Number(deal.dispatch_required_amount || 0) === 0 && deal.payment_plan !== 'bank_secured' && <div className="mt-4 rounded-2xl border border-blue-400/20 bg-blue-400/5 p-3 text-[11px] leading-5 text-blue-200">This plan intentionally permits dispatch before cash receipt. Payment becomes due {deal.payment_plan === 'pay_after_delivery' ? 'after delivery' : 'against the agreed trade documents'}.</div>}{deal.dispatch_exception && <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-400/5 p-3 text-[11px] text-amber-200">Exceptional dispatch was authorized: {deal.dispatch_exception_reason}</div>}</div>
 
         <div className="rounded-3xl border border-border bg-surface p-5 sm:p-6"><div className="flex items-center justify-between"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">Connected operations</div><h3 className="mt-1 text-lg font-bold">Payment, documents and transport</h3></div><button className="btn btn-sm" onClick={exportLog}><Download size={13} />Export log</button></div><div className="mt-4 grid gap-3 md:grid-cols-3"><Operation icon={WalletCards} title="Payment" value={pretty(deal.payment_status)} detail={`${fmtMoney(Number(deal.amount_confirmed || 0), deal.currency)} confirmed`} action="Open schedule" onClick={() => navigate(`/payments/${deal.payment_request_id}`)} /><Operation icon={LockKeyhole} title="Controlled documents" value={controlledDocsReleased ? 'Released' : 'Protected'} detail={`${(deal.documents || []).length} shared document${(deal.documents || []).length === 1 ? '' : 's'}`} action="Manage documents" onClick={() => navigate(`/contracts/${deal.id}`)} /><Operation icon={Ship} title="Transport" value={pretty(deal.current_milestone || 'planning')} detail={deal.transport_coordinator_name || 'Coordinator assigned'} action="Open transport" onClick={() => navigate(`/shipments/${deal.shipment_id}`)} /></div></div>
       </section>

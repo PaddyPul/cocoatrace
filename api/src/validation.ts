@@ -200,14 +200,14 @@ export const createPaymentRequestSchema = z.object({
 });
 
 export const payPaymentSchema = z.object({
-  transactionReference: z.string().min(1),
+  transactionReference: z.string().trim().min(3).max(200), evidenceId: z.string().uuid().optional(),
 });
 
 export const updatePaymentTermsSchema = z.object({
   paymentPlan: z.enum(['pay_before_dispatch','deposit_balance','bank_secured','documentary_collection','pay_after_delivery']),
-  depositPercentage: z.number().min(5).max(90).optional(), creditDays: z.number().int().min(0).max(365).optional(), note: z.string().trim().max(1000).optional(),
+  paymentEvidenceRequired: z.boolean().optional(), depositPercentage: z.number().min(5).max(90).optional(), creditDays: z.number().int().min(0).max(365).optional(), note: z.string().trim().max(1000).optional(),
 }).superRefine((value,ctx) => { if(value.paymentPlan==='deposit_balance' && value.depositPercentage===undefined) ctx.addIssue({code:z.ZodIssueCode.custom,path:['depositPercentage'],message:'Deposit percentage is required'}); });
-export const submitInstallmentSchema = z.object({ transactionReference:z.string().trim().min(3).max(200) });
+export const submitInstallmentSchema = z.object({ transactionReference:z.string().trim().min(3).max(200), evidenceId: z.string().uuid().optional() });
 export const rejectInstallmentSchema = z.object({ reason:z.string().trim().min(5).max(1000) });
 export const submitPaymentSecuritySchema = z.object({ provider:z.string().trim().min(2).max(200), reference:z.string().trim().min(3).max(200) });
 

@@ -171,7 +171,7 @@ export const contracts = {
     api<any>('PATCH', `/contracts/${id}/eudr`, data),
   updateCompliance: (id: string, data: { scheme: string; reference: string }) =>
     api<any>('PATCH', `/contracts/${id}/compliance`, data),
-  updatePaymentTerms: (id: string, data: { paymentPlan: string; depositPercentage?: number; creditDays?: number; note?: string }) =>
+  updatePaymentTerms: (id: string, data: { paymentPlan: string; depositPercentage?: number; creditDays?: number; note?: string; paymentEvidenceRequired?: boolean }) =>
     api<any>('PATCH', `/contracts/${id}/payment-terms`, data),
   confirmPaymentTerms: (id: string) => api<any>('POST', `/contracts/${id}/payment-terms/confirm`),
 };
@@ -182,7 +182,7 @@ export const payments = {
   pay: (id: string, data: { transactionReference: string }) =>
     api<any>('POST', `/payment-requests/${id}/pay`, data),
   submitDocuments: (id: string) => api<any>('POST', `/payment-requests/${id}/submit-documents`),
-  submitInstallment: (id: string, transactionReference: string) => api<any>('POST', `/payment-installments/${id}/submit`, { transactionReference }),
+  submitInstallment: (id: string, transactionReference: string, evidenceId?: string) => api<any>('POST', `/payment-installments/${id}/submit`, { transactionReference, evidenceId }),
   confirmInstallment: (id: string) => api<any>('POST', `/payment-installments/${id}/confirm`),
   rejectInstallment: (id: string, reason: string) => api<any>('POST', `/payment-installments/${id}/reject`, { reason }),
   submitSecurity: (id: string, provider: string, reference: string) => api<any>('POST', `/payment-requests/${id}/security`, { provider, reference }),
