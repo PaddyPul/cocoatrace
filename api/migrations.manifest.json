@@ -26,6 +26,7 @@
     { "path": "api/src/migrations/018_invitation_controls.ts", "sha256": "4606d902f42fcfb7409f9702f658b977e2001b4c788e4e610c0919fc4efe2916" },
     { "path": "api/src/migrations/019_invitation_email_delivery.ts", "sha256": "0fe559e15e7114dc87af2495c13e1d425a7745f332a60b11007c09f3e8889549" },
     { "path": "api/src/migrations/020_trade_integrity_constraints.ts", "sha256": "60ab56645d752d171c31afe9f35e7152eb9426b809e34c70d159448c1a4d1728" },
-    { "path": "api/src/migrations/021_trust_state_accuracy.ts", "sha256": "26fa27b61c6b5fe336e3c32f8c1b4b1abdc6f0d29866b3f484502afc4e5fe60d" }
+    { "path": "api/src/migrations/021_trust_state_accuracy.ts", "sha256": "26fa27b61c6b5fe336e3c32f8c1b4b1abdc6f0d29866b3f484502afc4e5fe60d" },
+    { "path": "api/src/migrations/022_recall_safety_holds.ts", "sha256": "c74808f0cb611d6bfbe56e0e78be97ddbc0a35e16a3599ac30d141114cc29b9d" }
   ]
 }

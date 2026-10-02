@@ -1,3 +1,4 @@
+import { lockRecallBoundary, assertBatchNotRecalled, activeBatchRecallSql } from '../modules/recall/safety';
 import { Request, Response } from 'express';
 import { query, getClient } from '../db';
 import { recordTradeAudit } from '../modules/trading/transaction';
@@ -5,7 +6,7 @@ import { lockHoldingListings, pendingTransferQuantity, reconcileHoldingListings 
 
 export async function getHolding(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT h.*, b.crop, b.harvest_date, b.organic_claim_status, b.grade, b.farm_id, b.source_mode, b.source_name, b.source_country, b.source_region, f.name as farm_name, b.quantity_kg as batch_quantity
+    `SELECT h.*, ${activeBatchRecallSql('h.batch_id')} AS "activeRecall", b.crop, b.harvest_date, b.organic_claim_status, b.grade, b.farm_id, b.source_mode, b.source_name, b.source_country, b.source_region, f.name as farm_name, b.quantity_kg as batch_quantity
      FROM batch_holdings h
      JOIN harvest_batches b ON b.id = h.batch_id
      LEFT JOIN farms f ON f.id = b.farm_id
@@ -29,7 +30,7 @@ export async function getHolding(req: Request, res: Response): Promise<void> {
 
 export async function listHoldings(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT h.*, b.crop, b.harvest_date, b.organic_claim_status, b.grade, b.source_mode, b.source_name, b.source_country, b.source_region, f.name as farm_name
+    `SELECT h.*, ${activeBatchRecallSql('h.batch_id')} AS "activeRecall", b.crop, b.harvest_date, b.organic_claim_status, b.grade, b.source_mode, b.source_name, b.source_country, b.source_region, f.name as farm_name
      FROM batch_holdings h
      JOIN harvest_batches b ON b.id = h.batch_id
      LEFT JOIN farms f ON f.id = b.farm_id
@@ -45,8 +46,10 @@ export async function createHolding(req: Request, res: Response): Promise<void> 
   const client = await getClient();
   try {
     await client.query('BEGIN');
+    await lockRecallBoundary(client);
     const batch = (await client.query('SELECT quantity_kg FROM harvest_batches WHERE id=$1 AND current_holder_id=$2 FOR NO KEY UPDATE', [batchId, req.user!.organizationId])).rows[0];
     if (!batch) { await client.query('ROLLBACK'); res.status(400).json({ error: 'Batch not found or not held by your organization' }); return; }
+    await assertBatchNotRecalled(client, batchId);
     const allocated = (await client.query("SELECT COALESCE(SUM(quantity_kg),0) AS quantity FROM batch_holdings WHERE batch_id=$1 AND status <> 'transferred'", [batchId])).rows[0];
     const remainingGrams = Math.round(Number(batch.quantity_kg) * 1000) - Math.round(Number(allocated.quantity) * 1000);
     const remaining = remainingGrams / 1000;
@@ -68,8 +71,10 @@ export async function transferHolding(req: Request, res: Response): Promise<void
   const client = await getClient();
   try {
     await client.query('BEGIN');
+    await lockRecallBoundary(client);
     const holding = (await client.query('SELECT * FROM batch_holdings WHERE id=$1 AND holder_organization_id=$2 FOR UPDATE', [id, req.user!.organizationId])).rows[0];
     if (!holding) { await client.query('ROLLBACK'); res.status(404).json({ error: 'Holding not found' }); return; }
+    await assertBatchNotRecalled(client, holding.batch_id);
     if (holding.status !== 'available') { await client.query('ROLLBACK'); res.status(409).json({ error: 'Committed stock cannot be transferred', code: 'INVENTORY_UNAVAILABLE' }); return; }
     const destination = await client.query('SELECT id FROM organizations WHERE id=$1', [toOrganizationId]);
     if (!destination.rows[0]) { await client.query('ROLLBACK'); res.status(400).json({ error: 'Destination organization not found' }); return; }
@@ -107,12 +112,14 @@ export async function acceptTransfer(req: Request, res: Response): Promise<void>
   const client = await getClient();
   try {
     await client.query('BEGIN');
+    await lockRecallBoundary(client);
     const discovered = (await client.query('SELECT holding_id FROM custody_transfers WHERE id=$1 AND to_organization_id=$2', [id, req.user!.organizationId])).rows[0];
     if (!discovered) { await client.query('ROLLBACK'); res.status(404).json({ error: 'Transfer not found' }); return; }
     const src = (await client.query('SELECT * FROM batch_holdings WHERE id=$1 FOR UPDATE', [discovered.holding_id])).rows[0];
     await lockHoldingListings(client, discovered.holding_id);
     const transfer = (await client.query('SELECT * FROM custody_transfers WHERE id=$1 AND to_organization_id=$2 FOR UPDATE', [id, req.user!.organizationId])).rows[0];
     if (!transfer || transfer.status !== 'requested') { await client.query('ROLLBACK'); res.status(409).json({ error: 'Transfer already decided', code: 'TRANSFER_NOT_PENDING' }); return; }
+    await assertBatchNotRecalled(client, src.batch_id);
     const qty = Number(transfer.quantity_kg);
     const reserved = await pendingTransferQuantity(client, src.id, id);
     const freeGrams = Math.round(Number(src.quantity_kg) * 1000) - Math.round(reserved * 1000);
@@ -140,8 +147,10 @@ export async function splitHolding(req: Request, res: Response): Promise<void> {
   const client = await getClient();
   try {
     await client.query('BEGIN');
+    await lockRecallBoundary(client);
     const holding = (await client.query('SELECT * FROM batch_holdings WHERE id=$1 AND holder_organization_id=$2 FOR UPDATE', [id, req.user!.organizationId])).rows[0];
     if (!holding) { await client.query('ROLLBACK'); res.status(404).json({ error: 'Holding not found' }); return; }
+    await assertBatchNotRecalled(client, holding.batch_id);
     if (holding.status !== 'available' || await pendingTransferQuantity(client, id) > 0) {
       await client.query('ROLLBACK'); res.status(409).json({ error: 'Committed or transfer-reserved stock cannot be split', code: 'INVENTORY_UNAVAILABLE' }); return;
     }

@@ -1,3 +1,4 @@
+import { lockRecallBoundary, assertBatchNotRecalled } from '../modules/recall/safety';
 import { Request, Response } from 'express';
 import { query, getClient } from '../db';
 import * as audit from '../services/audit';
@@ -15,6 +16,7 @@ export async function pushToMarketplace(req: Request, res: Response): Promise<vo
   const client = await getClient();
   try {
     await client.query('BEGIN');
+    await lockRecallBoundary(client);
     // Existing stock follows the holding -> listings lock order. A key-share lock
     // protects the source relationship without blocking unrelated batch updates.
     const batch = (await client.query(
@@ -26,6 +28,8 @@ export async function pushToMarketplace(req: Request, res: Response): Promise<vo
       res.status(404).json({ error: 'Batch not found or not yours' });
       return;
     }
+
+    await assertBatchNotRecalled(client, batchId);
 
     // Prefer the holding with the largest unpublished, unreserved balance. Recheck its budget after locking.
     const holdingRes = await client.query(
@@ -162,6 +166,7 @@ export async function createBatch(req: Request, res: Response): Promise<void> {
   const client = await getClient();
   try {
     await client.query('BEGIN');
+    await lockRecallBoundary(client);
     const { rows } = await client.query(
       "INSERT INTO harvest_batches (farm_id, plot_ids, crop, harvest_date, quantity_kg, moisture_percent, grade, current_holder_id, organic_claim_status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'pending_attestation') RETURNING *",
       [farmId, plotIds, crop, harvestDate, quantityKg, moisturePercent || null, grade || null, req.user!.organizationId]
@@ -187,6 +192,7 @@ export async function createDirectInventory(req: Request, res: Response): Promis
   const client = await getClient();
   try {
     await client.query('BEGIN');
+    await lockRecallBoundary(client);
     const batch = await client.query(
       `INSERT INTO harvest_batches (
         farm_id, plot_ids, crop, harvest_date, quantity_kg, moisture_percent, grade,

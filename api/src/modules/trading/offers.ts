@@ -1,4 +1,5 @@
 import { PoolClient, QueryResultRow } from 'pg';
+import { lockRecallBoundary, assertBatchNotRecalled } from '../recall/safety';
 import { AppError, ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../errors';
 import { lockHoldingListings, pendingTransferQuantity, reconcileHoldingListings } from '../../services/inventoryIntegrity';
 import { createFulfillment } from './fulfillment';
@@ -34,8 +35,10 @@ function requireSeller(actor: TradeActor, offer: QueryResultRow, holding: QueryR
 
 export async function acceptTradeOffer(actor: TradeActor, offerId: string) {
   return inTradeTransaction(async (client) => {
+    await lockRecallBoundary(client);
     const { offer, holding } = await lockOfferInventory(client, offerId);
     requireSeller(actor, offer, holding);
+    await assertBatchNotRecalled(client, holding.batch_id);
     if (offer.status !== 'pending') throw new ConflictError('Offer is no longer pending');
     if (!offer.valid_now) throw new AppError('Offer has expired; request a new offer', 409, 'OFFER_EXPIRED');
     if (!offer.active || holding.status !== 'available') throw new ConflictError('Supply is no longer available');
@@ -106,6 +109,7 @@ export async function createTradeOffer(actor: TradeActor, listingId: string, inp
     throw new ValidationError('Offer quantity must use at most three decimal places');
   }
   return inTradeTransaction(async (client) => {
+    await lockRecallBoundary(client);
     const found = await client.query('SELECT holding_id FROM listings WHERE id=$1', [listingId]);
     if (!found.rows[0]) throw new NotFoundError('Listing');
     const holdingId = found.rows[0].holding_id;
@@ -116,6 +120,7 @@ export async function createTradeOffer(actor: TradeActor, listingId: string, inp
     if (!listing || listing.holding_id !== holdingId || !listing.active || !holding || holding.status !== 'available') {
       throw new ConflictError('Supply is no longer available');
     }
+    await assertBatchNotRecalled(client, holding.batch_id);
     if (listing.seller_organization_id === actor.organizationId) throw new ValidationError('You cannot make an offer on your own supply');
     if (listing.seller_organization_id !== holding.holder_organization_id) throw new ConflictError('Supply ownership has changed');
     const freeGrams = Math.round(Number(holding.quantity_kg) * 1000)
@@ -134,6 +139,7 @@ export async function createTradeOffer(actor: TradeActor, listingId: string, inp
 
 export async function rejectTradeOffer(actor: TradeActor, offerId: string) {
   return inTradeTransaction(async (client) => {
+    await lockRecallBoundary(client);
     const { offer, holding } = await lockOfferInventory(client, offerId);
     requireSeller(actor, offer, holding);
     if (offer.status !== 'pending') throw new ConflictError('Offer is no longer pending');

@@ -1,3 +1,4 @@
+import { lockRecallBoundary, assertBatchNotRecalled, activeBatchRecallSql } from '../modules/recall/safety';
 import { loadBatchTrust, legacyOrganicStatus } from '../modules/trust/assessment';
 import { Request, Response } from 'express';
 import { query, getClient } from '../db';
@@ -8,13 +9,14 @@ export async function listListings(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
     `SELECT l.*, o.name as seller_name, h.batch_id, b.crop, b.organic_claim_status, b.grade, b.harvest_date,
             b.source_mode, b.source_name, b.source_country, b.source_region,
+            ${activeBatchRecallSql('b.id')} AS "activeRecall",
             f.name as farm_name, f.region as farm_region, f.country as farm_country
      FROM listings l
      JOIN organizations o ON o.id = l.seller_organization_id
      JOIN batch_holdings h ON h.id = l.holding_id
      JOIN harvest_batches b ON b.id = h.batch_id
      LEFT JOIN farms f ON f.id = b.farm_id
-     WHERE l.active = TRUE AND h.status='available' AND h.holder_organization_id=l.seller_organization_id
+     WHERE l.active = TRUE AND NOT ${activeBatchRecallSql('b.id')} AND h.status='available' AND h.holder_organization_id=l.seller_organization_id
      ORDER BY l.created_at DESC`
   );
   const trust = await loadBatchTrust(rows.map(row => row.batch_id));
@@ -25,6 +27,7 @@ export async function getListing(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
     `SELECT l.*, o.name as seller_name, h.batch_id, b.crop, b.organic_claim_status, b.grade, b.harvest_date,
             b.source_mode, b.source_name, b.source_country, b.source_region,
+            ${activeBatchRecallSql('b.id')} AS "activeRecall",
             f.name as farm_name, f.region as farm_region, f.country as farm_country,
             h.batch_id
      FROM listings l
@@ -48,11 +51,13 @@ export async function createListing(req: Request, res: Response): Promise<void> 
   const client = await getClient();
   try {
     await client.query('BEGIN');
+    await lockRecallBoundary(client);
     const holding = (await client.query('SELECT * FROM batch_holdings WHERE id=$1 AND holder_organization_id=$2 FOR UPDATE', [holdingId, req.user!.organizationId])).rows[0];
     if (!holding || holding.status !== 'available') {
       await client.query('ROLLBACK');
       res.status(409).json({ error: 'Holding not available', code: 'INVENTORY_UNAVAILABLE' }); return;
     }
+    await assertBatchNotRecalled(client, holding.batch_id);
     await lockHoldingListings(client, holdingId);
     const listed = await client.query('SELECT COALESCE(SUM(available_quantity_kg),0) AS quantity FROM listings WHERE holding_id=$1 AND active=TRUE', [holdingId]);
     const remainingGrams = Math.round(Number(holding.quantity_kg) * 1000)
@@ -85,6 +90,7 @@ export async function updateListing(req: Request, res: Response): Promise<void> 
   const client = await getClient();
   try {
     await client.query('BEGIN');
+    await lockRecallBoundary(client);
     const discovered = (await client.query('SELECT holding_id FROM listings WHERE id=$1 AND seller_organization_id=$2', [id, req.user!.organizationId])).rows[0];
     if (!discovered) { await client.query('ROLLBACK'); res.status(404).json({ error: 'Listing not found' }); return; }
     const holding = (await client.query('SELECT * FROM batch_holdings WHERE id=$1 FOR UPDATE', [discovered.holding_id])).rows[0];
@@ -95,6 +101,8 @@ export async function updateListing(req: Request, res: Response): Promise<void> 
       await client.query('ROLLBACK'); res.status(409).json({ error: 'Inventory changed; refresh before editing', code: 'INVENTORY_UNAVAILABLE' }); return;
     }
     const nextActive = active ?? listing.active;
+    // Withdrawing recalled stock remains permitted; any continuing publication is blocked.
+    if (nextActive) await assertBatchNotRecalled(client, holding.batch_id);
     const nextQuantity = availableQuantityKg ?? Number(listing.available_quantity_kg);
     const sibling = (await client.query('SELECT COALESCE(SUM(available_quantity_kg),0) AS quantity FROM listings WHERE holding_id=$1 AND active=TRUE AND id<>$2', [holding.id, id])).rows[0];
     const freeGrams = Math.round(Number(holding.quantity_kg) * 1000)
@@ -119,6 +127,7 @@ export async function deleteListing(req: Request, res: Response): Promise<void> 
   const client = await getClient();
   try {
     await client.query('BEGIN');
+    await lockRecallBoundary(client);
     const discovered = (await client.query('SELECT holding_id FROM listings WHERE id=$1 AND seller_organization_id=$2', [id, req.user!.organizationId])).rows[0];
     if (!discovered) { await client.query('ROLLBACK'); res.status(404).json({ error: 'Listing not found' }); return; }
     const holding = (await client.query('SELECT * FROM batch_holdings WHERE id=$1 FOR UPDATE', [discovered.holding_id])).rows[0];

@@ -56,7 +56,7 @@ only the ordered view and deliberately has no duplicate checkboxes.
 3. **Browser regression foundation — QLT-021, then QLT-009–QLT-011:** automate identity and invitation flows with isolated fixtures and a captured SMTP inbox; run in CI with sanitized failure reports/screenshots; keep optional credential-bearing traces private. Extend coverage alongside each subsequent feature sprint.
 4. **Trading Integrity v1 — ARC-005, ARC-012, TRD-001–TRD-009:** implementation and 24 trading integration regressions are present; require native migration/integration/browser CI and the short smoke test before closing this wave. See `docs/runbooks/TRADING_INTEGRITY.md` and `docs/releases/TRADING_INTEGRITY_WINDOWS.md`.
 5. **Trust-state Accuracy v1 — DAT-001–DAT-003:** implementation, audited correction report and eleven new integration regressions are present. Native migration/integration/browser tests and a short UI smoke test remain release gates. See `docs/runbooks/TRUST_STATE_ACCURACY.md` and `docs/releases/TRUST_STATE_ACCURACY_WINDOWS.md`.
-6. **RCL-001–RCL-002** — enforce recall holds across listings, offers, transfers and dispatch.
+6. **Recall Safety v1 — RCL-001–RCL-002:** transactional safety holds now quarantine affected lots/holdings, withdraw listings, block offers/transfers/splits/physical dispatch, preserve receipt containment, and provide read-only reconciliation. Native Docker integration and browser gates remain required. See `docs/releases/RECALL_SAFETY_V1_WINDOWS.md`.
 
 The following deployment work is a **parallel external gate**, not repository-complete work: **ENV-004–ENV-006, UPL-002, OPS-001–OPS-002**. A named infrastructure owner must provision isolated staging resources, private encrypted object storage, HTTPS/secrets, managed database recovery and a recorded restore drill. Repository tests and local Docker do not close those items.
 
@@ -271,8 +271,8 @@ The following deployment work is a **parallel external gate**, not repository-co
 
 # 11. Traceability and recall
 
-- [ ] **RCL-001 · P0 · Phase 2:** Put affected lots and holdings on hold when a recall activates.
-- [ ] **RCL-002 · P0 · Phase 2:** Disable affected listings and block offers, transfers and dispatch.
+- [-] **RCL-001 · P0 · Phase 2 — IN PROGRESS:** Migration 022 backfills active notices into explicit lot/holding safety holds; activation is atomic and quantities/ownership remain unchanged. Native validation pending.
+- [-] **RCL-002 · P0 · Phase 2 — IN PROGRESS:** Active recalled supply is withdrawn and server-gated across publication, offers, custody transfers/splits and physical dispatch, including payment-exception and milestone-skip attempts. Receipt containment remains available; resolution never auto-republishes. Native validation pending.
 - [ ] **RCL-003 · P1 · Phase 2:** Generate recipient notifications from the quantity-aware impact calculation.
 - [ ] **RCL-004 · P1 · Phase 2:** Add recipient acknowledgement, contact status and escalation.
 - [ ] **RCL-005 · P1 · Phase 2:** Track quarantined, returned, destroyed, corrected and released quantities.

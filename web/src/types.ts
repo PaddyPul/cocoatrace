@@ -71,6 +71,7 @@ export interface Batch {
 }
 
 export interface Listing {
+  activeRecall?: boolean;
   trust?: TrustSummary;
   id: string;
   seller_name?: string;

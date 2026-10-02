@@ -26,7 +26,8 @@
     "typecheck:browser": "tsc --noEmit -p e2e/tsconfig.json",
     "test:migrations:docker": "node scripts/run-migration-tests.mjs",
     "trade:reconcile": "tsx api/scripts/reconcile-trades.ts",
-    "trust:report": "tsx api/scripts/report-trust-corrections.ts"
+    "trust:report": "tsx api/scripts/report-trust-corrections.ts",
+    "recall:check": "tsx api/scripts/reconcile-recall-safety.ts"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",

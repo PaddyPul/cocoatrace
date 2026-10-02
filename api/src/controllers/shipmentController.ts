@@ -1,3 +1,4 @@
+import { lockRecallBoundary, assertBatchNotRecalled } from '../modules/recall/safety';
 import { Request, Response } from 'express';
 import { getClient, query } from '../db';
 import * as audit from '../services/audit';
@@ -116,10 +117,13 @@ export async function updateShipmentDetails(req: Request, res: Response): Promis
 export async function recordMilestone(req: Request, res: Response): Promise<void> {
   const id = req.params.id as string;
   const {milestone,location,notes,exceptionalDispatch}=req.body,client=await getClient();
-  try{await client.query('BEGIN');const r=await client.query(`SELECT sh.*,c.seller_organization_id,c.buyer_organization_id,c.payment_plan,c.payment_terms_status,c.credit_days,c.holding_id,c.quantity_kg as contract_quantity_kg,p.id payment_request_id,p.amount_confirmed,p.dispatch_required_amount,p.security_status
+  try{await client.query('BEGIN');await lockRecallBoundary(client);const r=await client.query(`SELECT sh.*,c.seller_organization_id,c.buyer_organization_id,c.payment_plan,c.payment_terms_status,c.credit_days,c.holding_id,c.quantity_kg as contract_quantity_kg,p.id payment_request_id,p.amount_confirmed,p.dispatch_required_amount,p.security_status
     FROM shipments sh JOIN sales_contracts c ON c.id=sh.contract_id JOIN payment_requests p ON p.contract_id=c.id WHERE sh.id=$1 FOR UPDATE OF sh,c,p`,[id]);const s=r.rows[0],org=req.user!.organizationId;
     if(!s){await client.query('ROLLBACK');res.status(404).json({error:'Transport record not found'});return;}if(s.seller_organization_id!==org&&s.buyer_organization_id!==org){await client.query('ROLLBACK');res.status(403).json({error:'Only a party can report progress'});return;}
     if(!MILESTONE_ORDER.includes(milestone)){await client.query('ROLLBACK');res.status(400).json({error:'Unknown transport milestone'});return;}const current=MILESTONE_ORDER.indexOf(s.current_milestone),next=MILESTONE_ORDER.indexOf(milestone);if(next<=current){await client.query('ROLLBACK');res.status(400).json({error:`Cannot go from ${s.current_milestone} to ${milestone}. Milestones must progress forward.`});return;}
+    // A safety recall cannot be overridden by the exceptional-payment dispatch option.
+    // Arrival, customs and receipt records stay available for containment and recovery.
+    if(['picked_up','handed_over','port_received','loaded','departed'].includes(milestone)||(current<MILESTONE_ORDER.indexOf('picked_up')&&next>=MILESTONE_ORDER.indexOf('picked_up'))){const holding=await client.query('SELECT batch_id FROM batch_holdings WHERE id=$1',[s.holding_id]);if(holding.rows[0])await assertBatchNotRecalled(client,holding.rows[0].batch_id);}
     const crosses=current<MILESTONE_ORDER.indexOf('loaded')&&next>=MILESTONE_ORDER.indexOf('loaded');let exception=false;
     if(crosses){const d=dispatchDecision({plan:s.payment_plan as PaymentPlan,termsStatus:s.payment_terms_status,amountConfirmed:Number(s.amount_confirmed||0),dispatchRequiredAmount:Number(s.dispatch_required_amount||0),securityStatus:s.security_status||'not_required'});if(!d.allowed){if(!exceptionalDispatch){await client.query('ROLLBACK');res.status(409).json({error:d.reason,code:'PAYMENT_DISPATCH_GATE'});return;}if(s.seller_organization_id!==org){await client.query('ROLLBACK');res.status(403).json({error:'Only the seller can authorize exceptional dispatch'});return;}exception=true;await client.query(`UPDATE shipments SET dispatch_exception=TRUE,dispatch_exception_reason=$1,dispatch_exception_recorded_at=NOW(),dispatch_exception_recorded_by_user_id=$2 WHERE id=$3`,[exceptionalDispatch.reason,req.user!.id,id]);}}
     await client.query('INSERT INTO shipment_milestones(shipment_id,milestone,recorded_by_user_id,location,notes)VALUES($1,$2,$3,$4,$5)',[id,milestone,req.user!.id,location||null,notes||null]);
