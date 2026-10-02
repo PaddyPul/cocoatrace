@@ -53,3 +53,16 @@ test('public review shows its attribution and loses reviewed status after revoca
   await expect(page.getByText('Organic · Reviewed', { exact: true })).toHaveCount(0);
   await expect(page.getByText('Origin verified', { exact: true })).toHaveCount(0);
 });
+
+ test('conventional inventory never invents a farm or harvest in its listing journey', async ({ page }) => {
+  await mock(page);
+  await page.route('**/api/listings/lot', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...listing, source_mode: 'direct_inventory', source_name: 'Warehouse stock', source_country: 'Ghana', source_region: 'Northern', farm_name: 'Stale farm name' }) }));
+  await page.goto('/listing/lot');
+  await expect(page.getByRole('heading', { name: 'peanut inventory' })).toBeVisible();
+  await expect(page.getByText('Declared inventory source', { exact: true })).toBeVisible();
+  await expect(page.getByText('Inventory lot', { exact: true })).toBeVisible();
+  await expect(page.getByText('Linked farm record', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Farm & plots', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Harvest lot', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Stale farm name', { exact: true })).toHaveCount(0);
+ });

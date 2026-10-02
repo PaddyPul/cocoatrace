@@ -30,6 +30,10 @@ Keep a normal database backup before applying production migrations. Application
 
 Authoring validation: 159 unit tests, API/web builds, browser type checking, migration integrity, seven mocked Chromium marketplace/trust cases, and 41 supplemental PostgreSQL/WASM integration cases passed. These comprise 30 existing boundary cases plus eight trust API cases and three migration cases. Supplemental execution is not native PostgreSQL race verification and does not exercise real S3/ClamAV infrastructure. Docker was unavailable in the authoring environment.
 
-Required release gates: native Docker migration suite, full integration suite (65 cases), full browser suite (13 cases), GitHub quality gate, and the short smoke test in the Windows release guide. Keep backlog items in progress until those gates pass.
+Required release gates: native Docker migration suite, full integration suite (65 cases), full browser suite (14 cases), GitHub quality gate, and the short smoke test in the Windows release guide. Keep backlog items in progress until those gates pass.
 
 Certificate overlap prevention, independent reviewer accreditation checks beyond approved certifier workspace/permissions, general claim review workflows, proactive revocation notifications and existing deal remedies remain separate backlog concerns. This release does not assert legal compliance from a reviewed label.
+
+## Buyer–supplier operating boundary
+
+A farm and its plots are reusable source records, not separate published products. Direct conventional inventory stores `farm_id=NULL` and empty plot IDs; creating a farm earlier does not link it to later inventory. Listing presentation must use `source_mode` to distinguish declared inventory source/inventory lot from farm/plots/harvest. Optional certifier APIs are internal independent-review capabilities, not mandatory onboarding or trade actors. Suppliers can contribute externally issued documents; those documents remain unreviewed until an actual independent decision exists. General external-document review workflow remains an open backlog item.

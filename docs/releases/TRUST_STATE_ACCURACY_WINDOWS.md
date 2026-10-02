@@ -43,7 +43,7 @@ npm run test:integration:docker
 npm run test:browser:docker
 ```
 
-Require successful exit codes from every command. Expected unit tests: 159. Full integration suite: 65 tests; full browser suite: 13 tests. Test containers use disposable test databases; keep application volumes intact. The mocked marketplace/trust browser tests check UI behavior; the other identity journeys use the isolated running application. Native integration tests remain necessary for real PostgreSQL transactions and storage/scanner adapters.
+Require successful exit codes from every command. Expected unit tests: 159. Full integration suite: 65 tests; full browser suite: 14 tests. Test containers use disposable test databases; keep application volumes intact. The mocked marketplace/trust browser tests check UI behavior; the other identity journeys use the isolated running application. Native integration tests remain necessary for real PostgreSQL transactions and storage/scanner adapters.
 
 Authoring checks passed: units, builds, browser type checking, migration integrity, seven mocked Chromium cases, and 41 supplemental PostgreSQL/WASM cases. Native Docker was unavailable here, so the native suites above and GitHub CI are required before merge. If any test fails, do not continue to push/merge as though it passed; share the full output.
 
@@ -77,8 +77,8 @@ Use your existing test accounts; this bundle creates no new credentials.
 1. As supplier, create a new source farm and plot. They must be supplier-declared, not independently reviewed. Enter a valid latitude/longitude pair; zero is valid. A missing coordinate partner or out-of-range value must be rejected. GPS alone must not produce verified origin or EUDR readiness.
 2. Publish conventional inventory. It should remain sellable, without an organic-reviewed badge. Open it as buyer in the marketplace and inspect Supply details / claim sources.
 3. Open an existing organic listing. If its certificate is expired, suspended, revoked, mismatched or absent, it must not show organic reviewed. Stored legacy `attested`/`verified` fields must not override the live decision.
-4. If you have a certifier test account with issue/attest permissions, issue a current certificate for another organization's farm and matching crop, then attest its batch. Verify the listing/passport shows organic reviewed with actual review organization, method and dates. Supplier accounts must not self-certify.
-5. As issuing certifier, suspend that certificate; refresh the buyer listing/public passport: organic review must be withdrawn. Reinstate while valid: review returns with an audited new decision. Revoke permanently: reinstatement is refused. The automated tests also verify suspension cannot be used to revive revocation.
+4. As supplier, optionally upload an externally issued certificate or supporting PDF against the relevant source/lot using its evidence action. The document must remain distinct from an independently reviewed organic claim. A clean upload must not grant a reviewed badge.
+5. As buyer, review the published conventional inventory, submit an offer, and continue the guided supplier acceptance/payment/dispatch workflow. No certifier login is required. Certificate issuance, suspension, reinstatement and permanent-revocation behavior are covered by automated API tests; certifier-account manual checks are optional internal testing only.
 6. A clean uploaded PDF is not automatically approved evidence. Origin and EUDR can remain declared/unknown until a real independent review workflow exists; that is expected.
 7. Confirm existing deals and the guided payment/dispatch flow still open. Run `trade:reconcile` again if you create/accept a new offer.
 
