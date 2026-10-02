@@ -17,7 +17,8 @@ const eventIcons = {
 };
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value));
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short', year: 'numeric' }).format(date) : 'Date not recorded';
 }
 
 function EventCard({ event, last }: { event: JourneyEvent; last: boolean }) {
@@ -76,19 +77,20 @@ export default function PublicProductPage() {
   if (error) return <main className="min-h-screen bg-[#f6f4ee] text-stone-900 grid place-items-center p-6"><div className="max-w-md text-center"><div className="text-5xl mb-4">🌱</div><h1 className="text-2xl font-bold">Profile not found</h1><p className="mt-2 text-stone-500">{error}</p></div></main>;
   if (!data) return <main className="min-h-screen bg-[#f6f4ee] grid place-items-center"><div className="h-9 w-9 rounded-full border-2 border-stone-200 border-t-emerald-700 animate-spin" /></main>;
 
-  const unsafe = data.safety.status !== 'clear';
+  const unsafe = data.safety.status !== 'clear' || Boolean(data.safety.inventoryHeld);
   return (
     <main className="min-h-screen bg-[#f6f4ee] text-stone-900 selection:bg-emerald-100">
       <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-[#f6f4ee]/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2 font-bold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-900 text-white"><Leaf size={17} /></span>CocoaTrace</div>
           <div className={`rounded-full px-3 py-1.5 text-xs font-semibold ${unsafe ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900'}`}>
-            {unsafe ? `${data.safety.status.toUpperCase()} NOTICE` : 'No active recalls recorded'}
+            {data.safety.inventoryHeld ? 'INVENTORY SAFETY HOLD' : unsafe ? `${data.safety.status.toUpperCase()} NOTICE` : 'No active recalls recorded'}
           </div>
         </div>
       </header>
 
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
+        {data.safety.inventoryHeld && <section role="alert" className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-950"><strong>Material remains on safety hold</strong><p className="mt-2">Recall resolution does not make returned, destroyed or partially segregated inventory available for trade. Follow the recorded recovery instructions; this material remains blocked.</p></section>}
         {unsafe && data.safety.activeRecalls.map((recall) => (
           <section key={recall.id} className="mb-6 overflow-hidden rounded-2xl border border-amber-300 bg-amber-50 shadow-sm">
             <div className="flex gap-3 p-5"><AlertTriangle className="mt-0.5 shrink-0 text-amber-700" />

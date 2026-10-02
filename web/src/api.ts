@@ -299,7 +299,11 @@ export const recalls = {
   list: () => api<import('./types').RecallNotice[]>('GET', '/recalls'),
   create: (data: { referenceCode: string; title: string; reason: string; instructions: string; severity: 'advisory' | 'warning' | 'critical'; batchIds?: string[]; lots?: Array<{ lotId: string; quantityKg?: number }> }) =>
     api<import('./types').RecallNotice>('POST', '/recalls', data),
-  resolve: (id: string) => api<import('./types').RecallNotice>('POST', `/recalls/${id}/resolve`),
+  response: (id: string) => api<import('./types').RecallResponse>('GET', `/recalls/${id}/response`),
+  acknowledge: (id: string, note: string) => api('POST', `/recalls/${id}/acknowledge`, { note }),
+  contact: (id: string, organizationId: string, data: { status: 'contacted' | 'unreachable' | 'escalated'; note: string }) => api('PATCH', `/recalls/${id}/participants/${organizationId}/contact`, data),
+  recovery: (id: string, holdingId: string, data: { quarantinedKg: number; returnedKg: number; destroyedKg: number; correctedKg: number; releasedKg: number; note: string }) => api('PUT', `/recalls/${id}/recovery/${holdingId}`, data),
+  resolve: (id: string, data: { reason: string; evidenceIds: string[] }) => api<import('./types').RecallNotice>('POST', `/recalls/${id}/resolve`, data),
 };
 
 export const traceability = {

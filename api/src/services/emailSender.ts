@@ -5,7 +5,7 @@ import tls from 'tls';
 import { config } from '../config/env';
 import logger from '../logger';
 
-export type IdentityEmailCategory = 'email_verification' | 'invitation' | 'password_reset';
+export type IdentityEmailCategory = 'email_verification' | 'invitation' | 'password_reset' | 'recall';
 
 export type EmailMessage = Readonly<{
   to: string | readonly string[];

@@ -220,13 +220,13 @@ export const createEvidenceUploadIntentSchema = z.object({
   fileName: z.string().trim().min(1).max(255),
   mimeType: z.enum(['application/pdf','image/jpeg','image/png']),
   fileSizeBytes: z.number().int().positive(),
-  linkedEntityType: z.enum(['batch','certificate','contract','farm','product_profile','shipment']),
+  linkedEntityType: z.enum(['batch','certificate','contract','farm','product_profile','shipment','recall']),
   linkedEntityId: z.string().uuid(),
   claimDescription: z.string().trim().max(2000).optional(),
 });
 
 export const evidenceListQuerySchema = z.object({
-  entityType: z.enum(['batch','certificate','contract','farm','product_profile','shipment']).optional(),
+  entityType: z.enum(['batch','certificate','contract','farm','product_profile','shipment','recall']).optional(),
   entityId: z.string().uuid().optional(),
 }).superRefine((value, ctx) => {
   if (Boolean(value.entityType) !== Boolean(value.entityId)) {
@@ -298,3 +298,10 @@ export const pilotFeedbackSchema = z.object({
   rating: z.number().int().min(1).max(5),
   comment: z.string().max(2000).default(''),
 });
+
+const recallResponseNote = z.string().trim().min(10).max(2000);
+const recoveryQuantity = z.number().finite().min(0).max(99999999999).refine(value => Math.abs(value * 1000 - Math.round(value * 1000)) < 0.00001, 'Use at most three decimal places').default(0);
+export const acknowledgeRecallSchema = z.object({note:recallResponseNote});
+export const contactRecallSchema = z.object({status:z.enum(['contacted','unreachable','escalated']),note:recallResponseNote});
+export const recallRecoverySchema = z.object({quarantinedKg:recoveryQuantity,returnedKg:recoveryQuantity,destroyedKg:recoveryQuantity,correctedKg:recoveryQuantity,releasedKg:recoveryQuantity,note:recallResponseNote});
+export const resolveRecallSchema = z.object({reason:recallResponseNote,evidenceIds:z.array(z.string().uuid()).min(1).max(20)});

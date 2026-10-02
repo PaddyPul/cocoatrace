@@ -373,6 +373,7 @@ export interface PublicProduct {
   }>;
   journey: JourneyEvent[];
   safety: {
+    inventoryHeld?: boolean;
     status: 'clear' | 'advisory' | 'warning' | 'critical';
     activeRecalls: Array<{
       id: string;
@@ -468,4 +469,27 @@ export interface RecallImpactResult {
   exactness: 'declared' | 'estimated';
   warnings: string[];
   assumptions: string[];
+}
+
+export interface RecallRecovery {
+  holding_id: string;
+  quarantined_kg: number | string;
+  returned_kg: number | string;
+  destroyed_kg: number | string;
+  corrected_kg: number | string;
+  released_kg: number | string;
+  note: string;
+}
+
+export interface RecallResponse {
+  notice: RecallNotice;
+  canManage: boolean;
+  myOrganizationId: string;
+  participants: Array<{
+    organization_id: string; organization_name: string; acknowledged_at: string | null;
+    acknowledgement_note: string | null; contact_status: string; email_statuses: string[]; eligible_contact_count?: number;
+  }>;
+  holdings: Array<{ id: string; batch_id: string; quantity_kg: number | string; holder_organization_id: string }>;
+  recoveries: RecallRecovery[];
+  evidence: Array<{ id: string; file_name: string }>;
 }
