@@ -37,8 +37,8 @@ export default function PaymentOperations({ payment, operations, organizationId,
         <span className={item.dueState === 'overdue' ? 'text-red-400' : 'text-text-muted'}>{pretty(item.dueState)} · {date(item.due_at)}</span>
       </div>)}</div>
       {isSeller && overdue && !active && <button className="btn text-xs mt-3" disabled={busy} onClick={() => onAction('reminder', () => payments.remind(payment.id), 'Reminder recorded. Repeating today does not create another reminder.')}>Send overdue reminder</button>}
-      <p className="text-xs text-text-muted mt-3">Reminders appear in this workspace. No automatic bank transfer or email is sent.</p>
-      {operations.reminders.length > 0 && <ul className="mt-3 space-y-2 text-xs">{operations.reminders.map(reminder => <li key={reminder.id}>Payment reminder · {date(reminder.created_at)}</li>)}</ul>}
+      <p className="text-xs text-text-muted mt-3">Reminders appear in this workspace. Automatic reminders begin after 24 hours overdue, at most once per UTC day. Emails queue for authorized buyer team members when email delivery is configured. Reminders pause during disputes and after payment submission.</p>
+      {operations.reminders.length > 0 && <ul className="mt-3 space-y-2 text-xs">{operations.reminders.map(reminder => <li key={reminder.id}>Payment reminder · {date(reminder.created_at)} · {reminder.email_sent_count ? 'Email accepted by relay' : reminder.email_failed_count ? 'Email retry or operator attention required' : reminder.email_pending_count ? 'Email queued' : reminder.email_suppressed_count ? 'Email suppressed' : 'No email recipient queued'}</li>)}</ul>}
     </div>
 
     <div className="bg-surface border border-border rounded p-5">

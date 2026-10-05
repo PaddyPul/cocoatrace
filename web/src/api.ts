@@ -197,7 +197,7 @@ export interface PaymentOperationsData {
   timeline: Array<{ id: string; action: string; occurred_at: string; metadata: Record<string, unknown>; actor_name: string | null }>;
   issues: PaymentOperationIssue[];
   installments: Array<{ id: string; installment_type: string; status: string; due_at: string | null; dueState: string; amount_due: string | number }>;
-  reminders: Array<{ id: string; created_at: string; installment_id?: string; message?: string }>;
+  reminders: Array<{ id: string; created_at: string; installment_id?: string; message?: string; email_recipient_count?: number; email_sent_count?: number; email_failed_count?: number; email_suppressed_count?: number; email_pending_count?: number }>;
 }
 
 export const payments = {

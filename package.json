@@ -36,7 +36,8 @@
     "demo:preview:share": "node scripts/demo-preview.mjs share",
     "demo:preview:stop": "node scripts/demo-preview.mjs stop",
     "demo:preview:status": "node scripts/demo-preview.mjs status",
-    "demo:preview:check": "node scripts/demo-preview.mjs check"
+    "demo:preview:check": "node scripts/demo-preview.mjs check",
+    "payments:remind": "npm run payments:remind --workspace=api"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",

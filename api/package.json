@@ -22,7 +22,8 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:docker": "node scripts/run-integration-tests.mjs",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "payments:remind": "tsx scripts/deliver-payment-reminders.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

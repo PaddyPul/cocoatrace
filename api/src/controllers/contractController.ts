@@ -1,3 +1,4 @@
+import { activatePaymentInstallments } from '../modules/payments/dueDates';
 import { Request, Response } from 'express';
 import { query, getClient } from '../db';
 import * as audit from '../services/audit';
@@ -115,7 +116,7 @@ export async function confirmPaymentTerms(req:Request,res:Response):Promise<void
     if(c.payment_terms_status==='agreed'){await client.query('COMMIT');res.json({ok:true,alreadyConfirmed:true});return;}
     if(c.payment_terms_status!=='proposed'){await client.query('ROLLBACK');res.status(409).json({error:'The supplier must propose the payment terms before the buyer can confirm them'});return;}
     await client.query("UPDATE sales_contracts SET payment_terms_status='agreed',payment_terms_confirmed_at=NOW(),payment_terms_confirmed_by_user_id=$1 WHERE id=$2",[req.user!.id,id]);
-    await client.query("UPDATE payment_installments SET status='due',updated_at=NOW() WHERE payment_request_id=$1 AND due_trigger='terms_agreed'",[c.payment_request_id]);
+    await activatePaymentInstallments(client,c.payment_request_id,'terms_agreed');
     const status=c.payment_plan==='bank_secured'?'awaiting_security':c.payment_plan==='pay_after_delivery'?'awaiting_delivery':c.payment_plan==='documentary_collection'?'awaiting_documents':'payment_due';
     await client.query(`UPDATE payment_requests SET status=$1,release_status=CASE WHEN $2='pay_after_delivery' THEN 'authorized' ELSE release_status END,updated_at=NOW() WHERE id=$3`,[status,c.payment_plan,c.payment_request_id]);
     await recordTradeAudit(client,req.user!,'payment.terms.confirm','sales_contract',id);await client.query('COMMIT');res.json({ok:true});

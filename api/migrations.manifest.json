@@ -112,6 +112,10 @@
     {
       "path": "api/src/migrations/026_delivery_acceptance.ts",
       "sha256": "e41d8ffbd5651e8c8efe6b3f1cc502bd237de4dcb199b1dfb711e0cd32ce3104"
+    },
+    {
+      "path": "api/src/migrations/027_payment_due_reminders.ts",
+      "sha256": "703cde3fde9aa86f2e8ecd4ee0a65c70a04a125e4582d53cb8d7f7dcdb1fd700"
     }
   ]
 }
