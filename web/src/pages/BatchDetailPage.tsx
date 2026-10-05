@@ -24,6 +24,7 @@ export default function BatchDetailPage() {
   const [showPush, setShowPush] = useState(false);
   const [pqty, setPqty] = useState(0);
   const [pprice, setPprice] = useState(0);
+  const [pcurrency, setPcurrency] = useState('EUR');
   const [porigin, setPorigin] = useState('');
   const [pdest, setPdest] = useState('');
   const [pincoterm, setPincoterm] = useState('CIF');
@@ -113,7 +114,7 @@ export default function BatchDetailPage() {
     try {
       const listing = await batchesApi.pushToMarketplace(batch.id, {
         quantityKg: Number(pqty), pricePerKg: Number(pprice),
-        currency: 'EUR', incoterm: pincoterm,
+        currency: pcurrency, incoterm: pincoterm,
         originLocation: porigin, destinationLocation: pdest,
       });
       setCreatedListingId(listing.id);
@@ -256,7 +257,7 @@ export default function BatchDetailPage() {
                 </div>
                 <div>
                   <label className="form-label">Price per kg (€)</label>
-                  <input type="number" step="0.01" className="form-input" value={pprice} onChange={(e) => setPprice(Number(e.target.value))} />
+                  <select aria-label="Supply currency" className="form-select mb-2" value={pcurrency} onChange={e => setPcurrency(e.target.value)}>{['EUR','USD','GHS','GBP'].map(code => <option key={code}>{code}</option>)}</select><input type="number" step="0.01" className="form-input" value={pprice} onChange={(e) => setPprice(Number(e.target.value))} />
                 </div>
                 <div>
                   <label className="form-label">Origin</label>
@@ -274,7 +275,7 @@ export default function BatchDetailPage() {
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-border text-sm">
                   <span className="text-text-muted">Value</span>
-                  <span className="font-bold font-mono text-brand-400">€{(pqty * pprice).toLocaleString()}</span>
+                  <span className="font-bold font-mono text-brand-400">{pcurrency} {(pqty * pprice).toLocaleString()}</span>
                 </div>
                 {pushErr && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{pushErr}</div>}
                 <div className="flex gap-2">

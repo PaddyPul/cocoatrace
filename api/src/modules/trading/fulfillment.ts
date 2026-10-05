@@ -1,11 +1,14 @@
 import { PoolClient, QueryResultRow } from 'pg';
 import { feePolicyVersion } from '../fees/policy';
+import { tradeTotal, requireTradeCurrency } from '../../services/tradeMoney';
 import { config } from '../../config/env';
 import { buildInstallments, requiredBeforeDispatch } from '../../services/paymentProtection';
 import { recordTradeAudit, TradeActor } from './transaction';
 
 /** Acceptance creates the whole actionable deal inside the inventory transaction. */
 export async function createFulfillment(client: PoolClient, actor: TradeActor, offer: QueryResultRow, holdingId: string) {
+  requireTradeCurrency(offer.currency);
+  const value = tradeTotal(offer.quantity_kg, offer.offered_price_per_kg);
   const contractRes = await client.query(
     `INSERT INTO sales_contracts (listing_id,offer_id,seller_organization_id,buyer_organization_id,holding_id,
       quantity_kg,price_per_kg,currency,incoterm,payment_plan,deposit_percentage,payment_terms_status)
@@ -13,7 +16,6 @@ export async function createFulfillment(client: PoolClient, actor: TradeActor, o
     [offer.listing_id, offer.id, actor.organizationId, offer.buyer_organization_id, holdingId,
       offer.quantity_kg, offer.offered_price_per_kg, offer.currency, offer.incoterm]);
   const contract = contractRes.rows[0];
-  const value = Number(offer.quantity_kg) * Number(offer.offered_price_per_kg);
   const paymentRes = await client.query(`INSERT INTO payment_requests
     (contract_id,requested_by_organization_id,amount_total,currency,status,payment_method,due_trigger,dispatch_required_amount,security_status)
     VALUES($1,$2,$3,$4,'awaiting_terms','deposit_balance','terms_agreed',$5,'not_required') RETURNING *`,

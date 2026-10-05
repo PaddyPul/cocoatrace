@@ -1,3 +1,4 @@
+import { requireSameCurrency } from '../../services/tradeMoney';
 import type { PoolClient } from 'pg';
 import { NotFoundError, ConflictError } from '../../errors';
 import type { TradeActor } from '../trading/transaction';
@@ -33,6 +34,7 @@ export async function lockPayment(
     ])
   ).rows[0];
   if (!payment) throw new NotFoundError('Payment workflow');
+  requireSameCurrency(payment.currency, contract.currency);
   return { contract, payment };
 }
 

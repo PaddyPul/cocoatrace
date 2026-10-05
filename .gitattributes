@@ -19,3 +19,5 @@ scripts/check-container-security.test.mjs text eol=lf
 api/scripts/check-runtime-image.mjs text eol=lf
 api/src/modules/cancellation/** text eol=lf
 api/src/modules/fees/** text eol=lf
+
+api/src/services/tradeMoney*.ts text eol=lf

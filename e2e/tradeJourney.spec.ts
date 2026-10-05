@@ -42,7 +42,7 @@ test('full prepayment trade: offer, verified payment gate, document sharing, del
     const inventoryResponse = await supplier.request.post('/api/inventory/direct', { data: { commodity: 'peanut', quantityKg: 10, inventoryDate: new Date().toISOString().slice(0, 10), sourceCountry: 'GH', sourceName: supplierIdentity.organization } });
     expect(inventoryResponse.status()).toBe(201);
     const inventory = await inventoryResponse.json();
-    const listingResponse = await supplier.request.post('/api/listings', { data: { holdingId: inventory.holding_id, availableQuantityKg: 10, pricePerKg: 5, incoterm: 'FOB', originLocation: 'Tema', destinationLocation: 'Rotterdam' } });
+    const listingResponse = await supplier.request.post('/api/listings', { data: { holdingId: inventory.holding_id, availableQuantityKg: 10, pricePerKg: 5, currency: 'EUR', incoterm: 'FOB', originLocation: 'Tema', destinationLocation: 'Rotterdam' } });
     expect(listingResponse.status()).toBe(201);
     const listing = await listingResponse.json();
 
@@ -51,7 +51,8 @@ test('full prepayment trade: offer, verified payment gate, document sharing, del
     await buyer.locator('article').filter({ hasText: supplierIdentity.organization }).getByRole('button', { name: 'View supply details' }).click();
     await expect(buyer).toHaveURL(new RegExp(`/listing/${listing.id}$`));
     await buyer.getByLabel('Quantity (kg)').fill('4');
-    await buyer.getByLabel('Price per kg (€)').fill('5');
+    expect(listing.currency).toBe('EUR');
+    await buyer.getByLabel(`Price per kg (${listing.currency})`, { exact: true }).fill('5');
     const offerEvent = buyer.waitForResponse(response => response.url().endsWith(`/api/listings/${listing.id}/offers`) && response.request().method() === 'POST');
     await buyer.getByRole('button', { name: 'Send evidence-backed offer' }).click();
     expect((await offerEvent).status()).toBe(201);

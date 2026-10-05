@@ -14,6 +14,8 @@ export const formattedPaths = [
   'scripts/check-script-contracts.test.mjs',
   'scripts/quality-policy.test.mjs',
   'scripts/run-release-checks.mjs',
+  'api/src/services/tradeMoney.ts',
+  'api/src/services/tradeMoney.test.ts',
   'api/src/modules/payments/**/*.ts',
   'api/src/modules/delivery/**/*.ts',
   'api/src/modules/cancellation/**/*.ts',
