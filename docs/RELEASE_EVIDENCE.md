@@ -117,3 +117,7 @@ Author checks: 261 API unit tests (26 new fee/dashboard regressions), ten qualit
 ## Trade currency foundation — 2026-10-05
 
 CUR-001–CUR-003 remain IN PROGRESS. Four-currency write policy (EUR/USD/GHS/GBP), exact contract totals/deposit allocation, listing/offer mismatch rejection, payment/dispatch/settlement drift guards and currency-aware UI implemented. No migration, dependencies or financial backfill. 284 unit tests, quality checks, workspace/browser types, API/web builds and migration integrity passed. Supplemental PGlite GHS fulfillment/settlement/fee SQL checks passed; native PostgreSQL/API/concurrency, browser, images and recovery checks not run here (Docker unavailable). Nine database tests and new real GHS buyer UI submission authored; existing fee browser journey switched to GHS. Founder must pass verify:release/CI before merge. Zero/three-decimal currencies, refunds, FX and language support remain open. Handoff: releases/TRADE_CURRENCY_WINDOWS.md; PR: releases/TRADE_CURRENCY_PR.md.
+
+### Trade currency browser selector correction
+
+Founder native release run reached the browser suite and reported the prepayment journey waiting for the retired euro-symbol price label. Corrected the EUR fixture to declare its currency explicitly and locate the exact price label using the returned listing currency. No application, database or payment behavior changed. Browser type checks pass locally; native rerun remains required.
