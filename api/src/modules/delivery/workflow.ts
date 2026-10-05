@@ -192,7 +192,7 @@ export async function acceptDelivery(
       receivedQuantityKg: input.receivedQuantityKg,
       note: input.note,
     });
-    await completeTradeIfReady(client, id);
+    await completeTradeIfReady(client, id, actor);
     const refreshed = await lockContract(client, actor, id);
     return details(client, refreshed);
   });

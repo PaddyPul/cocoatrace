@@ -19,6 +19,7 @@ const PRIMARY_NAV: NavGroup[] = [{ label: 'Workspace', items: [
 
 const TRADE_NAV: NavGroup = { label: 'Active trade', items: [
   { icon: Ship, label: 'Transport', page: 'shipments', orPermissions: ['shipment.read', 'shipment.update'] },
+  { icon: WalletCards, label: 'Platform fees', page: 'platform-fees', orPermissions: ['offer.respond','finance.manage'] },
   { icon: WalletCards, label: 'Payments', page: 'payments', orPermissions: ['payment.read', 'payment.request', 'payment.confirm'] },
 ] };
 

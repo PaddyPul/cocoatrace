@@ -290,7 +290,7 @@ export async function approveIssueResolution(actor: TradeActor, issueId: string)
         proposedByOrganizationId: issue.resolution_proposed_by_organization_id,
       },
     );
-    await completeTradeIfReady(client, contract.id);
+    await completeTradeIfReady(client, contract.id, actor);
     return updated;
   });
 }

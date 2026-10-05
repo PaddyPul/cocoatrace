@@ -1,4 +1,5 @@
 import { agreePaymentTerms, proposePaymentTerms, type PaymentTermsInput } from '../modules/payments/terms';
+import { config } from '../config/env';
 import { AppError } from '../errors';
 import { Request, Response } from 'express';
 import { query } from '../db';
@@ -7,7 +8,7 @@ import { acceptTradeOffer, createTradeOffer, rejectTradeOffer } from '../modules
 
 export async function listOffers(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT t.*, l.seller_organization_id, l.origin_location, l.destination_location,
+    `SELECT t.*, $2::int AS platform_fee_rate_bps,ROUND(t.quantity_kg*t.offered_price_per_kg*$2::integer/10000,2) AS platform_fee_estimate,'seller' AS platform_fee_payer, l.seller_organization_id, l.origin_location, l.destination_location,
             buyer.name as buyer_name, seller.name as seller_name
      FROM trade_offers t
      JOIN listings l ON l.id = t.listing_id
@@ -15,7 +16,7 @@ export async function listOffers(req: Request, res: Response): Promise<void> {
      JOIN organizations seller ON seller.id = l.seller_organization_id
      WHERE l.seller_organization_id=$1 OR t.buyer_organization_id=$1
      ORDER BY t.created_at DESC`,
-    [req.user!.organizationId]
+    [req.user!.organizationId,config.platformFeeBps]
   );
   res.json(rows);
 }
@@ -26,7 +27,7 @@ export async function makeOffer(req: Request, res: Response): Promise<void> {
 }
 
 export async function acceptOffer(req: Request, res: Response): Promise<void> {
-  res.json(await acceptTradeOffer(req.user!, req.params.id as string));
+  res.json(await acceptTradeOffer(req.user!, req.params.id as string, req.body?.feeRateBps));
 }
 
 export async function rejectOffer(req: Request, res: Response): Promise<void> {

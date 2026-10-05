@@ -17,4 +17,5 @@ export const formattedPaths = [
   'api/src/modules/payments/**/*.ts',
   'api/src/modules/delivery/**/*.ts',
   'api/src/modules/cancellation/**/*.ts',
+  'api/src/modules/fees/**/*.ts',
 ];

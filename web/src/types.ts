@@ -228,6 +228,9 @@ export interface Evidence {
 }
 
 export interface Offer {
+  platform_fee_rate_bps?: number;
+  platform_fee_estimate?: string;
+  platform_fee_payer?: string;
   id: string;
   listing_id: string;
   seller_name?: string;

@@ -120,6 +120,10 @@
     {
       "path": "api/src/migrations/028_pre_dispatch_cancellation.ts",
       "sha256": "36df4d4423d8c029746b599559e25ef667a18c8b80ea0e918b0804cbd102db07"
+    },
+    {
+      "path": "api/src/migrations/029_platform_fee_ledger.ts",
+      "sha256": "9615e1df38be457759486aaedc4e8f9bbb3b51b740dd5aee76a1cca88023648a"
     }
   ]
 }

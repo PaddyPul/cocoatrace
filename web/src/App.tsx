@@ -1,3 +1,4 @@
+import PlatformFeesPage from './pages/PlatformFeesPage';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuthCtx } from './components/auth/AuthProvider';
 import ErrorBoundary from './components/shared/ErrorBoundary';
@@ -102,6 +103,8 @@ export default function App() {
           <Route path="/contracts/:id" element={<ProtectedRoute><ContractDetailPage /></ProtectedRoute>} />
           <Route path="/shipments" element={<ProtectedRoute><ShipmentsPage /></ProtectedRoute>} />
           <Route path="/shipments/:id" element={<ProtectedRoute><ShipmentDetailPage /></ProtectedRoute>} />
+          <Route path="/platform-fees" element={<ProtectedRoute><PlatformFeesPage /></ProtectedRoute>} />
+          <Route path="/platform-fees/:id" element={<ProtectedRoute><PlatformFeesPage /></ProtectedRoute>} />
           <Route path="/payments" element={<ProtectedRoute><PaymentsPage /></ProtectedRoute>} />
           <Route path="/payments/:id" element={<ProtectedRoute><PaymentDetailPage /></ProtectedRoute>} />
           <Route path="/evidence" element={<ProtectedRoute><EvidencePage /></ProtectedRoute>} />

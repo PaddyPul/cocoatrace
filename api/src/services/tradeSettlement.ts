@@ -1,6 +1,8 @@
 import type { PoolClient } from 'pg';
+import { makeFeeDue } from '../modules/fees/lifecycle';
+import type { TradeActor } from '../modules/trading/transaction';
 
-export async function completeTradeIfReady(client: PoolClient, contractId: string): Promise<boolean> {
+export async function completeTradeIfReady(client: PoolClient, contractId: string, actor: TradeActor): Promise<boolean> {
   const result = await client.query(
     `SELECT c.*, sh.current_milestone, p.status AS payment_status
        FROM sales_contracts c
@@ -23,6 +25,6 @@ export async function completeTradeIfReady(client: PoolClient, contractId: strin
   await client.query(`UPDATE batch_holdings h SET holder_organization_id=c.buyer_organization_id,status='available' FROM sales_contracts c
     WHERE c.id=$1 AND h.id=c.holding_id AND h.holder_organization_id=c.seller_organization_id`, [contractId]);
   await client.query("UPDATE sales_contracts SET status='settled',completed_at=NOW() WHERE id=$1", [contractId]);
-  await client.query("UPDATE platform_fee_invoices SET status='invoiced',invoiced_at=COALESCE(invoiced_at,NOW()) WHERE contract_id=$1 AND status='estimated'", [contractId]);
+  await makeFeeDue(client, actor, contractId);
   return true;
 }
