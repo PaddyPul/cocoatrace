@@ -36,7 +36,7 @@ export async function api<T = any>(
     window.location.href = '/login';
     throw new Error('Session expired');
   }
-  let data: any = {};
+  let data: any;
   try { data = await res.json(); } catch { data = {}; }
   if (!res.ok) {
     const msg = data?.details ? `${data.error}: ${data.details.map((d: any) => d.message).join('; ')}` : (data?.error || `HTTP ${res.status}`);

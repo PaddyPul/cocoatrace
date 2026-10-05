@@ -4,7 +4,18 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const releaseChecks = [
-  ['Runner checks', ['--test', 'scripts/run-release-checks.test.mjs', 'scripts/compose-compatibility.test.mjs', 'scripts/demo-preview.test.mjs'], true],
+  ['Code quality', ['run', 'check:quality']],
+  ['Workspace type checks', ['run', 'typecheck']],
+  [
+    'Runner checks',
+    [
+      '--test',
+      'scripts/run-release-checks.test.mjs',
+      'scripts/compose-compatibility.test.mjs',
+      'scripts/demo-preview.test.mjs',
+    ],
+    true,
+  ],
   ['API unit tests', ['run', 'test', '--workspace=api']],
   ['API build', ['run', 'build', '--workspace=api']],
   ['Web build', ['run', 'build', '--workspace=web']],
@@ -21,13 +32,25 @@ export function runReleaseChecks(execute, checks = releaseChecks) {
   const results = [];
   let failed = false;
   for (const [name, args, directNode = false] of checks) {
-    if (failed) { results.push({ name, status: 'not_run' }); continue; }
+    if (failed) {
+      results.push({ name, status: 'not_run' });
+      continue;
+    }
     console.log(`\nRelease gate: ${name}`);
     const started = Date.now();
     let exitCode = 1;
-    try { exitCode = execute(args, directNode); } catch { /* Unexpected launch failures are failed gates. */ }
+    try {
+      exitCode = execute(args, directNode);
+    } catch {
+      /* Unexpected launch failures are failed gates. */
+    }
     const passed = exitCode === 0;
-    results.push({ name, status: passed ? 'passed' : 'failed', exitCode, durationMs: Date.now() - started });
+    results.push({
+      name,
+      status: passed ? 'passed' : 'failed',
+      exitCode,
+      durationMs: Date.now() - started,
+    });
     failed = !passed;
   }
   return { status: failed ? 'failed' : 'passed', checks: results };
@@ -38,12 +61,19 @@ function main() {
   const npmCli = process.env.npm_execpath;
   if (!npmCli) throw new Error('Run through npm: npm run verify:release');
   const result = runReleaseChecks((args, directNode) => {
-    const child = spawnSync(process.execPath, directNode ? args : [npmCli, ...args], { cwd: root, stdio: 'inherit' });
+    const child = spawnSync(process.execPath, directNode ? args : [npmCli, ...args], {
+      cwd: root,
+      stdio: 'inherit',
+    });
     if (child.error) throw child.error;
     return child.status ?? 1;
   });
   const revision = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
-  const report = { ...result, commit: revision.status === 0 ? revision.stdout.trim() : null, completedAt: new Date().toISOString() };
+  const report = {
+    ...result,
+    commit: revision.status === 0 ? revision.stdout.trim() : null,
+    completedAt: new Date().toISOString(),
+  };
   const directory = path.join(root, 'release-test-results');
   fs.mkdirSync(directory, { recursive: true });
   fs.writeFileSync(path.join(directory, 'summary.json'), JSON.stringify(report, null, 2));
@@ -51,5 +81,10 @@ function main() {
   process.exitCode = report.status === 'passed' ? 0 : 1;
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  try { main(); } catch (error) { console.error(error.message); process.exitCode = 1; }
+  try {
+    main();
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
 }

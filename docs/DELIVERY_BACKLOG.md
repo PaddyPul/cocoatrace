@@ -3,7 +3,7 @@
 **Purpose:** Single source of truth for work required to move CocoaTrace from a passion project to an investor-ready, pilot-safe and production-capable company.  
 **North Star:** [`NORTH_STAR.md`](./NORTH_STAR.md)  
 **Architecture direction:** [`ARCHITECTURE_MODERNIZATION.md`](./ARCHITECTURE_MODERNIZATION.md)  
-**Last triaged:** 2026-10-02
+**Last triaged:** 2026-10-05
 **Next formal review:** Weekly, before selecting new work
 
 ## How to use this file
@@ -71,7 +71,7 @@ and independent-review evidence becomes available.
 
 ## Progress snapshot — 2026-10-05
 
-Interpreting the founder's latest “done” as completion of the prescribed release checks and merge/pull, the canonical backlog contains **310 items: 61 complete (19.7%), 18 in progress (5.8%), and 231 not started (74.5%)**. Items are counted equally, with no fractional completion credit. Started work is **25.5%**; that is not a completion measure.
+Interpreting the founder's latest “done” as completion of the prescribed release checks and merge/pull, the canonical backlog contains **310 items: 62 complete (20.0%), 20 in progress (6.5%), and 228 not started (73.5%)**. Items are counted equally, with no fractional completion credit. Started work is **26.5%**; that is not a completion measure.
 
 The denominator includes engineering, operations, design-partner validation, fundraising evidence, multi-currency, multi-language and later expansion. It measures the exhaustive roadmap, not usability of the existing app or a percentage of an $8M valuation. Native/CI completion here is founder-reported; independent CI URL archival remains open. Partially implemented suspension, real email delivery, hosted restore, disposal/segregation and recall deadline/external-recipient workflows stay open.
 
@@ -79,9 +79,9 @@ The denominator includes engineering, operations, design-partner validation, fun
 
 Select the next coherent batch from this queue. Completed-wave history and evidence are maintained in [`RELEASE_EVIDENCE.md`](RELEASE_EVIDENCE.md), rather than occupying the active queue.
 
-1. **Payment timing release — PAY-008:** verify terms/document/delivery deadline activation, conservative historical backfill and daily reminder/email worker in native release checks.
+1. **Repository maintainability release — QLT-006, targeted QLT-007 and ARC-028:** incremental lint/format/type and script-contract gates implemented; native release verification and merge pending. See `engineering/CODE_QUALITY.md`.
 2. **Remaining delivery remedies — LOG-006:** partial settlement/refunds/cancellation/returns require explicit financial and inventory policies; full-quantity acceptance and discrepancy resolution are already merged.
-3. **Repository maintainability gate — QLT-006 and targeted ARC items:** introduce lint/format/type checks incrementally, then extract modules when changing their behavior. Avoid a broad rewrite that delays tested customer flows.
+3. **Continue targeted architectural cleanup:** adopt strict typing and extract large modules when their behavior changes; do not broadly rewrite tested customer flows.
 4. **Commercial operations — PAY-011–PAY-013:** explicit fee payer/invoice/collection rules and reconciled finance exports; real tax/business policy needs founder input.
 5. **Controlled pilot and live environment gates — IDN-005, IDN-021, ENV-004–ENV-006, OPS-001–OPS-002, BST-002–BST-003:** actual approved design partners, real email delivery, private storage and a verified hosted restore under the zero-budget constraint. Provider eligibility and customer participation remain external dependencies.
 
@@ -153,7 +153,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **ARC-025 · P2 · Phase 3:** Remove the unused sessions design or make it the authoritative revocable session system.
 - [ ] **ARC-026 · P3 · Phase 4:** Add commodity policy/configuration interfaces before onboarding the second commodity.
 - [ ] **ARC-027 · P3 · Phase 4:** Add transformation workflow ports and domain types only when a validated customer requires blending/repacking.
-- [ ] **ARC-028 · P2 · Phase 2:** Audit package-script entry points and remove or repair obsolete aliases. Discovered 2026-10-01: `api` scripts `db:migrate:js` and `db:seed:js` reference absent files. Done when documented commands resolve to supported runners and a lightweight script-contract check prevents recurrence.
+- [-] **ARC-028 · P2 · Phase 2:** Audit package-script entry points and remove or repair obsolete aliases. Discovered 2026-10-01: `api` scripts `db:migrate:js` and `db:seed:js` reference absent files. Done when documented commands resolve to supported runners and a lightweight script-contract check prevents recurrence.
 
 # 4. Identity, registration and organizations
 
@@ -273,7 +273,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [x] **PAY-005 · P1 · Phase 2:** IMPLEMENTED: state-based retry safety for submission, confirmation, rejection, document presentation and bank security; atomic audits, contract-first locking and exact NUMERIC receipt totals. Native simultaneous-request regression remains pending execution. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
 - [x] **PAY-006 · P1 · Phase 2:** Prevent one party from unilaterally satisfying incompatible payment and delivery conditions. IMPLEMENTED: physical delivery no longer settles; buyer acceptance and seller receipt verification are both required. Founder confirmed tested and merged on 2026-10-02.
 - [x] **PAY-007 · P1 · Phase 2:** IMPLEMENTED: five-plan policy in [`runbooks/PAYMENT_DOCUMENT_RULES.md`](runbooks/PAYMENT_DOCUMENT_RULES.md), contract/shipment download gating and safe document-presentation checks. Native release confirmation pending. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
-- [-] **PAY-008 · P1 · Phase 2:** Add overdue installment calculation and reminders. IN PROGRESS: terms/document/delivery deadlines and daily reminder email worker implemented in this wave; native release verification and merge pending. Disabled email retains the queue, SMTP acceptance is distinct from inbox delivery.
+- [x] **PAY-008 · P1 · Phase 2:** Add overdue installment calculation and reminders. Founder reports release verification and merge/pull complete including the system-audit correction. Disabled email retains the queue; SMTP acceptance is distinct from inbox delivery.
 - [x] **PAY-009 · P1 · Phase 2:** Add correction/reversal procedure without deleting history. CLOSED 2026-10-02: bilateral reference/receipt corrections and durable audit events tested and merged per founder confirmation; this records external payments and does not refund funds.
 - [x] **PAY-010 · P1 · Phase 2:** Define how bank guarantees/LC references are independently checked or explicitly marked seller-accepted only. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
 - [ ] **PAY-011 · P1 · Phase 2:** Define platform fee payer, tax treatment, invoice timing and collection process.
@@ -354,8 +354,8 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **QLT-003 · P0 · Phase 1:** Add inventory and offer concurrency tests.
 - [x] **QLT-004 · P0 · Phase 1:** Real-PostgreSQL integration tests cover linked-resource upload authorization, private quarantine, extension/MIME/signature validation, file and tenant quota limits, EICAR rejection and audit, quarantine deletion, scan-clean download gating and unauthenticated `/uploads` denial. The Docker harness additionally exercises S3-compatible storage and ClamAV.
 - [x] **QLT-005 · P1 · Phase 1:** Test migrations from an empty database and from the current baseline snapshot. IMPLEMENTED: ten release-command scenarios cover fresh/no-op startup, concurrent startup, preserved upgrade records/history, real forward-failure rollback, occupied schemas, partial/unknown history and stale locks. Nine nonconcurrent scenarios passed against temporary WASM PostgreSQL; the full native Docker suite must pass. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
-- [ ] **QLT-006 · P1 · Phase 1:** Add ESLint, formatting and typecheck commands to CI.
-- [ ] **QLT-007 · P1 · Phase 1:** Prohibit new `any` in changed high-risk modules.
+- [-] **QLT-006 · P1 · Phase 1:** Add ESLint, formatting and typecheck commands to CI. IN PROGRESS: incremental gates implemented; native release and merge pending.
+- [-] **QLT-007 · P1 · Phase 1:** Prohibit new `any` in changed high-risk modules. PARTIAL: enforced for payment/delivery; expansion to other high-risk modules remains open.
 - [ ] **QLT-008 · P1 · Phase 1:** Add regression tests for every confirmed P0 defect before or with the fix.
 - [ ] **QLT-009 · P1 · Phase 2:** Add Playwright buyer onboarding and sourcing journey.
 - [ ] **QLT-010 · P1 · Phase 2:** Add Playwright supplier organic and conventional publishing journeys.
@@ -527,4 +527,4 @@ An item is complete only when applicable criteria are met:
 | No restore/monitoring/incident proof | High | Health endpoints and structured logger | OPS-001–012 |
 | Marketing claims exceed implemented transformations | Medium | Demo genealogy | PRD-001, RCL-011, INV-005 |
 
-Payment/document hardening wave: apply [`releases/PAYMENT_DOCUMENT_HARDENING_WINDOWS.md`](releases/PAYMENT_DOCUMENT_HARDENING_WINDOWS.md), then record native release results before closing the pending payment checks. Subsequent payment work is the remaining PAY-008 due-date activation and scheduled notification delivery, followed by fee invoicing/collection; real-provider integration remains deferred.
+Payment/document hardening wave: apply [`releases/PAYMENT_DOCUMENT_HARDENING_WINDOWS.md`](releases/PAYMENT_DOCUMENT_HARDENING_WINDOWS.md), then record native release results before closing the pending payment checks. PAY-008 is now founder-verified and merged. Subsequent payment work includes fee invoicing/collection; real-provider integration remains deferred.

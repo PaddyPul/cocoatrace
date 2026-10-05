@@ -1,0 +1,13 @@
+node_modules
+**/dist
+**/private-evidence
+**/uploads
+api/src/migrations
+api/test/integration/baselines
+package-lock.json
+*.bundle
+browser-test-results
+release-test-results
+playwright-report
+test-results
+.demo-preview

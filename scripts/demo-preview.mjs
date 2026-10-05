@@ -96,7 +96,7 @@ export async function verifyEmailGate(url,{fetchImpl=fetch,pauseImpl=pause,attem
    if(isEmailGate(response.status,location,body,url)) {log('PASS: anonymous external request denied or sent to provider email gate');return;}
    if(body.includes('id="root"')) throw new Error('EXPOSED_APP');
   } catch(error) {
-   if(error.message==='EXPOSED_APP') throw new Error('Anonymous request reached the application; stopping sharing immediately');
+   if(error.message==='EXPOSED_APP') throw new Error('Anonymous request reached the application; stopping sharing immediately', { cause: error });
    observed=error.name==='TimeoutError'?'probe timed out':'probe request failed';
   }
   log(`External access check ${attempt+1}/${attempts}: ${observed}`);

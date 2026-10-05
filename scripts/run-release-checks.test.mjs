@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {runReleaseChecks} from './run-release-checks.mjs';
+import {runReleaseChecks, releaseChecks} from './run-release-checks.mjs';
 const plan=[['first',['first']],['second',['second']],['third',['third']]];
 test('a failed gate stops execution and cannot count later checks as passing',()=>{
  const invoked=[];
@@ -15,4 +15,8 @@ test('a launch error fails the release and prevents later checks',()=>{
 test('all gates must execute successfully to report a passed release',()=>{
  let count=0;const result=runReleaseChecks(()=>{count++;return 0;},plan);
  assert.equal(count,3);assert.equal(result.status,'passed');assert.ok(result.checks.every(check=>check.status==='passed'));
+});
+
+test('quality and workspace types gate every release before infrastructure checks',()=>{
+ assert.deepEqual(releaseChecks.slice(0,2).map(check=>check[1]),[['run','check:quality'],['run','typecheck']]);
 });
