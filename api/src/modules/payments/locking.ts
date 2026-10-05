@@ -26,6 +26,7 @@ export async function lockPayment(
     )
   ).rows[0];
   if (!contract) throw new NotFoundError('Payment workflow');
+  if (contract.status === 'cancelled') throw new ConflictError('This trade has been cancelled');
   const payment = (
     await client.query('SELECT * FROM payment_requests WHERE contract_id=$1 FOR UPDATE', [
       contractId,

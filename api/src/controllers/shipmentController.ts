@@ -2,7 +2,6 @@ import { activatePaymentInstallments } from '../modules/payments/dueDates';
 import { lockRecallBoundary, assertBatchNotRecalled } from '../modules/recall/safety';
 import { Request, Response } from 'express';
 import { getClient, query } from '../db';
-import * as audit from '../services/audit';
 import { dispatchDecision, PaymentPlan } from '../services/paymentProtection';
 import { recordTradeAudit } from '../modules/trading/transaction';
 import { completeTradeIfReady } from '../services/tradeSettlement';
@@ -72,7 +71,15 @@ export async function updateShipmentDetails(req: Request, res: Response): Promis
     transportDocumentReference, trackingUrl, vesselName, containerReference,
     originLocation, destinationLocation, etaArrival,
   } = req.body;
-  const { rows } = await query(
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    await lockRecallBoundary(client);
+    const selected = await client.query(`SELECT c.status FROM sales_contracts c JOIN shipments sh ON sh.contract_id=c.id WHERE sh.id=$1 AND sh.transport_coordinator_organization_id=$2 FOR UPDATE OF c`, [id, req.user!.organizationId]);
+    if (selected.rows[0]?.status === 'cancelled') {
+      await client.query('ROLLBACK'); res.status(409).json({ error: 'This trade has been cancelled' }); return;
+    }
+  const { rows } = await client.query(
     `UPDATE shipments sh SET
        service_provider_name=COALESCE($1, service_provider_name),
        booking_reference=COALESCE($2, booking_reference),
@@ -100,28 +107,32 @@ export async function updateShipmentDetails(req: Request, res: Response): Promis
     ]
   );
   if (!rows[0]) {
+    await client.query('ROLLBACK');
     res.status(403).json({ error: 'Only the buyer or seller assigned by the Incoterm can edit the transport arrangement' });
     return;
   }
   if (rows[0].current_milestone === 'booked') {
-    await query(
+    await client.query(
       `INSERT INTO shipment_milestones (shipment_id, milestone, recorded_by_user_id, notes)
        SELECT $1, 'booked', $2, 'External transport arrangement recorded'
        WHERE NOT EXISTS (SELECT 1 FROM shipment_milestones WHERE shipment_id=$1 AND milestone='booked')`,
       [id, req.user!.id]
     );
-    await query("UPDATE sales_contracts SET status='fulfilment_in_progress' WHERE id=$1 AND status='accepted'", [rows[0].contract_id]);
+    await client.query("UPDATE sales_contracts SET status='fulfilment_in_progress' WHERE id=$1 AND status='accepted'", [rows[0].contract_id]);
   }
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'transport.arrangement.update', entityType: 'shipment', entityId: id });
+  await recordTradeAudit(client, req.user!, 'transport.arrangement.update', 'shipment', id);
+  await client.query('COMMIT');
   res.json(rows[0]);
+  } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
 }
 
 export async function recordMilestone(req: Request, res: Response): Promise<void> {
   const id = req.params.id as string;
   const {milestone,location,notes,exceptionalDispatch}=req.body,client=await getClient();
-  try{await client.query('BEGIN');await lockRecallBoundary(client);const r=await client.query(`SELECT sh.*,c.seller_organization_id,c.buyer_organization_id,c.payment_plan,c.payment_terms_status,c.credit_days,c.holding_id,c.quantity_kg as contract_quantity_kg,p.id payment_request_id,p.amount_confirmed,p.dispatch_required_amount,p.security_status
+  try{await client.query('BEGIN');await lockRecallBoundary(client);const r=await client.query(`SELECT sh.*,c.seller_organization_id,c.buyer_organization_id,c.payment_plan,c.payment_terms_status,c.credit_days,c.holding_id,c.quantity_kg as contract_quantity_kg,c.status as contract_status,p.id payment_request_id,p.amount_confirmed,p.dispatch_required_amount,p.security_status
     FROM shipments sh JOIN sales_contracts c ON c.id=sh.contract_id JOIN payment_requests p ON p.contract_id=c.id WHERE sh.id=$1 FOR UPDATE OF sh,c,p`,[id]);const s=r.rows[0],org=req.user!.organizationId;
     if(!s){await client.query('ROLLBACK');res.status(404).json({error:'Transport record not found'});return;}if(s.seller_organization_id!==org&&s.buyer_organization_id!==org){await client.query('ROLLBACK');res.status(403).json({error:'Only a party can report progress'});return;}
+    if(s.contract_status==='cancelled'){await client.query('ROLLBACK');res.status(409).json({error:'This trade has been cancelled'});return;}
     if(!MILESTONE_ORDER.includes(milestone)){await client.query('ROLLBACK');res.status(400).json({error:'Unknown transport milestone'});return;}const current=MILESTONE_ORDER.indexOf(s.current_milestone),next=MILESTONE_ORDER.indexOf(milestone);if(next<=current){await client.query('ROLLBACK');res.status(400).json({error:`Cannot go from ${s.current_milestone} to ${milestone}. Milestones must progress forward.`});return;}
     // A safety recall cannot be overridden by the exceptional-payment dispatch option.
     // Arrival, customs and receipt records stay available for containment and recovery.

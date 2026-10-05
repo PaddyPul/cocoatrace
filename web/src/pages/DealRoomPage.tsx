@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BadgeCheck, Check, Circle, Download, FileText, Landmark, LockKeyhole, PackageCheck, Settings, ShieldCheck, Ship, WalletCards } from 'lucide-react';
 import PaymentProof from '../components/payments/PaymentProof';
+import ContractCancellation from '../components/trading/ContractCancellation';
 import DeliveryAcceptance from '../components/delivery/DeliveryAcceptance';
 import Layout from '../components/layout/Layout';
 import { contracts, payments } from '../api';
@@ -41,6 +42,8 @@ export default function DealRoomPage() {
 
   if (!deal && !error) return <Layout currentPage="deal-room"><SkeletonDetail /></Layout>;
   if (error || !deal) return <Layout currentPage="deal-room"><div className="rounded-2xl border border-red-500/30 bg-red-900/10 p-4 text-xs text-red-300">{error || 'Deal not found'}</div></Layout>;
+
+  if (deal.status === 'cancelled') return <Layout currentPage="deal-room"><h1 className="text-xl font-semibold mb-4">Trade cancelled</h1><ContractCancellation contractId={deal.id} organizationId={user?.organizationId || ''} onChanged={refresh} /><button className="btn mt-4" onClick={() => navigate(`/contracts/${deal.id}`)}>View archived contract and documents</button></Layout>;
 
   const isBuyer = deal.buyer_organization_id === user?.organizationId;
   const isSeller = deal.seller_organization_id === user?.organizationId;
@@ -126,6 +129,7 @@ export default function DealRoomPage() {
 
     <section className="mt-5 rounded-3xl border border-brand-400/25 bg-brand-400/5 p-5 sm:p-6"><div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-300">Best next action</div><h3 className="mt-1 text-lg font-bold">{nextTitle}</h3><p className="mt-1 max-w-2xl text-xs leading-5 text-text-muted">{nextCopy}</p></div><div className="w-full lg:w-auto lg:min-w-[310px]">{nextAction}</div></div></section>
 
+    <div className="mt-5"><ContractCancellation contractId={deal.id} organizationId={user?.organizationId || ''} onChanged={refresh} /></div>
     {delivered && <div className="mt-5"><DeliveryAcceptance contractId={deal.id} organizationId={user?.organizationId || ''} onChanged={refresh} /></div>}
     <div className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]">
       <section className="space-y-5">

@@ -162,7 +162,16 @@ export const sourcing = {
     api<import('./types').SourcingRequest>('PATCH', `/sourcing-requests/${id}`, data),
 };
 
+export interface CancellationState {
+  contractStatus: string;
+  blockedReason: string | null;
+  requests: { id: string; requested_by_organization_id: string; status: 'requested' | 'approved' | 'rejected'; reason: string }[];
+}
+
 export const contracts = {
+  cancellation: (id: string) => api<CancellationState>('GET', `/contracts/${id}/cancellation`),
+  requestCancellation: (id: string, reason: string) => api('POST', `/contracts/${id}/cancellation`, {reason}),
+  reviewCancellation: (id: string, requestId: string, approve: boolean) => api('POST', `/contracts/${id}/cancellation/${requestId}/${approve ? 'approve' : 'reject'}`, {}),
   delivery: (id: string) => api<any>('GET', `/contracts/${id}/delivery`),
   acceptDelivery: (id: string, data: {receivedQuantityKg: number; note: string}) => api<any>('POST', `/contracts/${id}/delivery/accept`, data),
   reportDiscrepancy: (id: string, data: {kind: string;receivedQuantityKg:number;reason:string;evidenceIds:string[]}) => api<any>('POST', `/contracts/${id}/delivery/discrepancy`, data),
