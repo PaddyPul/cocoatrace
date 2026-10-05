@@ -1,9 +1,8 @@
-import { activatePaymentInstallments } from '../modules/payments/dueDates';
+import { agreePaymentTerms, proposePaymentTerms, type PaymentTermsInput } from '../modules/payments/terms';
+import { AppError } from '../errors';
 import { Request, Response } from 'express';
-import { query, getClient } from '../db';
+import { query } from '../db';
 import * as audit from '../services/audit';
-import { recordTradeAudit } from '../modules/trading/transaction';
-import { buildInstallments, PaymentPlan, requiredBeforeDispatch } from '../services/paymentProtection';
 import { acceptTradeOffer, createTradeOffer, rejectTradeOffer } from '../modules/trading/offers';
 
 export async function listOffers(req: Request, res: Response): Promise<void> {
@@ -90,37 +89,23 @@ export async function getContract(req: Request, res: Response): Promise<void> {
   res.json({ ...rows[0], delivery_accepted_at: acceptance.rows[0]?.accepted_at || null, delivery_discrepancy_status: discrepancy.rows[0]?.status || null, documents: documents.rows, installments:installments.rows });
 }
 
-export async function updatePaymentTerms(req:Request,res:Response):Promise<void>{
-  const id=req.params.id as string; const {paymentPlan,depositPercentage=20,creditDays=30,note,paymentEvidenceRequired=false}=req.body as {paymentPlan:PaymentPlan;depositPercentage?:number;creditDays?:number;note?:string;paymentEvidenceRequired?:boolean};
-  const client=await getClient();
-  try{await client.query('BEGIN'); const r=await client.query(`SELECT c.*,p.id payment_request_id,p.amount_total FROM sales_contracts c JOIN payment_requests p ON p.contract_id=c.id
-    WHERE c.id=$1 AND c.seller_organization_id=$2 FOR UPDATE OF c,p`,[id,req.user!.organizationId]); const c=r.rows[0];
-    if(!c){await client.query('ROLLBACK');res.status(404).json({error:'Contract not found or only the seller can propose payment terms'});return;}
-    if(c.payment_terms_status==='agreed'){await client.query('ROLLBACK');res.status(409).json({error:'Confirmed payment terms cannot be changed'});return;}
-    const activity=await client.query("SELECT 1 FROM payment_installments WHERE payment_request_id=$1 AND status IN('payment_submitted','paid') LIMIT 1",[c.payment_request_id]);
-    if(activity.rows[0]){await client.query('ROLLBACK');res.status(409).json({error:'Payment activity already exists'});return;}
-    const total=Number(c.amount_total),required=requiredBeforeDispatch(paymentPlan,total,depositPercentage),security=paymentPlan==='bank_secured'?'awaiting_submission':'not_required';
-    await client.query(`UPDATE sales_contracts SET payment_plan=$1,deposit_percentage=$2,credit_days=$3,payment_terms_note=$4,payment_terms_status='proposed',payment_terms_confirmed_at=NULL,payment_terms_confirmed_by_user_id=NULL WHERE id=$5`,[paymentPlan,depositPercentage,creditDays,note||null,id]);
-    await client.query(`UPDATE payment_requests SET status='awaiting_terms',payment_method=$1,dispatch_required_amount=$2,amount_confirmed=0,security_status=$3,security_provider=NULL,security_reference=NULL,security_submitted_at=NULL,security_verified_at=NULL,security_verified_by_user_id=NULL,release_status='locked',updated_at=NOW() WHERE id=$4`,[paymentPlan,required,security,c.payment_request_id]);
-    await client.query('UPDATE sales_contracts SET payment_evidence_required=$1 WHERE id=$2',[paymentEvidenceRequired,id]);
-    await client.query('DELETE FROM payment_installments WHERE payment_request_id=$1',[c.payment_request_id]);
-    for(const i of buildInstallments(paymentPlan,total,depositPercentage)) await client.query(`INSERT INTO payment_installments(payment_request_id,installment_type,sequence_number,amount_due,due_trigger,status) VALUES($1,$2,$3,$4,$5,'awaiting_trigger')`,[c.payment_request_id,i.installmentType,i.sequenceNumber,i.amountDue,i.dueTrigger]);
-    await recordTradeAudit(client,req.user!,'payment.terms.propose','sales_contract',id,{paymentPlan,paymentEvidenceRequired}); await client.query('COMMIT'); res.json({ok:true});
-  }catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
+// Preserve the existing HTTP response shape while the service owns transaction policy.
+export async function updatePaymentTerms(req: Request, res: Response): Promise<void> {
+  try {
+    res.json(await proposePaymentTerms(req.user!, req.params.id as string, req.body as PaymentTermsInput));
+  } catch (error) {
+    if (!(error instanceof AppError)) throw error;
+    res.status(error.statusCode).json({ error: error.message });
+  }
 }
 
-export async function confirmPaymentTerms(req:Request,res:Response):Promise<void>{
-  const id=req.params.id as string,client=await getClient();
-  try{await client.query('BEGIN');const r=await client.query(`SELECT c.*,p.id payment_request_id FROM sales_contracts c JOIN payment_requests p ON p.contract_id=c.id WHERE c.id=$1 AND c.buyer_organization_id=$2 FOR UPDATE OF c,p`,[id,req.user!.organizationId]);const c=r.rows[0];
-    if(!c){await client.query('ROLLBACK');res.status(404).json({error:'Contract not found or only the buyer can confirm its payment terms'});return;}
-    if(c.payment_terms_status==='agreed'){await client.query('COMMIT');res.json({ok:true,alreadyConfirmed:true});return;}
-    if(c.payment_terms_status!=='proposed'){await client.query('ROLLBACK');res.status(409).json({error:'The supplier must propose the payment terms before the buyer can confirm them'});return;}
-    await client.query("UPDATE sales_contracts SET payment_terms_status='agreed',payment_terms_confirmed_at=NOW(),payment_terms_confirmed_by_user_id=$1 WHERE id=$2",[req.user!.id,id]);
-    await activatePaymentInstallments(client,c.payment_request_id,'terms_agreed');
-    const status=c.payment_plan==='bank_secured'?'awaiting_security':c.payment_plan==='pay_after_delivery'?'awaiting_delivery':c.payment_plan==='documentary_collection'?'awaiting_documents':'payment_due';
-    await client.query(`UPDATE payment_requests SET status=$1,release_status=CASE WHEN $2='pay_after_delivery' THEN 'authorized' ELSE release_status END,updated_at=NOW() WHERE id=$3`,[status,c.payment_plan,c.payment_request_id]);
-    await recordTradeAudit(client,req.user!,'payment.terms.confirm','sales_contract',id);await client.query('COMMIT');res.json({ok:true});
-  }catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
+export async function confirmPaymentTerms(req: Request, res: Response): Promise<void> {
+  try {
+    res.json(await agreePaymentTerms(req.user!, req.params.id as string));
+  } catch (error) {
+    if (!(error instanceof AppError)) throw error;
+    res.status(error.statusCode).json({ error: error.message });
+  }
 }
 
 export async function updateEudrReference(req: Request, res: Response): Promise<void> {

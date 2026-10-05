@@ -15,6 +15,7 @@
 5. Do not hide unfinished scope inside a pull request. Create follow-up items before merging.
 6. At the end of each work session, update checkboxes, the current queue, risks and `Last triaged` if priorities changed.
 7. Automate repeatable browser journeys in each sprint. Bundle handoffs should require automated checks plus a short targeted smoke test, not repeat the entire manual regression suite. Real-provider delivery, usability and new behavior still require focused human verification.
+8. Every bundle handoff includes guarded apply/test/start/push/merge/pull commands and a tailored PR title/description, with actual and pending verification distinguished.
 
 When asked “what needs to be done?”, start with incomplete items in the current execution queue, then the active phase exit criteria, then blocked P0/P1 work.
 
@@ -71,7 +72,7 @@ and independent-review evidence becomes available.
 
 ## Progress snapshot — 2026-10-05
 
-Interpreting the founder's latest “done” as completion of the prescribed release checks and merge/pull, the canonical backlog contains **310 items: 64 complete (20.6%), 19 in progress (6.1%), and 227 not started (73.2%)**. Items are counted equally, with no fractional completion credit. Started work is **26.8%**; that is not a completion measure.
+Interpreting the founder's latest “done” as completion of the prescribed release checks and merge/pull, the canonical backlog contains **310 items: 64 complete (20.6%), 21 in progress (6.8%), and 225 not started (72.6%)**. Items are counted equally, with no fractional completion credit. Started work is **27.4%**; that is not a completion measure.
 
 The denominator includes engineering, operations, design-partner validation, fundraising evidence, multi-currency, multi-language and later expansion. It measures the exhaustive roadmap, not usability of the existing app or a percentage of an $8M valuation. Native/CI completion here is founder-reported; independent CI URL archival remains open. Partially implemented suspension, real email delivery, hosted restore, disposal/segregation and recall deadline/external-recipient workflows stay open.
 
@@ -79,9 +80,9 @@ The denominator includes engineering, operations, design-partner validation, fun
 
 Select the next coherent batch from this queue. Completed-wave history and evidence are maintained in [`RELEASE_EVIDENCE.md`](RELEASE_EVIDENCE.md), rather than occupying the active queue.
 
-1. **Container security release — SEC-014:** dependency fixes are founder-reported merged. Multi-stage API runtime, supported Node 24 bases, unprivileged Nginx and fail-closed OS/library image scans implemented; actual Docker/CI verification remains pending. The unpatched build-only braces advisory, third-party service images and digest promotion remain open. See `runbooks/CONTAINER_SECURITY.md`.
+1. **Container security release — SEC-014:** dependency fixes are founder-reported merged. Multi-stage API runtime, supported Node 24 bases, unprivileged Nginx and fail-closed OS/library image scans implemented; founder confirmed release/merge/pull on 2026-10-05 after the package-manager correction. Remaining image/digest/build-tool scope stays open. The unpatched build-only braces advisory, third-party service images and digest promotion remain open. See `runbooks/CONTAINER_SECURITY.md`.
 2. **Remaining delivery remedies — LOG-006:** partial settlement/refunds/cancellation/returns require explicit financial and inventory policies; full-quantity acceptance and discrepancy resolution are already merged.
-3. **Continue targeted architectural cleanup:** adopt strict typing and extract large modules when their behavior changes; do not broadly rewrite tested customer flows.
+3. **Payment-term workflow extraction — ARC-006, ARC-019, QLT-007:** proposal/confirmation are moved from HTTP controllers into a typed transaction service; contract-first locking, closed-contract guards, retry and rollback regressions implemented. Native release/CI remains pending. Continue other state-machine extraction incrementally.
 4. **Commercial operations — PAY-011–PAY-013:** explicit fee payer/invoice/collection rules and reconciled finance exports; real tax/business policy needs founder input.
 5. **Controlled pilot and live environment gates — IDN-005, IDN-021, ENV-004–ENV-006, OPS-001–OPS-002, BST-002–BST-003:** actual approved design partners, real email delivery, private storage and a verified hosted restore under the zero-budget constraint. Provider eligibility and customer participation remain external dependencies.
 
@@ -131,7 +132,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **ARC-003 · P1 · Phase 1:** Create reusable resource policy interfaces and move authorization decisions out of controllers.
 - [ ] **ARC-004 · P1 · Phase 1:** Extract evidence controller logic into service, policy, repository and infrastructure adapters.
 - [x] **ARC-005 · P1 · Phase 1:** Extract offer acceptance and inventory reservation into one transactional trading use case. IMPLEMENTED: Offer acceptance, stock commitment and fulfillment creation are extracted into the trading module; native integration/CI validation is pending. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
-- [ ] **ARC-006 · P1 · Phase 2:** Extract payment-plan and installment state machines.
+- [-] **ARC-006 · P1 · Phase 2:** Extract payment-plan and installment state machines. IN PROGRESS: typed payment-term proposal/confirmation use cases and next-state mapping extracted, with transaction/audit and authorization regressions; other payment state transitions and native verification remain open.
 - [ ] **ARC-007 · P1 · Phase 2:** Extract shipment and delivery state machines.
 - [ ] **ARC-008 · P1 · Phase 2:** Extract recall activation, notification and resolution use cases.
 - [ ] **ARC-009 · P2 · Phase 2:** Split public product administration, public rendering and recall code into separate modules.
@@ -144,7 +145,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **ARC-016 · P2 · Phase 3:** Split `web/src/api.ts` into a shared HTTP client and feature clients.
 - [ ] **ARC-017 · P2 · Phase 3:** Split `web/src/types.ts` into module-owned schemas and domain types.
 - [ ] **ARC-018 · P2 · Phase 3:** Refactor batch, contract and shipment route components into focused components and hooks.
-- [ ] **ARC-019 · P2 · Phase 3:** Replace compressed multi-operation functions with readable, named use cases.
+- [-] **ARC-019 · P2 · Phase 3:** Replace compressed multi-operation functions with readable, named use cases. IN PROGRESS: contract payment-term handlers are HTTP adapters over named typed use cases; remaining controllers and native verification stay open.
 - [ ] **ARC-020 · P2 · Phase 3:** Eliminate `any` from high-risk domain, authorization, payment, evidence and traceability paths.
 - [ ] **ARC-021 · P2 · Phase 3:** Publish and maintain an OpenAPI specification.
 - [ ] **ARC-022 · P2 · Phase 3:** Generate or strongly type the frontend API boundary from the OpenAPI contract.

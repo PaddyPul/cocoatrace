@@ -26,7 +26,7 @@ async function actor(type: 'exporter' | 'importer'): Promise<Actor> {
 const post = (path: string, principal: Actor, body = {}) => request(app).post(path).set('Authorization', `Bearer ${principal.token}`).send(body);
 const get = (path: string, principal: Actor) => request(app).get(path).set('Authorization', `Bearer ${principal.token}`);
 
-async function deal(plan: PaymentPlan, proof = false, incoterm = 'FOB') {
+async function deal(plan: PaymentPlan, proof = false, incoterm = 'FOB', confirm = true) {
   const batch = (await query("INSERT INTO harvest_batches(crop,harvest_date,quantity_kg,current_holder_id,source_mode,source_name,source_country) VALUES('peanut',CURRENT_DATE,10,$1,'direct_inventory','Payment regression','GH') RETURNING id", [seller.organizationId])).rows[0];
   const holding = (await query('INSERT INTO batch_holdings(batch_id,holder_organization_id,quantity_kg) VALUES($1,$2,10) RETURNING id', [batch.id, seller.organizationId])).rows[0];
   const listing = (await query("INSERT INTO listings(seller_organization_id,holding_id,available_quantity_kg,price_per_kg,currency,incoterm,origin_location,destination_location) VALUES($1,$2,10,5,'EUR',$3,'Tema','Rotterdam') RETURNING id", [seller.organizationId, holding.id, incoterm])).rows[0];
@@ -36,7 +36,7 @@ async function deal(plan: PaymentPlan, proof = false, incoterm = 'FOB') {
   const { contract, shipment, paymentRequest } = accepted.body;
   const payment = paymentRequest || (await query('SELECT * FROM payment_requests WHERE contract_id=$1', [contract.id])).rows[0];
   expect((await request(app).patch(`/contracts/${contract.id}/payment-terms`).set('Authorization', `Bearer ${seller.token}`).send( { paymentPlan: plan, depositPercentage: 20, creditDays: 0, paymentEvidenceRequired: proof })).status).toBe(200);
-  expect((await post(`/contracts/${contract.id}/payment-terms/confirm`, buyer)).status).toBe(200);
+  if (confirm) expect((await post(`/contracts/${contract.id}/payment-terms/confirm`, buyer)).status).toBe(200);
   // Transport metadata is a fixture; progress mutations use the real API.
   await query("UPDATE shipments SET transport_document_reference='REGRESSION-CONSIGNMENT' WHERE id=$1", [shipment.id]);
   return { contractId: contract.id, shipmentId: shipment.id, paymentId: payment.id, holdingId: contract.holding_id };
@@ -245,5 +245,45 @@ describe('payment plans, protected documents and atomic retries', () => {
       expect((await post(`/payment-installments/${id}/submit`, buyer, { transactionReference: 'AUDIT-ROLLBACK' })).status).toBe(500);
       const p = await state(d); expect(p.installments[0].status).toBe('due'); expect(p.status).toBe('payment_due');
     } finally { await query('DROP TRIGGER fail_payment_audit ON audit_events; DROP FUNCTION fail_payment_audit()'); }
+  });
+});
+
+
+describe('extracted payment-term use cases at the API boundary', () => {
+  it('restricts proposal to the supplier and confirmation to the buyer without leaking another tenant', async () => {
+    const d = await deal('deposit_balance', false, 'FOB', false);
+    const endpoint = `/contracts/${d.contractId}/payment-terms`;
+    for (const principal of [buyer, outsider]) {
+      const response = await request(app).patch(endpoint).set('Authorization', `Bearer ${principal.token}`).send({ paymentPlan: 'pay_before_dispatch' });
+      expect(response.status).toBe(404);
+    }
+    for (const principal of [seller, outsider]) expect((await post(`${endpoint}/confirm`, principal)).status).toBe(404);
+    expect((await query('SELECT payment_plan,payment_terms_status FROM sales_contracts WHERE id=$1', [d.contractId])).rows[0]).toMatchObject({ payment_plan: 'deposit_balance', payment_terms_status: 'proposed' });
+  });
+  it('agreement retry preserves deadlines and creates one confirmation audit event', async () => {
+    const d = await deal('deposit_balance', false, 'FOB', false);
+    const endpoint = `/contracts/${d.contractId}/payment-terms/confirm`;
+    expect((await post(endpoint, buyer)).status).toBe(200);
+    const first = (await query('SELECT id,due_at,status FROM payment_installments WHERE payment_request_id=$1 ORDER BY sequence_number', [d.paymentId])).rows;
+    const repeated = await post(endpoint, buyer);
+    expect(repeated.status).toBe(200);
+    expect(repeated.body).toEqual({ ok: true, alreadyConfirmed: true });
+    expect((await query('SELECT id,due_at,status FROM payment_installments WHERE payment_request_id=$1 ORDER BY sequence_number', [d.paymentId])).rows).toEqual(first);
+    expect((await query("SELECT COUNT(*)::int n FROM audit_events WHERE entity_id=$1 AND action='payment.terms.confirm'", [d.contractId])).rows[0].n).toBe(1);
+  });
+  it('cannot replace agreed terms or confirm a cancelled contract', async () => {
+    const agreed = await deal('deposit_balance');
+    expect((await request(app).patch(`/contracts/${agreed.contractId}/payment-terms`).set('Authorization', `Bearer ${seller.token}`).send({ paymentPlan: 'pay_after_delivery' })).status).toBe(409);
+    const cancelled = await deal('deposit_balance', false, 'FOB', false);
+    await query("UPDATE sales_contracts SET status='cancelled' WHERE id=$1", [cancelled.contractId]);
+    expect((await post(`/contracts/${cancelled.contractId}/payment-terms/confirm`, buyer)).status).toBe(409);
+    expect((await query("SELECT COUNT(*)::int n FROM audit_events WHERE entity_id=$1 AND action='payment.terms.confirm'", [cancelled.contractId])).rows[0].n).toBe(0);
+  });
+  nativeIt('serializes two simultaneous confirmations without duplicate activation or audit', async () => {
+    const d = await deal('deposit_balance', false, 'FOB', false);
+    const responses = await Promise.all([1, 2].map(() => post(`/contracts/${d.contractId}/payment-terms/confirm`, buyer)));
+    expect(responses.map(response => response.status)).toEqual([200, 200]);
+    expect(responses.filter(response => response.body.alreadyConfirmed).length).toBe(1);
+    expect((await query("SELECT COUNT(*)::int n FROM audit_events WHERE entity_id=$1 AND action='payment.terms.confirm'", [d.contractId])).rows[0].n).toBe(1);
   });
 });
