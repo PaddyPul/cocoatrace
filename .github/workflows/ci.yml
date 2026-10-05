@@ -64,13 +64,21 @@ jobs:
 
   container-build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
-      - name: Build production API image
-        run: docker build --file api/Dockerfile --tag cocoatrace-api:ci .
-      - name: Build production web image
-        run: docker build --file web/Dockerfile --build-arg VITE_DEMO_MODE=false --tag cocoatrace-web:ci .
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node --test scripts/check-container-security.test.mjs
+      - name: Build, verify runtime contents and scan API/web images
+        run: node scripts/check-container-security.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: container-security-reports
+          path: container-test-results/*.json
+          retention-days: 7
 
   postgres-integration:
     runs-on: ubuntu-latest

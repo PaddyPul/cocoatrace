@@ -1,34 +1,39 @@
-FROM node:20-alpine
+# Build tooling stays in this stage.
+FROM node:24-alpine AS build
 WORKDIR /app
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-
-# Copy root workspace config first (for npm workspaces resolution)
 COPY package*.json ./
 COPY api/package*.json ./api/
 COPY api/tsconfig.json ./api/
-
-# Install all workspace deps (hoisted to root node_modules)
-RUN npm ci --workspace=api --include-workspace-root --ignore-scripts \
-  && npm rebuild bcryptjs
-
-# Copy source and build
+RUN npm ci --workspace=api --include-workspace-root --ignore-scripts
 COPY api/src/ ./api/src/
-RUN npm run build --workspace=api && rm -f api/dist/migrations/*.d.ts
+RUN npm run build --workspace=api
 
-# Copy runtime configuration, database assets and migration scripts. Evidence
-# objects are stored through the configured private storage adapter; the old
-# ignored api/uploads directory is not a production image dependency.
+FROM node:24-alpine AS runtime
+WORKDIR /app
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+COPY package*.json ./
+COPY api/package*.json ./api/
+# tsx is an explicit runtime dependency for reviewed maintenance/migration CLIs.
+# Root lint tools and workspace development dependencies are excluded.
+RUN npm ci --workspace=api --omit=dev --include-workspace-root=false --ignore-scripts \
+  && rm -f package-lock.json \
+  && rm -rf /root/.npm /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn* \
+  && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+    /usr/local/bin/yarn /usr/local/bin/yarnpkg /usr/local/bin/pnpm /usr/local/bin/pnpx
+COPY --from=build /app/api/dist ./api/dist
+COPY api/src/ ./api/src/
+COPY api/tsconfig.json ./api/
 COPY api/knexfile.ts ./api/
 COPY api/migrations.manifest.json ./api/
-COPY db/ ./db/
 COPY api/scripts/ ./api/scripts/
-RUN mkdir -p /app/private-evidence && chown appuser:appgroup /app/private-evidence
-
+COPY db/ ./db/
+RUN find api/src -type f -name '*.test.ts' -delete \
+  && find api/dist -type f \( -name '*.test.*' -o -name '*.map' -o -name '*.d.ts' \) -delete \
+  && mkdir -p /app/private-evidence \
+  && chown appuser:appgroup /app/private-evidence
 USER appuser
 EXPOSE 3001
 ENV NODE_ENV=production
-
-# Apply schema changes on start. Demo data is loaded only by an explicit demo
-# command. exec makes the API process PID 1 after migration so Docker SIGTERM
-# reaches the graceful-shutdown handlers.
-CMD ["sh", "-c", "npx tsx api/scripts/migrate.ts && exec node api/dist/server.js"]
+# Retain original TypeScript migration names and enforce manifest integrity.
+# No npx download is allowed or needed on the normal startup path.
+CMD ["sh", "-c", "node --import tsx api/scripts/migrate.ts && exec node api/dist/server.js"]

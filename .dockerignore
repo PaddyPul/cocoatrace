@@ -15,3 +15,15 @@ test-results
 release-test-results
 
 dependency-test-results/
+
+container-test-results/
+
+# Local secrets, user objects and exported bundles never enter image contexts.
+.env*
+**/.env*
+*.bundle
+**/uploads
+**/private-evidence
+
+**/node_modules
+**/dist

@@ -47,7 +47,7 @@ try {
       run(docker, ['inspect', '--format', '{{json .State.Health}}', webId.stdout.trim()]);
     }
   } else {
-    const fixtureCode = run(docker, [...compose, 'exec', '-T', 'api', 'npx', 'tsx', 'api/scripts/seed-browser-tests.ts']);
+    const fixtureCode = run(docker, [...compose, 'exec', '-T', 'api', 'node', '--import', 'tsx', 'api/scripts/seed-browser-tests.ts']);
     process.exitCode = fixtureCode || run(process.execPath, [playwright, 'test'], {
       env: {
         ...process.env,

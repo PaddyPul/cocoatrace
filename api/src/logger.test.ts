@@ -1,6 +1,6 @@
 import pino from 'pino';
 import { describe, expect, it } from 'vitest';
-import { loggerRedactionPaths } from './logger';
+import { loggerRedactionPaths, useDevelopmentLogTransport } from './logger';
 
 describe('logger redaction', () => {
   it('redacts authentication headers, cookies and common application secrets', () => {
@@ -38,5 +38,17 @@ describe('logger redaction', () => {
     expect(output).not.toContain('private-password');
     expect(output).not.toContain('private-storage-key');
     expect(output).toContain('[REDACTED]');
+  });
+});
+
+
+describe('runtime logging profiles', () => {
+  it('container demo, browser fixtures and deployed profiles do not require development tooling', () => {
+    for (const environment of ['demo', 'test', 'staging', 'production']) {
+      expect(useDevelopmentLogTransport(environment, 'production')).toBe(false);
+      expect(useDevelopmentLogTransport(environment, 'test')).toBe(false);
+    }
+    expect(useDevelopmentLogTransport('development', 'production')).toBe(false);
+    expect(useDevelopmentLogTransport('development', 'development')).toBe(true);
   });
 });

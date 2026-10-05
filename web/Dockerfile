@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 COPY web/package*.json ./web/
@@ -12,7 +12,7 @@ ENV VITE_DEMO_PREVIEW=$VITE_DEMO_PREVIEW
 RUN npm run build --workspace=web
 
 # Stage 2: Serve via Nginx
-FROM nginx:stable-alpine
+FROM nginxinc/nginx-unprivileged:stable-alpine
 COPY --from=builder /app/web/dist /usr/share/nginx/html
 COPY web/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 3000

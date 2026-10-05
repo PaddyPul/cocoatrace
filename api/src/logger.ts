@@ -23,7 +23,11 @@ export const loggerRedactionPaths = [
   'evidenceUploadSigningSecret',
 ];
 
-const transport = config.isDeployed
+export function useDevelopmentLogTransport(environment: string, nodeEnvironment?: string): boolean {
+  return environment === 'development' && nodeEnvironment !== 'production';
+}
+
+const transport = !useDevelopmentLogTransport(config.environment, process.env.NODE_ENV)
   ? undefined
   : {
       target: 'pino-pretty',

@@ -22,7 +22,7 @@ services:
     depends_on:
       postgres-recovery-test:
         condition: service_healthy
-    command: ["npx", "tsx", "api/scripts/migrate.ts"]
+    command: ["node", "--import", "tsx", "api/scripts/migrate.ts"]
     environment:
       APP_ENV: production
       NODE_ENV: production

@@ -1,6 +1,9 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
   'eslint.config.mjs',
+  'scripts/check-container-security.mjs',
+  'scripts/check-container-security.test.mjs',
+  'api/scripts/check-runtime-image.mjs',
   'scripts/check-dependencies.mjs',
   'scripts/check-dependencies.test.mjs',
   'security/dependency-exceptions.json',

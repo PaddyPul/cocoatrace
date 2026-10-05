@@ -27,7 +27,7 @@ services:
     build:
       context: .
       dockerfile: api/Dockerfile
-    command: ["sh", "-c", "npx tsx api/scripts/migrate.ts && npx tsx api/scripts/seed-demo-preview.ts && exec node api/dist/server.js"]
+    command: ["sh", "-c", "node --import tsx api/scripts/migrate.ts && node --import tsx api/scripts/seed-demo-preview.ts && exec node api/dist/server.js"]
     environment:
       APP_ENV: demo
       NODE_ENV: production
