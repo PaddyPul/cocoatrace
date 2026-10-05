@@ -7,6 +7,9 @@ import { hashObject } from '../../services/audit';
 import { emailSender, type EmailSender } from '../../services/emailSender';
 import { inTradeTransaction } from '../trading/transaction';
 
+// Reserved non-login audit principal. It is not a users row and grants no permissions.
+export const PAYMENT_REMINDER_SYSTEM_ACTOR = '00000000-0000-4000-8000-000000000001';
+
 const eligiblePayment = `c.payment_terms_status='agreed' AND c.status NOT IN ('settled','cancelled')
   AND i.status='due' AND i.due_at<NOW()
   AND NOT EXISTS (SELECT 1 FROM payment_issues issue WHERE issue.payment_request_id=p.id AND issue.status<>'resolved')
@@ -49,8 +52,8 @@ export async function enqueueOverdueReminders(limit = 100) {
       const metadata = { recipientOrganizationId: installment.buyer_organization_id, reminderDate: reminder.reminder_date, automatic: true };
       await client.query(`INSERT INTO audit_events
         (actor_user_id,actor_organization_id,action,entity_type,entity_id,new_state_hash,metadata)
-        VALUES(NULL,NULL,'payment.reminder.create','payment_installment',$1,$2,$3)`,
-      [installment.id, hashObject({ action: 'payment.reminder.create', entityId: installment.id, ...metadata }), JSON.stringify(metadata)]);
+        VALUES($4,$5,'payment.reminder.create','payment_installment',$1,$2,$3)`,
+      [installment.id, hashObject({ action: 'payment.reminder.create', entityId: installment.id, ...metadata }), JSON.stringify(metadata), PAYMENT_REMINDER_SYSTEM_ACTOR, installment.buyer_organization_id]);
       await queueReminderEmails(client, reminder.id);
       return true;
     });

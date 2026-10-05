@@ -4,7 +4,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import app from '../../src/app';
 import { pool, query } from '../../src/db';
-import { enqueueOverdueReminders, processPaymentReminderEmails } from '../../src/modules/payments/reminders';
+import { enqueueOverdueReminders, PAYMENT_REMINDER_SYSTEM_ACTOR, processPaymentReminderEmails } from '../../src/modules/payments/reminders';
 import { evidenceStorage } from '../../src/services/evidenceStorage';
 import type { EmailDeliveryResult, EmailMessage, EmailSender } from '../../src/services/emailSender';
 import type { PaymentPlan } from '../../src/services/paymentProtection';
@@ -226,6 +226,27 @@ describe('durable payment deadlines and scoped reminder delivery', () => {
     expect(sender.messages).toHaveLength(1);
     const rows = await outbox(d); expect(rows.find(row => row.reminder_id === first.id).status).toBe('suppressed');
     expect(rows.filter(row => row.status === 'sent')).toHaveLength(1);
+  });
+
+  it('creates an automatic reminder with a non-login system audit identity and commits email work once', async () => {
+    const d = await deal(); await overdue(d);
+    expect((await enqueueOverdueReminders()).created).toBe(1);
+    expect((await enqueueOverdueReminders()).created).toBe(0);
+    expect(await reminderRows(d)).toHaveLength(1);
+    expect(await outbox(d)).toHaveLength(1);
+    const installment = (await installments(d))[0];
+    const events = (await query("SELECT * FROM audit_events WHERE entity_id=$1 AND action='payment.reminder.create'", [installment.id])).rows;
+    expect(events).toHaveLength(1);
+    expect(events[0].actor_user_id).toBe(PAYMENT_REMINDER_SYSTEM_ACTOR);
+    expect(events[0].actor_organization_id).toBe(buyer.organizationId);
+    expect(events[0].metadata.automatic).toBe(true);
+    expect((await query('SELECT id FROM users WHERE id=$1', [PAYMENT_REMINDER_SYSTEM_ACTOR])).rows).toHaveLength(0);
+    const view = await request(app).get(`/payment-requests/${d.paymentId}/operations`).set('Authorization', `Bearer ${buyer.token}`);
+    expect(view.status).toBe(200);
+    expect(view.body.timeline.find((event: { action: string }) => event.action === 'payment.reminder.create').actor_name).toBe('Scheduled payment worker');
+    const sender = new CapturingSender(); await processPaymentReminderEmails(sender);
+    expect(sender.messages).toHaveLength(1);
+    expect((await outbox(d))[0].status).toBe('sent');
   });
 
   nativeIt('serializes concurrent automatic runs into one reminder and one recipient email', async () => {

@@ -1,4 +1,4 @@
-import { queueReminderEmails } from './reminders';
+import { PAYMENT_REMINDER_SYSTEM_ACTOR, queueReminderEmails } from './reminders';
 import { ConflictError, NotFoundError } from '../../errors';
 import { inTradeTransaction, recordTradeAudit, TradeActor } from '../trading/transaction';
 import { lockPayment, requireAgreed } from './locking';
@@ -38,7 +38,7 @@ export async function getPaymentOperations(actor: TradeActor, paymentId: string)
       (SELECT COUNT(*)::int FROM payment_reminder_email_outbox q WHERE q.reminder_id=r.id AND q.status IN('queued','sending')) AS email_pending_count
       FROM payment_reminders r WHERE payment_request_id=$1 ORDER BY created_at,id`, [paymentId])).rows;
     const timeline = (await client.query(`SELECT a.id,a.action,a.entity_type,a.entity_id,a.occurred_at,
-      a.metadata,COALESCE(u.name,'Former team member') AS actor_name,o.name AS actor_organization_name
+      a.metadata,CASE WHEN a.actor_user_id=$3 THEN 'Scheduled payment worker' ELSE COALESCE(u.name,'Former team member') END AS actor_name,o.name AS actor_organization_name
       FROM audit_events a LEFT JOIN users u ON u.id=a.actor_user_id
       LEFT JOIN organizations o ON o.id=a.actor_organization_id
       WHERE (a.action LIKE 'payment.%' OR a.action LIKE 'transport.%') AND (
@@ -49,7 +49,7 @@ export async function getPaymentOperations(actor: TradeActor, paymentId: string)
         OR (a.entity_type='shipment' AND a.entity_id IN (SELECT id FROM shipments WHERE contract_id=$2))
         OR (a.entity_type='payment_issue' AND a.entity_id IN
           (SELECT id FROM payment_issues WHERE payment_request_id=$1)))
-      ORDER BY a.occurred_at,a.id`, [paymentId, payment.contract_id])).rows;
+      ORDER BY a.occurred_at,a.id`, [paymentId, payment.contract_id, PAYMENT_REMINDER_SYSTEM_ACTOR])).rows;
     return {
       installments: installments.map(item => ({ ...item, dueState: installmentDueState(item, now) })),
       issues, reminders,
