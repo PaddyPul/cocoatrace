@@ -1,5 +1,5 @@
 # Build tooling stays in this stage.
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 COPY api/package*.json ./api/
@@ -8,7 +8,7 @@ RUN npm ci --workspace=api --include-workspace-root --ignore-scripts
 COPY api/src/ ./api/src/
 RUN npm run build --workspace=api
 
-FROM node:24-alpine AS runtime
+FROM node:26-alpine AS runtime
 WORKDIR /app
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 COPY package*.json ./
