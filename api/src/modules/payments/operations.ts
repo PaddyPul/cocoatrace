@@ -1,3 +1,4 @@
+import { queueReminderEmails } from './reminders';
 import { ConflictError, NotFoundError } from '../../errors';
 import { inTradeTransaction, recordTradeAudit, TradeActor } from '../trading/transaction';
 import { lockPayment, requireAgreed } from './locking';
@@ -29,8 +30,13 @@ export async function getPaymentOperations(actor: TradeActor, paymentId: string)
     const now = new Date();
     const issues = (await client.query(`SELECT * FROM payment_issues
       WHERE payment_request_id=$1 ORDER BY created_at,id`, [paymentId])).rows;
-    const reminders = (await client.query(`SELECT * FROM payment_reminders
-      WHERE payment_request_id=$1 ORDER BY created_at,id`, [paymentId])).rows;
+    const reminders = (await client.query(`SELECT r.*,
+      (SELECT COUNT(*)::int FROM payment_reminder_email_outbox q WHERE q.reminder_id=r.id) AS email_recipient_count,
+      (SELECT COUNT(*)::int FROM payment_reminder_email_outbox q WHERE q.reminder_id=r.id AND q.status='sent') AS email_sent_count,
+      (SELECT COUNT(*)::int FROM payment_reminder_email_outbox q WHERE q.reminder_id=r.id AND q.status IN('failed','failed_terminal')) AS email_failed_count,
+      (SELECT COUNT(*)::int FROM payment_reminder_email_outbox q WHERE q.reminder_id=r.id AND q.status='suppressed') AS email_suppressed_count,
+      (SELECT COUNT(*)::int FROM payment_reminder_email_outbox q WHERE q.reminder_id=r.id AND q.status IN('queued','sending')) AS email_pending_count
+      FROM payment_reminders r WHERE payment_request_id=$1 ORDER BY created_at,id`, [paymentId])).rows;
     const timeline = (await client.query(`SELECT a.id,a.action,a.entity_type,a.entity_id,a.occurred_at,
       a.metadata,COALESCE(u.name,'Former team member') AS actor_name,o.name AS actor_organization_name
       FROM audit_events a LEFT JOIN users u ON u.id=a.actor_user_id
@@ -58,8 +64,10 @@ export async function remindPayment(actor: TradeActor, paymentId: string) {
     const { contract, payment } = await lockPayment(client, actor, paymentId, 'seller');
     requireAgreed(contract);
     const activeIssue = (await client.query(`SELECT id FROM payment_issues
-      WHERE payment_request_id=$1 AND status='open' LIMIT 1`, [payment.id])).rows[0];
+      WHERE payment_request_id=$1 AND status<>'resolved' LIMIT 1`, [payment.id])).rows[0];
     if (activeIssue) throw new ConflictError('Resolve the active payment issue before sending a reminder');
+    if (['settled','cancelled'].includes(contract.status)) throw new ConflictError('Closed trades cannot send payment reminders');
+    if ((await client.query("SELECT id FROM delivery_discrepancies WHERE contract_id=$1 AND status<>'resolved' LIMIT 1", [contract.id])).rows[0]) throw new ConflictError('Resolve the delivery discrepancy before sending payment reminders');
     const overdue = (await client.query(`SELECT id FROM payment_installments
       WHERE payment_request_id=$1 AND status='due' AND due_at<NOW()
       ORDER BY sequence_number,id FOR UPDATE`, [payment.id])).rows;
@@ -72,6 +80,7 @@ export async function remindPayment(actor: TradeActor, paymentId: string) {
         ON CONFLICT(installment_id,reminder_date) DO NOTHING RETURNING *`,
       [payment.id, installment.id, contract.buyer_organization_id, actor.id])).rows[0];
       if (reminder) {
+        await queueReminderEmails(client, reminder.id);
         await recordTradeAudit(client, actor, 'payment.reminder.create', 'payment_installment', installment.id,
           { recipientOrganizationId: contract.buyer_organization_id, reminderDate: reminder.reminder_date });
         reminders.push(reminder);

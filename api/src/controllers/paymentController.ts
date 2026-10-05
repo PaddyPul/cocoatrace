@@ -1,3 +1,4 @@
+import { activatePaymentInstallments } from '../modules/payments/dueDates';
 import { Request, Response } from 'express';
 import { query } from '../db';
 import { inTradeTransaction, recordTradeAudit } from '../modules/trading/transaction';
@@ -39,7 +40,7 @@ export async function createPaymentRequest(req: Request, res: Response): Promise
     }
     if (contract.payment_terms_status === 'agreed') {
       const status = contract.payment_plan === 'bank_secured' ? 'awaiting_security' : contract.payment_plan === 'pay_after_delivery' ? 'awaiting_delivery' : contract.payment_plan === 'documentary_collection' ? 'awaiting_documents' : 'payment_due';
-      await client.query("UPDATE payment_installments SET status='due' WHERE payment_request_id=$1 AND due_trigger='terms_agreed'",[created.id]);
+      await activatePaymentInstallments(client,created.id,'terms_agreed',{triggeredAt:contract.payment_terms_confirmed_at});
       await client.query("UPDATE payment_requests SET status=$1,release_status=CASE WHEN $2='pay_after_delivery' THEN 'authorized' ELSE release_status END WHERE id=$3",[status,contract.payment_plan,created.id]);
     }
     await recordTradeAudit(client, req.user!, 'payment.request', 'payment_request', created.id);

@@ -1,3 +1,4 @@
+import { activatePaymentInstallments } from './dueDates';
 import { evidenceStorage } from '../../services/evidenceStorage';
 import { ConflictError, ValidationError } from '../../errors';
 import { inTradeTransaction, recordTradeAudit, TradeActor } from '../trading/transaction';
@@ -33,7 +34,7 @@ export async function presentDocuments(actor: TradeActor, id: string) {
     }
     const missing = required.filter(type => !present.has(type));
     if (missing.length) throw new ValidationError(`Upload validated, scan-clean documents first: ${missing.join(', ')}`);
-    await client.query("UPDATE payment_installments SET status='due',updated_at=NOW() WHERE payment_request_id=$1 AND due_trigger='documents_presented' AND status='awaiting_trigger'", [id]);
+    await activatePaymentInstallments(client,id,'documents_presented');
     const updated = (await client.query("UPDATE payment_requests SET status='payment_due',documents_presented_at=NOW(),updated_at=NOW() WHERE id=$1 RETURNING *", [id])).rows[0];
     await recordTradeAudit(client, actor, 'payment.documents.present', 'payment_request', id, { required });
     return updated;

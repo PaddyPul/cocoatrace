@@ -1,3 +1,4 @@
+import { startPaymentReminderWorker } from './modules/payments/reminders';
 import {startRecallEmailWorker} from './modules/recall/notifications';
 import logger from './logger';
 import { config } from './config/env';
@@ -12,7 +13,8 @@ async function start(): Promise<void> {
     logger.info({ port: config.port, environment: config.environment, demoMode: config.demoMode }, `CocoaTrace API running on port ${config.port}`);
   });
   const stopRecallEmails=startRecallEmailWorker();
-  server.on('close',stopRecallEmails);
+  const stopPaymentReminders = startPaymentReminderWorker();
+  server.on('close', () => { stopRecallEmails(); stopPaymentReminders(); });
   registerGracefulShutdown(server, pool, logger);
 }
 
