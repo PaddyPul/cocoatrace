@@ -1,4 +1,4 @@
-import { requireSameCurrency } from '../../services/tradeMoney';
+import { requireSameCurrency, requireSamePrecision } from '../../services/tradeMoney';
 import type { PoolClient } from 'pg';
 import { NotFoundError, ConflictError } from '../../errors';
 import type { TradeActor } from '../trading/transaction';
@@ -35,6 +35,13 @@ export async function lockPayment(
   ).rows[0];
   if (!payment) throw new NotFoundError('Payment workflow');
   requireSameCurrency(payment.currency, contract.currency);
+  requireSamePrecision(payment.currency_minor_units, contract.currency_minor_units);
+  const drift = await client.query(
+    'SELECT id FROM payment_installments WHERE payment_request_id=$1 AND currency_minor_units<>$2 LIMIT 1',
+    [payment.id, payment.currency_minor_units ?? 2],
+  );
+  if (drift.rows[0])
+    throw new ConflictError('Installment precision differs from its payment request');
   return { contract, payment };
 }
 

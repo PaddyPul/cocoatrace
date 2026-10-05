@@ -1,4 +1,4 @@
-import { requireTradeCurrency, requireSameCurrency, tradeTotal } from '../../services/tradeMoney';
+import { requireTradeCurrency, requireSameCurrency, tradeTotal, tradeMinorUnits } from '../../services/tradeMoney';
 import { config } from '../../config/env';
 import { PoolClient, QueryResultRow } from 'pg';
 import { lockRecallBoundary, assertBatchNotRecalled } from '../recall/safety';
@@ -44,7 +44,7 @@ export async function acceptTradeOffer(actor: TradeActor, offerId: string, quote
     if (offer.status !== 'pending') throw new ConflictError('Offer is no longer pending');
     requireTradeCurrency(offer.currency);
     requireSameCurrency(offer.currency, offer.listing_currency);
-    tradeTotal(offer.quantity_kg, offer.offered_price_per_kg);
+    tradeTotal(offer.quantity_kg, offer.offered_price_per_kg, tradeMinorUnits(offer.currency));
     if (quotedRateBps !== undefined && quotedRateBps !== config.platformFeeBps) throw new ConflictError('Platform fee rate changed; refresh the offer before accepting');
     if (!offer.valid_now) throw new AppError('Offer has expired; request a new offer', 409, 'OFFER_EXPIRED');
     if (!offer.active || holding.status !== 'available') throw new ConflictError('Supply is no longer available');
@@ -129,7 +129,7 @@ export async function createTradeOffer(actor: TradeActor, listingId: string, inp
     await assertBatchNotRecalled(client, holding.batch_id);
     requireTradeCurrency(input.currency);
     requireSameCurrency(input.currency, listing.currency);
-    tradeTotal(input.quantityKg, input.offeredPricePerKg);
+    tradeTotal(input.quantityKg, input.offeredPricePerKg, tradeMinorUnits(input.currency));
     if (listing.seller_organization_id === actor.organizationId) throw new ValidationError('You cannot make an offer on your own supply');
     if (listing.seller_organization_id !== holding.holder_organization_id) throw new ConflictError('Supply ownership has changed');
     const freeGrams = Math.round(Number(holding.quantity_kg) * 1000)

@@ -11,7 +11,7 @@ describe('exact two-decimal trade money', () => {
   it.each(['EUR', 'USD', 'GHS', 'GBP'])('allows %s without conversion', (currency) =>
     expect(requireTradeCurrency(currency)).toBe(currency),
   );
-  it.each(['JPY', 'XXX', 'eur', ' EUR', 'KWD'])('rejects unsupported %s explicitly', (currency) =>
+  it.each(['KRW', 'XXX', 'eur', ' EUR', 'KWD'])('rejects unsupported %s explicitly', (currency) =>
     expect(() => requireTradeCurrency(currency)).toThrow(),
   );
   it('rejects a mismatching quote', () =>
@@ -62,4 +62,41 @@ describe('exact two-decimal trade money', () => {
         securityStatus: 'not_required',
       }).allowed,
     ).toBe(false));
+});
+
+describe('snapshotted whole-yen settlement', () => {
+  it.each([
+    ['0.125', '404', '51'],
+    ['1', '0.5', '1'],
+    ['1', '1.4999', '1'],
+    ['1', '1.5', '2'],
+  ])('rounds %s x %s to whole yen', (q, p, total) => expect(tradeTotal(q, p, 0)).toBe(total));
+  it('conserves a whole-yen deposit and balance', () =>
+    expect(exactInstallmentAmounts('51.00', 20, 0)).toEqual({
+      total: '51',
+      deposit: '10',
+      balance: '41',
+    }));
+  it('uses the same rounded amount for the schedule and dispatch', () => {
+    expect(buildInstallments('deposit_balance', '51.00', 20, 0).map((p) => p.amountDue)).toEqual([
+      10, 41,
+    ]);
+    expect(requiredBeforeDispatch('deposit_balance', '51.00', 20, 0)).toBe(10);
+  });
+  it('rejects fractional-yen totals and zero-sized deposit components', () => {
+    expect(() => exactInstallmentAmounts('1.01', 20, 0)).toThrow();
+    expect(() => buildInstallments('deposit_balance', '1.00', 20, 0)).toThrow('zero installment');
+    expect(() => buildInstallments('deposit_balance', '1.00', 90, 0)).toThrow('zero installment');
+  });
+  it('retains legacy JPY decimals through an explicit two-decimal snapshot', () =>
+    expect(exactInstallmentAmounts('51.50', 20, 2)).toEqual({
+      total: '51.50',
+      deposit: '10.30',
+      balance: '41.20',
+    }));
+  it('rejects a sub-yen trade and values beyond the schema limit', () => {
+    expect(() => tradeTotal('0.001', '1', 0)).toThrow();
+    expect(() => tradeTotal('1000000', '1000000', 0)).toThrow();
+    expect(tradeTotal('1', '999999999999', 0)).toBe('999999999999');
+  });
 });

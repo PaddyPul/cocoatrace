@@ -358,10 +358,10 @@ export const traceability = {
 
 export interface FeeStatement {
   statementNumber: string; taxNotice: string; documentType: string;
-  fee: {receipt_verified:boolean;amount_matches:boolean;payer_matches:boolean;id:string;contract_id:string;status:string;amount_total:string;currency:string;rate_bps:number;fee_payer:string;payer_organization_id:string|null;policy_version:string;due_at:string|null;paid_at:string|null;seller_name:string;buyer_name:string;contract_status:string};
+  fee: {receipt_verified:boolean;amount_matches:boolean;payer_matches:boolean;id:string;contract_id:string;status:string;amount_total:string;currency:string;currency_minor_units:number;rate_bps:number;fee_payer:string;payer_organization_id:string|null;policy_version:string;due_at:string|null;paid_at:string|null;seller_name:string;buyer_name:string;contract_status:string};
   submissions: {id:string;status:string;reference:string;rejection_reason:string|null}[];
 }
-export interface FeeReconciliation {ok:boolean;issues:{code:string;fee_id:string|null;contract_id:string}[];totals:{currency:string;status:string;count:number;amount_total:string}[];limitations:string[]}
+export interface FeeReconciliation {ok:boolean;issues:{code:string;fee_id:string|null;contract_id:string}[];totals:{currency:string;currency_minor_units:number;status:string;count:number;amount_total:string}[];limitations:string[]}
 export const platformFees = {
   list:()=>api<FeeStatement['fee'][]>('GET','/platform-fees'),
   statement:(id:string)=>api<FeeStatement>('GET',`/contracts/${id}/fee`),

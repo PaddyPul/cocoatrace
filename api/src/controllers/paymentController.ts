@@ -28,15 +28,15 @@ export async function createPaymentRequest(req: Request, res: Response): Promise
     if (['settled','cancelled'].includes(contract.status)) throw new ConflictError('Closed contracts cannot request a new payment');
     const existing = await client.query('SELECT id FROM payment_requests WHERE contract_id=$1', [contract.id]);
     if (existing.rows[0]) throw new ConflictError('A payment workflow already exists for this contract');
-    const total = (await client.query('SELECT ROUND(quantity_kg*price_per_kg,2) AS total FROM sales_contracts WHERE id=$1', [contract.id])).rows[0].total;
+    const total = (await client.query('SELECT ROUND(quantity_kg*price_per_kg,currency_minor_units) AS total FROM sales_contracts WHERE id=$1', [contract.id])).rows[0].total;
     if (Number(total) !== req.body.amountTotal || contract.currency !== req.body.currency) {
       throw new ValidationError('The payment amount and currency must match the contract');
     }
-    const created = (await client.query(`INSERT INTO payment_requests(contract_id,requested_by_organization_id,amount_total,currency,status,payment_method,dispatch_required_amount,security_status)
-      VALUES($1,$2,$3,$4,'awaiting_terms',$5,$6,$7) RETURNING *`, [contract.id, req.user!.organizationId, total, contract.currency,contract.payment_plan,requiredBeforeDispatch(contract.payment_plan,Number(total),Number(contract.deposit_percentage)),contract.payment_plan==='bank_secured'?'awaiting_submission':'not_required'])).rows[0];
-    for (const i of buildInstallments(contract.payment_plan, Number(total), Number(contract.deposit_percentage))) {
-      await client.query(`INSERT INTO payment_installments(payment_request_id,installment_type,sequence_number,amount_due,due_trigger,status)
-        VALUES($1,$2,$3,$4,$5,'awaiting_trigger')`, [created.id,i.installmentType,i.sequenceNumber,i.amountDue,i.dueTrigger]);
+    const created = (await client.query(`INSERT INTO payment_requests(contract_id,requested_by_organization_id,amount_total,currency,status,payment_method,dispatch_required_amount,security_status,currency_minor_units)
+      VALUES($1,$2,$3,$4,'awaiting_terms',$5,$6,$7,$8) RETURNING *`, [contract.id, req.user!.organizationId, total, contract.currency,contract.payment_plan,requiredBeforeDispatch(contract.payment_plan,total,Number(contract.deposit_percentage),contract.currency_minor_units),contract.payment_plan==='bank_secured'?'awaiting_submission':'not_required',contract.currency_minor_units])).rows[0];
+    for (const i of buildInstallments(contract.payment_plan, total, Number(contract.deposit_percentage),contract.currency_minor_units)) {
+      await client.query(`INSERT INTO payment_installments(payment_request_id,installment_type,sequence_number,amount_due,due_trigger,status,currency_minor_units)
+        VALUES($1,$2,$3,$4,$5,'awaiting_trigger',$6)`, [created.id,i.installmentType,i.sequenceNumber,i.amountDue,i.dueTrigger,contract.currency_minor_units]);
     }
     if (contract.payment_terms_status === 'agreed') {
       const status = contract.payment_plan === 'bank_secured' ? 'awaiting_security' : contract.payment_plan === 'pay_after_delivery' ? 'awaiting_delivery' : contract.payment_plan === 'documentary_collection' ? 'awaiting_documents' : 'payment_due';

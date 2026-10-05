@@ -1,3 +1,4 @@
+import { decimalUnits } from '../../services/tradeMoney';
 import type { PoolClient } from 'pg';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../errors';
 import { inTradeTransaction, recordTradeAudit, type TradeActor } from '../trading/transaction';
@@ -16,6 +17,7 @@ export interface FeeRecord {
   rate_bps: number;
   amount_total: string;
   currency: string;
+  currency_minor_units: number;
   status: string;
   policy_version: string;
   tax_status: string;
@@ -43,9 +45,9 @@ export function isFinanceAdmin(actor: FeeActor) {
 function requireAdmin(actor: FeeActor) {
   if (!isFinanceAdmin(actor)) throw new ForbiddenError('Platform finance permission is required');
 }
-const projection = `SELECT f.id,f.contract_id,f.fee_payer,f.payer_organization_id,f.rate_bps,f.amount_total,f.currency,f.status,f.policy_version,f.tax_status,f.due_at,f.invoiced_at,f.paid_at,
+const projection = `SELECT f.id,f.contract_id,f.fee_payer,f.payer_organization_id,f.rate_bps,f.amount_total,f.currency,f.currency_minor_units,f.status,f.policy_version,f.tax_status,f.due_at,f.invoiced_at,f.paid_at,
  (f.status='paid' AND f.paid_at IS NOT NULL AND f.verified_by_user_id IS NOT NULL AND f.platform_receipt_reference IS NOT NULL AND EXISTS(SELECT 1 FROM platform_fee_submissions fs WHERE fs.fee_id=f.id AND fs.status='verified')) receipt_verified,
- (f.amount_total=round(c.quantity_kg*c.price_per_kg*f.rate_bps/10000::numeric,2) AND f.currency=c.currency) amount_matches,
+ (f.amount_total=round(c.quantity_kg*c.price_per_kg*f.rate_bps/10000::numeric,f.currency_minor_units) AND f.currency=c.currency AND f.currency_minor_units=c.currency_minor_units) amount_matches,
  (f.payer_organization_id IS NOT DISTINCT FROM CASE f.fee_payer WHEN 'seller' THEN c.seller_organization_id WHEN 'buyer' THEN c.buyer_organization_id ELSE NULL END) payer_matches,
  c.seller_organization_id,c.buyer_organization_id,c.status contract_status,c.quantity_kg,c.price_per_kg,s.name seller_name,b.name buyer_name
  FROM platform_fee_invoices f JOIN sales_contracts c ON c.id=f.contract_id JOIN organizations s ON s.id=c.seller_organization_id JOIN organizations b ON b.id=c.buyer_organization_id`;
@@ -139,6 +141,7 @@ export async function reviewFee(
     throw new ValidationError('Enter the exact received amount and ISO currency');
   return inTradeTransaction(async (client) => {
     const f = await fee(client, actor, contractId, true);
+    if (input.decision === 'verify') decimalUnits(input.amount, f.currency_minor_units ?? 2);
     if (actor.organizationId === f.payer_organization_id)
       throw new ForbiddenError('The fee payer cannot verify its own receipt');
     const s = (

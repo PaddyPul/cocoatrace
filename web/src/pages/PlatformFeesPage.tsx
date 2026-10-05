@@ -85,7 +85,7 @@ export default function PlatformFeesPage() {
                     {f.seller_name} → {f.buyer_name}
                   </span>
                   <span className="block text-xs">
-                    {fmtMoney(Number(f.amount_total), f.currency)} · {f.status.split('_').join(' ')}{' '}
+                    {fmtMoney(Number(f.amount_total), f.currency, f.currency_minor_units)} · {f.status.split('_').join(' ')}{' '}
                     · {f.contract_id}
                   </span>
                 </Link>
