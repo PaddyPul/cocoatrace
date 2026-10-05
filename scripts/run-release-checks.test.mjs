@@ -25,3 +25,10 @@ test('dependency audit is required before application and Docker release checks'
  assert.deepEqual(releaseChecks[2][1],['run','check:dependencies']);
  assert.ok(releaseChecks.find(check=>check[0]==='Runner checks')[1].includes('scripts/check-dependencies.test.mjs'));
 });
+
+test('image security is required before native migration and browser checks',()=>{
+ const imageIndex=releaseChecks.findIndex(check=>check[0]==='Container runtime and vulnerability checks');
+ const migrationIndex=releaseChecks.findIndex(check=>check[0]==='Fresh and upgrade migrations');
+ assert.ok(imageIndex>=0 && imageIndex<migrationIndex);
+ assert.deepEqual(releaseChecks[imageIndex][1],['run','check:containers']);
+});

@@ -14,3 +14,6 @@ api/src/modules/delivery/** text eol=lf
 scripts/check-dependencies.mjs text eol=lf
 scripts/check-dependencies.test.mjs text eol=lf
 security/dependency-exceptions.json text eol=lf
+scripts/check-container-security.mjs text eol=lf
+scripts/check-container-security.test.mjs text eol=lf
+api/scripts/check-runtime-image.mjs text eol=lf

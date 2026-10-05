@@ -44,7 +44,8 @@
     "check:scripts": "node scripts/check-script-contracts.mjs",
     "check:quality": "npm run lint && npm run format:check && npm run check:scripts && node --test scripts/quality-policy.test.mjs scripts/check-script-contracts.test.mjs",
     "typecheck": "npm run typecheck --workspace=api && npm run typecheck --workspace=web && npm run typecheck:browser",
-    "check:dependencies": "node scripts/check-dependencies.mjs"
+    "check:dependencies": "node scripts/check-dependencies.mjs",
+    "check:containers": "node scripts/check-container-security.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
