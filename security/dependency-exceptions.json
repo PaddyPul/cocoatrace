@@ -1,0 +1,11 @@
+[
+  {
+    "advisory": "GHSA-vfj7-8cjw-p6xm",
+    "package": "braces",
+    "version": "3.0.3",
+    "scope": "development-only",
+    "owner": "CocoaTrace engineering",
+    "expires": "2026-11-05",
+    "reason": "No upstream patch exists. Only trusted repository-controlled glob patterns are supplied by Tailwind/build tools. Never accept visitor-provided build paths or expose build/watch tooling publicly. Remove through a separately tested build-tool migration or upstream patch. Production audit findings cannot use this exception."
+  }
+]
