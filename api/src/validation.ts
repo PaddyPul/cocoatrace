@@ -1,3 +1,4 @@
+import { tradeCurrencies } from './services/tradeMoney';
 import { z } from 'zod';
 
 const inventoryQuantitySchema = z.number().finite().positive().max(999999999.999)
@@ -130,7 +131,7 @@ export const createListingSchema = z.object({
   holdingId: z.string().uuid(),
   availableQuantityKg: inventoryQuantitySchema,
   pricePerKg: inventoryPriceSchema,
-  currency: z.string().length(3).default('EUR'),
+  currency: z.enum(tradeCurrencies).default('EUR'),
   incoterm: z.string().default('CIF'),
   originLocation: z.string(),
   destinationLocation: z.string(),
@@ -145,7 +146,7 @@ export const updateListingSchema = z.object({
 export const createOfferSchema = z.object({
   quantityKg: inventoryQuantitySchema,
   offeredPricePerKg: inventoryPriceSchema,
-  currency: z.string().length(3).default('EUR'),
+  currency: z.enum(tradeCurrencies).default('EUR'),
   validUntil: z.string().optional(),
 });
 
@@ -196,7 +197,7 @@ export const updateShipmentDetailsSchema = z.object({
 
 export const createPaymentRequestSchema = z.object({
   amountTotal: z.number().positive(),
-  currency: z.string().length(3).default('EUR'),
+  currency: z.enum(tradeCurrencies).default('EUR'),
 });
 
 export const payPaymentSchema = z.object({
@@ -240,7 +241,7 @@ export const provenanceExportQuerySchema = provenanceViewQuerySchema.extend({ fo
 export const pushToMarketplaceSchema = z.object({
   quantityKg: inventoryQuantitySchema,
   pricePerKg: inventoryPriceSchema,
-  currency: z.string().length(3).default('EUR'),
+  currency: z.enum(tradeCurrencies).default('EUR'),
   incoterm: z.string().default('CIF'),
   originLocation: z.string().min(1, 'Origin location required'),
   destinationLocation: z.string().min(1, 'Destination location required'),

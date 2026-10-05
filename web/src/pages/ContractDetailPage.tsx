@@ -152,7 +152,7 @@ export default function ContractDetailPage() {
   if (error || !data) return <Layout currentPage="contracts"><div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{error || 'Not found'}</div></Layout>;
 
   const c = data;
-  const totalValue = Number(c.quantity_kg || 0) * Number(c.price_per_kg || 0);
+  const totalValue = Number(c.payment_amount ?? Number(c.quantity_kg || 0) * Number(c.price_per_kg || 0));
   const steps = [
     { label: 'Offer accepted and contract created', done: true },
     { label: 'Buyer confirmed the payment protection plan', done: c.payment_terms_status === 'agreed' },
@@ -187,7 +187,7 @@ export default function ContractDetailPage() {
 
           <div className="bg-surface border border-border rounded p-5">
             <div className="flex items-start justify-between mb-5"><div><h1 className="text-lg font-bold">Sales Contract</h1><p className="font-mono text-xs text-text-muted mt-0.5">{c.id}</p></div><StatusBadge status={c.status} /></div>
-            <div className="grid grid-cols-2 gap-4"><Field label="Seller" value={c.seller_name} /><Field label="Buyer" value={c.buyer_name} /><Field label="Quantity" value={`${Number(c.quantity_kg || 0).toLocaleString()} kg`} /><Field label="Price" value={`€${Number(c.price_per_kg || 0).toFixed(2)}/kg`} /><Field label="Total value" value={fmtMoney(totalValue, c.currency)} highlight /><Field label="Incoterm" value={c.incoterm || '—'} />{c.compliance_reference && <div className="col-span-2"><Field label={`${c.compliance_scheme || 'Compliance'} reference`} value={c.compliance_reference} mono /></div>}</div>
+            <div className="grid grid-cols-2 gap-4"><Field label="Seller" value={c.seller_name} /><Field label="Buyer" value={c.buyer_name} /><Field label="Quantity" value={`${Number(c.quantity_kg || 0).toLocaleString()} kg`} /><Field label="Price" value={`${fmtMoney(Number(c.price_per_kg || 0), c.currency)}/kg`} /><Field label="Total value" value={fmtMoney(totalValue, c.currency)} highlight /><Field label="Incoterm" value={c.incoterm || '—'} />{c.compliance_reference && <div className="col-span-2"><Field label={`${c.compliance_scheme || 'Compliance'} reference`} value={c.compliance_reference} mono /></div>}</div>
           </div>
 
           <div className="bg-surface border border-border rounded p-5">

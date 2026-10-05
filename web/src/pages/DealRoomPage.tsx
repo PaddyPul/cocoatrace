@@ -48,7 +48,7 @@ export default function DealRoomPage() {
 
   const isBuyer = deal.buyer_organization_id === user?.organizationId;
   const isSeller = deal.seller_organization_id === user?.organizationId;
-  const total = Number(deal.quantity_kg) * Number(deal.price_per_kg);
+  const total = Number(deal.payment_amount ?? Number(deal.quantity_kg) * Number(deal.price_per_kg));
   const termsReady = deal.payment_terms_status === 'agreed';
   const securityReady = deal.payment_plan !== 'bank_secured' || deal.security_status === 'verified';
   const moneyReady = Number(deal.amount_confirmed || 0) + 0.005 >= Number(deal.dispatch_required_amount || 0);
@@ -117,7 +117,7 @@ export default function DealRoomPage() {
   }
 
   const exportLog = () => {
-    const payload = { contractId: deal.id, status: deal.status, seller: deal.seller_name, buyer: deal.buyer_name, quantityKg: Number(deal.quantity_kg), pricePerKg: Number(deal.price_per_kg), incoterm: deal.incoterm, paymentPlan: deal.payment_plan, paymentStatus: deal.payment_status, amountConfirmed: Number(deal.amount_confirmed || 0), dispatchCleared: dispatchReady, shipmentId: deal.shipment_id || null, currentMilestone: deal.current_milestone || null, exportedAt: new Date().toISOString() };
+    const payload = { contractId: deal.id, status: deal.status, seller: deal.seller_name, buyer: deal.buyer_name, quantityKg: Number(deal.quantity_kg), pricePerKg: Number(deal.price_per_kg), currency: deal.currency, incoterm: deal.incoterm, paymentPlan: deal.payment_plan, paymentStatus: deal.payment_status, amountConfirmed: Number(deal.amount_confirmed || 0), dispatchCleared: dispatchReady, shipmentId: deal.shipment_id || null, currentMilestone: deal.current_milestone || null, exportedAt: new Date().toISOString() };
     const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
     const anchor = document.createElement('a'); anchor.href = url; anchor.download = `cocoatrace-deal-${String(deal.id).slice(0, 8)}-log.json`; anchor.click(); URL.revokeObjectURL(url);
   };

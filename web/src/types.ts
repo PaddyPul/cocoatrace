@@ -71,6 +71,7 @@ export interface Batch {
 }
 
 export interface Listing {
+  currency: string;
   activeRecall?: boolean;
   trust?: TrustSummary;
   id: string;
@@ -228,6 +229,7 @@ export interface Evidence {
 }
 
 export interface Offer {
+  trade_value?: string;
   platform_fee_rate_bps?: number;
   platform_fee_estimate?: string;
   platform_fee_payer?: string;

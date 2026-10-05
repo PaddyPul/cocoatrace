@@ -8,7 +8,7 @@ import { acceptTradeOffer, createTradeOffer, rejectTradeOffer } from '../modules
 
 export async function listOffers(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT t.*, $2::int AS platform_fee_rate_bps,ROUND(t.quantity_kg*t.offered_price_per_kg*$2::integer/10000,2) AS platform_fee_estimate,'seller' AS platform_fee_payer, l.seller_organization_id, l.origin_location, l.destination_location,
+    `SELECT t.*, ROUND(t.quantity_kg*t.offered_price_per_kg,2) AS trade_value, $2::int AS platform_fee_rate_bps,ROUND(t.quantity_kg*t.offered_price_per_kg*$2::integer/10000,2) AS platform_fee_estimate,'seller' AS platform_fee_payer, l.seller_organization_id, l.origin_location, l.destination_location,
             buyer.name as buyer_name, seller.name as seller_name
      FROM trade_offers t
      JOIN listings l ON l.id = t.listing_id

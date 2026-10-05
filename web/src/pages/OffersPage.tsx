@@ -85,7 +85,7 @@ export default function OffersPage() {
                     <td className="text-text-primary font-medium">{tab === 'received' ? (o.buyer_name || '—') : (o.seller_name || '—')}</td>
                     <td>{(o.quantity_kg || 0).toLocaleString()}</td>
                     <td className="font-mono">{fmtMoney(Number(o.offered_price_per_kg),o.currency)}</td>
-                    <td className="text-brand-400 font-mono">{fmtMoney(Number(o.quantity_kg || 0)*Number(o.offered_price_per_kg || 0),o.currency)}</td>
+                    <td className="text-brand-400 font-mono">{fmtMoney(Number(o.trade_value ?? Number(o.quantity_kg || 0)*Number(o.offered_price_per_kg || 0)),o.currency)}</td>
                     <td className="text-xs">{o.platform_fee_estimate == null ? 'Fee estimate unavailable' : `${fmtMoney(Number(o.platform_fee_estimate),o.currency)} (${Number(o.platform_fee_rate_bps || 0)/100}%)`}<div className="text-text-muted">Separate from buyer payment; tax not configured</div></td>
                     <td className="text-[11px]">{o.valid_until ? fmtDate(o.valid_until) : '—'}</td>
                     <td>
@@ -117,7 +117,7 @@ export default function OffersPage() {
                     <td className="text-text-primary font-medium">{tab === 'received' ? (o.buyer_name || '—') : (o.seller_name || '—')}</td>
                     <td>{(o.quantity_kg || 0).toLocaleString()}</td>
                     <td className="font-mono">{fmtMoney(Number(o.offered_price_per_kg),o.currency)}</td>
-                    <td className="text-brand-400 font-mono">{fmtMoney(Number(o.quantity_kg || 0)*Number(o.offered_price_per_kg || 0),o.currency)}</td>
+                    <td className="text-brand-400 font-mono">{fmtMoney(Number(o.trade_value ?? Number(o.quantity_kg || 0)*Number(o.offered_price_per_kg || 0)),o.currency)}</td>
                     <td><StatusBadge status={o.status} /></td>
                   </tr>
                 ))}

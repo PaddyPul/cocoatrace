@@ -1,3 +1,4 @@
+import { requireSameCurrency } from '../../services/tradeMoney';
 import type { PoolClient } from 'pg';
 import { AppError, ConflictError } from '../../errors';
 import {
@@ -20,10 +21,12 @@ interface TermsContract {
   status: string;
   payment_terms_status: string;
   payment_plan: PaymentPlan;
+  currency: string;
 }
 interface TermsPayment {
   id: string;
   amount_total: string;
+  currency: string;
 }
 
 /** Match the contract-first ordering used by installments, delivery and settlement. */
@@ -35,7 +38,7 @@ async function lockTerms(
 ) {
   const contract = (
     await client.query<TermsContract>(
-      `SELECT id,status,payment_terms_status,payment_plan FROM sales_contracts
+      `SELECT id,status,payment_terms_status,payment_plan,currency FROM sales_contracts
      WHERE id=$1 AND ${party}_organization_id=$2 FOR UPDATE`,
       [id, actor.organizationId],
     )
@@ -47,11 +50,12 @@ async function lockTerms(
   if (!contract) throw new AppError(message, 404, 'NOT_FOUND');
   const payment = (
     await client.query<TermsPayment>(
-      'SELECT id,amount_total FROM payment_requests WHERE contract_id=$1 FOR UPDATE',
+      'SELECT id,amount_total,currency FROM payment_requests WHERE contract_id=$1 FOR UPDATE',
       [id],
     )
   ).rows[0];
   if (!payment) throw new AppError(message, 404, 'NOT_FOUND');
+  requireSameCurrency(payment.currency, contract.currency);
   if (['cancelled', 'settled'].includes(contract.status))
     throw new ConflictError('Closed contracts cannot change payment terms');
   return { contract, payment };
@@ -86,7 +90,7 @@ export async function proposePaymentTerms(actor: TradeActor, id: string, input: 
       [payment.id],
     );
     if (activity.rows[0]) throw new ConflictError('Payment activity already exists');
-    const total = Number(payment.amount_total);
+    const total = payment.amount_total;
     const required = requiredBeforeDispatch(paymentPlan, total, depositPercentage);
     const security = paymentPlan === 'bank_secured' ? 'awaiting_submission' : 'not_required';
     await client.query(

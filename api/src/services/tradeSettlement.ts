@@ -1,16 +1,18 @@
+import { requireSameCurrency } from './tradeMoney';
 import type { PoolClient } from 'pg';
 import { makeFeeDue } from '../modules/fees/lifecycle';
 import type { TradeActor } from '../modules/trading/transaction';
 
 export async function completeTradeIfReady(client: PoolClient, contractId: string, actor: TradeActor): Promise<boolean> {
   const result = await client.query(
-    `SELECT c.*, sh.current_milestone, p.status AS payment_status
+    `SELECT c.*, sh.current_milestone, p.status AS payment_status, p.currency AS payment_currency
        FROM sales_contracts c
        LEFT JOIN LATERAL (SELECT current_milestone FROM shipments WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1) sh ON TRUE
-       LEFT JOIN LATERAL (SELECT status FROM payment_requests WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1) p ON TRUE
+       LEFT JOIN LATERAL (SELECT status,currency FROM payment_requests WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1) p ON TRUE
       WHERE c.id=$1 FOR UPDATE OF c`, [contractId]);
   const contract = result.rows[0];
   if (!contract || contract.status === 'settled' || contract.current_milestone !== 'delivered' || contract.payment_status !== 'settled') return false;
+  requireSameCurrency(contract.currency, contract.payment_currency);
   const delivery = await client.query(`SELECT a.contract_id FROM delivery_acceptances a WHERE a.contract_id=$1
     AND a.received_quantity_kg=$2::numeric AND a.accepted_by_organization_id=$3
     AND NOT EXISTS(SELECT 1 FROM delivery_discrepancies d WHERE d.contract_id=a.contract_id AND d.status<>'resolved')`, [contractId, contract.quantity_kg, contract.buyer_organization_id]);

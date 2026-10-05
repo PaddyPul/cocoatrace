@@ -30,7 +30,7 @@ test('seller submits a completed-trade fee and platform admin verifies receipt w
         holdingId: inventory.holding_id,
         availableQuantityKg: 10,
         pricePerKg: 5,
-        currency: 'EUR',
+        currency: 'GHS',
         incoterm: 'FOB',
         originLocation: 'Tema',
         destinationLocation: 'Rotterdam',
@@ -42,7 +42,7 @@ test('seller submits a completed-trade fee and platform admin verifies receipt w
       data: {
         quantityKg: 4,
         offeredPricePerKg: 5,
-        currency: 'EUR',
+        currency: 'GHS',
         validUntil: new Date(Date.now() + 86400000).toISOString(),
       },
     });
@@ -111,7 +111,7 @@ test('seller submits a completed-trade fee and platform admin verifies receipt w
     const admin = await adminContext.newPage();
     await admin.goto(`/platform-fees/${contract.id}`);
     await admin.getByLabel('Amount actually received').fill(before.fees[0].amount_total);
-    await admin.getByLabel('Received currency').fill('EUR');
+    await admin.getByLabel('Received currency').fill('GHS');
     await admin
       .getByLabel('Platform bank receipt reference')
       .fill(`BROWSER-RECEIPT-${contract.id}`);
