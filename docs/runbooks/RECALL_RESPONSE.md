@@ -19,13 +19,13 @@ Recall messages reuse the configured SMTP sender and WEB_URL. In local developme
 For one manual worker pass:
 
 ```powershell
-docker compose -f docker-compose.yml -f docker-compose.email-test.yml exec api npm run recall:deliver
+docker compose -f docker-compose.yml -f docker-compose.email-test.yml exec api node --import tsx api/scripts/deliver-recall-notifications.ts
 ```
 
 For safety reconciliation:
 
 ```powershell
-docker compose -f docker-compose.yml -f docker-compose.email-test.yml exec api npm run recall:check
+docker compose -f docker-compose.yml -f docker-compose.email-test.yml exec api node --import tsx api/scripts/reconcile-recall-safety.ts
 ```
 
 The report includes retained holds and flags published supply under them. It never releases inventory or alters quantities. Check failed/terminal email statuses in the manager response panel and record contact/escalation if needed. A manager must not treat email status as acknowledgement. An organization with no active contact is visibly escalated and cannot be acknowledged until a real user is enrolled; activation and stock blocking still succeed. There is no manager bypass of acknowledgement.

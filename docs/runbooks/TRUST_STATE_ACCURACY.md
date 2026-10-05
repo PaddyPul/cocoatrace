@@ -22,7 +22,7 @@ Issuance, attestation and status changes commit with their audits. Suppliers can
 
 ## Operations
 
-Run the normal migration startup, then `npm run trust:report` (or `npm run trust:report -- --details`) inside the API container. This command runs in a read-only repeatable-read transaction. A positive correction count is historical evidence that unsupported defaults were corrected; it is not an error and should not be erased. Review unexpected corrections rather than restoring unsubstantiated verified flags.
+Run the normal migration startup, then `node --import tsx api/scripts/report-trust-corrections.ts` (or append `--details`) inside the API container. This command runs in a read-only repeatable-read transaction. A positive correction count is historical evidence that unsupported defaults were corrected; it is not an error and should not be erased. Review unexpected corrections rather than restoring unsubstantiated verified flags.
 
 Keep a normal database backup before applying production migrations. Application Compose volumes must remain intact. Never reseed customer data or run `down -v` to clear findings. A rollback of application code must remain compatible with the forward schema; do not remove correction or review history.
 

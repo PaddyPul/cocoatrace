@@ -101,3 +101,49 @@ test('API scans require installed Node package coverage', () => {
   assert.equal(evaluateImageReport(report(), true).status, 'passed');
   assert.equal(evaluateImageReport(missing, false).status, 'passed');
 });
+
+test('runtime removes package-manager trees and deployed runners invoke installed Node directly', () => {
+  const root = new URL('../', import.meta.url);
+  const dockerfile = fs.readFileSync(new URL('api/Dockerfile', root), 'utf8');
+  const install = dockerfile.indexOf('RUN npm ci --workspace=api --omit=dev');
+  for (const target of [
+    '/usr/local/lib/node_modules/npm',
+    '/usr/local/lib/node_modules/corepack',
+    '/opt/yarn*',
+    '/usr/local/bin/npm',
+    '/usr/local/bin/npx',
+  ]) {
+    assert.ok(
+      dockerfile.indexOf(target, install) > install,
+      `Remove ${target} after production install`,
+    );
+  }
+  for (const file of [
+    'docker-compose.demo-preview.yml',
+    'docker-compose.recovery-tests.yml',
+    'scripts/run-browser-tests.mjs',
+  ]) {
+    const content = fs.readFileSync(new URL(file, root), 'utf8');
+    assert.ok(!/\bnpx\b/.test(content), `${file} must not require npx`);
+    assert.ok(
+      content.includes('--import') && content.includes('tsx'),
+      `${file} must use installed tsx`,
+    );
+  }
+  const runtimeCheck = fs.readFileSync(
+    new URL('api/scripts/check-runtime-image.mjs', root),
+    'utf8',
+  );
+  assert.ok(runtimeCheck.includes('/usr/local/lib/node_modules/npm'));
+  assert.ok(runtimeCheck.includes('/usr/local/bin/npx'));
+});
+
+test('blocked findings retain image package paths for diagnosis', () => {
+  const input = report([
+    { Severity: 'HIGH', PkgPath: 'usr/local/lib/node_modules/npm/node_modules/tar/package.json' },
+  ]);
+  input.Results[0].Target = 'global npm';
+  const failure = evaluateImageReport(input).failures[0];
+  assert.equal(failure.target, 'global npm');
+  assert.equal(failure.packagePath, 'usr/local/lib/node_modules/npm/node_modules/tar/package.json');
+});

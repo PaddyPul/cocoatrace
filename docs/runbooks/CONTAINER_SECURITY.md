@@ -10,7 +10,7 @@ High, critical, unknown-severity findings, scanner/download failures, malformed 
 
 - API uses Node 24 Alpine build and runtime stages. Only API production dependencies are installed in runtime; root lint and workspace development tools are excluded. tsx is now an explicit runtime dependency because existing migration, demo, recovery and maintenance commands use TypeScript.
 - Original migration files, names and manifest checks remain unchanged. Compiled code, database baseline and reviewed TS sources/maintenance scripts remain; test files, type declarations and source maps are removed from runtime.
-- Startup invokes installed tsx through node --import, without npx downloading tooling. Existing Compose overrides still find the installed tsx package.
+- Startup invokes installed tsx through node --import, without npx downloading tooling. Tracked Compose/test commands invoke Node directly. Runtime npm, npx, Yarn and Corepack are removed after installation; host npm commands remain available.
 - Container demo/test/deployed profiles use structured logs. The pretty formatter is limited to local development. Redaction stays enabled.
 - Web build uses Node 24; serving uses nginxinc/nginx-unprivileged:stable-alpine, retains port 3000 and existing API proxy configuration. The config check maps api to loopback only inside its short-lived check container.
 - Build contexts exclude local env files, evidence/upload directories, node_modules, dist and Git bundles. Application evidence volumes and database storage are not reset.

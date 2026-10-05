@@ -75,7 +75,7 @@ Use a lower environment-specific alert threshold only after it is documented in 
 5. For **pre-existing evidence items** in `legacy_unscanned` or `scan_failed`, execute the supported scanner job once from the release environment:
 
    ```bash
-   npm run evidence:scan-pending --workspace=api
+   node --import tsx api/scripts/scan-pending-evidence.ts
    ```
 
    The command must finish with zero failed records. A missing stored object is an integrity incident, not permission to mark the row clean.

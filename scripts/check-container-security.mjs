@@ -30,6 +30,8 @@ export function evaluateImageReport(report, requireNodeInventory = false) {
           id: finding.VulnerabilityID ?? 'unknown',
           package: finding.PkgName ?? 'unknown',
           version: finding.InstalledVersion,
+          target: result.Target ?? null,
+          packagePath: finding.PkgPath ?? null,
           fixedVersion: finding.FixedVersion ?? null,
           severity: severity ?? 'UNKNOWN',
         });

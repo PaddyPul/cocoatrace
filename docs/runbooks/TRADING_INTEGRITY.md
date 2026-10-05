@@ -68,7 +68,7 @@ To inspect the normal local application database through its configured API
 container:
 
 ```powershell
-docker compose -f docker-compose.yml -f docker-compose.email-test.yml exec api npm run trade:reconcile
+docker compose -f docker-compose.yml -f docker-compose.email-test.yml exec api node --import tsx api/scripts/reconcile-trades.ts
 ```
 
 Alternatively, run `npm run trade:reconcile` on a host configured with the
