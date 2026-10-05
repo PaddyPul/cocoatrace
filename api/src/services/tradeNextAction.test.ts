@@ -43,3 +43,18 @@ describe('delivery consent', () => {
    expect(buildTradeActions([], [deal({cancellation_requested_by_organization_id: seller})], seller)[0].requiresAction).toBe(false);
    expect(buildTradeActions([], [deal({status:'cancelled',installment_status:'due'})], buyer)[0]).toMatchObject({requiresAction:false,title:'Trade cancelled',kind:'complete'});
  });
+
+describe('separate platform fee action',()=>{
+ it('keeps trade completed while prompting only the recorded fee payer',()=>{
+   const d=deal({status:'settled',fee_status:'invoiced',fee_payer_organization_id:seller,fee_amount:'0.20'});
+   const supplierActions=buildTradeActions([], [d], seller);
+   expect(supplierActions.some(a=>a.title==='Trade completed')).toBe(true);
+   expect(supplierActions[0]).toMatchObject({title:'Review and pay the platform fee',requiresAction:true});
+   expect(buildTradeActions([], [d], buyer).some(a=>a.id.endsWith(':fee'))).toBe(false);
+ });
+ it('submitted fee waits for platform receipt and zero fees never prompt payment',()=>{
+   const d=deal({status:'settled',fee_status:'invoiced',fee_payer_organization_id:seller,fee_amount:'0.20',fee_payment_submitted:true});
+   expect(buildTradeActions([], [d], seller)[0]).toMatchObject({title:'Platform fee awaiting receipt verification',requiresAction:false});
+   expect(buildTradeActions([], [deal({...d,fee_amount:'0.00'})], seller).some(a=>a.id.endsWith(':fee'))).toBe(false);
+ });
+});

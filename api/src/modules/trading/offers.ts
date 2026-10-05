@@ -1,3 +1,4 @@
+import { config } from '../../config/env';
 import { PoolClient, QueryResultRow } from 'pg';
 import { lockRecallBoundary, assertBatchNotRecalled } from '../recall/safety';
 import { AppError, ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../errors';
@@ -33,13 +34,14 @@ function requireSeller(actor: TradeActor, offer: QueryResultRow, holding: QueryR
   }
 }
 
-export async function acceptTradeOffer(actor: TradeActor, offerId: string) {
+export async function acceptTradeOffer(actor: TradeActor, offerId: string, quotedRateBps?: number) {
   return inTradeTransaction(async (client) => {
     await lockRecallBoundary(client);
     const { offer, holding } = await lockOfferInventory(client, offerId);
     requireSeller(actor, offer, holding);
     await assertBatchNotRecalled(client, holding.batch_id);
     if (offer.status !== 'pending') throw new ConflictError('Offer is no longer pending');
+    if (quotedRateBps !== undefined && quotedRateBps !== config.platformFeeBps) throw new ConflictError('Platform fee rate changed; refresh the offer before accepting');
     if (!offer.valid_now) throw new AppError('Offer has expired; request a new offer', 409, 'OFFER_EXPIRED');
     if (!offer.active || holding.status !== 'available') throw new ConflictError('Supply is no longer available');
     if (offer.buyer_organization_id === actor.organizationId) throw new ConflictError('A seller cannot accept its own offer');

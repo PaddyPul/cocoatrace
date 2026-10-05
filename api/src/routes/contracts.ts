@@ -12,7 +12,7 @@ const router = Router();
 
 router.get('/offers', requireAuth, requireAnyPermission('offer.respond', 'offer.create'), contractController.listOffers);
 router.post('/listings/:id/offers', requireAuth, requirePermission('offer.create'), validate(createOfferSchema), contractController.makeOffer);
-router.post('/offers/:id/accept', requireAuth, requirePermission('offer.respond'), contractController.acceptOffer);
+router.post('/offers/:id/accept', requireAuth, requirePermission('offer.respond'), validate(z.object({feeRateBps:z.number().int().min(0).max(1000).optional()}).default({})), contractController.acceptOffer);
 router.post('/offers/:id/reject', requireAuth, requirePermission('offer.respond'), contractController.rejectOffer);
 router.get('/contracts', requireAuth, requirePermission('contract.read'), contractController.listContracts);
 router.get('/contracts/:id', requireAuth, requirePermission('contract.read'), contractController.getContract);

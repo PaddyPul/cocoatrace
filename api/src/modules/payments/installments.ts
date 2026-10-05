@@ -134,7 +134,7 @@ export async function confirmReceipt(actor: TradeActor, id: string) {
       settled_at=CASE WHEN $3 THEN COALESCE(settled_at,NOW()) ELSE settled_at END,updated_at=NOW() WHERE id=$4`,
       [totals.confirmed, totals.settled ? 'settled' : 'partially_paid', totals.settled, payment.id],
     );
-    if (totals.settled) await completeTradeIfReady(client, contract.id);
+    if (totals.settled) await completeTradeIfReady(client, contract.id, actor);
     await recordTradeAudit(client, actor, 'payment.receipt.verify', 'payment_installment', id, {
       reference: item.payment_reference_external,
       evidenceId: item.payment_evidence_id,

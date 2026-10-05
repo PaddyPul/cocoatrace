@@ -1,4 +1,5 @@
 import { PoolClient, QueryResultRow } from 'pg';
+import { feePolicyVersion } from '../fees/policy';
 import { config } from '../../config/env';
 import { buildInstallments, requiredBeforeDispatch } from '../../services/paymentProtection';
 import { recordTradeAudit, TradeActor } from './transaction';
@@ -24,9 +25,10 @@ export async function createFulfillment(client: PoolClient, actor: TradeActor, o
       VALUES($1,$2,$3,$4,$5,'awaiting_trigger')`,
     [paymentRequest.id, installment.installmentType, installment.sequenceNumber, installment.amountDue, installment.dueTrigger]);
   }
-  await client.query(`INSERT INTO platform_fee_invoices(contract_id,fee_payer,rate_bps,amount_total,currency)
-    VALUES($1,'seller',$2,$3,$4)`,
-  [contract.id, config.platformFeeBps, Math.round(value * config.platformFeeBps / 100) / 100, offer.currency]);
+  const fee = (await client.query(`INSERT INTO platform_fee_invoices(contract_id,fee_payer,payer_organization_id,policy_version,rate_bps,amount_total,currency)
+    SELECT id,'seller',seller_organization_id,$3,$2::integer,ROUND(quantity_kg*price_per_kg*$2::integer/10000,2),currency FROM sales_contracts WHERE id=$1 RETURNING *`,
+  [contract.id, config.platformFeeBps, feePolicyVersion])).rows[0];
+  await recordTradeAudit(client, actor, 'fee.estimate.create', 'platform_fee_invoice', fee.id, {contractId:contract.id,amount:fee.amount_total,currency:fee.currency,rateBps:fee.rate_bps,policyVersion:feePolicyVersion});
   const buyerArranges = ['EXW', 'FCA', 'FAS', 'FOB'].includes(String(offer.incoterm).toUpperCase());
   const shipmentRes = await client.query(`INSERT INTO shipments
     (contract_id,transport_coordinator_organization_id,origin_port,destination_port,current_milestone,transport_mode)

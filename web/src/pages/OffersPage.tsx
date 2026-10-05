@@ -37,7 +37,7 @@ export default function OffersPage() {
   const handleAccept = async (offerId: string) => {
     setProcessing(offerId);
     try {
-      const result: any = await offersApi.accept(offerId);
+      const result: any = await offersApi.accept(offerId,data.find(o=>o.id===offerId)?.platform_fee_rate_bps);
       toast('success', 'Offer accepted. Contract and fulfilment workflow created.');
       navigate(`/deal-room/${result.contract.id}`);
     } catch (e: any) { toast('error', e.message); } finally { setProcessing(''); }
@@ -77,15 +77,16 @@ export default function OffersPage() {
           <>
             <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Pending ({pending.length})</div>
             <table className="mb-6">
-              <thead><tr><th>Listing</th><th>{tab === 'received' ? 'Buyer' : 'Seller'}</th><th>Qty (kg)</th><th>Price/kg</th><th>Total</th><th>Valid Until</th><th></th></tr></thead>
+              <thead><tr><th>Listing</th><th>{tab === 'received' ? 'Buyer' : 'Seller'}</th><th>Qty (kg)</th><th>Price/kg</th><th>Total</th><th>Seller fee at completion</th><th>Valid Until</th><th></th></tr></thead>
               <tbody>
                 {pending.map((o) => (
                   <tr key={o.id} className="hover:bg-brand-500/5">
                     <td className="font-mono text-[11px]">{o.listing_id.slice(0, 8)}…</td>
                     <td className="text-text-primary font-medium">{tab === 'received' ? (o.buyer_name || '—') : (o.seller_name || '—')}</td>
                     <td>{(o.quantity_kg || 0).toLocaleString()}</td>
-                    <td className="font-mono">€{o.offered_price_per_kg}</td>
-                    <td className="text-brand-400 font-mono">€{((o.quantity_kg || 0) * (o.offered_price_per_kg || 0)).toLocaleString()}</td>
+                    <td className="font-mono">{fmtMoney(Number(o.offered_price_per_kg),o.currency)}</td>
+                    <td className="text-brand-400 font-mono">{fmtMoney(Number(o.quantity_kg || 0)*Number(o.offered_price_per_kg || 0),o.currency)}</td>
+                    <td className="text-xs">{o.platform_fee_estimate == null ? 'Fee estimate unavailable' : `${fmtMoney(Number(o.platform_fee_estimate),o.currency)} (${Number(o.platform_fee_rate_bps || 0)/100}%)`}<div className="text-text-muted">Separate from buyer payment; tax not configured</div></td>
                     <td className="text-[11px]">{o.valid_until ? fmtDate(o.valid_until) : '—'}</td>
                     <td>
                       {tab === 'received' ? (
@@ -115,8 +116,8 @@ export default function OffersPage() {
                     <td className="font-mono text-[11px]">{o.listing_id.slice(0, 8)}…</td>
                     <td className="text-text-primary font-medium">{tab === 'received' ? (o.buyer_name || '—') : (o.seller_name || '—')}</td>
                     <td>{(o.quantity_kg || 0).toLocaleString()}</td>
-                    <td className="font-mono">€{o.offered_price_per_kg}</td>
-                    <td className="text-brand-400 font-mono">€{((o.quantity_kg || 0) * (o.offered_price_per_kg || 0)).toLocaleString()}</td>
+                    <td className="font-mono">{fmtMoney(Number(o.offered_price_per_kg),o.currency)}</td>
+                    <td className="text-brand-400 font-mono">{fmtMoney(Number(o.quantity_kg || 0)*Number(o.offered_price_per_kg || 0),o.currency)}</td>
                     <td><StatusBadge status={o.status} /></td>
                   </tr>
                 ))}

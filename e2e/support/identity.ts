@@ -35,6 +35,16 @@ export async function signIn(page: Page, email: string, password: string): Promi
   await expect(page).toHaveURL(/\/(home|onboarding)(\?|$)/);
 }
 
+export async function platformReviewerContext(browser: Browser): Promise<BrowserContext> {
+  const context=await browser.newContext({baseURL,storageState:reviewerSessions.get(browser)});
+  try {
+    const session=await context.request.get('/api/me');
+    if(session.status()===401){const page=await context.newPage();await signIn(page,'platform-admin@browser.test','BrowserAdminPassword123!');reviewerSessions.set(browser,await context.storageState());await page.close();}
+    else expect(session.status(),'Cached reviewer session must remain valid').toBe(200);
+    return context;
+  } catch(error){await context.close();throw error;}
+}
+
 export async function completeOnboarding(page: Page, role: 'buyer' | 'supplier'): Promise<void> {
   await page.goto('/onboarding');
   await page.getByRole('button', { name: 'Show me how it works' }).click();
@@ -63,16 +73,9 @@ export async function createWorkspace(page: Page, browser: Browser, role: 'buyer
   // verification page's in-memory React StrictMode request cache.
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Verification unavailable' })).toBeVisible();
-  const reviewer = await browser.newContext({ baseURL, storageState: reviewerSessions.get(browser) });
+  const reviewer = await platformReviewerContext(browser);
   try {
     const reviewPage = await reviewer.newPage();
-    const session = await reviewer.request.get('/api/me');
-    if (session.status() === 401) {
-      await signIn(reviewPage, 'platform-admin@browser.test', 'BrowserAdminPassword123!');
-      reviewerSessions.set(browser, await reviewer.storageState());
-    } else {
-      expect(session.status(), 'Cached reviewer session must remain valid').toBe(200);
-    }
     await reviewPage.goto('/access-applications');
     await reviewPage.locator('article').filter({ hasText: identity.organization }).getByRole('button', { name: 'Review', exact: true }).click();
     await reviewPage.getByLabel('Review reason or note').fill('Browser regression fixture approval');

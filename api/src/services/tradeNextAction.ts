@@ -16,6 +16,7 @@ export interface TradeAction {
 type OfferFact = { id:string; status:string; buyer_organization_id:string; seller_organization_id:string; buyer_name?:string; seller_name?:string };
 type DealFact = {
   id:string; seller_organization_id:string; buyer_organization_id:string; seller_name:string; buyer_name:string;
+  fee_status?:string;fee_payer_organization_id?:string;fee_amount?:string;fee_payment_submitted?:boolean;
   payment_terms_status:string; payment_plan:string; payment_request_id?:string; payment_status?:string; security_status?:string;
   installment_id?:string; installment_status?:string; installment_type?:string; amount_due?:number; currency?:string;
   cancellation_requested_by_organization_id?:string; delivery_accepted_at?:string; delivery_discrepancy_status?:string; shipment_id?:string; transport_coordinator_organization_id?:string; current_milestone?:string; status:string;
@@ -42,6 +43,9 @@ export function buildTradeActions(offers:OfferFact[],deals:DealFact[],organizati
     if(deal.cancellation_requested_by_organization_id){
       const reviewer=deal.cancellation_requested_by_organization_id!==organizationId;
       actions.push({id:`deal:${deal.id}:cancellation`,kind:'waiting',priority:reviewer?8:65,requiresAction:reviewer,title:reviewer?'Review cancellation request':'Cancellation awaiting the other organization',description:'Inventory remains committed until the other party agrees and the safety checks pass.',actionLabel:reviewer?'Review cancellation':'View cancellation',actionPath:room,contractId:deal.id});continue;
+    }
+    if(deal.status==='settled'&&deal.fee_status==='invoiced'&&deal.fee_payer_organization_id===organizationId&&Number(deal.fee_amount)>0){
+      actions.push({id:`deal:${deal.id}:fee`,kind:'payment',priority:35,requiresAction:!deal.fee_payment_submitted,title:deal.fee_payment_submitted?'Platform fee awaiting receipt verification':'Review and pay the platform fee',description:'The trade is complete. Platform fee collection is separate from the goods payment.',actionLabel:'Review fee statement',actionPath:room,contractId:deal.id});
     }
     if(deal.status==='settled'){
       actions.push({id:`deal:${deal.id}:complete`,kind:'complete',priority:100,requiresAction:false,title:'Trade completed',description:`Delivery and settlement with ${seller?deal.buyer_name:deal.seller_name} are recorded.`,actionLabel:'View completed deal',actionPath:room,contractId:deal.id});continue;
