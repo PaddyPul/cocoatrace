@@ -16,8 +16,6 @@
     "demo:seed:commercial": "tsx scripts/demo.ts commercial",
     "demo:seed:incident": "tsx scripts/demo.ts incident",
     "demo:validate": "tsx scripts/validate-demo.ts",
-    "db:migrate:js": "node scripts/migrate.js",
-    "db:seed:js": "node scripts/seed.js",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:docker": "node scripts/run-integration-tests.mjs",

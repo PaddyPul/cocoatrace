@@ -66,8 +66,8 @@ export default function DealRoomPage() {
   ];
   const currentStage = Math.max(0, stages.findIndex((stage) => !stage.done));
 
-  let nextTitle = 'Review the shared deal record';
-  let nextCopy = 'The agreement, payment, documents and transport state are synchronized here.';
+  let nextTitle: string;
+  let nextCopy: string;
   let nextAction: React.ReactNode = null;
   if (!settled && delivered && deal.delivery_discrepancy_status) {
     nextTitle = 'Resolve the delivery discrepancy'; nextCopy = 'Trade completion remains paused. Review the evidence and resolution below.';

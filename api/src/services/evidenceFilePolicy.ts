@@ -11,6 +11,8 @@ const extensions: Record<AllowedEvidenceMime, readonly string[]> = {
 };
 
 export function validateEvidenceMetadata(fileName: string, mimeType: string): { fileName: string; mimeType: AllowedEvidenceMime } {
+  // Filenames must strip control characters; this security filter deliberately matches them.
+  // eslint-disable-next-line no-control-regex
   const cleanName = path.basename(fileName.replace(/\\/g, '/')).replace(/[\u0000-\u001f\u007f]/g, '').trim();
   if (!cleanName || cleanName.length > 255) throw new ValidationError('A valid evidence filename is required');
   if (!(ALLOWED_EVIDENCE_MIME_TYPES as readonly string[]).includes(mimeType)) {

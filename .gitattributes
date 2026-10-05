@@ -1,0 +1,13 @@
+# Keep the adopted formatting scope LF on Windows as well as Linux.
+# Deliberately do not renormalize frozen migrations or legacy baselines.
+.gitattributes text eol=lf
+eslint.config.mjs text eol=lf
+.prettierrc.json text eol=lf
+scripts/quality-scope.mjs text eol=lf
+scripts/run-format-check.mjs text eol=lf
+scripts/check-script-contracts.mjs text eol=lf
+scripts/check-script-contracts.test.mjs text eol=lf
+scripts/quality-policy.test.mjs text eol=lf
+scripts/run-release-checks.mjs text eol=lf
+api/src/modules/payments/** text eol=lf
+api/src/modules/delivery/** text eol=lf
