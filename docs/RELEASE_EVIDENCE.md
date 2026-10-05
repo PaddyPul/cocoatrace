@@ -65,3 +65,12 @@ Author checks: clean npm ci, quality checks and nine policy/script regressions, 
 
 
 Windows formatting correction — 2026-10-05: founder lint passed but all 21 scoped files failed Prettier after Windows checkout. LF configuration lacked matching Git checkout attributes. Scoped eol=lf attributes now cover the entire formatter scope, without changing frozen migrations or legacy baselines; a regression checks every scoped path and migration exclusion. Existing checkout bytes require one scoped format:fix run. Ten quality/script regressions and migration integrity passed locally. Detailed npm dependency findings remain open under SEC-014; no forced dependency upgrade is included. Native release verification remains required.
+
+
+## Dependency-security boundary — 2026-10-05
+
+Founder confirms the quality-gates and LF correction merged and main pulled. QLT-006 and ARC-028 are closed on founder-reported release/merge evidence. QLT-007 remains partial outside adopted payment/delivery modules.
+
+SEC-014 now includes targeted Express/query-parser, Vitest/mocker/Vite and React Router upgrades, unused dependency removal, fail-closed production/full npm audits in CI and release checks, weekly review, and Dependabot update proposals. One unpatched braces advisory in development build tooling has an exact version/advisory exception expiring 2026-11-05; production classification never uses exceptions. Container/OS scanning and runtime-image reduction remain open. This is not a zero-vulnerability or production-readiness claim.
+
+Author validation: clean npm ci and dependency resolution, all 187 API tests, API/web/browser types, API/web builds, quality policies and migration integrity passed. Audit gate passed with no production findings and only the recorded build-tool exception. Twenty-five Node runner/dependency-policy regressions and ten quality/script-policy regressions passed, covering expiry, production rejection, unknown findings, malformed responses and malicious query data. Native Docker integration/concurrency, browser journeys and recovery were not run in this environment and remain required in verify:release before merge. Instructions: releases/DEPENDENCY_SECURITY_WINDOWS.md.

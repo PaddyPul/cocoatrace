@@ -6,11 +6,13 @@ import { fileURLToPath } from 'node:url';
 export const releaseChecks = [
   ['Code quality', ['run', 'check:quality']],
   ['Workspace type checks', ['run', 'typecheck']],
+  ['Dependency advisories', ['run', 'check:dependencies']],
   [
     'Runner checks',
     [
       '--test',
       'scripts/run-release-checks.test.mjs',
+      'scripts/check-dependencies.test.mjs',
       'scripts/compose-compatibility.test.mjs',
       'scripts/demo-preview.test.mjs',
     ],

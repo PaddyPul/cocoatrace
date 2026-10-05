@@ -11,3 +11,6 @@ scripts/quality-policy.test.mjs text eol=lf
 scripts/run-release-checks.mjs text eol=lf
 api/src/modules/payments/** text eol=lf
 api/src/modules/delivery/** text eol=lf
+scripts/check-dependencies.mjs text eol=lf
+scripts/check-dependencies.test.mjs text eol=lf
+security/dependency-exceptions.json text eol=lf

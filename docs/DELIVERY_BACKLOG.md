@@ -71,7 +71,7 @@ and independent-review evidence becomes available.
 
 ## Progress snapshot — 2026-10-05
 
-Interpreting the founder's latest “done” as completion of the prescribed release checks and merge/pull, the canonical backlog contains **310 items: 62 complete (20.0%), 20 in progress (6.5%), and 228 not started (73.5%)**. Items are counted equally, with no fractional completion credit. Started work is **26.5%**; that is not a completion measure.
+Interpreting the founder's latest “done” as completion of the prescribed release checks and merge/pull, the canonical backlog contains **310 items: 64 complete (20.6%), 19 in progress (6.1%), and 227 not started (73.2%)**. Items are counted equally, with no fractional completion credit. Started work is **26.8%**; that is not a completion measure.
 
 The denominator includes engineering, operations, design-partner validation, fundraising evidence, multi-currency, multi-language and later expansion. It measures the exhaustive roadmap, not usability of the existing app or a percentage of an $8M valuation. Native/CI completion here is founder-reported; independent CI URL archival remains open. Partially implemented suspension, real email delivery, hosted restore, disposal/segregation and recall deadline/external-recipient workflows stay open.
 
@@ -79,7 +79,7 @@ The denominator includes engineering, operations, design-partner validation, fun
 
 Select the next coherent batch from this queue. Completed-wave history and evidence are maintained in [`RELEASE_EVIDENCE.md`](RELEASE_EVIDENCE.md), rather than occupying the active queue.
 
-1. **Repository maintainability release — QLT-006, targeted QLT-007 and ARC-028:** incremental lint/format/type and script-contract gates implemented; native release verification and merge pending. See `engineering/CODE_QUALITY.md`.
+1. **Dependency security — SEC-014:** patched test runner/query parser/router dependencies and fail-closed npm audit gates implemented; native release verification pending. The exact unpatched build-only braces advisory has an expiring exception. Container/OS scanning and runtime reduction remain open. See `runbooks/DEPENDENCY_SECURITY.md`.
 2. **Remaining delivery remedies — LOG-006:** partial settlement/refunds/cancellation/returns require explicit financial and inventory policies; full-quantity acceptance and discrepancy resolution are already merged.
 3. **Continue targeted architectural cleanup:** adopt strict typing and extract large modules when their behavior changes; do not broadly rewrite tested customer flows.
 4. **Commercial operations — PAY-011–PAY-013:** explicit fee payer/invoice/collection rules and reconciled finance exports; real tax/business policy needs founder input.
@@ -153,7 +153,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **ARC-025 · P2 · Phase 3:** Remove the unused sessions design or make it the authoritative revocable session system.
 - [ ] **ARC-026 · P3 · Phase 4:** Add commodity policy/configuration interfaces before onboarding the second commodity.
 - [ ] **ARC-027 · P3 · Phase 4:** Add transformation workflow ports and domain types only when a validated customer requires blending/repacking.
-- [-] **ARC-028 · P2 · Phase 2:** Audit package-script entry points and remove or repair obsolete aliases. Discovered 2026-10-01: `api` scripts `db:migrate:js` and `db:seed:js` reference absent files. Done when documented commands resolve to supported runners and a lightweight script-contract check prevents recurrence.
+- [x] **ARC-028 · P2 · Phase 2:** Audit package-script entry points and remove or repair obsolete aliases. Discovered 2026-10-01: `api` scripts `db:migrate:js` and `db:seed:js` reference absent files. Done when documented commands resolve to supported runners and a lightweight script-contract check prevents recurrence. CLOSED 2026-10-05: founder reports quality gate/correction tested, merged and pulled.
 
 # 4. Identity, registration and organizations
 
@@ -195,7 +195,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **SEC-011 · P1 · Phase 1:** Add bounded rate limits for public scan, QR, login, reset, invitation and upload-intent endpoints.
 - [ ] **SEC-012 · P1 · Phase 1:** Move production secrets to a managed secret store and rotate existing secrets.
 - [ ] **SEC-013 · P1 · Phase 1:** Add secret scanning to CI and repository settings.
-- [ ] **SEC-014 · P1 · Phase 1:** Add dependency and container vulnerability scanning; remediate or accept findings explicitly. Founder npm ci output on 2026-10-05 reports 13 findings (6 moderate, 6 high, 1 critical); capture the detailed dependency paths and runtime exposure before choosing tested upgrades. This is not resolved by the formatting correction.
+- [-] **SEC-014 · P1 · Phase 1:** Add dependency and container vulnerability scanning; remediate or accept findings explicitly. Founder npm ci output on 2026-10-05 reports 13 findings (6 moderate, 6 high, 1 critical); capture the detailed dependency paths and runtime exposure before choosing tested upgrades. IN PROGRESS: targeted patched dependencies, production/full audit CI and release gates, weekly review and exact expiring build-only exception implemented in this wave. Container/OS scanning, removal of the unpatched build-tool tree and native release verification remain open.
 - [ ] **SEC-015 · P1 · Phase 2:** Threat-model account takeover, tenant breakout, fraudulent claims, malicious files, payment-reference fraud and recall abuse.
 - [ ] **SEC-016 · P2 · Phase 2:** Add PostgreSQL RLS to the highest-risk tenant tables after application policies stabilize.
 - [ ] **SEC-017 · P1 · Phase 2:** Add immutable security-event retention and alerts for abnormal authorization failures.
@@ -354,7 +354,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **QLT-003 · P0 · Phase 1:** Add inventory and offer concurrency tests.
 - [x] **QLT-004 · P0 · Phase 1:** Real-PostgreSQL integration tests cover linked-resource upload authorization, private quarantine, extension/MIME/signature validation, file and tenant quota limits, EICAR rejection and audit, quarantine deletion, scan-clean download gating and unauthenticated `/uploads` denial. The Docker harness additionally exercises S3-compatible storage and ClamAV.
 - [x] **QLT-005 · P1 · Phase 1:** Test migrations from an empty database and from the current baseline snapshot. IMPLEMENTED: ten release-command scenarios cover fresh/no-op startup, concurrent startup, preserved upgrade records/history, real forward-failure rollback, occupied schemas, partial/unknown history and stale locks. Nine nonconcurrent scenarios passed against temporary WASM PostgreSQL; the full native Docker suite must pass. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
-- [-] **QLT-006 · P1 · Phase 1:** Add ESLint, formatting and typecheck commands to CI. IN PROGRESS: incremental gates implemented; native release and merge pending.
+- [x] **QLT-006 · P1 · Phase 1:** Add ESLint, formatting and typecheck commands to CI. CLOSED 2026-10-05: founder reports incremental gates and Windows LF correction tested, merged and pulled. Broader strict-module adoption remains QLT-007.
 - [-] **QLT-007 · P1 · Phase 1:** Prohibit new `any` in changed high-risk modules. PARTIAL: enforced for payment/delivery; expansion to other high-risk modules remains open.
 - [ ] **QLT-008 · P1 · Phase 1:** Add regression tests for every confirmed P0 defect before or with the fix.
 - [ ] **QLT-009 · P1 · Phase 2:** Add Playwright buyer onboarding and sourcing journey.

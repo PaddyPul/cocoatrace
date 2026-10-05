@@ -20,3 +20,8 @@ test('all gates must execute successfully to report a passed release',()=>{
 test('quality and workspace types gate every release before infrastructure checks',()=>{
  assert.deepEqual(releaseChecks.slice(0,2).map(check=>check[1]),[['run','check:quality'],['run','typecheck']]);
 });
+
+test('dependency audit is required before application and Docker release checks',()=>{
+ assert.deepEqual(releaseChecks[2][1],['run','check:dependencies']);
+ assert.ok(releaseChecks.find(check=>check[0]==='Runner checks')[1].includes('scripts/check-dependencies.test.mjs'));
+});

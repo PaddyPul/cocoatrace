@@ -1,6 +1,9 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
   'eslint.config.mjs',
+  'scripts/check-dependencies.mjs',
+  'scripts/check-dependencies.test.mjs',
+  'security/dependency-exceptions.json',
   '.prettierrc.json',
   'scripts/quality-scope.mjs',
   'scripts/run-format-check.mjs',
