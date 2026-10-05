@@ -11,6 +11,6 @@ Backlog: QLT-006, QLT-007 and ARC-028.
 - `npm run check:scripts` verifies supported Node/tsx entry points and npm workspace delegations. Obsolete compiled migration and seed aliases were removed; supported `db:migrate` and `db:seed` remain.
 - Policy tests prove strict-module violations are rejected and frozen migrations remain excluded.
 
-Frozen migrations and integration baselines must not be reformatted. Migration integrity remains a separate release gate. Formatting uses LF through Prettier with a Node runner that works on Windows without shell glob expansion.
+Frozen migrations and integration baselines must not be reformatted. Migration integrity remains a separate release gate. Formatting uses LF through Prettier and matching scoped Git attributes, with a Node runner that works on Windows without shell glob expansion. After applying the line-ending correction to an existing Windows checkout, run `npm run format:fix` once; it only rewrites the adopted scope. Do not globally renormalize migrations.
 
 This is an incremental boundary, not a declaration that all architectural debt is solved. Broader strict typing, splitting remaining large pages/services, supported runtime upgrades and adoption of formatting by other modules remain backlog work. Keep behavior changes separate from large formatting passes.

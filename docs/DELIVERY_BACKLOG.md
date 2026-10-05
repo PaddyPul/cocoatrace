@@ -195,7 +195,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **SEC-011 · P1 · Phase 1:** Add bounded rate limits for public scan, QR, login, reset, invitation and upload-intent endpoints.
 - [ ] **SEC-012 · P1 · Phase 1:** Move production secrets to a managed secret store and rotate existing secrets.
 - [ ] **SEC-013 · P1 · Phase 1:** Add secret scanning to CI and repository settings.
-- [ ] **SEC-014 · P1 · Phase 1:** Add dependency and container vulnerability scanning; remediate or accept findings explicitly.
+- [ ] **SEC-014 · P1 · Phase 1:** Add dependency and container vulnerability scanning; remediate or accept findings explicitly. Founder npm ci output on 2026-10-05 reports 13 findings (6 moderate, 6 high, 1 critical); capture the detailed dependency paths and runtime exposure before choosing tested upgrades. This is not resolved by the formatting correction.
 - [ ] **SEC-015 · P1 · Phase 2:** Threat-model account takeover, tenant breakout, fraudulent claims, malicious files, payment-reference fraud and recall abuse.
 - [ ] **SEC-016 · P2 · Phase 2:** Add PostgreSQL RLS to the highest-risk tenant tables after application policies stabilize.
 - [ ] **SEC-017 · P1 · Phase 2:** Add immutable security-event retention and alerts for abnormal authorization failures.

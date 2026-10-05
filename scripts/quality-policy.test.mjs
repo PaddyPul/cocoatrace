@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ESLint } from 'eslint';
+import { execFileSync } from 'node:child_process';
+import { formattedPaths } from './quality-scope.mjs';
 import * as prettier from 'prettier';
 
 const eslint = new ESLint();
@@ -34,4 +36,15 @@ test('frozen migration files remain outside automatic lint and format rewriting'
   const file = 'api/src/migrations/001_initial_schema.ts';
   assert.equal(await eslint.isPathIgnored(file), true);
   assert.equal((await prettier.getFileInfo(file, { ignorePath: '.prettierignore' })).ignored, true);
+});
+
+test('Git checkout uses LF throughout the formatting scope without touching frozen migrations', () => {
+  const paths = formattedPaths.map((item) => item.replace('**/*.ts', 'checkout-probe.ts'));
+  for (const file of paths) {
+    const result = execFileSync('git', ['check-attr', 'eol', '--', file], { encoding: 'utf8' });
+    assert.equal(result.trim(), `${file}: eol: lf`);
+  }
+  const frozen = 'api/src/migrations/001_initial_schema.ts';
+  const result = execFileSync('git', ['check-attr', 'eol', '--', frozen], { encoding: 'utf8' });
+  assert.equal(result.trim(), `${frozen}: eol: unspecified`);
 });
