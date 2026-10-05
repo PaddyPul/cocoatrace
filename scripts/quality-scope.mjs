@@ -16,4 +16,5 @@ export const formattedPaths = [
   'scripts/run-release-checks.mjs',
   'api/src/modules/payments/**/*.ts',
   'api/src/modules/delivery/**/*.ts',
+  'api/src/modules/cancellation/**/*.ts',
 ];

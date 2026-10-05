@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { contracts, evidence, payments } from '../api';
+import ContractCancellation from '../components/trading/ContractCancellation';
 import DeliveryAcceptance from '../components/delivery/DeliveryAcceptance';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import Layout from '../components/layout/Layout';
@@ -164,7 +165,8 @@ export default function ContractDetailPage() {
   const uploadChoices = isSeller ? SELLER_DOCUMENTS : BUYER_DOCUMENTS;
 
   let nextAction = 'Review the contract and shared documents.';
-  if (isSeller && c.payment_terms_status !== 'agreed') nextAction = 'Propose the payment protection plan for buyer confirmation.';
+  if (c.status === 'cancelled') nextAction = 'Trade cancelled by agreement. Review the archived documents and released inventory.';
+  else if (isSeller && c.payment_terms_status !== 'agreed') nextAction = 'Propose the payment protection plan for buyer confirmation.';
   else if (isBuyer && c.payment_terms_status === 'proposed') nextAction = 'Review and confirm the seller’s payment protection plan.';
   else if (isTransportCoordinator && !c.service_provider_name && !c.booking_reference) nextAction = `Open the transport workspace and record the external arrangement. Your organization coordinates transport under ${c.incoterm}.`;
   else if (isSeller && missingDocuments.length > 0) nextAction = `Upload the remaining trade documents (${missingDocuments.length} missing).`;
@@ -178,6 +180,7 @@ export default function ContractDetailPage() {
     <Layout currentPage="contracts" actions={<button className="btn btn-sm" onClick={() => navigate('/contracts')}><ArrowLeft size={14} /> Back</button>}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-5">
+          <ContractCancellation contractId={id!} organizationId={user?.organizationId || ''} onChanged={loadContract} />
           <DeliveryAcceptance contractId={c.id} organizationId={user?.organizationId || ''} onChanged={loadContract} />
           <div className="bg-brand-500/10 border border-brand-500/30 rounded p-4"><div className="text-[10px] text-brand-400 uppercase tracking-wider mb-1">Your next action</div><div className="text-sm font-semibold">{nextAction}</div></div>
 
@@ -206,10 +209,10 @@ export default function ContractDetailPage() {
 
         <div className="space-y-4"><div className="bg-surface border border-border rounded p-5 sticky top-6"><h4 className="text-xs font-semibold mb-3">Contract actions</h4><div className="space-y-2">
           {isBuyer && !c.compliance_reference && <button className="btn w-full justify-center text-xs" onClick={() => setShowCompliance(true)}><FileText size={14} /> Add compliance reference</button>}
-          {isSeller && c.payment_terms_status !== 'agreed' && <button className="btn btn-primary w-full justify-center text-xs" onClick={() => setShowTerms(true)}><ShieldCheck size={14} /> Set payment protection</button>}
-          {isBuyer && c.payment_terms_status === 'proposed' && <button className="btn btn-primary w-full justify-center text-xs" onClick={confirmTerms} disabled={termsLoading}><ShieldCheck size={14} /> {termsLoading ? 'Confirming…' : 'Confirm payment terms'}</button>}
+          {isSeller && !['cancelled','settled'].includes(c.status) && c.payment_terms_status !== 'agreed' && <button className="btn btn-primary w-full justify-center text-xs" onClick={() => setShowTerms(true)}><ShieldCheck size={14} /> Set payment protection</button>}
+          {isBuyer && !['cancelled','settled'].includes(c.status) && c.payment_terms_status === 'proposed' && <button className="btn btn-primary w-full justify-center text-xs" onClick={confirmTerms} disabled={termsLoading}><ShieldCheck size={14} /> {termsLoading ? 'Confirming…' : 'Confirm payment terms'}</button>}
           {c.shipment_id && <button className={`btn ${isTransportCoordinator && !c.service_provider_name ? 'btn-primary' : ''} w-full justify-center text-xs`} onClick={() => navigate(`/shipments/${c.shipment_id}`)}><Ship size={14} /> {isTransportCoordinator ? 'Manage transport' : 'View transport'}</button>}
-          {isSeller && ['deposit_balance','documentary_collection','bank_secured'].includes(c.payment_plan) && !c.documents_presented_at && c.payment_terms_status === 'agreed' && <button className="btn btn-primary w-full justify-center text-xs" onClick={handlePresentDocuments} disabled={presenting || missingDocuments.length > 0 || !transportDocumentsReady}><Euro size={14} /> {presenting ? 'Presenting…' : 'Present documents for payment'}</button>}
+          {isSeller && c.status !== 'cancelled' && ['deposit_balance','documentary_collection','bank_secured'].includes(c.payment_plan) && !c.documents_presented_at && c.payment_terms_status === 'agreed' && <button className="btn btn-primary w-full justify-center text-xs" onClick={handlePresentDocuments} disabled={presenting || missingDocuments.length > 0 || !transportDocumentsReady}><Euro size={14} /> {presenting ? 'Presenting…' : 'Present documents for payment'}</button>}
           {c.payment_request_id && <button className="btn w-full justify-center text-xs" onClick={() => navigate(`/payments/${c.payment_request_id}`)}><Euro size={14} /> {isBuyer && c.payment_status === 'requested' ? 'Record bank payment' : 'View payment workflow'}</button>}
           <button className="btn w-full justify-center text-xs" onClick={() => downloadContract(c, toast)}><FileText size={14} /> Download contract</button>
         </div></div></div>

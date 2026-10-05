@@ -18,7 +18,7 @@ type DealFact = {
   id:string; seller_organization_id:string; buyer_organization_id:string; seller_name:string; buyer_name:string;
   payment_terms_status:string; payment_plan:string; payment_request_id?:string; payment_status?:string; security_status?:string;
   installment_id?:string; installment_status?:string; installment_type?:string; amount_due?:number; currency?:string;
-  delivery_accepted_at?:string; delivery_discrepancy_status?:string; shipment_id?:string; transport_coordinator_organization_id?:string; current_milestone?:string; status:string;
+  cancellation_requested_by_organization_id?:string; delivery_accepted_at?:string; delivery_discrepancy_status?:string; shipment_id?:string; transport_coordinator_organization_id?:string; current_milestone?:string; status:string;
 };
 
 const money = (amount: unknown, currency = 'EUR') => new Intl.NumberFormat('en', { style:'currency', currency }).format(Number(amount || 0));
@@ -36,6 +36,13 @@ export function buildTradeActions(offers:OfferFact[],deals:DealFact[],organizati
   for(const deal of deals){
     const seller=deal.seller_organization_id===organizationId,buyer=deal.buyer_organization_id===organizationId;
     const room=`/deal-room/${deal.id}`,payment=deal.payment_request_id?`/payments/${deal.payment_request_id}`:room;
+    if(deal.status==='cancelled'){
+      actions.push({id:`deal:${deal.id}:cancelled`,kind:'complete',priority:100,requiresAction:false,title:'Trade cancelled',description:'Both parties agreed to close this unstarted trade. Released inventory is not automatically republished.',actionLabel:'View cancelled deal',actionPath:room,contractId:deal.id});continue;
+    }
+    if(deal.cancellation_requested_by_organization_id){
+      const reviewer=deal.cancellation_requested_by_organization_id!==organizationId;
+      actions.push({id:`deal:${deal.id}:cancellation`,kind:'waiting',priority:reviewer?8:65,requiresAction:reviewer,title:reviewer?'Review cancellation request':'Cancellation awaiting the other organization',description:'Inventory remains committed until the other party agrees and the safety checks pass.',actionLabel:reviewer?'Review cancellation':'View cancellation',actionPath:room,contractId:deal.id});continue;
+    }
     if(deal.status==='settled'){
       actions.push({id:`deal:${deal.id}:complete`,kind:'complete',priority:100,requiresAction:false,title:'Trade completed',description:`Delivery and settlement with ${seller?deal.buyer_name:deal.seller_name} are recorded.`,actionLabel:'View completed deal',actionPath:room,contractId:deal.id});continue;
     }

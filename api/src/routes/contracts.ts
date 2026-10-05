@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { z } from 'zod';
+import * as cancellationController from '../controllers/cancellationController';
 import { requireAuth, requireAnyPermission, requirePermission } from '../middleware/auth';
 import validate from '../middleware/validate';
 import { createOfferSchema, updateComplianceSchema, updateEudrSchema, updatePaymentTermsSchema } from '../validation';
@@ -24,4 +26,9 @@ router.post('/contracts/:id/delivery/accept', requireAuth, requirePermission('co
 router.post('/contracts/:id/delivery/discrepancy', requireAuth, requirePermission('contract.read'), validate(deliveryDiscrepancySchema), deliveryController.report);
 router.post('/contracts/:id/delivery/resolution', requireAuth, requirePermission('contract.read'), validate(deliveryResolutionSchema), deliveryController.propose);
 router.post('/contracts/:id/delivery/resolution/approve', requireAuth, requirePermission('contract.read'), deliveryController.approve);
+router.get('/contracts/:id/cancellation', requireAuth, requirePermission('contract.read'), cancellationController.get);
+router.post('/contracts/:id/cancellation', requireAuth, requirePermission('contract.read'), requireAnyPermission('offer.create', 'offer.respond'), validate(z.object({ reason: z.string().trim().min(10).max(2000) })), cancellationController.request);
+router.post('/contracts/:id/cancellation/:requestId/approve', requireAuth, requirePermission('contract.read'), requireAnyPermission('offer.create', 'offer.respond'), cancellationController.approve);
+router.post('/contracts/:id/cancellation/:requestId/reject', requireAuth, requirePermission('contract.read'), requireAnyPermission('offer.create', 'offer.respond'), cancellationController.reject);
+
 export = router;

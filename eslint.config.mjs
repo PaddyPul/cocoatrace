@@ -31,7 +31,11 @@ export default tseslint.config(
     },
   },
   {
-    files: ['api/src/modules/payments/**/*.ts', 'api/src/modules/delivery/**/*.ts'],
+    files: [
+      'api/src/modules/payments/**/*.ts',
+      'api/src/modules/delivery/**/*.ts',
+      'api/src/modules/cancellation/**/*.ts',
+    ],
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': [

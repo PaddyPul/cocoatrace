@@ -37,3 +37,9 @@ describe('delivery consent', () => {
     expect(buildTradeActions([], [deal({delivery_discrepancy_status:'resolution_proposed'})], buyer)[0].requiresAction).toBe(true);
   });
 });
+
+ it('prioritizes the other organization’s cancellation review and never asks a cancelled trade to pay', () => {
+   expect(buildTradeActions([], [deal({cancellation_requested_by_organization_id: seller})], buyer)[0]).toMatchObject({requiresAction:true,title:'Review cancellation request'});
+   expect(buildTradeActions([], [deal({cancellation_requested_by_organization_id: seller})], seller)[0].requiresAction).toBe(false);
+   expect(buildTradeActions([], [deal({status:'cancelled',installment_status:'due'})], buyer)[0]).toMatchObject({requiresAction:false,title:'Trade cancelled',kind:'complete'});
+ });

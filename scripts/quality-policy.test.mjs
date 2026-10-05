@@ -7,10 +7,11 @@ import * as prettier from 'prettier';
 
 const eslint = new ESLint();
 
-test('payment and delivery code cannot introduce explicit any', async () => {
+test('payment, delivery and cancellation code cannot introduce explicit any', async () => {
   for (const filePath of [
     'api/src/modules/payments/policy-probe.ts',
     'api/src/modules/delivery/policy-probe.ts',
+    'api/src/modules/cancellation/policy-probe.ts',
   ]) {
     const [result] = await eslint.lintText('export const unsafe = (value: any) => value;', {
       filePath,

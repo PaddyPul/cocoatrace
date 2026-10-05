@@ -72,7 +72,7 @@ and independent-review evidence becomes available.
 
 ## Progress snapshot — 2026-10-05
 
-Interpreting the founder's latest “done” as completion of the prescribed release checks and merge/pull, the canonical backlog contains **310 items: 64 complete (20.6%), 21 in progress (6.8%), and 225 not started (72.6%)**. Items are counted equally, with no fractional completion credit. Started work is **27.4%**; that is not a completion measure.
+Interpreting the founder's latest “done” as completion of the prescribed release checks and merge/pull, the canonical backlog contains **310 items: 64 complete (20.6%), 22 in progress (7.1%), and 224 not started (72.3%)**. Items are counted equally, with no fractional completion credit. Started work is **27.7%**; that is not a completion measure.
 
 The denominator includes engineering, operations, design-partner validation, fundraising evidence, multi-currency, multi-language and later expansion. It measures the exhaustive roadmap, not usability of the existing app or a percentage of an $8M valuation. Native/CI completion here is founder-reported; independent CI URL archival remains open. Partially implemented suspension, real email delivery, hosted restore, disposal/segregation and recall deadline/external-recipient workflows stay open.
 
@@ -81,8 +81,8 @@ The denominator includes engineering, operations, design-partner validation, fun
 Select the next coherent batch from this queue. Completed-wave history and evidence are maintained in [`RELEASE_EVIDENCE.md`](RELEASE_EVIDENCE.md), rather than occupying the active queue.
 
 1. **Container security release — SEC-014:** dependency fixes are founder-reported merged. Multi-stage API runtime, supported Node 24 bases, unprivileged Nginx and fail-closed OS/library image scans implemented; founder confirmed release/merge/pull on 2026-10-05 after the package-manager correction. Remaining image/digest/build-tool scope stays open. The unpatched build-only braces advisory, third-party service images and digest promotion remain open. See `runbooks/CONTAINER_SECURITY.md`.
-2. **Remaining delivery remedies — LOG-006:** partial settlement/refunds/cancellation/returns require explicit financial and inventory policies; full-quantity acceptance and discrepancy resolution are already merged.
-3. **Payment-term workflow extraction — ARC-006, ARC-019, QLT-007:** proposal/confirmation are moved from HTTP controllers into a typed transaction service; contract-first locking, closed-contract guards, retry and rollback regressions implemented. Native release/CI remains pending. Continue other state-machine extraction incrementally.
+2. **Unstarted bilateral cancellation — LOG-006, TRD-017:** scoped request/review, payment/security/transport guards, exact committed-stock release, estimated-fee voiding and immutable audit history implemented. Native release/CI verification pending. Paid cancellation, partial settlement, refunds and returns still require explicit financial and inventory policies.
+3. **Payment-term workflow extraction — ARC-006, ARC-019, QLT-007:** proposal/confirmation are moved from HTTP controllers into a typed transaction service; contract-first locking, closed-contract guards, retry and rollback regressions implemented. Founder confirms payment-term extraction merged and pulled. Continue other state-machine extraction incrementally.
 4. **Commercial operations — PAY-011–PAY-013:** explicit fee payer/invoice/collection rules and reconciled finance exports; real tax/business policy needs founder input.
 5. **Controlled pilot and live environment gates — IDN-005, IDN-021, ENV-004–ENV-006, OPS-001–OPS-002, BST-002–BST-003:** actual approved design partners, real email delivery, private storage and a verified hosted restore under the zero-budget constraint. Provider eligibility and customer participation remain external dependencies.
 
@@ -132,7 +132,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **ARC-003 · P1 · Phase 1:** Create reusable resource policy interfaces and move authorization decisions out of controllers.
 - [ ] **ARC-004 · P1 · Phase 1:** Extract evidence controller logic into service, policy, repository and infrastructure adapters.
 - [x] **ARC-005 · P1 · Phase 1:** Extract offer acceptance and inventory reservation into one transactional trading use case. IMPLEMENTED: Offer acceptance, stock commitment and fulfillment creation are extracted into the trading module; native integration/CI validation is pending. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
-- [-] **ARC-006 · P1 · Phase 2:** Extract payment-plan and installment state machines. IN PROGRESS: typed payment-term proposal/confirmation use cases and next-state mapping extracted, with transaction/audit and authorization regressions; other payment state transitions and native verification remain open.
+- [-] **ARC-006 · P1 · Phase 2:** Extract payment-plan and installment state machines. IN PROGRESS: typed payment-term proposal/confirmation use cases and next-state mapping extracted, with transaction/audit and authorization regressions; founder confirms this wave merged/pulled; other payment state transitions remain open.
 - [ ] **ARC-007 · P1 · Phase 2:** Extract shipment and delivery state machines.
 - [ ] **ARC-008 · P1 · Phase 2:** Extract recall activation, notification and resolution use cases.
 - [ ] **ARC-009 · P2 · Phase 2:** Split public product administration, public rendering and recall code into separate modules.
@@ -260,7 +260,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **TRD-014 · P1 · Phase 2:** Snapshot accepted price, quantity, Incoterm, locations and assurance requirements.
 - [ ] **TRD-015 · P1 · Phase 2:** Add agreement version, explicit acceptance by both parties and acceptance timestamp.
 - [ ] **TRD-016 · P1 · Phase 2:** Rename “sales contract” where no legally executed contract exists, or add signed-document support.
-- [ ] **TRD-017 · P1 · Phase 2:** Add cancellation, dispute and administrator-resolution states.
+- [-] **TRD-017 · P1 · Phase 2:** Add cancellation, dispute and administrator-resolution states. IN PROGRESS: bilateral unstarted cancellation with critical audit and exact stock release implemented; native verification, paid cancellation, broader disputes and administrator resolution remain open.
 - [ ] **TRD-018 · P2 · Phase 2:** Award/close the originating sourcing request when appropriate.
 - [ ] **TRD-019 · P2 · Phase 3:** Add marketplace pagination, search indexes and deterministic match explanations.
 - [ ] **TRD-020 · P2 · Phase 3:** Add listing expiry and supplier renewal workflows.
@@ -289,7 +289,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [ ] **LOG-003 · P1 · Phase 2:** Require essential arrangement fields before departure-relevant milestones.
 - [ ] **LOG-004 · P1 · Phase 2:** Decide whether milestone skipping is allowed; encode required predecessors explicitly.
 - [x] **LOG-005 · P1 · Phase 2:** Add buyer delivery confirmation distinct from a reported delivery milestone. IMPLEMENTED: separate buyer inspection/acceptance, exact quantity, retry-safe auditable acceptance and settlement guard. Founder confirmed tested and merged on 2026-10-02. See runbooks/DELIVERY_ACCEPTANCE.md.
-- [-] **LOG-006 · P1 · Phase 2:** Add shortages, damage, rejection and delivery-dispute flows. IN PROGRESS: evidence-backed reports, supplier proposal and buyer approval with settlement hold implemented; partial settlement, refunds, cancellation and returned inventory remain explicit follow-up scope.
+- [-] **LOG-006 · P1 · Phase 2:** Add shortages, damage, rejection and delivery-dispute flows. IN PROGRESS: evidence-backed reports, supplier proposal and buyer approval with settlement hold implemented; bilateral unstarted cancellation implemented with guarded stock release; native verification, partial settlement, refunds, paid cancellation and returned inventory remain explicit follow-up scope.
 - [x] **LOG-007 · P1 · Phase 2:** Prevent automatic settlement while a delivery dispute is open. Implemented and founder-tested with delivery acceptance; founder confirmed release testing and merge on 2026-10-02.
 - [ ] **LOG-008 · P1 · Phase 2:** Require reason, acknowledgement and notification for exceptional dispatch.
 - [ ] **LOG-009 · P1 · Phase 2:** Attach transport documents through the controlled evidence workflow.
@@ -356,7 +356,7 @@ The following deployment work is a **parallel external gate**, not repository-co
 - [x] **QLT-004 · P0 · Phase 1:** Real-PostgreSQL integration tests cover linked-resource upload authorization, private quarantine, extension/MIME/signature validation, file and tenant quota limits, EICAR rejection and audit, quarantine deletion, scan-clean download gating and unauthenticated `/uploads` denial. The Docker harness additionally exercises S3-compatible storage and ClamAV.
 - [x] **QLT-005 · P1 · Phase 1:** Test migrations from an empty database and from the current baseline snapshot. IMPLEMENTED: ten release-command scenarios cover fresh/no-op startup, concurrent startup, preserved upgrade records/history, real forward-failure rollback, occupied schemas, partial/unknown history and stale locks. Nine nonconcurrent scenarios passed against temporary WASM PostgreSQL; the full native Docker suite must pass. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
 - [x] **QLT-006 · P1 · Phase 1:** Add ESLint, formatting and typecheck commands to CI. CLOSED 2026-10-05: founder reports incremental gates and Windows LF correction tested, merged and pulled. Broader strict-module adoption remains QLT-007.
-- [-] **QLT-007 · P1 · Phase 1:** Prohibit new `any` in changed high-risk modules. PARTIAL: enforced for payment/delivery; expansion to other high-risk modules remains open.
+- [-] **QLT-007 · P1 · Phase 1:** Prohibit new `any` in changed high-risk modules. PARTIAL: enforced for payment/delivery/cancellation; expansion to other high-risk modules remains open.
 - [ ] **QLT-008 · P1 · Phase 1:** Add regression tests for every confirmed P0 defect before or with the fix.
 - [ ] **QLT-009 · P1 · Phase 2:** Add Playwright buyer onboarding and sourcing journey.
 - [ ] **QLT-010 · P1 · Phase 2:** Add Playwright supplier organic and conventional publishing journeys.
