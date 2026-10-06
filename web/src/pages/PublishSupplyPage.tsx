@@ -1,7 +1,7 @@
 import SupplyPathChoice from '../components/supply/SupplyPathChoice';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Check, Circle, PackageCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Circle, PackageCheck, Sparkles, Sprout } from 'lucide-react';
 import TrustClaims from '../components/shared/TrustClaims';
 import Layout from '../components/layout/Layout';
 import { holdings, listings } from '../api';

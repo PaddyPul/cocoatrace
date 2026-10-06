@@ -226,3 +226,7 @@ At 23:41 Accra time the founder confirms release checks passed and merge/pull co
 ## Source and evidence entry candidate — 2026-10-06
 
 Shared setup chooser, contextual evidence picker and four browser cases implemented. Author quality (10 policy checks), workspace/browser types, API units (424 across 55 files), API/web builds, migration integrity and backlog checks passed. No migration or dependency change. Native browser/integration/release execution is pending: Docker is unavailable here. Request-specific evidence checklists and saved-brief reopening/editing remain open; no completion credit for those gaps.
+
+### Source entry import correction
+
+Founder release typecheck caught missing `Sprout` in PublishSupplyPage after the final import cleanup. The earlier author success report did not cover that final cleanup; it was inaccurate for the delivered candidate. The corrected import passed rerun workspace/browser type checks, web production build and quality checks (10 policy tests). Full native release acceptance remains pending.
