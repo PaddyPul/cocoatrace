@@ -1,3 +1,4 @@
+import { assertMutationAssurance } from '../mfa/assurance';
 import type { AuthenticatedActor } from '../../services/authSessionService';
 import { query } from '../../db';
 import { AppError, ConflictError, NotFoundError } from '../../errors';
@@ -40,6 +41,7 @@ export async function changeAccess(
   passwordHash: string,
 ) {
   return inDatabaseTransaction(async (client) => {
+    await assertMutationAssurance(client, actor);
     const actorRow = (
       await client.query(
         `SELECT u.organization_id,u.password_hash,u.active,u.access_suspended_at,o.access_suspended_at AS org_suspended,o.verification_status,

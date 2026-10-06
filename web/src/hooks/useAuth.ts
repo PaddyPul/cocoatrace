@@ -17,7 +17,7 @@ export function useAuth() {
       const restored: User = {
         id: data.id, email: data.email, name: data.name,
         organizationId: data.organization_id, orgName: data.org_name, orgType: data.org_type,
-        roles: data.roles || [], permissions: data.permissions || [],
+        roles: data.roles || [], permissions: data.permissions || [], mfa: data.mfa,
       };
       localStorage.setItem('ct_user', JSON.stringify(restored));
       setUser(restored);

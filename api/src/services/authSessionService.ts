@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env';
 import { getClient, query } from '../db';
+import { mfaState, type MfaState } from '../modules/mfa/policy';
 
 const sessionLifetimeSeconds = 24 * 60 * 60;
 
@@ -17,6 +18,7 @@ export interface AuthenticatedActor {
   permissions: string[];
   orgName: string;
   orgType: string;
+  mfa?: MfaState;
 }
 
 type TokenClaims = jwt.JwtPayload & { sub: string; sid: string };
@@ -103,7 +105,14 @@ export async function authenticateSession(token: string): Promise<AuthenticatedA
       WHERE id=$1 AND (last_seen_at IS NULL OR last_seen_at<NOW()-INTERVAL '5 minutes')`,
     [claims.sid],
   );
-  return { ...actor, sessionId: claims.sid };
+  const assurance = (await query(`SELECT s.mfa_verified_at,
+    EXISTS(SELECT 1 FROM user_passkeys WHERE user_id=s.user_id) AS history,
+    EXISTS(SELECT 1 FROM user_passkeys WHERE user_id=s.user_id AND revoked_at IS NULL) AS enrolled,
+    EXISTS(SELECT 1 FROM user_passkeys WHERE id=s.mfa_credential_id AND user_id=s.user_id AND revoked_at IS NULL) AS valid_key
+    FROM sessions s WHERE id=$1 AND revoked_at IS NULL AND expires_at>NOW()`, [claims.sid])).rows[0];
+  if (!assurance) return null;
+  return { ...actor, sessionId: claims.sid, mfa: mfaState(config.mfaEnforced, actor.roles, actor.permissions,
+    assurance.enrolled, assurance.valid_key ? assurance.mfa_verified_at : null, Date.now(), assurance.history) };
 }
 
 export async function revokeSession(sessionId: string, reason = 'logout'): Promise<boolean> {

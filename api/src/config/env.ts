@@ -49,6 +49,7 @@ export type AppConfig = Readonly<{
   publicWebUrl: string;
   jwtSecret: string;
   cookieSecure: boolean;
+  mfaEnforced: boolean;
   databaseUrl: string;
   databaseSsl: boolean;
   databaseSslRejectUnauthorized: boolean;
@@ -103,6 +104,7 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     PUBLIC_WEB_URL: z.string().url().optional(),
     JWT_SECRET: z.string().min(1).default('cocoatrace_dev_secret_change_in_production'),
     COOKIE_SECURE: booleanValue.default(false),
+    MFA_ENFORCED: booleanValue.default(environment === 'staging' || environment === 'production'),
     DATABASE_URL: z.string().url().default(localDatabase),
     DATABASE_SSL: booleanValue.default(false),
     DATABASE_SSL_REJECT_UNAUTHORIZED: booleanValue.default(true),
@@ -151,7 +153,13 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     SMTP_AUTH_METHOD: z.enum(['plain', 'login']).default('plain'),
     SMTP_CONNECTION_TIMEOUT_MS: z.coerce.number().int().min(500).max(120_000).default(10_000),
   }).superRefine((values, context) => {
+    if (values.MFA_ENFORCED && !values.WEB_URL.startsWith('https://') && !['localhost','127.0.0.1'].includes(new URL(values.WEB_URL).hostname)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['WEB_URL'], message: 'MFA requires HTTPS or localhost' });
+    }
     const deployed = environment === 'staging' || environment === 'production';
+    if (deployed && !values.MFA_ENFORCED) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['MFA_ENFORCED'], message: 'cannot disable privileged MFA in staging or production' });
+    }
     if (deployed) {
       for (const name of ['DATABASE_URL', 'JWT_SECRET', 'WEB_URL', 'PUBLIC_WEB_URL', 'APP_VERSION'] as const) {
         if (!source[name]) {
@@ -242,6 +250,7 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     publicWebUrl: (values.PUBLIC_WEB_URL || values.WEB_URL).replace(/\/$/, ''),
     jwtSecret: values.JWT_SECRET,
     cookieSecure: values.COOKIE_SECURE,
+    mfaEnforced: values.MFA_ENFORCED,
     databaseUrl: values.DATABASE_URL,
     databaseSsl: values.DATABASE_SSL,
     databaseSslRejectUnauthorized: values.DATABASE_SSL_REJECT_UNAUTHORIZED,

@@ -52,7 +52,7 @@ try {
       env: {
         ...process.env,
         COCOATRACE_BROWSER_RUN: 'true',
-        COCOATRACE_BROWSER_BASE_URL: `http://127.0.0.1:${webPort}`,
+        COCOATRACE_BROWSER_BASE_URL: `http://localhost:${webPort}`,
         COCOATRACE_BROWSER_INBOX_URL: `http://127.0.0.1:${mailPort}`,
         COCOATRACE_BROWSER_DATABASE_URL: `postgresql://browser_test:browser_test@127.0.0.1:${dbPort}/cocoatrace_browser_test`,
       },

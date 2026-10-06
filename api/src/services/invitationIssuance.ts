@@ -1,12 +1,14 @@
+import { assertMutationAssurance } from '../modules/mfa/assurance';
 import { getClient } from '../db';
 import { ConflictError } from '../errors';
 
 export async function createPendingInvitation(input: {
-  organizationId: string; email: string; roleId: string; tokenHash: string; actorId: string;
+  organizationId: string; email: string; roleId: string; tokenHash: string; actorId: string; actorOrganizationId?:string; actorSessionId?:string;
 }) {
   const client = await getClient();
   try {
     await client.query('BEGIN');
+    if(input.actorOrganizationId)await assertMutationAssurance(client,{id:input.actorId,organizationId:input.actorOrganizationId,sessionId:input.actorSessionId});
     // Serialize double-clicks and concurrent requests for the same address.
     await client.query('SELECT pg_advisory_xact_lock(hashtextextended(LOWER($1),0))', [input.email]);
     const existing = await client.query(`SELECT 1 FROM users WHERE LOWER(email)=LOWER($1)

@@ -10,6 +10,7 @@ const eslint = new ESLint();
 test('security, payment, delivery, cancellation and fee code cannot introduce explicit any', async () => {
   for (const filePath of [
     'api/src/modules/security/policy-probe.ts',
+    'api/src/modules/mfa/policy-probe.ts',
     'api/src/modules/payments/policy-probe.ts',
     'api/src/modules/delivery/policy-probe.ts',
     'api/src/modules/cancellation/policy-probe.ts',

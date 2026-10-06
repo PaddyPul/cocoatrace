@@ -11,6 +11,7 @@ import { evidenceStorage } from './services/evidenceStorage';
 import { evidenceMalwareScanner } from './services/evidenceMalwareScanner';
 import { assignRequestId, requestLogContext } from './requestContext';
 
+import mfaRoutes from './modules/mfa/routes';
 import authRoutes from './routes/auth';
 import orgRoutes from './routes/organizations';
 import farmRoutes from './routes/farms';
@@ -67,6 +68,7 @@ app.get('/health/ready', async (_req, res) => {
     res.status(503).json({ status: 'not_ready', dependency: 'database_storage_or_evidence_scanner' });
   }
 });
+app.use(mfaRoutes);
 app.use(authRoutes);
 app.use(orgRoutes);
 app.use(farmRoutes);

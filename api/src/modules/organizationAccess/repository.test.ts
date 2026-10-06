@@ -37,6 +37,7 @@ describe('Postgres organization access repository', () => {
     const client = {
       query: vi.fn(async (sql: string) => {
         queries.push(sql.trim());
+        if (sql.includes('o.verification_status,EXISTS')) return {rows:[{active:true,verification_status:'verified',history:false,privileged:true}]};
         if (sql.includes('FROM organization_access_applications') && sql.includes('FOR UPDATE')) return { rows: [applicationRow] };
         if (sql.includes('SELECT 1 FROM organizations')) return { rows: [] };
         if (sql.includes('SELECT id FROM roles')) return { rows: [{ id: 'role-id' }] };
@@ -72,6 +73,7 @@ describe('Postgres organization access repository', () => {
   it('rolls back without creating an organization when approval prerequisites fail', async () => {
     const client = {
       query: vi.fn(async (sql: string) => {
+        if (sql.includes('o.verification_status,EXISTS')) return {rows:[{active:true,verification_status:'verified',history:false,privileged:true}]};
         if (sql.includes('FROM organization_access_applications') && sql.includes('FOR UPDATE')) {
           return { rows: [{ ...applicationRow, status: 'pending_email_verification', email_verified_at: null }] };
         }

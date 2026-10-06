@@ -3,7 +3,7 @@ import { JwtPayload } from '../../middleware/auth';
 
 export type OrganizationAccessType = 'buyer' | 'supplier';
 export type OrganizationAccessStatus = 'pending_email_verification' | 'pending_review' | 'approved' | 'rejected';
-export type AccessReviewActor = Pick<JwtPayload, 'id' | 'organizationId' | 'permissions'>;
+export type AccessReviewActor = Pick<JwtPayload, 'id' | 'organizationId' | 'permissions'> & Partial<Pick<JwtPayload,'sessionId'>>;
 
 export type RequestOrganizationAccess = {
   organizationName: string;

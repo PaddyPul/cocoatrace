@@ -45,10 +45,10 @@
     {
       "id": "CORE-abuse",
       "scope": "core",
-      "status": "partial",
+      "status": "complete",
       "title": "Shared per-account/IP public-endpoint limits hold across instances",
       "backlog": ["IDN-013", "SEC-011"],
-      "evidence": "Shared PostgreSQL authentication budgets founder-tested and merged; fixed-operation public and upload budgets implemented under SEC-011, native release pending."
+      "evidence": "Founder confirms public-abuse release tested, merged and pulled on 2026-10-06; PostgreSQL shared account/token, deployment/socket-peer and member/organization budgets with concurrency, route, no-side-effect and fail-closed regressions. Hosted trusted-ingress/client attribution and capacity/alerts remain separate gates."
     },
     {
       "id": "CORE-privilege",
@@ -56,7 +56,7 @@
       "status": "partial",
       "title": "Privileged MFA/recovery and suspension are enforced",
       "backlog": ["IDN-011", "IDN-012", "SAF-004"],
-      "evidence": "Founder confirms tested/merged password-confirmed audited non-privileged user/organization suspension and safe restoration on 2026-10-06. MFA and privileged recovery/suspension remain open."
+      "evidence": "Non-privileged suspension founder-tested/merged. Passkey enrollment, restricted sessions, fresh writes, audited key/session revocation and two-reviewer console recovery implemented 2026-10-06. Native PostgreSQL/browser release, physical/hosted verification, privileged access review, notifications and emergency privileged recovery/suspension remain pending. See runbooks/PRIVILEGED_PASSKEYS.md."
     },
     {
       "id": "CORE-files",

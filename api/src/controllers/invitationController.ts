@@ -24,7 +24,7 @@ export async function createInvitation(req: Request, res: Response): Promise<voi
   const token = crypto.randomBytes(32).toString('base64url');
   const invitation = await createPendingInvitation({
     organizationId, email: req.body.email, roleId: role.id,
-    tokenHash: hashToken(token), actorId: req.user!.id,
+    tokenHash: hashToken(token), actorId: req.user!.id, actorOrganizationId:req.user!.organizationId,actorSessionId:req.user!.sessionId,
   });
   const inviteUrl = `${config.publicWebUrl}/accept-invite/${token}`;
   const delivery = await deliverInvitation({ id: invitation.id, token, to: req.body.email, invitationUrl: inviteUrl, organizationName: org.name });

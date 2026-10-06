@@ -136,6 +136,10 @@
     {
       "path": "api/src/migrations/032_access_suspension.ts",
       "sha256": "42e5bf1b0d04e2e7a656c91ac3977cce2e7d2fb5f1ee5517b6c117986da01860"
+    },
+    {
+      "path": "api/src/migrations/033_privileged_passkeys.ts",
+      "sha256": "0604f0112acf2e536532d593268689bee3c1c10cf350daa76d92385b01f67dfa"
     }
   ]
 }
