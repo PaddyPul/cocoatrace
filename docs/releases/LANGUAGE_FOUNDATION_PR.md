@@ -13,7 +13,7 @@ Buyers and suppliers can choose English or French for workspace navigation and s
 ## Change summary
 
 - Extract workspace headers, navigation, account links and command search into stable English/French catalogs with English fallback.
-- Add accessible language selection, account-separated device persistence and visible storage-failure feedback.
+- Add accessible language selection, account-separated device persistence and visible storage-failure feedback. Use a separate translated label connected with React useId/htmlFor so exact English/French label lookups exclude option text.
 - Add pure locale formatting helpers that preserve currency precision and ISO calendar dates; no localized money parsing or currency conversion.
 - Add six language unit tests, three real-identity browser regressions and a mandatory language release gate.
 
@@ -43,7 +43,7 @@ Buyers and suppliers can choose English or French for workspace navigation and s
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: Authoring: six language tests, quality checks, workspace/browser types, web production build and seven release-runner tests pass. Correction validation: clean npm ci, production/full advisory gates, 294 API unit tests, nine dependency tests, six locale tests, API/web builds and workspace/browser types pass. CSS output compares byte-identical. Full native checks remain pending; see docs/RELEASE_EVIDENCE.md. Native Docker/browser/images/recovery unavailable in authoring environment. Before merging, run npm run verify:release and check the integration/E2E boxes only after success. Existing web bundle-size warning remains tracked.
+- Evidence/results: Authoring: six language tests, quality checks, workspace/browser types, web production build and seven release-runner tests pass. Correction validation: clean npm ci, production/full advisory gates, 294 API unit tests, nine dependency tests, six locale tests, API/web builds and workspace/browser types pass. CSS output compares byte-identical. Focused Chromium check of the actual layout/selector passes exact English/French lookup, switching, reload persistence and translated search. Full native checks remain pending; see docs/RELEASE_EVIDENCE.md. Native Docker/browser/images/recovery unavailable in authoring environment. Before merging, run npm run verify:release and check the integration/E2E boxes only after success. Existing web bundle-size warning remains tracked.
 
 ## Product and operations
 

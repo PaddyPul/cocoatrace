@@ -1,4 +1,12 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useState,
+} from 'react';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { Language, normalizeLanguage, readLanguage, saveLanguage, translate } from './locale';
 
@@ -57,11 +65,13 @@ export function useLanguage(): LanguageContextValue {
 }
 export function LanguageSelector() {
   const { language, setLanguage, saved, t } = useLanguage();
+  const selectorId = useId();
   return (
     <div className="max-w-48 text-xs">
-      <label className="flex flex-wrap items-center gap-1">
-        <span>{t('shell.language')}</span>
+      <div className="flex flex-wrap items-center gap-1">
+        <label htmlFor={selectorId}>{t('shell.language')}</label>
         <select
+          id={selectorId}
           className="rounded-lg border border-border bg-surface px-2 py-2"
           title={t('shell.device')}
           value={language}
@@ -74,7 +84,7 @@ export function LanguageSelector() {
             Français
           </option>
         </select>
-      </label>
+      </div>
       <p className="mt-1 text-[10px] text-text-muted">{t('shell.scope')}</p>
       {!saved && (
         <p role="status" className="mt-1 text-amber-300">
