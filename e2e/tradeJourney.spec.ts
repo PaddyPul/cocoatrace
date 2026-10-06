@@ -11,6 +11,9 @@ const modalField = (page: Page, label: string) => modal(page).getByText(label, {
 async function recordProgress(page: Page, shipmentId: string, milestone: string, blocked = false) {
   await page.goto(`/shipments/${shipmentId}`);
   await page.getByRole('button', { name: 'Record progress', exact: true }).click();
+  const options=await modalField(page,'Milestone').locator('option').evaluateAll(items=>items.map(item=>(item as HTMLOptionElement).value));
+  if(milestone==='loaded') expect(options).not.toContain('departed');
+  if(milestone==='departed') {expect(options).not.toContain('loaded');expect(options).not.toContain('cargo_ready');}
   await modalField(page, 'Milestone').selectOption(milestone);
   const responseEvent = page.waitForResponse(response => response.url().endsWith(`/api/shipments/${shipmentId}/milestones`) && response.request().method() === 'POST');
   await modal(page).getByRole('button', { name: 'Record progress', exact: true }).click();
@@ -132,7 +135,7 @@ test('full prepayment trade: offer, verified payment gate, document sharing, del
     expect((await downloadEvent).suggestedFilename()).toBe('trade-invoice.pdf');
 
     await recordProgress(supplier, shipment.id, 'loaded');
-    await recordProgress(supplier, shipment.id, 'departed');
+    await recordProgress(buyer, shipment.id, 'departed');
     await recordProgress(buyer, shipment.id, 'arrived');
     await recordProgress(buyer, shipment.id, 'customs_cleared');
     await recordProgress(buyer, shipment.id, 'delivered');

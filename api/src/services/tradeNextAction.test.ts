@@ -58,3 +58,18 @@ describe('separate platform fee action',()=>{
    expect(buildTradeActions([], [deal({...d,fee_amount:'0.00'})], seller).some(a=>a.id.endsWith(':fee'))).toBe(false);
  });
 });
+
+describe('Incoterm dashboard handoffs',()=>{
+ it('FOB cargo preparation belongs to seller after buyer booking',()=>{
+  const d=deal({incoterm:'FOB',payment_terms_status:'agreed',current_milestone:'booked',transport_coordinator_organization_id:buyer});
+  expect(buildTradeActions([], [d],seller)[0]).toMatchObject({requiresAction:true,title:'Next transport action: cargo ready'});
+  expect(buildTradeActions([], [d],buyer)[0]).toMatchObject({requiresAction:false,title:'Awaiting seller: cargo ready'});
+ });
+ it('DDP clearance and DPU unloading stay with seller before buyer receipt',()=>{
+  for(const [incoterm,current_milestone] of [['DDP','arrived'],['DPU','customs_cleared']]) {
+   const d=deal({incoterm,current_milestone,payment_terms_status:'agreed',transport_coordinator_organization_id:seller});
+   expect(buildTradeActions([], [d],seller)[0].requiresAction).toBe(true);
+   expect(buildTradeActions([], [d],buyer)[0].requiresAction).toBe(false);
+  }
+ });
+});

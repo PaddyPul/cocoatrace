@@ -229,7 +229,7 @@ export const payments = {
 
 export const shipments = {
   list: () => api<import('./types').Shipment[]>('GET', '/shipments'),
-  get: (id: string) => api<{ shipment: import('./types').Shipment; milestones: any[] }>('GET', `/shipments/${id}`),
+  get: (id: string) => api<{ shipment: import('./types').Shipment; milestones: any[]; permissions: { canArrange: boolean; supported: boolean; milestones: string[]; responsibilities: Record<string, string | null> } }>('GET', `/shipments/${id}`),
   updateDetails: (id: string, data: { serviceProviderName?: string; bookingReference?: string; transportMode?: string; transportDocumentType?: string; transportDocumentReference?: string; trackingUrl?: string; vesselName?: string; containerReference?: string; originLocation?: string; destinationLocation?: string; etaArrival?: string }) =>
     api<any>('PATCH', `/shipments/${id}/details`, data),
   recordMilestone: (id: string, data: { milestone: string; location?: string; notes?: string; exceptionalDispatch?: { reason: string; acknowledgePaymentRisk: true } }) =>

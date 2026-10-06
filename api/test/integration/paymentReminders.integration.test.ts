@@ -109,6 +109,7 @@ describe('durable payment deadlines and scoped reminder delivery', () => {
   it('starts delivery credit from persisted delivery and does not extend it on milestone replay', async () => {
     const d = await deal('pay_after_delivery', 14);
     expect((await installments(d))[0].due_at).toBeNull();
+    expect((await post(`/shipments/${d.shipmentId}/milestones`, seller, { milestone: 'loaded' })).status).toBe(200);
     expect((await post(`/shipments/${d.shipmentId}/milestones`, buyer, { milestone: 'delivered' })).status).toBe(200);
     const first = (await installments(d))[0], shipment = (await query('SELECT delivered_at FROM shipments WHERE id=$1', [d.shipmentId])).rows[0];
     expect(first.status).toBe('due');

@@ -10,6 +10,9 @@ const field = (page: Page, label: string) => modal(page).getByText(label, { exac
 async function progress(page: Page, shipmentId: string, milestone: string, blocked = false) {
   await page.goto(`/shipments/${shipmentId}`);
   await page.getByRole('button', { name: 'Record progress', exact: true }).click();
+  const options = await field(page, 'Milestone').locator('option').evaluateAll(items => items.map(item => (item as HTMLOptionElement).value));
+  if (milestone === 'loaded') expect(options).not.toContain('departed');
+  if (milestone === 'departed') { expect(options).not.toContain('loaded'); expect(options).not.toContain('cargo_ready'); }
   await field(page, 'Milestone').selectOption(milestone);
   const event = page.waitForResponse(r => r.url().endsWith(`/shipments/${shipmentId}/milestones`) && r.request().method() === 'POST');
   await modal(page).getByRole('button', { name: 'Record progress', exact: true }).click();
@@ -102,7 +105,7 @@ for (const plan of ['deposit_balance', 'bank_secured', 'documentary_collection',
         await shareDocuments(seller, contract.id);
         await submitAndVerify(buyer, seller, contract.id, proof);
       }
-      await progress(seller, shipment.id, 'departed');
+      await progress(buyer, shipment.id, 'departed');
       await progress(buyer, shipment.id, 'arrived');
       await progress(buyer, shipment.id, 'customs_cleared');
       await progress(buyer, shipment.id, 'delivered');
