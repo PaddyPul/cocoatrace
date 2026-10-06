@@ -1,3 +1,5 @@
+import { AppError } from '../../errors';
+import { coordinatorParty } from '../transport/responsibilities';
 import { PoolClient, QueryResultRow } from 'pg';
 import { feePolicyVersion } from '../fees/policy';
 import { tradeTotal, requireTradeCurrency, tradeMinorUnits } from '../../services/tradeMoney';
@@ -33,7 +35,9 @@ export async function createFulfillment(client: PoolClient, actor: TradeActor, o
     SELECT id,'seller',seller_organization_id,$3,$2::integer,ROUND(quantity_kg*price_per_kg*$2::integer/10000,currency_minor_units),currency,currency_minor_units FROM sales_contracts WHERE id=$1 RETURNING *`,
   [contract.id, config.platformFeeBps, feePolicyVersion])).rows[0];
   await recordTradeAudit(client, actor, 'fee.estimate.create', 'platform_fee_invoice', fee.id, {contractId:contract.id,amount:fee.amount_total,currency:fee.currency,rateBps:fee.rate_bps,policyVersion:feePolicyVersion,currencyMinorUnits:units});
-  const buyerArranges = ['EXW', 'FCA', 'FAS', 'FOB'].includes(String(offer.incoterm).toUpperCase());
+  const coordinator = coordinatorParty(offer.incoterm);
+  if (!coordinator) throw new AppError('Review the unsupported Incoterm before accepting this offer',409,'UNSUPPORTED_INCOTERM');
+  const buyerArranges = coordinator === 'buyer';
   const shipmentRes = await client.query(`INSERT INTO shipments
     (contract_id,transport_coordinator_organization_id,origin_port,destination_port,current_milestone,transport_mode)
     VALUES($1,$2,$3,$4,'planning','unspecified') RETURNING *`,

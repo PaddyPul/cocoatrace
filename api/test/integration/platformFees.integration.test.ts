@@ -93,6 +93,7 @@ async function deal(complete = true, price = 5, acceptDelivery = true) {
     expect((await post(`/payment-installments/${installment.id}/confirm`, seller)).status).toBe(
       200,
     );
+    expect((await post(`/shipments/${shipment.id}/milestones`, seller, {milestone:'loaded'})).status).toBe(200);
     expect(
       (await post(`/shipments/${shipment.id}/milestones`, buyer, { milestone: 'delivered' }))
         .status,

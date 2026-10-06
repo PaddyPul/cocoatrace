@@ -1,3 +1,4 @@
+import { milestoneParty, transportPermissions } from '../modules/transport/responsibilities';
 export type TradeActionKind = 'offer_decision' | 'offer_waiting' | 'configure_terms' | 'confirm_terms' | 'payment' | 'payment_verification' | 'transport' | 'delivery' | 'waiting' | 'complete';
 
 export interface TradeAction {
@@ -15,7 +16,7 @@ export interface TradeAction {
 
 type OfferFact = { id:string; status:string; buyer_organization_id:string; seller_organization_id:string; buyer_name?:string; seller_name?:string };
 type DealFact = {
-  currency_minor_units?: number;
+  incoterm?: string; currency_minor_units?: number;
   id:string; seller_organization_id:string; buyer_organization_id:string; seller_name:string; buyer_name:string;
   fee_status?:string;fee_payer_organization_id?:string;fee_amount?:string;fee_payment_submitted?:boolean;
   payment_terms_status:string; payment_plan:string; payment_request_id?:string; payment_status?:string; security_status?:string;
@@ -90,14 +91,22 @@ export function buildTradeActions(offers:OfferFact[],deals:DealFact[],organizati
         actionLabel:buyer?'Submit payment':'View deal',actionPath:room,contractId:deal.id});continue;
     }
     const milestone=deal.current_milestone||'planning';
-    if(['arrived','customs_cleared'].includes(milestone)){
-      actions.push({id:`deal:${deal.id}:delivery`,kind:buyer?'delivery':'waiting',priority:buyer?30:70,requiresAction:buyer,title:buyer?'Confirm final delivery':'Shipment awaiting buyer receipt',description:buyer?'Review the received goods and record delivery when appropriate.':`${deal.buyer_name} is responsible for confirming receipt.`,actionLabel:buyer?'Confirm delivery':'Track shipment',actionPath:deal.shipment_id?`/shipments/${deal.shipment_id}`:room,contractId:deal.id});continue;
-    }
     if(milestone==='delivered'){
       actions.push({id:`deal:${deal.id}:settlement`,kind:'waiting',priority:65,requiresAction:false,title:'Delivery recorded—awaiting settlement',description:'The deal will close automatically when every payment installment is seller-verified.',actionLabel:'View deal',actionPath:room,contractId:deal.id});continue;
     }
-    const coordinator=deal.transport_coordinator_organization_id===organizationId;
-    actions.push({id:`deal:${deal.id}:transport`,kind:coordinator?'transport':'waiting',priority:coordinator?30:70,requiresAction:coordinator,title:coordinator?'Continue fulfilment and transport':`Shipment progress: ${pretty(milestone)}`,description:coordinator?'The payment release conditions are satisfied. Record the next physical milestone.':`The assigned coordinator is updating transport progress.`,actionLabel:coordinator?'Continue transport':'Track shipment',actionPath:deal.shipment_id?`/shipments/${deal.shipment_id}`:room,contractId:deal.id});
+    const permissions=transportPermissions(deal,organizationId);
+    let next: string | undefined;
+    if (['planning','booked','requested','accepted'].includes(milestone)) next=milestone==='planning'?'booked':'cargo_ready';
+    else if (['cargo_ready','export_cleared','picked_up','warehouse_received','handed_over','port_received'].includes(milestone)) next=deal.incoterm==='FAS'&&milestone!=='handed_over'&&milestone!=='port_received'?'handed_over':'loaded';
+    else if(milestone==='loaded') next='departed';
+    else if(milestone==='departed') next='arrived';
+    else if(milestone==='arrived') next='customs_cleared';
+    else if(milestone==='customs_cleared') next=deal.incoterm==='DPU'?'unloaded':'delivered';
+    else if(milestone==='unloaded') next='delivered';
+    const responsible=next?milestoneParty(deal.incoterm,next):null;
+    const actor=permissions.party!==null&&permissions.party===responsible;
+    const task=next?pretty(next):'transport configuration review';
+    actions.push({id:`deal:${deal.id}:transport`,kind:actor?'transport':'waiting',priority:actor?30:70,requiresAction:actor,title:actor?`Next transport action: ${task}`:`Awaiting ${responsible||'contract'}: ${task}`,description:actor?`Your contract role records this step under ${deal.incoterm}. Payment and safety gates still apply.`:'The other party must record its assigned step. You can track progress without confirming on its behalf.',actionLabel:actor?'Continue transport':'Track shipment',actionPath:deal.shipment_id?`/shipments/${deal.shipment_id}`:room,contractId:deal.id});
   }
   return actions.sort((a,b)=>a.priority-b.priority||a.title.localeCompare(b.title));
 }

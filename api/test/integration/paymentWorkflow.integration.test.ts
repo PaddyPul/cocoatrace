@@ -42,7 +42,7 @@ async function deal(plan: PaymentPlan, proof = false, incoterm = 'FOB', confirm 
   return { contractId: contract.id, shipmentId: shipment.id, paymentId: payment.id, holdingId: contract.holding_id };
 }
 async function state(d: Awaited<ReturnType<typeof deal>>) { return (await get(`/payment-requests/${d.paymentId}`, buyer)).body; }
-async function progress(d: Awaited<ReturnType<typeof deal>>, milestone: string) { return post(`/shipments/${d.shipmentId}/milestones`, milestone === 'delivered' ? buyer : seller, { milestone }); }
+async function progress(d: Awaited<ReturnType<typeof deal>>, milestone: string) { return post(`/shipments/${d.shipmentId}/milestones`, ['delivered','departed'].includes(milestone) ? buyer : seller, { milestone }); }
 async function pay(d: Awaited<ReturnType<typeof deal>>, installment: string, evidenceId?: string) {
   expect((await post(`/payment-installments/${installment}/submit`, buyer, { transactionReference: `PAY-${installment}`, evidenceId })).status).toBe(200);
   expect((await post(`/payment-installments/${installment}/confirm`, seller)).status).toBe(200);

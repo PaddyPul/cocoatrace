@@ -1,3 +1,4 @@
+import { incoterms } from './modules/transport/responsibilities';
 import { tradeCurrencies } from './services/tradeMoney';
 import { z } from 'zod';
 
@@ -132,7 +133,7 @@ export const createListingSchema = z.object({
   availableQuantityKg: inventoryQuantitySchema,
   pricePerKg: inventoryPriceSchema,
   currency: z.enum(tradeCurrencies).default('EUR'),
-  incoterm: z.string().default('CIF'),
+  incoterm: z.enum(incoterms).default('CIF'),
   originLocation: z.string(),
   destinationLocation: z.string(),
 });
@@ -158,7 +159,7 @@ export const createSourcingRequestSchema = z.object({
   qualityRequirements: z.record(z.unknown()).default({}),
   assuranceRequirements: z.record(z.unknown()).default({}),
   deliveryLocation: z.string().trim().min(2).max(160),
-  incoterm: z.string().trim().min(2).max(20).default('CIF'),
+  incoterm: z.enum(incoterms).default('CIF'),
   requiredBy: z.string().optional(),
   offerDeadline: z.string().optional(),
   visibility: z.enum(['matched','invited','private']).default('matched'),
@@ -242,7 +243,7 @@ export const pushToMarketplaceSchema = z.object({
   quantityKg: inventoryQuantitySchema,
   pricePerKg: inventoryPriceSchema,
   currency: z.enum(tradeCurrencies).default('EUR'),
-  incoterm: z.string().default('CIF'),
+  incoterm: z.enum(incoterms).default('CIF'),
   originLocation: z.string().min(1, 'Origin location required'),
   destinationLocation: z.string().min(1, 'Destination location required'),
 });

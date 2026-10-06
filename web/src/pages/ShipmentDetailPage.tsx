@@ -8,10 +8,10 @@ import Layout from '../components/layout/Layout';
 import { ArrowLeft, Calendar, ExternalLink, FileText, MapPin, Plus, Ship, X } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 
-const MILESTONES = ['planning', 'booked', 'cargo_ready', 'handed_over', 'loaded', 'departed', 'arrived', 'customs_cleared', 'delivered'];
+const MILESTONES = ['planning', 'booked', 'cargo_ready', 'export_cleared', 'handed_over', 'loaded', 'departed', 'arrived', 'customs_cleared', 'unloaded', 'delivered'];
 const LABELS: Record<string, string> = {
-  planning: 'Planning', booked: 'Transport Booked', cargo_ready: 'Cargo Ready',
-  handed_over: 'Handed to Transport Provider', loaded: 'Loaded / Dispatched',
+  export_cleared: 'Export Clearance Confirmed (if applicable)', unloaded: 'Unloaded at Destination', planning: 'Planning', booked: 'Transport Booked', cargo_ready: 'Cargo Ready',
+  handed_over: 'Origin Handover Confirmed', loaded: 'Origin Loading Confirmed',
   departed: 'Departed Origin', arrived: 'Arrived at Destination',
   customs_cleared: 'Customs / Border Cleared', delivered: 'Delivered',
 };
@@ -21,7 +21,7 @@ export default function ShipmentDetailPage() {
   const navigate = useNavigate();
   const { user, canDo } = useAuthCtx();
   const { toast } = useToast();
-  const [data, setData] = useState<{ shipment: any; milestones: any[] } | null>(null);
+  const [data, setData] = useState<{ shipment: any; milestones: any[]; permissions: { canArrange: boolean; supported: boolean; milestones: string[]; responsibilities: Record<string, string | null> } } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -52,10 +52,9 @@ export default function ShipmentDetailPage() {
   if (error || !data) return <Layout currentPage="shipments"><div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{error || 'Not found'}</div></Layout>;
 
   const { shipment: s, milestones } = data;
-  const isCoordinator = s.transport_coordinator_organization_id === user?.organizationId;
+  const isCoordinator = data.permissions.canArrange;
   const isSeller = s.seller_organization_id === user?.organizationId;
-  const currentIndex = MILESTONES.indexOf(s.current_milestone);
-  const availableMilestones = MILESTONES.filter((_, index) => index > currentIndex);
+  const availableMilestones = MILESTONES.filter(item => data.permissions.milestones.includes(item));
 
   const openDetails = () => {
     setDetails({
@@ -105,8 +104,8 @@ export default function ShipmentDetailPage() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-5">
         <div className="bg-brand-500/10 border border-brand-500/30 rounded p-4 text-xs leading-5">
-          <div className="font-semibold text-brand-400">Buyer–seller managed transport</div>
-          <div className="text-text-muted">{s.transport_coordinator_name} coordinates transport under {s.incoterm}. External providers do not need a CocoaTrace account; the parties record information received from their provider.</div>
+          <div className="font-semibold text-brand-400">Buyer–seller managed transport</div>{['FAS','FOB','CFR','CIF'].includes(s.incoterm) && !['unspecified','sea','inland_waterway'].includes(s.transport_mode) && <p className="text-amber-400">This Incoterm is for sea or inland-waterway carriage. Review the contract and mode before using it for this route.</p>}
+          <div className="text-text-muted">{s.transport_coordinator_name} coordinates transport under {s.incoterm}. External providers do not need a CocoaTrace account; Departure and arrival are reports from the coordinating party, not independently verified carrier events. Destination receipt is separate from inspection and acceptance.</div>
         </div>
         <div className={`${Number(s.amount_confirmed || 0) >= Number(s.dispatch_required_amount || 0) && s.payment_terms_status === 'agreed' ? 'bg-green-500/10 border-green-500/30' : 'bg-amber-500/10 border-amber-500/30'} border rounded p-4 text-xs leading-5`}><div className="font-semibold">Payment dispatch gate</div><div className="text-text-muted">Plan: {pretty(s.payment_plan)} · confirmed {Number(s.amount_confirmed || 0).toLocaleString()} of {Number(s.dispatch_required_amount || 0).toLocaleString()} required before dispatch · security {pretty(s.security_status || 'not required')}.</div>{s.dispatch_exception && <div className="text-amber-400 mt-1">Exceptional dispatch: {s.dispatch_exception_reason}</div>}</div>
 
@@ -131,16 +130,17 @@ export default function ShipmentDetailPage() {
           <h3 className="text-sm font-semibold mb-4 flex items-center gap-2"><Ship size={16} className="text-brand-400" /> Transport progress</h3>
           <div className="space-y-0">{MILESTONES.map((item, index) => {
             const event = milestones.find((entry: any) => entry.milestone === item);
-            const done = index <= currentIndex;
-            return <div key={item} className="flex gap-3"><div className="flex flex-col items-center w-6 shrink-0"><div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] ${done ? 'bg-brand-500 text-white' : 'bg-surface-darker border border-border-strong'}`}>{done ? '✓' : '○'}</div>{index < MILESTONES.length - 1 && <div className={`w-0.5 flex-1 min-h-[26px] ${done ? 'bg-brand-500' : 'bg-border'}`} />}</div><div className="pb-4 flex-1"><div className={`text-sm ${done ? 'text-text-primary font-medium' : 'text-text-muted'}`}>{LABELS[item]}</div>{event && <div className="text-[11px] text-text-muted mt-1">{event.location && <div><MapPin size={11} className="inline" /> {event.location}</div>}{event.notes && <div>{event.notes}</div>}<div>{event.recorded_by_organization_name} · {new Date(event.recorded_at).toLocaleString()}</div></div>}</div></div>;
+            const done = Boolean(event);
+            return <div key={item} className="flex gap-3"><div className="flex flex-col items-center w-6 shrink-0"><div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] ${done ? 'bg-brand-500 text-white' : 'bg-surface-darker border border-border-strong'}`}>{done ? '✓' : '○'}</div>{index < MILESTONES.length - 1 && <div className={`w-0.5 flex-1 min-h-[26px] ${done ? 'bg-brand-500' : 'bg-border'}`} />}</div><div className="pb-4 flex-1"><div className={`text-sm ${done ? 'text-text-primary font-medium' : 'text-text-muted'}`}>{LABELS[item]} <span className="text-[10px] text-text-muted">· {data.permissions.responsibilities[item] || 'Review required'}</span></div>{event && <div className="text-[11px] text-text-muted mt-1">{event.location && <div><MapPin size={11} className="inline" /> {event.location}</div>}{event.notes && <div>{event.notes}</div>}<div>{event.recorded_by_organization_name} · {new Date(event.recorded_at).toLocaleString()}</div></div>}</div></div>;
           })}</div>
         </div>
       </div>
 
       <div><div className="bg-surface border border-border rounded p-5 sticky top-6"><h4 className="text-xs font-semibold mb-3">Transport actions</h4><div className="space-y-2">
-        {isCoordinator && <button className="btn btn-primary w-full justify-center text-xs" onClick={openDetails}><Ship size={14} /> {s.service_provider_name ? 'Update arrangement' : 'Add arrangement'}</button>}
-        {canDo('shipment.update') && s.current_milestone !== 'delivered' && <button className="btn w-full justify-center text-xs" onClick={() => setShowMilestone(true)}><Plus size={14} /> Record progress</button>}
-        {!isCoordinator && <p className="text-[10px] text-text-muted leading-4 pt-2">Only {s.transport_coordinator_name} can edit provider and booking details. Both contract parties can report auditable progress.</p>}
+        {!data.permissions.supported && <p className="text-xs text-amber-400">Review this contract’s unsupported Incoterm before recording progress.</p>}
+        {isCoordinator && canDo('shipment.update') && s.current_milestone !== 'delivered' && <button className="btn btn-primary w-full justify-center text-xs" onClick={openDetails}><Ship size={14} /> {s.service_provider_name ? 'Update arrangement' : 'Add arrangement'}</button>}
+        {canDo('shipment.update') && availableMilestones.length > 0 && <button className="btn w-full justify-center text-xs" onClick={() => setShowMilestone(true)}><Plus size={14} /> Record progress</button>}
+        {!isCoordinator && <p className="text-[10px] text-text-muted leading-4 pt-2">Only {s.transport_coordinator_name} can edit provider and booking details. You can confirm only milestones assigned to your contract role.</p>}
       </div></div></div>
     </div>
 

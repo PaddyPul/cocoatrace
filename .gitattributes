@@ -35,3 +35,5 @@ api/src/middleware/security.ts text eol=lf
 api/src/middleware/security.test.ts text eol=lf
 
 api/src/modules/accessControls/** text eol=lf
+
+api/src/modules/transport/** text eol=lf

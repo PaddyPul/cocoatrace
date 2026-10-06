@@ -44,6 +44,7 @@ async function deal(delivered = true, prepaid = true): Promise<Deal> {
     expect((await post(`/payment-installments/${installment.id}/confirm`, seller)).status).toBe(200);
   }
   const d = { contractId: contract.id, shipmentId: shipment.id, paymentId: payment.id, holdingId: contract.holding_id };
+  if (delivered) { expect((await post(`/shipments/${d.shipmentId}/milestones`, seller, { milestone: 'loaded' })).status).toBe(200); }
   if (delivered) expect((await post(`/shipments/${d.shipmentId}/milestones`, buyer, { milestone: 'delivered' })).status).toBe(200);
   return d;
 }

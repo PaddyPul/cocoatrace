@@ -184,7 +184,7 @@ describe('real PostgreSQL recall containment', () => {
     const shipment = (await query('SELECT id,current_milestone FROM shipments WHERE contract_id=$1', [accepted.body.contract.id])).rows[0], before = await snapshot(s);
     expect((await recall(s)).status).toBe(201);
     for (const milestone of ['picked_up', 'handed_over', 'loaded', 'departed', 'arrived', 'delivered']) {
-      const progress = await request(app).post(`/shipments/${shipment.id}/milestones`).set('Authorization', `Bearer ${seller.token}`).send({ milestone, exceptionalDispatch: { reason: 'Previously agreed exception to payment terms', acknowledgePaymentRisk: true } });
+      const progress = await request(app).post(`/shipments/${shipment.id}/milestones`).set('Authorization', `Bearer ${['departed','arrived','delivered'].includes(milestone)?buyer.token:seller.token}`).send({ milestone, exceptionalDispatch: { reason: 'Previously agreed exception to payment terms', acknowledgePaymentRisk: true } });
       blocked(progress);
     }
     expect((await query('SELECT current_milestone,dispatch_exception FROM shipments WHERE id=$1', [shipment.id])).rows[0]).toEqual({ current_milestone: shipment.current_milestone, dispatch_exception: false });
@@ -199,7 +199,7 @@ describe('real PostgreSQL recall containment', () => {
     const loaded = await request(app).post(`/shipments/${shipment.id}/milestones`).set('Authorization', `Bearer ${seller.token}`).send({ milestone: 'loaded', exceptionalDispatch: { reason: 'Approved commercial risk before safety notice', acknowledgePaymentRisk: true } });
     expect(loaded.status).toBe(200);
     expect((await recall(s)).status).toBe(201);
-    blocked(await request(app).post(`/shipments/${shipment.id}/milestones`).set('Authorization', `Bearer ${seller.token}`).send({ milestone: 'departed' }));
+    blocked(await request(app).post(`/shipments/${shipment.id}/milestones`).set('Authorization', `Bearer ${buyer.token}`).send({ milestone: 'departed' }));
     const arrived = await request(app).post(`/shipments/${shipment.id}/milestones`).set('Authorization', `Bearer ${buyer.token}`).send({ milestone: 'arrived', notes: 'Received into isolated containment area' });
     expect(arrived.status).toBe(200);
     expect((await query('SELECT current_milestone FROM shipments WHERE id=$1', [shipment.id])).rows[0].current_milestone).toBe('arrived');

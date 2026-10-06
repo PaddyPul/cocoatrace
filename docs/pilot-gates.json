@@ -128,7 +128,7 @@
       "status": "partial",
       "title": "Pilot milestone authority and required route information are explicit",
       "backlog": ["LOG-001", "LOG-002", "LOG-003", "LOG-004", "GEO-001"],
-      "evidence": "Manual transport works; unrestricted party/milestone assumptions need policy tests."
+      "evidence": "All 11 Incoterms now enforce contract-party authority, origin confirmation and DPU/DDP gates; API-driven UI/dashboard and regression matrix added. Native release pending; mode/named-place/domestic policies remain open."
     },
     {
       "id": "CORE-exceptions",

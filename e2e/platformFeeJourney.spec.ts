@@ -83,6 +83,7 @@ for (const currency of ['GHS','JPY']) test(`${currency}: seller submits a comple
     expect(
       (await seller.request.post(`/api/payment-installments/${installment.id}/confirm`)).status(),
     ).toBe(200);
+    expect((await seller.request.post(`/api/shipments/${shipment.id}/milestones`, {data:{milestone:'loaded'}})).status()).toBe(200);
     expect(
       (
         await buyer.request.post(`/api/shipments/${shipment.id}/milestones`, {
