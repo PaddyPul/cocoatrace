@@ -3,7 +3,7 @@ import { baseURL } from './support/environment';
 import { createWorkspace, platformReviewerContext } from './support/identity';
 import { tradeSnapshot } from './support/tradeDatabase';
 
-test('seller submits a completed-trade fee and platform admin verifies receipt without changing custody', async ({
+for (const currency of ['GHS','JPY']) test(`${currency}: seller submits a completed-trade fee and platform admin verifies receipt without changing custody`, async ({
   page: seller,
   browser,
 }) => {
@@ -29,8 +29,8 @@ test('seller submits a completed-trade fee and platform admin verifies receipt w
       data: {
         holdingId: inventory.holding_id,
         availableQuantityKg: 10,
-        pricePerKg: 5,
-        currency: 'GHS',
+        pricePerKg: currency === 'JPY' ? 12.625 : 5,
+        currency,
         incoterm: 'FOB',
         originLocation: 'Tema',
         destinationLocation: 'Rotterdam',
@@ -41,8 +41,8 @@ test('seller submits a completed-trade fee and platform admin verifies receipt w
     const offerResponse = await buyer.request.post(`/api/listings/${listing.id}/offers`, {
       data: {
         quantityKg: 4,
-        offeredPricePerKg: 5,
-        currency: 'GHS',
+        offeredPricePerKg: currency === 'JPY' ? 12.625 : 5,
+        currency,
         validUntil: new Date(Date.now() + 86400000).toISOString(),
       },
     });
@@ -51,6 +51,8 @@ test('seller submits a completed-trade fee and platform admin verifies receipt w
     const acceptance = await seller.request.post(`/api/offers/${offer.id}/accept`);
     expect(acceptance.status()).toBe(200);
     const { contract, shipment, paymentRequest } = await acceptance.json();
+    expect(contract.currency_minor_units).toBe(currency === 'JPY' ? 0 : 2);
+    expect(paymentRequest.amount_total).toBe(currency === 'JPY' ? '51.00' : '20.00');
     await seller.goto(`/deal-room/${contract.id}`);
     const fee = seller.getByRole('region', { name: 'Platform fee statement' });
     await expect(fee.getByText('Estimated fee. No fee payment is due yet.')).toBeVisible();
@@ -67,6 +69,10 @@ test('seller submits a completed-trade fee and platform admin verifies receipt w
     ).toBe(200);
     const state = await buyer.request.get(`/api/payment-requests/${paymentRequest.id}`);
     const installment = (await state.json()).installments[0];
+    if (currency === 'JPY') {
+      await buyer.goto(`/payments/${paymentRequest.id}`);
+      await expect(buyer.getByText('JPY 51', {exact:true}).first()).toBeVisible();
+    }
     expect(
       (
         await buyer.request.post(`/api/payment-installments/${installment.id}/submit`, {
@@ -94,6 +100,7 @@ test('seller submits a completed-trade fee and platform admin verifies receipt w
     const before = await tradeSnapshot(contract.id);
     expect(before.contract.status).toBe('settled');
     expect(before.fees[0].status).toBe('invoiced');
+    expect(before.fees[0].amount_total).toBe(currency === 'JPY' ? '1.00' : '0.20');
     await seller.goto('/home');
     await expect(
       seller.getByText('Review and pay the platform fee', { exact: true }),
@@ -110,8 +117,13 @@ test('seller submits a completed-trade fee and platform admin verifies receipt w
     await expect(buyer.getByText('BROWSER-FEE-TRANSFER', { exact: true })).toHaveCount(0);
     const admin = await adminContext.newPage();
     await admin.goto(`/platform-fees/${contract.id}`);
+    if (currency === 'JPY') {
+      const statement = await (await admin.request.get(`/api/contracts/${contract.id}/fee`)).json();
+      const rejected = await admin.request.post(`/api/contracts/${contract.id}/fee/submissions/${statement.submissions[0].id}/review`, {data:{decision:'verify',amount:'1.01',currency,receiptReference:`FRACTIONAL-${contract.id}`}});
+      expect(rejected.status()).toBe(400);
+    }
     await admin.getByLabel('Amount actually received').fill(before.fees[0].amount_total);
-    await admin.getByLabel('Received currency').fill('GHS');
+    await admin.getByLabel('Received currency').fill(currency);
     await admin
       .getByLabel('Platform bank receipt reference')
       .fill(`BROWSER-RECEIPT-${contract.id}`);

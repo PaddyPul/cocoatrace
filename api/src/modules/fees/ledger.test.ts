@@ -22,6 +22,8 @@ function fixture(
     used?: boolean;
     auditFailure?: boolean;
     zero?: boolean;
+    minorUnits?: number;
+    currency?: string;
   } = {},
 ) {
   const f = {
@@ -30,8 +32,9 @@ function fixture(
     status: options.status ?? 'invoiced',
     contract_status: options.contractStatus ?? 'settled',
     payer_organization_id: 'seller',
-    amount_total: options.zero ? '0.00' : '12.50',
-    currency: 'EUR',
+    amount_total: options.zero ? '0.00' : options.minorUnits === 0 ? '12.00' : '12.50',
+    currency: options.currency ?? 'EUR',
+    currency_minor_units: options.minorUnits ?? 2,
   };
   const s = {
     id: 'submission',
@@ -275,4 +278,28 @@ it('fee amount or payer drift blocks collection', () => {
         ...extra,
       }),
     ).toThrow();
+});
+
+describe('whole-yen verification input', () => {
+  it('rejects fractional yen before financial mutation while retaining legacy JPY verification', async () => {
+    const { calls } = fixture({ currency: 'JPY', minorUnits: 0 });
+    await expect(
+      reviewFee(admin, 'contract', 'submission', {
+        decision: 'verify',
+        amount: '12.01',
+        currency: 'JPY',
+        receiptReference: 'FRACTIONAL-YEN',
+      }),
+    ).rejects.toMatchObject({ statusCode: 400 });
+    expect(calls.some((c) => c.sql.startsWith('INSERT') || c.sql.startsWith('UPDATE'))).toBe(false);
+    expect(calls.at(-1)?.sql).toBe('ROLLBACK');
+    const legacy = fixture({ currency: 'JPY', minorUnits: 2 });
+    await reviewFee(admin, 'contract', 'submission', {
+      decision: 'verify',
+      amount: '12.50',
+      currency: 'JPY',
+      receiptReference: 'LEGACY-YEN',
+    });
+    expect(legacy.calls.at(-1)?.sql).toBe('COMMIT');
+  });
 });

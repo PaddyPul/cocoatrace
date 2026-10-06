@@ -53,7 +53,65 @@ describe('trade currency boundary and exact contract money', () => {
     expect((await query('SELECT COUNT(*)::int count FROM payment_installments WHERE payment_request_id=$1',[d.paymentRequest.id])).rows[0].count).toBe(2);
   });
   it('rejects unsupported currency at the listing input boundary', () => {
-    expect(createListingSchema.safeParse({holdingId:crypto.randomUUID(),availableQuantityKg:1,pricePerKg:1,currency:'JPY',originLocation:'Tema',destinationLocation:'London'}).success).toBe(false);
+    expect(createListingSchema.safeParse({holdingId:crypto.randomUUID(),availableQuantityKg:1,pricePerKg:1,currency:'KWD',originLocation:'Tema',destinationLocation:'London'}).success).toBe(false);
   });
   it('keeps authentication mandatory on listing creation',async () => expect((await request(app).post('/listings').send({currency:'GHS'})).status).toBe(401));
+});
+
+describe('whole-yen snapshots and guards', () => {
+  it('creates whole-yen totals, fee and exact deposit installments', async () => {
+    const f=await fixture('JPY');
+    const o=await createTradeOffer(f.buyer,f.listing.id,{quantityKg:0.125,offeredPricePerKg:404,currency:'JPY'});
+    const d=await acceptTradeOffer(f.seller,o.id);
+    expect(d.contract.currency_minor_units).toBe(0);
+    expect(d.contract.payment_plan).toBe('pay_before_dispatch');
+    expect(d.paymentRequest).toMatchObject({currency:'JPY',currency_minor_units:0,amount_total:'51.00'});
+    expect((await query('SELECT amount_total,currency_minor_units FROM platform_fee_invoices WHERE contract_id=$1',[d.contract.id])).rows[0]).toEqual({amount_total:'1.00',currency_minor_units:0});
+    await proposePaymentTerms(f.seller,d.contract.id,{paymentPlan:'deposit_balance',depositPercentage:20});
+    const parts=(await query('SELECT amount_due,currency_minor_units FROM payment_installments WHERE payment_request_id=$1 ORDER BY sequence_number',[d.paymentRequest.id])).rows;
+    expect(parts).toEqual([{amount_due:'10.00',currency_minor_units:0},{amount_due:'41.00',currency_minor_units:0}]);
+    for(const paymentPlan of ['pay_before_dispatch','bank_secured','documentary_collection','pay_after_delivery'] as const) {
+      await proposePaymentTerms(f.seller,d.contract.id,{paymentPlan});
+      expect((await query('SELECT amount_due,currency_minor_units FROM payment_installments WHERE payment_request_id=$1',[d.paymentRequest.id])).rows).toEqual([{amount_due:'51.00',currency_minor_units:0}]);
+    }
+  });
+  it('rejects fractional-yen database mutations', async () => {
+    const f=await fixture('JPY');
+    const o=await createTradeOffer(f.buyer,f.listing.id,{quantityKg:1,offeredPricePerKg:100,currency:'JPY'});
+    const d=await acceptTradeOffer(f.seller,o.id);
+    await expect(query('UPDATE payment_requests SET amount_confirmed=0.01 WHERE id=$1',[d.paymentRequest.id])).rejects.toMatchObject({code:'23514'});
+    await expect(query('UPDATE payment_installments SET amount_due=0.01 WHERE payment_request_id=$1',[d.paymentRequest.id])).rejects.toMatchObject({code:'23514'});
+    await expect(query('UPDATE platform_fee_invoices SET amount_total=0.01 WHERE contract_id=$1',[d.contract.id])).rejects.toMatchObject({code:'23514'});
+  });
+  it('rejects a zero deposit without deleting the existing full payment', async () => {
+    const f=await fixture('JPY');
+    const o=await createTradeOffer(f.buyer,f.listing.id,{quantityKg:1,offeredPricePerKg:1,currency:'JPY'});
+    const d=await acceptTradeOffer(f.seller,o.id);
+    await expect(proposePaymentTerms(f.seller,d.contract.id,{paymentPlan:'deposit_balance',depositPercentage:20})).rejects.toThrow('zero installment');
+    expect((await query('SELECT amount_due FROM payment_installments WHERE payment_request_id=$1',[d.paymentRequest.id])).rows).toEqual([{amount_due:'1.00'}]);
+    expect((await query('SELECT payment_terms_status FROM sales_contracts WHERE id=$1',[d.contract.id])).rows[0].payment_terms_status).toBe('draft');
+  });
+  it('rejects precision drift even when currency matches', async () => {
+    const f=await fixture('JPY');
+    const o=await createTradeOffer(f.buyer,f.listing.id,{quantityKg:1,offeredPricePerKg:100,currency:'JPY'});
+    const d=await acceptTradeOffer(f.seller,o.id);
+    await query('UPDATE payment_requests SET currency_minor_units=2 WHERE id=$1',[d.paymentRequest.id]);
+    await expect(proposePaymentTerms(f.seller,d.contract.id,{paymentPlan:'pay_before_dispatch'})).rejects.toThrow('precision differs');
+  });
+});
+
+describe('legacy precision preservation', () => {
+  it('honors recorded two-decimal JPY contracts rather than applying the new policy',async () => {
+    const f=await fixture('JPY');
+    const o=await createTradeOffer(f.buyer,f.listing.id,{quantityKg:1,offeredPricePerKg:50.5,currency:'JPY'});
+    const d=await acceptTradeOffer(f.seller,o.id);
+    // Represent a pre-030 contract snapshot; no production backfill changes amounts.
+    await query('UPDATE sales_contracts SET currency_minor_units=2 WHERE id=$1',[d.contract.id]);
+    await query('UPDATE payment_requests SET currency_minor_units=2,amount_total=50.50,dispatch_required_amount=50.50 WHERE id=$1',[d.paymentRequest.id]);
+    await query('UPDATE payment_installments SET currency_minor_units=2,amount_due=50.50 WHERE payment_request_id=$1',[d.paymentRequest.id]);
+    await query('UPDATE platform_fee_invoices SET currency_minor_units=2,amount_total=0.51 WHERE contract_id=$1',[d.contract.id]);
+    await proposePaymentTerms(f.seller,d.contract.id,{paymentPlan:'deposit_balance',depositPercentage:20});
+    expect((await query('SELECT amount_due,currency_minor_units FROM payment_installments WHERE payment_request_id=$1 ORDER BY sequence_number',[d.paymentRequest.id])).rows).toEqual([{amount_due:'10.10',currency_minor_units:2},{amount_due:'40.40',currency_minor_units:2}]);
+    expect((await query('SELECT amount_total,currency_minor_units FROM platform_fee_invoices WHERE contract_id=$1',[d.contract.id])).rows[0]).toEqual({amount_total:'0.51',currency_minor_units:2});
+  });
 });

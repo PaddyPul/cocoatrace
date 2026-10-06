@@ -48,10 +48,10 @@ export function StatusBadge({ status }: { status?: string }) {
   );
 }
 
-export function fmtMoney(n?: number, currency = 'EUR') {
-  return `${currency} ${(n || 0).toLocaleString('en', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+export function fmtMoney(n?: number, currency = 'EUR', minorUnits = currency === 'JPY' ? 0 : 2) {
+  return `${currency} ${Number(n || 0).toLocaleString('en', {
+    minimumFractionDigits: minorUnits,
+    maximumFractionDigits: minorUnits,
   })}`;
 }
 

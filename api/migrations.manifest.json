@@ -124,6 +124,10 @@
     {
       "path": "api/src/migrations/029_platform_fee_ledger.ts",
       "sha256": "9615e1df38be457759486aaedc4e8f9bbb3b51b740dd5aee76a1cca88023648a"
+    },
+    {
+      "path": "api/src/migrations/030_currency_precision.ts",
+      "sha256": "190423ed9bd1949540be668f499ca5992f38f724a2c5984e1a282be2cd80c3b4"
     }
   ]
 }

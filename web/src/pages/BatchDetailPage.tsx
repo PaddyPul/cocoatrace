@@ -257,7 +257,7 @@ export default function BatchDetailPage() {
                 </div>
                 <div>
                   <label className="form-label">Price per kg (€)</label>
-                  <select aria-label="Supply currency" className="form-select mb-2" value={pcurrency} onChange={e => setPcurrency(e.target.value)}>{['EUR','USD','GHS','GBP'].map(code => <option key={code}>{code}</option>)}</select><input type="number" step="0.01" className="form-input" value={pprice} onChange={(e) => setPprice(Number(e.target.value))} />
+                  <select aria-label="Supply currency" className="form-select mb-2" value={pcurrency} onChange={e => setPcurrency(e.target.value)}>{['EUR','USD','GHS','GBP','JPY'].map(code => <option key={code}>{code}</option>)}</select><input type="number" step="0.0001" className="form-input" value={pprice} onChange={(e) => setPprice(Number(e.target.value))} />
                 </div>
                 <div>
                   <label className="form-label">Origin</label>

@@ -15,6 +15,7 @@ export interface TradeAction {
 
 type OfferFact = { id:string; status:string; buyer_organization_id:string; seller_organization_id:string; buyer_name?:string; seller_name?:string };
 type DealFact = {
+  currency_minor_units?: number;
   id:string; seller_organization_id:string; buyer_organization_id:string; seller_name:string; buyer_name:string;
   fee_status?:string;fee_payer_organization_id?:string;fee_amount?:string;fee_payment_submitted?:boolean;
   payment_terms_status:string; payment_plan:string; payment_request_id?:string; payment_status?:string; security_status?:string;
@@ -22,7 +23,7 @@ type DealFact = {
   cancellation_requested_by_organization_id?:string; delivery_accepted_at?:string; delivery_discrepancy_status?:string; shipment_id?:string; transport_coordinator_organization_id?:string; current_milestone?:string; status:string;
 };
 
-const money = (amount: unknown, currency = 'EUR') => new Intl.NumberFormat('en', { style:'currency', currency }).format(Number(amount || 0));
+const money = (amount: unknown, currency = 'EUR', minorUnits = currency === 'JPY' ? 0 : 2) => new Intl.NumberFormat('en', { style:'currency', currency,minimumFractionDigits:minorUnits,maximumFractionDigits:minorUnits }).format(Number(amount || 0));
 const pretty = (value: string) => String(value || '').split('_').join(' ');
 
 export function buildTradeActions(offers:OfferFact[],deals:DealFact[],organizationId:string):TradeAction[]{
@@ -85,7 +86,7 @@ export function buildTradeActions(offers:OfferFact[],deals:DealFact[],organizati
     if(deal.installment_status==='due'){
       actions.push({id:`deal:${deal.id}:payment`,kind:buyer?'payment':'waiting',priority:buyer?20:70,requiresAction:buyer,
         title:buyer?'Complete the due payment':'Awaiting buyer payment',
-        description:buyer?`${money(deal.amount_due,deal.currency)} is due for the ${pretty(deal.installment_type||'payment')}.`:`${deal.buyer_name} must submit the due ${pretty(deal.installment_type||'payment')}.`,
+        description:buyer?`${money(deal.amount_due,deal.currency,deal.currency_minor_units)} is due for the ${pretty(deal.installment_type||'payment')}.`:`${deal.buyer_name} must submit the due ${pretty(deal.installment_type||'payment')}.`,
         actionLabel:buyer?'Submit payment':'View deal',actionPath:room,contractId:deal.id});continue;
     }
     const milestone=deal.current_milestone||'planning';

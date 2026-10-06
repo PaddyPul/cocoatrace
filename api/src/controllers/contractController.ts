@@ -8,9 +8,10 @@ import { acceptTradeOffer, createTradeOffer, rejectTradeOffer } from '../modules
 
 export async function listOffers(req: Request, res: Response): Promise<void> {
   const { rows } = await query(
-    `SELECT t.*, ROUND(t.quantity_kg*t.offered_price_per_kg,2) AS trade_value, $2::int AS platform_fee_rate_bps,ROUND(t.quantity_kg*t.offered_price_per_kg*$2::integer/10000,2) AS platform_fee_estimate,'seller' AS platform_fee_payer, l.seller_organization_id, l.origin_location, l.destination_location,
+    `SELECT t.*, COALESCE(cs.currency_minor_units,CASE WHEN t.currency='JPY' THEN 0 ELSE 2 END) AS currency_minor_units, ROUND(t.quantity_kg*t.offered_price_per_kg,COALESCE(cs.currency_minor_units,CASE WHEN t.currency='JPY' THEN 0 ELSE 2 END)) AS trade_value, $2::int AS platform_fee_rate_bps,ROUND(t.quantity_kg*t.offered_price_per_kg*$2::integer/10000,COALESCE(cs.currency_minor_units,CASE WHEN t.currency='JPY' THEN 0 ELSE 2 END)) AS platform_fee_estimate,'seller' AS platform_fee_payer, l.seller_organization_id, l.origin_location, l.destination_location,
             buyer.name as buyer_name, seller.name as seller_name
      FROM trade_offers t
+     LEFT JOIN sales_contracts cs ON cs.offer_id=t.id
      JOIN listings l ON l.id = t.listing_id
      JOIN organizations buyer ON buyer.id = t.buyer_organization_id
      JOIN organizations seller ON seller.id = l.seller_organization_id

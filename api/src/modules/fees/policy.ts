@@ -1,5 +1,5 @@
 import { ConflictError, ValidationError } from '../../errors';
-export const feePolicyVersion = 'seller-completion-v1';
+export const feePolicyVersion = 'seller-completion-v2';
 export function textInput(value: string, minimum: number, label: string): string {
   const result = value.trim();
   if ([...result].length < minimum || result.length > (minimum === 3 ? 200 : 2000))

@@ -160,7 +160,7 @@ describe('commercial fee statements and controlled collection', () => {
       amount_total: '0.01',
       status: 'estimated',
       payer_organization_id: seller.organizationId,
-      policy_version: 'seller-completion-v1',
+      policy_version: 'seller-completion-v2',
       tax_status: 'not_configured',
     });
     expect(r.body.documentType).toBe('commercial_fee_statement');

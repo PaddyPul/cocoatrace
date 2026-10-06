@@ -197,6 +197,7 @@ export interface Holding {
 }
 
 export interface Payment {
+  currency_minor_units?: number;
   id: string;
   contract_id: string;
   amount_total: number;
@@ -229,6 +230,7 @@ export interface Evidence {
 }
 
 export interface Offer {
+  currency_minor_units?: number;
   trade_value?: string;
   platform_fee_rate_bps?: number;
   platform_fee_estimate?: string;

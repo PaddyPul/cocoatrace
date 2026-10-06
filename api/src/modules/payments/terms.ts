@@ -1,4 +1,4 @@
-import { requireSameCurrency } from '../../services/tradeMoney';
+import { requireSameCurrency, requireSamePrecision } from '../../services/tradeMoney';
 import type { PoolClient } from 'pg';
 import { AppError, ConflictError } from '../../errors';
 import {
@@ -22,11 +22,13 @@ interface TermsContract {
   payment_terms_status: string;
   payment_plan: PaymentPlan;
   currency: string;
+  currency_minor_units: number;
 }
 interface TermsPayment {
   id: string;
   amount_total: string;
   currency: string;
+  currency_minor_units: number;
 }
 
 /** Match the contract-first ordering used by installments, delivery and settlement. */
@@ -38,7 +40,7 @@ async function lockTerms(
 ) {
   const contract = (
     await client.query<TermsContract>(
-      `SELECT id,status,payment_terms_status,payment_plan,currency FROM sales_contracts
+      `SELECT id,status,payment_terms_status,payment_plan,currency,currency_minor_units FROM sales_contracts
      WHERE id=$1 AND ${party}_organization_id=$2 FOR UPDATE`,
       [id, actor.organizationId],
     )
@@ -50,12 +52,13 @@ async function lockTerms(
   if (!contract) throw new AppError(message, 404, 'NOT_FOUND');
   const payment = (
     await client.query<TermsPayment>(
-      'SELECT id,amount_total,currency FROM payment_requests WHERE contract_id=$1 FOR UPDATE',
+      'SELECT id,amount_total,currency,currency_minor_units FROM payment_requests WHERE contract_id=$1 FOR UPDATE',
       [id],
     )
   ).rows[0];
   if (!payment) throw new AppError(message, 404, 'NOT_FOUND');
   requireSameCurrency(payment.currency, contract.currency);
+  requireSamePrecision(payment.currency_minor_units, contract.currency_minor_units);
   if (['cancelled', 'settled'].includes(contract.status))
     throw new ConflictError('Closed contracts cannot change payment terms');
   return { contract, payment };
@@ -91,7 +94,12 @@ export async function proposePaymentTerms(actor: TradeActor, id: string, input: 
     );
     if (activity.rows[0]) throw new ConflictError('Payment activity already exists');
     const total = payment.amount_total;
-    const required = requiredBeforeDispatch(paymentPlan, total, depositPercentage);
+    const required = requiredBeforeDispatch(
+      paymentPlan,
+      total,
+      depositPercentage,
+      payment.currency_minor_units ?? 2,
+    );
     const security = paymentPlan === 'bank_secured' ? 'awaiting_submission' : 'not_required';
     await client.query(
       `UPDATE sales_contracts SET payment_plan=$1,deposit_percentage=$2,credit_days=$3,payment_terms_note=$4,payment_terms_status='proposed',payment_terms_confirmed_at=NULL,payment_terms_confirmed_by_user_id=NULL WHERE id=$5`,
@@ -108,15 +116,21 @@ export async function proposePaymentTerms(actor: TradeActor, id: string, input: 
     await client.query('DELETE FROM payment_installments WHERE payment_request_id=$1', [
       payment.id,
     ]);
-    for (const installment of buildInstallments(paymentPlan, total, depositPercentage)) {
+    for (const installment of buildInstallments(
+      paymentPlan,
+      total,
+      depositPercentage,
+      payment.currency_minor_units ?? 2,
+    )) {
       await client.query(
-        `INSERT INTO payment_installments(payment_request_id,installment_type,sequence_number,amount_due,due_trigger,status) VALUES($1,$2,$3,$4,$5,'awaiting_trigger')`,
+        `INSERT INTO payment_installments(payment_request_id,installment_type,sequence_number,amount_due,due_trigger,status,currency_minor_units) VALUES($1,$2,$3,$4,$5,'awaiting_trigger',$6)`,
         [
           payment.id,
           installment.installmentType,
           installment.sequenceNumber,
           installment.amountDue,
           installment.dueTrigger,
+          payment.currency_minor_units ?? 2,
         ],
       );
     }

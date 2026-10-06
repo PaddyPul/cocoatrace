@@ -86,7 +86,7 @@ export default function FeeStatement({ contractId }: { contractId: string }) {
         <>
           <p className="text-xs">{data.statementNumber}</p>
           <p className="text-sm">
-            {fmtMoney(Number(f.amount_total), f.currency)} · {f.fee_payer} pays · {f.rate_bps / 100}
+            {fmtMoney(Number(f.amount_total), f.currency, f.currency_minor_units)} · {f.fee_payer} pays · {f.rate_bps / 100}
             % · {f.status.split('_').join(' ')}
           </p>
           <p className="text-xs text-text-muted">
