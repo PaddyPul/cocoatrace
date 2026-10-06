@@ -5,8 +5,9 @@ import { createWorkspace } from './support/identity';
 
 test('cookie writes reject absent/foreign origin and malformed-header bypass while normal sign-out works', async ({ page, browser }) => {
   await createWorkspace(page, browser, 'buyer');
-  // An independently constructed API client deliberately has no default Origin.
-  const client = await apiRequest.newContext({ baseURL, storageState: await page.context().storageState() });
+  // Playwright inherits configured headers even for standalone API clients.
+  // Explicitly clear them to exercise a genuinely absent Origin.
+  const client = await apiRequest.newContext({ baseURL, extraHTTPHeaders: {}, storageState: await page.context().storageState() });
   try {
     const absent = await client.post('/api/auth/logout');
     expect(absent.status()).toBe(403);
