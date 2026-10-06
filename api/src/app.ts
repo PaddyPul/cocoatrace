@@ -34,6 +34,8 @@ import sourcingRoutes from './routes/sourcing';
 import organizationAccessRoutes from './modules/organizationAccess';
 
 const app = express();
+// Forwarded IP/host headers are untrusted until an explicit ingress policy is introduced.
+app.set('trust proxy', false);
 
 app.use(pinoHttp({
   logger,

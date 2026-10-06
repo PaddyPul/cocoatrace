@@ -9,7 +9,7 @@ for (const currency of ['GHS','JPY']) test(`${currency}: seller submits a comple
 }) => {
   test.setTimeout(180_000);
   const identity = await createWorkspace(seller, browser, 'supplier');
-  const buyerContext = await browser.newContext({ baseURL }),
+  const buyerContext = await browser.newContext({ extraHTTPHeaders: { Origin: baseURL }, baseURL }),
     adminContext = await platformReviewerContext(browser);
   try {
     const buyer = await buyerContext.newPage();

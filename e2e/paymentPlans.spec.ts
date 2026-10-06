@@ -48,7 +48,7 @@ for (const plan of ['deposit_balance', 'bank_secured', 'documentary_collection',
   test(`real ${plan} journey: guided payment, documents, dispatch and settlement`, async ({ page: seller, browser }) => {
     test.setTimeout(300_000);
     const supplier = await createWorkspace(seller, browser, 'supplier');
-    const buyerContext = await browser.newContext({ baseURL });
+    const buyerContext = await browser.newContext({ extraHTTPHeaders: { Origin: baseURL }, baseURL });
     try {
       const buyer = await buyerContext.newPage(); await createWorkspace(buyer, browser, 'buyer');
       const inventoryResponse = await seller.request.post('/api/inventory/direct', { data: { commodity: 'peanut', quantityKg: 10, inventoryDate: new Date().toISOString().slice(0, 10), sourceCountry: 'GH', sourceName: supplier.organization } });

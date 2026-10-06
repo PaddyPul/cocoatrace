@@ -36,7 +36,7 @@ export async function signIn(page: Page, email: string, password: string): Promi
 }
 
 export async function platformReviewerContext(browser: Browser): Promise<BrowserContext> {
-  const context=await browser.newContext({baseURL,storageState:reviewerSessions.get(browser)});
+  const context=await browser.newContext({extraHTTPHeaders: { Origin: baseURL },baseURL,storageState:reviewerSessions.get(browser)});
   try {
     const session=await context.request.get('/api/me');
     if(session.status()===401){const page=await context.newPage();await signIn(page,'platform-admin@browser.test','BrowserAdminPassword123!');reviewerSessions.set(browser,await context.storageState());await page.close();}

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { sessionCredential } from './credentials';
 import { authenticateSession, AuthenticatedActor } from '../services/authSessionService';
 
 export type JwtPayload = AuthenticatedActor;
@@ -13,9 +14,7 @@ declare global {
 }
 
 async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const header = req.headers.authorization;
-  const cookieToken = req.headers.cookie?.split(';').map((item) => item.trim()).find((item) => item.startsWith('ct_session='))?.slice('ct_session='.length);
-  const token = header?.startsWith('Bearer ') ? header.slice(7) : cookieToken;
+  const token = sessionCredential(req);
   if (!token) {
     res.status(401).json({ error: 'Authentication required' });
     return;
@@ -48,7 +47,9 @@ function requireAnyPermission(...permissions: string[]) {
       next();
       return;
     }
-    res.status(403).json({ error: `One of these permissions is required: ${permissions.join(', ')}` });
+    res
+      .status(403)
+      .json({ error: `One of these permissions is required: ${permissions.join(', ')}` });
   };
 }
 

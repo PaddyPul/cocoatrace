@@ -27,7 +27,7 @@ function recoveryPdf(): Buffer {
 test('buyer and supplier acknowledge, account for recalled stock, upload proof and resolve without releasing returned material', async ({ page: supplier, browser }) => {
   test.setTimeout(180_000);
   const supplierIdentity = await createWorkspace(supplier, browser, 'supplier');
-  const buyerContext = await browser.newContext({ baseURL });
+  const buyerContext = await browser.newContext({ extraHTTPHeaders: { Origin: baseURL }, baseURL });
   try {
     const buyer = await buyerContext.newPage();
     const buyerIdentity = await createWorkspace(buyer, browser, 'buyer');

@@ -27,7 +27,7 @@ test('team invitations: create, resend, reject old link, revoke, reject revoked 
   const row = page.locator('div.rounded-2xl').filter({ has: page.getByText(email, { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Resend', exact: true }) });
   await row.getByRole('button', { name: 'Resend', exact: true }).click();
   const resent = await emailLink(page.request, email, 'invitation', first.id);
-  const guest = await browser.newContext({ baseURL });
+  const guest = await browser.newContext({ extraHTTPHeaders: { Origin: baseURL }, baseURL });
   try {
     const invited = await guest.newPage();
     await invited.goto(first.link);
@@ -50,7 +50,7 @@ test('team invitations: create, resend, reject old link, revoke, reject revoked 
 
 test('password reset: real captured email, token single use, old password fails, new password signs in', async ({ page, browser }) => {
   const identity = await createWorkspace(page, browser);
-  const session = await browser.newContext({ baseURL });
+  const session = await browser.newContext({ extraHTTPHeaders: { Origin: baseURL }, baseURL });
   try {
     const recovery = await session.newPage();
     await recovery.goto('/forgot-password');
@@ -81,7 +81,7 @@ test('password reset: real captured email, token single use, old password fails,
 
 test('password change preserves this browser session and revokes another browser session', async ({ page, browser }) => {
   const identity = await createWorkspace(page, browser);
-  const otherContext = await browser.newContext({ baseURL });
+  const otherContext = await browser.newContext({ extraHTTPHeaders: { Origin: baseURL }, baseURL });
   try {
     const other = await otherContext.newPage();
     await signIn(other, identity.email, accountPassword);
@@ -104,7 +104,7 @@ test('expired verification fails, retry rotates the link and only the newest ema
   await requestAccess(page, identity);
   const first = await emailLink(page.request, identity.email, 'verification');
   await expireVerification(identity.email);
-  const guest = await browser.newContext({ baseURL });
+  const guest = await browser.newContext({ extraHTTPHeaders: { Origin: baseURL }, baseURL });
   try {
     const verificationPage = await guest.newPage();
     await verificationPage.goto(first.link);
