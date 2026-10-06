@@ -22,6 +22,8 @@ A stolen password alone cannot enter an enrolled or deployed privileged workspac
 - Add two-reviewer console recovery with a consumed 30-minute replacement enrollment window; no email-only recovery bypass or suspension restoration.
 - Recheck live administrative mutation assurance under transaction locks; add automated adversarial PostgreSQL and virtual-authenticator browser tests. Change disposable app origin to localhost for valid WebAuthn; keep inbox/database isolation.
 
+- Correct the supplier browser probe to use holdings, assert MFA_REQUIRED on restricted sessions, and verify organization administration stays forbidden after signed verification. Add a PostgreSQL regression separating MFA assurance from role authorization.
+
 ## Security and data review
 
 - [x] Resource authorization and unrelated-tenant behavior considered

@@ -15,11 +15,11 @@ const password='MfaRegressionPassword123!';
 type Account={userId:string;token:string;email:string;sessionId:string};
 const post=(a:Account,path:string,data={})=>request(app).post(path).set('Authorization',`Bearer ${a.token}`).send(data);
 const get=(a:Account,path:string)=>request(app).get(path).set('Authorization',`Bearer ${a.token}`);
-async function account():Promise<Account>{
+async function account(permissions=['*']):Promise<Account>{
   const suffix=crypto.randomUUID(),email=`mfa-${suffix}@integration.test`;
   const org=(await query("INSERT INTO organizations(name,type,jurisdiction,verification_status) VALUES($1,'admin','GH','verified') RETURNING id",[`MFA ${suffix}`])).rows[0];
   const user=(await query('INSERT INTO users(organization_id,email,password_hash,name) VALUES($1,$2,$3,$4) RETURNING id',[org.id,email,await bcrypt.hash(password,4),'MFA regression'])).rows[0];
-  const role=(await query("INSERT INTO roles(name,permissions) VALUES($1,ARRAY['*']) RETURNING id",[`mfa-${suffix}`])).rows[0];
+  const role=(await query('INSERT INTO roles(name,permissions) VALUES($1,$2) RETURNING id',[`mfa-${suffix}`,permissions])).rows[0];
   await query('INSERT INTO user_roles(user_id,role_id) VALUES($1,$2)',[user.id,role.id]);
   const login=await request(app).post('/auth/login').send({email,password});expect(login.status).toBe(200);
   const session=(await query('SELECT id FROM sessions WHERE user_id=$1',[user.id])).rows[0];
@@ -45,6 +45,18 @@ describe('real PostgreSQL passkey boundaries',()=>{
     expect((await post(a,'/auth/mfa/registration/options',{currentPassword:'wrong'})).status).toBe(403);
     await enroll(a);expect((await get(a,'/organizations')).status).toBe(200);
     expect((await post(a,'/auth/logout')).status).toBe(204);
+  });
+  it('passkey verification clears MFA restriction without granting organization administration',async()=>{
+    const a=await account(['holding.read','member.invite']);
+    const restricted=await get(a,'/holdings');
+    expect(restricted.status).toBe(403);
+    expect(restricted.body.code).toBe('MFA_REQUIRED');
+    await enroll(a);
+    expect((await get(a,'/me')).body.mfa).toMatchObject({required:true,enrolled:true,verified:true});
+    expect((await get(a,'/holdings')).status).toBe(200);
+    const forbidden=await get(a,'/organizations');
+    expect(forbidden.status).toBe(403);
+    expect(forbidden.body.error).toBe('Permission required: organization.admin');
   });
   it('rejects malformed input with a controlled 400',async()=>{
     const a=await account();expect((await post(a,'/auth/mfa/registration/verify',{response:{}})).status).toBe(400);
