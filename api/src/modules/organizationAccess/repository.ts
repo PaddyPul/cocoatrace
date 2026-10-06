@@ -1,3 +1,4 @@
+import { assertMutationAssurance } from '../mfa/assurance';
 import { PoolClient, QueryResultRow } from 'pg';
 import { getClient, query } from '../../db';
 import { ConflictError, NotFoundError } from '../../errors';
@@ -140,6 +141,7 @@ export class PostgresOrganizationAccessRepository implements OrganizationAccessR
     const client = await getClient();
     try {
       await client.query('BEGIN');
+      await assertMutationAssurance(client,input.actor);
       const selected = await client.query(
         `SELECT ${applicationColumns} FROM organization_access_applications WHERE id=$1 FOR UPDATE`, [input.id],
       );
@@ -198,6 +200,7 @@ export class PostgresOrganizationAccessRepository implements OrganizationAccessR
     const client = await getClient();
     try {
       await client.query('BEGIN');
+      await assertMutationAssurance(client,actor);
       const result = await client.query(
         `UPDATE organization_access_applications SET status='rejected',reviewed_by_user_id=$2,reviewed_at=NOW(),
            review_reason=$3,verification_token_hash=NULL,updated_at=NOW()

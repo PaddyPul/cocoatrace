@@ -128,6 +128,11 @@ describe('environment configuration', () => {
     expect(() => parseConfig({ PLATFORM_FEE_BPS: '1001' })).toThrow(/PLATFORM_FEE_BPS/);
   });
 
+  it('cannot disable privileged MFA in deployed environments',()=>{
+    expect(parseConfig({...deployedBase,APP_ENV:'staging'}).mfaEnforced).toBe(true);
+    expect(()=>parseConfig({...deployedBase,APP_ENV:'staging',MFA_ENFORCED:'false'})).toThrow(/MFA_ENFORCED/);
+    expect(()=>parseConfig({APP_ENV:'development',MFA_ENFORCED:'true',WEB_URL:'http://remote.example'})).toThrow(/WEB_URL/);
+  });
   it('rejects unknown environment names instead of falling back', () => {
     expect(() => parseConfig({ APP_ENV: 'prodution' })).toThrow(/Invalid CocoaTrace APP_ENV/);
   });

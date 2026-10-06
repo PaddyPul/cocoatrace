@@ -1,3 +1,4 @@
+import PasskeysPage from './pages/PasskeysPage';
 import { LanguageProvider } from './i18n/LanguageProvider';
 import PlatformFeesPage from './pages/PlatformFeesPage';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
@@ -44,6 +45,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   if (loading) return <main className="grid min-h-screen place-items-center bg-surface-darker"><div className="spinner" /></main>;
   if (!user) return <Navigate to="/login" replace />;
+  if (user.mfa?.required && !user.mfa.verified) return <PasskeysPage />;
   if (onboardingLoading) return <main className="grid min-h-screen place-items-center bg-surface-darker"><div className="spinner" /></main>;
   if (onboarding && onboarding.status !== 'completed' && location.pathname !== '/onboarding') return <Navigate to="/onboarding" replace />;
   return <ErrorBoundary>{children}</ErrorBoundary>;
@@ -117,6 +119,7 @@ export default function App() {
           <Route path="/organizations" element={<ProtectedRoute><OrganizationsPage /></ProtectedRoute>} />
           <Route path="/access-controls" element={<ProtectedRoute><AccessControlsPage /></ProtectedRoute>} />
           <Route path="/access-applications" element={<ProtectedRoute><AccessApplicationsPage /></ProtectedRoute>} />
+          <Route path="/account/passkeys" element={<ProtectedRoute><PasskeysPage /></ProtectedRoute>} />
           <Route path="/account/security" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>

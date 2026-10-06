@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { query } from '../db';
 import { config } from '../config/env';
-import { createSession, revokeSession } from '../services/authSessionService';
+import { authenticateSession, createSession, revokeSession } from '../services/authSessionService';
 import { changePassword, requestPasswordReset, resetPassword } from '../services/passwordLifecycleService';
 import { recordSecurityEvent, securityIdentifierHash } from '../services/securityEventService';
 import { sendPasswordResetEmail } from '../services/emailSender';
@@ -43,13 +43,15 @@ export async function login(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const { token, actor } = await createSession(user.id, user.password_hash);
+  const { token } = await createSession(user.id, user.password_hash);
+  const actor = await authenticateSession(token);
+  if(!actor){res.status(401).json({error:'Account changed; sign in again'});return;}
   await recordSecurityEvent({ eventType: 'login.succeeded', success: true, actorUserId: actor.id, actorOrganizationId: actor.organizationId, sessionId: actor.sessionId });
   setSessionCookie(res, token);
   res.json({
     accessToken: token,
     user: { id: actor.id, email: actor.email, name: actor.name, organizationId: actor.organizationId,
-      orgName: actor.orgName, orgType: actor.orgType, roles: actor.roles, permissions: actor.permissions },
+      orgName: actor.orgName, orgType: actor.orgType, roles: actor.roles, permissions: actor.permissions, mfa: actor.mfa },
   });
 }
 
@@ -99,5 +101,5 @@ export async function updatePassword(req: Request, res: Response): Promise<void>
 export async function me(req: Request, res: Response): Promise<void> {
   const user = req.user!;
   res.json({ id: user.id, email: user.email, name: user.name, organization_id: user.organizationId,
-    mfa_enabled: false, org_name: user.orgName, org_type: user.orgType, roles: user.roles, permissions: user.permissions });
+    mfa: user.mfa, mfa_enabled: user.mfa?.enrolled || false, org_name: user.orgName, org_type: user.orgType, roles: user.roles, permissions: user.permissions });
 }

@@ -21,12 +21,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [onboarding, setOnboarding] = useState<OnboardingState | null>(null);
   const [onboardingLoading, setOnboardingLoading] = useState(Boolean(auth.user));
   const refreshOnboarding = useCallback(async () => {
-    if (!auth.user) { setOnboarding(null); setOnboardingLoading(false); return; }
+    if (!auth.user || (auth.user.mfa?.required && !auth.user.mfa.verified)) { setOnboarding(null); setOnboardingLoading(false); return; }
     setOnboardingLoading(true);
     try { setOnboarding(await workspace.getOnboarding()); }
     catch { setOnboarding(null); }
     finally { setOnboardingLoading(false); }
-  }, [auth.user?.id]);
+  }, [auth.user?.id, auth.user?.mfa?.verified]);
   useEffect(() => { refreshOnboarding(); }, [refreshOnboarding]);
   const canDo = (perm: string) => {
     const perms = auth.user?.permissions || [];

@@ -1,0 +1,8 @@
+# Local hardware verification only; deployed configuration always enforces MFA.
+services:
+  api:
+    environment:
+      MFA_ENFORCED: "true"
+      DEMO_MODE: "false"
+      WEB_URL: http://localhost:3000
+      PUBLIC_WEB_URL: http://localhost:3000

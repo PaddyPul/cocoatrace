@@ -38,8 +38,8 @@ services:
       BROWSER_TEST_FIXTURES: "true"
       DATABASE_URL: postgresql://browser_test:browser_test@postgres:5432/cocoatrace_browser_test
       JWT_SECRET: browser-test-only-jwt-secret-at-least-32-characters
-      WEB_URL: http://127.0.0.1:${COCOATRACE_BROWSER_WEB_PORT:-13000}
-      PUBLIC_WEB_URL: http://127.0.0.1:${COCOATRACE_BROWSER_WEB_PORT:-13000}
+      WEB_URL: http://localhost:${COCOATRACE_BROWSER_WEB_PORT:-13000}
+      PUBLIC_WEB_URL: http://localhost:${COCOATRACE_BROWSER_WEB_PORT:-13000}
       COOKIE_SECURE: "false"
       EVIDENCE_STORAGE_DRIVER: local
       EVIDENCE_STORAGE_LOCAL_ROOT: /app/private-evidence

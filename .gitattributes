@@ -39,3 +39,5 @@ api/src/modules/accessControls/** text eol=lf
 api/src/modules/transport/** text eol=lf
 
 api/src/middleware/publicRateLimit.ts text eol=lf
+
+api/src/modules/mfa/** text eol=lf

@@ -33,6 +33,7 @@ export default tseslint.config(
   {
     files: [
       'api/src/modules/security/**/*.ts',
+      'api/src/modules/mfa/**/*.ts',
       'api/src/modules/accessControls/**/*.ts',
       'api/src/modules/transport/**/*.ts',
       'api/src/modules/payments/**/*.ts',

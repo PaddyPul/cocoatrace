@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { bypassPath } from '../modules/mfa/policy';
 import { sessionCredential } from './credentials';
 import { authenticateSession, AuthenticatedActor } from '../services/authSessionService';
 
@@ -26,6 +27,23 @@ async function requireAuth(req: Request, res: Response, next: NextFunction): Pro
   }
   req.user = actor;
   req.authToken = token;
+  if (!bypassPath(req.originalUrl.split('?')[0]) && actor.mfa?.required) {
+    if (!actor.mfa.verified) {
+      res.status(403).json({
+        error: actor.mfa.enrolled
+          ? 'Verify your passkey to continue'
+          : 'Enroll a passkey to continue',
+        code: 'MFA_REQUIRED',
+      });
+      return;
+    }
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && !actor.mfa.fresh) {
+      res
+        .status(403)
+        .json({ error: 'Verify your passkey again for this action', code: 'MFA_STEP_UP_REQUIRED' });
+      return;
+    }
+  }
   next();
 }
 

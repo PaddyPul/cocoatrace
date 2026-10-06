@@ -14,6 +14,7 @@ export async function api<T = any>(
   path: string,
   body?: any,
   isForm = false,
+  mfaRetry = false,
 ): Promise<T> {
   const opts: RequestInit = {
     method,
@@ -38,6 +39,15 @@ export async function api<T = any>(
   }
   let data: any;
   try { data = await res.json(); } catch { data = {}; }
+  if (res.status === 403 && data?.code === 'MFA_STEP_UP_REQUIRED' && !mfaRetry && !path.startsWith('/auth/mfa')) {
+    const { verifyPasskey } = await import('./mfa');
+    await verifyPasskey();
+    return api<T>(method,path,body,isForm,true);
+  }
+  if (res.status === 403 && data?.code === 'MFA_REQUIRED' && !path.startsWith('/auth/mfa')) {
+    window.location.assign('/account/passkeys');
+    throw new Error('Passkey verification required');
+  }
   if (!res.ok) {
     const msg = data?.details ? `${data.error}: ${data.details.map((d: any) => d.message).join('; ')}` : (data?.error || `HTTP ${res.status}`);
     throw new Error(msg);

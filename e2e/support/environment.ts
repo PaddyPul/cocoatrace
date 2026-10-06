@@ -7,5 +7,5 @@ export function localOrigin(value: string): string {
   return url.origin;
 }
 
-export const baseURL = localOrigin(process.env.COCOATRACE_BROWSER_BASE_URL || 'http://127.0.0.1:13000');
+export const baseURL = localOrigin(process.env.COCOATRACE_BROWSER_BASE_URL || 'http://localhost:13000');
 export const inboxURL = localOrigin(process.env.COCOATRACE_BROWSER_INBOX_URL || 'http://127.0.0.1:18025');

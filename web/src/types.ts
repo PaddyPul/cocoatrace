@@ -11,6 +11,7 @@ export interface TrustClaim {
 export interface TrustSummary { organic: TrustClaim; origin: TrustClaim; eudr: TrustClaim; }
 
 export interface User {
+  mfa?: {required:boolean;enrolled:boolean;verified:boolean;fresh:boolean};
   id: string;
   email: string;
   name: string;
