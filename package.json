@@ -46,7 +46,9 @@
     "typecheck": "npm run typecheck --workspace=api && npm run typecheck --workspace=web && npm run typecheck:browser",
     "check:dependencies": "node scripts/check-dependencies.mjs",
     "check:containers": "node scripts/check-container-security.mjs",
-    "test:locale": "node --import tsx --test scripts/locale.test.mjs"
+    "test:locale": "node --import tsx --test scripts/locale.test.mjs",
+    "backlog:progress": "node scripts/backlog-progress.mjs",
+    "test:backlog": "node --test scripts/backlog-progress.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

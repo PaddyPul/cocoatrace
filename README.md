@@ -1,3 +1,5 @@
+> **BetterTrade planning update (2026-10-06):** CocoaTrace is the current runtime/repository name. The [BetterTrade pilot plan](docs/BETTERTRADE_PILOT_PLAN.md) is the current product direction; rebranding is staged to preserve existing installations. See [the backlog audit and percentages](docs/BACKLOG_GROOMING_2026-10-06.md). No provider marketplace capability is implied by the rename.
+
 # CocoaTrace — Organic Cocoa Provenance Platform
 
 > CocoaTrace is a product identity and safety network for trusted food trade, beginning with Ghana-to-EU cocoa. See the [pilot operating model](docs/PILOT_OPERATING_MODEL.md) and [production release gate](docs/PRODUCTION_READINESS.md).
