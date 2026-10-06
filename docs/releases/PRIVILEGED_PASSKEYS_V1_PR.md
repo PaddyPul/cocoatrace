@@ -24,6 +24,8 @@ A stolen password alone cannot enter an enrolled or deployed privileged workspac
 
 - Correct the supplier browser probe to use holdings, assert MFA_REQUIRED on restricted sessions, and verify organization administration stays forbidden after signed verification. Add a PostgreSQL regression separating MFA assurance from role authorization.
 
+- Wait for successful password-reset HTTP/UI completion before signing in with the changed password; preserve real passkey and role-boundary assertions.
+
 ## Security and data review
 
 - [x] Resource authorization and unrelated-tenant behavior considered

@@ -40,12 +40,18 @@ test('real passkey: enrollment, restricted password session, signed sign-in and 
   await expect(page.getByRole('heading',{name:'Protect your account with a passkey'})).toHaveCount(0);
   await expectVerifiedSupplier(page);
   await page.goto('/account/passkeys');await page.getByRole('button',{name:'Sign out',exact:true}).click();
+  await expect(page).toHaveURL(/\/login$/);
   await page.goto('/forgot-password');await page.getByLabel('Work email').fill(identity.email);
   await page.getByRole('button',{name:'Send reset instructions',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Check your email',exact:true})).toBeVisible();
   const mail=await emailLink(identity.email,'reset');await page.goto(mail.link);
   const changed='ChangedPasskeyPassword456!';
   await page.getByLabel('New password',{exact:true}).fill(changed);await page.getByLabel('Confirm new password',{exact:true}).fill(changed);
+  const resetCompleted=page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/api/auth/password/reset')&&response.request().method()==='POST');
   await page.getByRole('button',{name:'Set new password',exact:true}).click();
+  const resetResponse=await resetCompleted;
+  expect(resetResponse.status(),'Passkey journey password reset must complete before signing in').toBe(204);
+  await expect(page.getByRole('heading',{name:'Password updated',exact:true})).toBeVisible();
   await signIn(page,identity.email,changed);
   await expect(page.getByRole('heading',{name:'Protect your account with a passkey'})).toBeVisible();
   await expectRestrictedSupplier(page);

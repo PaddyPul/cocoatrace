@@ -189,3 +189,8 @@ SAF-004 / IDN-012/018 now have a passkey implementation: required UV and exact c
 ### Privileged passkeys: supplier permission probe correction
 
 The reported browser 200/403 mismatch came from probing organization.admin with a supplier account. The corrected real-authenticator journey checks holding.read, explicit MFA_REQUIRED responses, verified live session state, and retained organization.admin denial. A PostgreSQL regression covers assurance without permission elevation. No runtime authorization or migration change; Docker release acceptance remains pending on the founder PC.
+
+
+### Privileged passkeys: password reset browser synchronization
+
+The customer browser test navigated to login immediately after clicking password reset, before verifying completion. It now awaits reset HTTP 204 and the Password updated screen, plus sign-out and reset-request UI completion. No production authentication changes. Browser type and quality checks pass; native Docker browser acceptance remains pending.
