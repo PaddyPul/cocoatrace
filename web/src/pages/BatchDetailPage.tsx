@@ -128,6 +128,7 @@ export default function BatchDetailPage() {
 
   return (
     <Layout currentPage="batch" actions={<button className="btn btn-sm" onClick={() => navigate('/batches')}><ArrowLeft size={14} /> Back</button>}>
+      {canDo('evidence.upload') && <button className="btn mb-4" onClick={()=>navigate(`/evidence/contribute?entityType=batch&entityId=${id}`)}>Add supporting evidence</button>}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-5">
           <div className="bg-surface border border-border rounded overflow-hidden">
