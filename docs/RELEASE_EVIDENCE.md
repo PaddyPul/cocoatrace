@@ -194,3 +194,14 @@ The reported browser 200/403 mismatch came from probing organization.admin with 
 ### Privileged passkeys: password reset browser synchronization
 
 The customer browser test navigated to login immediately after clicking password reset, before verifying completion. It now awaits reset HTTP 204 and the Password updated screen, plus sign-out and reset-request UI completion. No production authentication changes. Browser type and quality checks pass; native Docker browser acceptance remains pending.
+
+
+### 2026-10-06 founder acknowledgement: privileged passkeys
+
+Founder reports the passkey branch merged after both browser corrections. Record implementation as merged; no CI URL, tested report or physical/hosted acceptance artifact was supplied with this acknowledgement. IDN-012/018 and SAF-004 remain partial for their outstanding acceptance/operations criteria. Next execution slice: IDN-011 privileged access lifecycle safeguards.
+
+### Privileged access lifecycle v1 — implementation evidence
+
+Console-only two-reviewer user/organization suspension/restoration and user deactivation implemented; normal HTTP protected-account denial remains. Shared reviewer validation and access/recovery serialization; two usable-admin continuity, immediate session/reset/challenge/invitation revocation and atomic audits. Deactivation revokes keys and rejects recovery approval; no automated reactivation or organization deletion.
+
+Author validation: 396 API unit tests, quality/script checks, workspace/browser type checks, API/web builds, migration integrity and backlog checks pass. Twelve native PostgreSQL integration cases added; native Docker/browser/container/restore acceptance pending on founder PC/CI. Physical/hosted reviewer independence, notification delivery and bootstrap operations remain separate gates. See releases/PRIVILEGED_ACCESS_LIFECYCLE_V1_WINDOWS.md and runbooks/PRIVILEGED_ACCESS_LIFECYCLE.md.

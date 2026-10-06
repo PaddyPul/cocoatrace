@@ -9,7 +9,9 @@ describe('access control policy', () => {
     expect(() => requirePlatformAdministrator(['*'])).not.toThrow();
   });
   it('privileged organizations are protected from the routine suspension path', () => {
-    expect(() => requireSafeTarget(true)).toThrow('privileged recovery');
+    expect(() => requireSafeTarget(true)).toThrowError(
+      expect.objectContaining({ code: 'PRIVILEGED_ACCESS_PROTECTED' }),
+    );
     expect(() => requireSafeTarget(false)).not.toThrow();
   });
   it('requires an explicit boolean, substantive bounded reason and current password', () => {
