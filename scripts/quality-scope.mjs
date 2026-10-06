@@ -1,5 +1,10 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/services/tradeNextAction*.ts',
+  'api/src/modules/tradeActions/**/*.ts',
+  'api/src/services/tradeActionRepository*.ts',
+  'web/src/components/trading/TradeAction.ts',
+  'web/src/components/trading/DealNextAction.tsx',
   'api/src/modules/security/**/*.ts',
   'api/src/modules/mfa/**/*.ts',
   'api/src/modules/accessControls/**/*.ts',

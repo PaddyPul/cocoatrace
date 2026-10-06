@@ -1,3 +1,5 @@
+import { loadTradeActions } from '../services/tradeActionRepository';
+import {dispatchDecision} from '../services/paymentProtection';
 import { agreePaymentTerms, proposePaymentTerms, type PaymentTermsInput } from '../modules/payments/terms';
 import { config } from '../config/env';
 import { AppError } from '../errors';
@@ -88,7 +90,9 @@ export async function getContract(req: Request, res: Response): Promise<void> {
   const installments=rows[0].payment_request_id?await query('SELECT * FROM payment_installments WHERE payment_request_id=$1 ORDER BY sequence_number',[rows[0].payment_request_id]):{rows:[]};
   const acceptance = await query('SELECT accepted_at FROM delivery_acceptances WHERE contract_id=$1', [id]);
   const discrepancy = await query("SELECT status FROM delivery_discrepancies WHERE contract_id=$1 AND status<>'resolved' LIMIT 1", [id]);
-  res.json({ ...rows[0], delivery_accepted_at: acceptance.rows[0]?.accepted_at || null, delivery_discrepancy_status: discrepancy.rows[0]?.status || null, documents: documents.rows, installments:installments.rows });
+  const nextAction=(await loadTradeActions(req.user!,id))[0]||null;
+  const dispatchGate=(!rows[0].payment_request_id||rows[0].amount_confirmed==null||rows[0].dispatch_required_amount==null)?{allowed:false,reason:'Payment protection record is missing.'}:(nextAction?.id.endsWith(':hold')||nextAction?.id.endsWith(':unavailable'))?{allowed:false,reason:nextAction.description}:dispatchDecision({plan:rows[0].payment_plan,termsStatus:rows[0].payment_terms_status,amountConfirmed:rows[0].amount_confirmed||'0',dispatchRequiredAmount:rows[0].dispatch_required_amount||'0',securityStatus:rows[0].security_status,currencyMinorUnits:rows[0].currency_minor_units});
+  res.json({ ...rows[0], nextAction, dispatchGate, delivery_accepted_at: acceptance.rows[0]?.accepted_at || null, delivery_discrepancy_status: discrepancy.rows[0]?.status || null, documents: documents.rows, installments:installments.rows });
 }
 
 // Preserve the existing HTTP response shape while the service owns transaction policy.

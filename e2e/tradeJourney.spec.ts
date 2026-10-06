@@ -105,7 +105,7 @@ test('full prepayment trade: offer, verified payment gate, document sharing, del
     expect(Number(snapshot.payment.amount_confirmed)).toBe(0);
     await supplier.goto(`/deal-room/${contract.id}`);
     await supplier.getByRole('button', { name: 'Confirm funds received', exact: true }).click();
-    await expect(supplier.getByText('Payment gate cleared—prepare dispatch', { exact: true })).toBeVisible();
+    await expect(supplier.getByTestId('deal-next-action').getByRole('heading', { name: 'Awaiting buyer: booked', exact: true })).toBeVisible();
     snapshot = await tradeSnapshot(contract.id);
     expect(snapshot.payment.status).toBe('settled');
     expect(Number(snapshot.payment.amount_confirmed)).toBe(20);

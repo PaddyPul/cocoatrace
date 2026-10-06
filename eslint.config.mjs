@@ -32,6 +32,9 @@ export default tseslint.config(
   },
   {
     files: [
+      'api/src/services/tradeNextAction*.ts',
+      'api/src/modules/tradeActions/**/*.ts',
+      'api/src/services/tradeActionRepository*.ts',
       'api/src/modules/security/**/*.ts',
       'api/src/modules/mfa/**/*.ts',
       'api/src/modules/accessControls/**/*.ts',

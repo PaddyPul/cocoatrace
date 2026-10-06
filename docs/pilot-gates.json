@@ -8,7 +8,7 @@
       "status": "partial",
       "title": "Current release passes every gate on the candidate commit",
       "backlog": ["QLT-001", "SEC-014", "LNG-001"],
-      "evidence": "Founder reports corrected auth-boundary release and merge/pull completed. Access suspension candidate now needs its own full native release gate."
+      "evidence": "Founder reports privileged access lifecycle release checks passed and merge/pull completed 2026-10-06. Each subsequent candidate, including shared trade actions, requires its own commit-specific full native release report; hosted staging evidence remains separate."
     },
     {
       "id": "CORE-isolation",
@@ -56,7 +56,7 @@
       "status": "partial",
       "title": "Privileged MFA/recovery and suspension are enforced",
       "backlog": ["IDN-011", "IDN-012", "SAF-004"],
-      "evidence": "Non-privileged suspension founder-tested/merged. Passkey enrollment, restricted sessions, fresh writes, audited key/session revocation and two-reviewer console recovery implemented 2026-10-06. Founder confirms passkey/recovery implementation and browser corrections merged on 2026-10-06. Independent CI/report archival, physical/hosted verification, privileged access review, notifications and emergency bootstrap recovery remain pending. Two-reviewer console privileged suspension/restoration and user deactivation implemented in the next wave; native/operational acceptance pending. See runbooks/PRIVILEGED_PASSKEYS.md."
+      "evidence": "Non-privileged suspension founder-tested/merged. Passkey enrollment, restricted sessions, fresh writes, audited key/session revocation and two-reviewer console recovery implemented 2026-10-06. Founder confirms passkey/recovery implementation and browser corrections merged on 2026-10-06. Independent CI/report archival, physical/hosted verification, privileged access review, notifications and emergency bootstrap recovery remain pending. Founder confirms two-reviewer privileged lifecycle release checks passed and merge/pull completed on 2026-10-06. IDN-011 implementation closed; physical/hosted privileged review, notifications and emergency bootstrap acceptance remain open. See runbooks/PRIVILEGED_PASSKEYS.md."
     },
     {
       "id": "CORE-files",
@@ -120,7 +120,7 @@
       "status": "partial",
       "title": "Dashboard/deal room share one permitted next action",
       "backlog": ["PRD-006", "PRD-011"],
-      "evidence": "Separate decisions remain."
+      "evidence": "Shared permitted next-action policy candidate implemented 2026-10-06 with scoped read projection, commercial/fulfilment/closeout modules and actual UI transition coverage. Author units/types/builds/quality passed; native API/browser release and merge acknowledgement pending. Other platform empty states remain open."
     },
     {
       "id": "CORE-transport",
