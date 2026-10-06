@@ -13,6 +13,7 @@ export const releaseChecks = [
       '--test',
       'scripts/run-release-checks.test.mjs',
       'scripts/check-dependencies.test.mjs',
+      'scripts/shell-quote-security.test.mjs',
       'scripts/check-container-security.test.mjs',
       'scripts/compose-compatibility.test.mjs',
       'scripts/demo-preview.test.mjs',

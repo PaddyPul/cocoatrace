@@ -1,7 +1,9 @@
+import { AuthenticationError } from '../errors';
+import type { PoolClient } from 'pg';
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env';
-import { query } from '../db';
+import { getClient, query } from '../db';
 
 const sessionLifetimeSeconds = 24 * 60 * 60;
 
@@ -23,26 +25,35 @@ export function hashSessionToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
-export async function createSession(userId: string): Promise<{ token: string; actor: AuthenticatedActor }> {
-  const actor = await loadCurrentActor(userId);
-  if (!actor) throw new Error('Cannot create a session for an inactive or unapproved account');
-  const sessionId = crypto.randomUUID();
-  const token = jwt.sign({ sub: actor.id, sid: sessionId }, config.jwtSecret, {
-    expiresIn: sessionLifetimeSeconds,
-    issuer: 'cocoatrace-api',
-    audience: 'cocoatrace',
-  });
-  const expiresAt = new Date(Date.now() + sessionLifetimeSeconds * 1000);
-  await query(
-    `INSERT INTO sessions(id,user_id,token_hash,expires_at,last_seen_at)
-     VALUES ($1,$2,$3,$4,NOW())`,
-    [sessionId, actor.id, hashSessionToken(token), expiresAt],
-  );
-  return { token, actor: { ...actor, sessionId } };
+export async function createSession(userId: string, expectedPasswordHash?: string): Promise<{ token: string; actor: AuthenticatedActor }> {
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    const identity = (await client.query('SELECT organization_id FROM users WHERE id=$1', [userId])).rows[0];
+    if (!identity) throw new AuthenticationError('Account is unavailable');
+    // Serialize session issuance with suspension: organization before user.
+    await client.query('SELECT id FROM organizations WHERE id=$1 FOR SHARE', [identity.organization_id]);
+    const user = (await client.query('SELECT id,password_hash,organization_id FROM users WHERE id=$1 FOR SHARE', [userId])).rows[0];
+    if (!user || user.organization_id !== identity.organization_id || (expectedPasswordHash && user.password_hash !== expectedPasswordHash)) throw new AuthenticationError('Credentials changed; sign in again');
+    const actor = await loadCurrentActor(userId, client);
+    if (!actor) throw new AuthenticationError('Account is unavailable');
+    const sessionId = crypto.randomUUID();
+    const token = jwt.sign({ sub: actor.id, sid: sessionId }, config.jwtSecret, {
+      expiresIn: sessionLifetimeSeconds, issuer: 'cocoatrace-api', audience: 'cocoatrace',
+    });
+    await client.query(`INSERT INTO sessions(id,user_id,token_hash,expires_at,last_seen_at)
+      VALUES ($1,$2,$3,$4,NOW())`, [sessionId, actor.id, hashSessionToken(token), new Date(Date.now() + sessionLifetimeSeconds * 1000)]);
+    await client.query('COMMIT');
+    return { token, actor: { ...actor, sessionId } };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally { client.release(); }
 }
 
-async function loadCurrentActor(userId: string): Promise<Omit<AuthenticatedActor, 'sessionId'> | null> {
-  const { rows } = await query(
+async function loadCurrentActor(userId: string, client?: PoolClient): Promise<Omit<AuthenticatedActor, 'sessionId'> | null> {
+  const execute = client ? client.query.bind(client) : query;
+  const { rows } = await execute(
     `SELECT u.id,u.organization_id,u.email,u.name,o.name AS org_name,o.type AS org_type,
             array_remove(array_agg(DISTINCT r.name),NULL) AS roles,
             array_remove(array_agg(DISTINCT permission),NULL) AS permissions
@@ -51,7 +62,7 @@ async function loadCurrentActor(userId: string): Promise<Omit<AuthenticatedActor
        LEFT JOIN user_roles ur ON ur.user_id=u.id
        LEFT JOIN roles r ON r.id=ur.role_id
        LEFT JOIN LATERAL unnest(r.permissions) permission ON TRUE
-      WHERE u.id=$1 AND u.active=TRUE AND o.verification_status='verified'
+      WHERE u.id=$1 AND u.active=TRUE AND u.access_suspended_at IS NULL AND o.access_suspended_at IS NULL AND o.verification_status='verified'
       GROUP BY u.id,o.id`,
     [userId],
   );

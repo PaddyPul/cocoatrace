@@ -35,6 +35,7 @@ import AccessVerificationPage from './pages/AccessVerificationPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
+import AccessControlsPage from './pages/AccessControlsPage';
 import AccessApplicationsPage from './pages/AccessApplicationsPage';
 import { webConfig } from './config';
 
@@ -114,6 +115,7 @@ export default function App() {
           <Route path="/certs" element={<ProtectedRoute><CertsPage /></ProtectedRoute>} />
           <Route path="/my-listings" element={<ProtectedRoute><MyListingsPage /></ProtectedRoute>} />
           <Route path="/organizations" element={<ProtectedRoute><OrganizationsPage /></ProtectedRoute>} />
+          <Route path="/access-controls" element={<ProtectedRoute><AccessControlsPage /></ProtectedRoute>} />
           <Route path="/access-applications" element={<ProtectedRoute><AccessApplicationsPage /></ProtectedRoute>} />
           <Route path="/account/security" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/home" replace />} />

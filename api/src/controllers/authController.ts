@@ -21,29 +21,29 @@ function clearSessionCookie(res: Response): void {
 export async function login(req: Request, res: Response): Promise<void> {
   const { email, password } = req.body;
   const { rows } = await query(
-    `SELECT u.id,u.email,u.name,u.organization_id,u.password_hash,u.active,o.verification_status
+    `SELECT u.id,u.email,u.name,u.organization_id,u.password_hash,u.active,u.access_suspended_at,o.access_suspended_at AS org_suspended,o.verification_status
        FROM users u JOIN organizations o ON o.id=u.organization_id WHERE u.email=$1`,
     [email],
   );
   const user = rows[0];
   const valid = await bcrypt.compare(password, user?.password_hash || await dummyHash);
-  if (!user || !valid || !user.active) {
+  if (!user || !valid || !user.active || user.access_suspended_at) {
     await recordSecurityEvent({
       eventType: 'login.failed', success: false,
       actorUserId: user?.id, actorOrganizationId: user?.organization_id,
-      reason: !user ? 'unknown_account' : !user.active ? 'inactive_account' : 'invalid_password',
+      reason: !user ? 'unknown_account' : !user.active ? 'inactive_account' : user.access_suspended_at ? 'account_suspended' : 'invalid_password',
       metadata: { emailHash: securityIdentifierHash(email) },
     });
     res.status(401).json({ error: 'Invalid credentials' });
     return;
   }
-  if (user.verification_status !== 'verified') {
+  if (user.verification_status !== 'verified' || user.org_suspended) {
     await recordSecurityEvent({ eventType: 'login.failed', success: false, actorUserId: user.id, actorOrganizationId: user.organization_id, reason: 'organization_not_active' });
     res.status(403).json({ error: 'This organization is not approved for access', code: 'ORGANIZATION_NOT_ACTIVE' });
     return;
   }
 
-  const { token, actor } = await createSession(user.id);
+  const { token, actor } = await createSession(user.id, user.password_hash);
   await recordSecurityEvent({ eventType: 'login.succeeded', success: true, actorUserId: actor.id, actorOrganizationId: actor.organizationId, sessionId: actor.sessionId });
   setSessionCookie(res, token);
   res.json({

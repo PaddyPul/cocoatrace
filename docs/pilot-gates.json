@@ -8,7 +8,7 @@
       "status": "partial",
       "title": "Current release passes every gate on the candidate commit",
       "backlog": ["QLT-001", "SEC-014", "LNG-001"],
-      "evidence": "Previous releases founder-reported green; current language label correction still needs native acknowledgement."
+      "evidence": "Founder reports corrected auth-boundary release and merge/pull completed. Access suspension candidate now needs its own full native release gate."
     },
     {
       "id": "CORE-isolation",
@@ -37,10 +37,10 @@
     {
       "id": "CORE-origin",
       "scope": "core",
-      "status": "partial",
+      "status": "complete",
       "title": "Cookie/proxy write boundaries resist abuse",
       "backlog": ["SAF-001", "SEC-007"],
-      "evidence": "Unsafe origin/credential precedence and untrusted-forwarded-header regressions implemented. Local unit/type/build checks pass; native PostgreSQL/browser release verification pending."
+      "evidence": "Founder reports corrected auth-boundary release/merge/pull completed on 2026-10-06; exploit regressions and actual Playwright request-header probe. Forwarded headers remain untrusted; future ingress changes require review."
     },
     {
       "id": "CORE-abuse",
@@ -48,15 +48,15 @@
       "status": "partial",
       "title": "Shared per-account/IP public-endpoint limits hold across instances",
       "backlog": ["IDN-013", "SEC-011"],
-      "evidence": "Shared PostgreSQL account/token/user and immediate-peer IP budgets, atomic counters and fail-closed outages implemented. Native concurrency/release validation and broader public endpoint controls remain pending."
+      "evidence": "Shared PostgreSQL authentication budgets founder-tested and merged; broader public endpoint policies under SEC-011 remain open."
     },
     {
       "id": "CORE-privilege",
       "scope": "core",
-      "status": "open",
+      "status": "partial",
       "title": "Privileged MFA/recovery and suspension are enforced",
       "backlog": ["IDN-011", "IDN-012", "SAF-004"],
-      "evidence": "Live active checks exist; administration lifecycle incomplete."
+      "evidence": "Password-confirmed audited non-privileged user/organization suspension and safe restoration implemented; native tests pending. MFA and privileged recovery/suspension remain open."
     },
     {
       "id": "CORE-files",

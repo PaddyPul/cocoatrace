@@ -1,6 +1,7 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
   'api/src/modules/security/**/*.ts',
+  'api/src/modules/accessControls/**/*.ts',
   'api/src/middleware/credentials.ts',
   'api/src/middleware/auth.ts',
   'api/src/middleware/auth.test.ts',
