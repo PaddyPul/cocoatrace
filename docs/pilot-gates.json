@@ -48,7 +48,7 @@
       "status": "partial",
       "title": "Shared per-account/IP public-endpoint limits hold across instances",
       "backlog": ["IDN-013", "SEC-011"],
-      "evidence": "Shared PostgreSQL authentication budgets founder-tested and merged; broader public endpoint policies under SEC-011 remain open."
+      "evidence": "Shared PostgreSQL authentication budgets founder-tested and merged; fixed-operation public and upload budgets implemented under SEC-011, native release pending."
     },
     {
       "id": "CORE-privilege",
@@ -56,7 +56,7 @@
       "status": "partial",
       "title": "Privileged MFA/recovery and suspension are enforced",
       "backlog": ["IDN-011", "IDN-012", "SAF-004"],
-      "evidence": "Password-confirmed audited non-privileged user/organization suspension and safe restoration implemented; native tests pending. MFA and privileged recovery/suspension remain open."
+      "evidence": "Founder confirms tested/merged password-confirmed audited non-privileged user/organization suspension and safe restoration on 2026-10-06. MFA and privileged recovery/suspension remain open."
     },
     {
       "id": "CORE-files",
@@ -128,7 +128,7 @@
       "status": "partial",
       "title": "Pilot milestone authority and required route information are explicit",
       "backlog": ["LOG-001", "LOG-002", "LOG-003", "LOG-004", "GEO-001"],
-      "evidence": "All 11 Incoterms now enforce contract-party authority, origin confirmation and DPU/DDP gates; API-driven UI/dashboard and regression matrix added. Native release pending; mode/named-place/domestic policies remain open."
+      "evidence": "Founder confirms Incoterm responsibility bundle tested/merged on 2026-10-06: all-term actor matrix, persisted origin, DPU/DDP gates and UI/dashboard. Mode/named-place/domestic policies remain open under LOG-002/003/004 and GEO-001."
     },
     {
       "id": "CORE-exceptions",
