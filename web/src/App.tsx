@@ -1,3 +1,4 @@
+import { LanguageProvider } from './i18n/LanguageProvider';
 import PlatformFeesPage from './pages/PlatformFeesPage';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuthCtx } from './components/auth/AuthProvider';
@@ -67,7 +68,7 @@ export default function App() {
         Supervised demo: synthetic records and simulated payments. Do not enter personal data or upload real documents.
       </div>}
       <AuthProvider>
-        <ToastProvider>
+        <LanguageProvider><ToastProvider>
         <Routes>
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
@@ -117,7 +118,7 @@ export default function App() {
           <Route path="/account/security" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
-        </ToastProvider>
+        </ToastProvider></LanguageProvider>
       </AuthProvider>
     </BrowserRouter>
   );

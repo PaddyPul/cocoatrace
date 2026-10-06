@@ -45,7 +45,8 @@
     "check:quality": "npm run lint && npm run format:check && npm run check:scripts && node --test scripts/quality-policy.test.mjs scripts/check-script-contracts.test.mjs",
     "typecheck": "npm run typecheck --workspace=api && npm run typecheck --workspace=web && npm run typecheck:browser",
     "check:dependencies": "node scripts/check-dependencies.mjs",
-    "check:containers": "node scripts/check-container-security.mjs"
+    "check:containers": "node scripts/check-container-security.mjs",
+    "test:locale": "node --import tsx --test scripts/locale.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -60,6 +61,10 @@
     "node": "^20.19.0 || ^22.13.0 || >=24"
   },
   "overrides": {
-    "vite": "6.4.3"
+    "vite": "6.4.3",
+    "proxy-addr": "2.0.8",
+    "fast-copy": "4.1.2",
+    "postcss-selector-parser": "7.1.6",
+    "source-map-js": "1.2.2"
   }
 }

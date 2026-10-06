@@ -3,7 +3,7 @@
 **Purpose:** Single source of truth for work required to move CocoaTrace from a passion project to an investor-ready, pilot-safe and production-capable company.  
 **North Star:** [`NORTH_STAR.md`](./NORTH_STAR.md)  
 **Architecture direction:** [`ARCHITECTURE_MODERNIZATION.md`](./ARCHITECTURE_MODERNIZATION.md)  
-**Last triaged:** 2026-10-05
+**Last triaged:** 2026-10-06
 **Next formal review:** Weekly, before selecting new work
 
 ## How to use this file
@@ -37,9 +37,9 @@ Hosting follow-ups **BST-001–003** and their completion tests are maintained i
 
 ### Multi-language
 
-- [ ] **LNG-001 · P1 · Phase 2:** Select pilot languages with users; introduce translation catalogs, English fallback and persisted user language preference. Completion: no hard-coded customer-facing strings in the first translated trade journey.
-- [ ] **LNG-002 · P1 · Phase 2:** Translate onboarding, sourcing, offers, guided dashboard, payment and delivery actions plus actionable API errors using stable error codes. Completion: buyer and supplier browser journeys pass in two selected locales.
-- [ ] **LNG-003 · P1 · Phase 2:** Localize recipient emails and notifications and format dates, quantities and currency using locale-aware helpers. Validate localized number input without changing commercial units. Completion: decimal/date ambiguity and fallback tests pass.
+- [-] **LNG-001 · P1 · Phase 2 · IN PROGRESS:** Select pilot languages with users; introduce translation catalogs, English fallback and persisted user language preference. Completion: no hard-coded customer-facing strings in the first translated trade journey.
+- [-] **LNG-002 · P1 · Phase 2 · IN PROGRESS:** Translate onboarding, sourcing, offers, guided dashboard, payment and delivery actions plus actionable API errors using stable error codes. Completion: buyer and supplier browser journeys pass in two selected locales.
+- [-] **LNG-003 · P1 · Phase 2 · IN PROGRESS:** Localize recipient emails and notifications and format dates, quantities and currency using locale-aware helpers. Validate localized number input without changing commercial units. Completion: decimal/date ambiguity and fallback tests pass.
 - [ ] **LNG-004 · P2 · Phase 3:** Define authoritative contract/document languages, reviewed translations and clearly labeled translated summaries; preserve original evidence and user-entered text. Completion: versioned language policy and review workflow, with no automatic replacement of legal records.
 - [ ] **LNG-005 · P2 · Phase 3:** Human-review pilot translations and test keyboard access, longer text and missing keys; design for later RTL support. Completion: translation QA checklist and automated overflow/fallback coverage.
 
@@ -70,9 +70,9 @@ three engineering items in progress, finish vertical slices, and move a phase
 only when its exit gate passes. Phase 4 may extend beyond week 16 as customer
 and independent-review evidence becomes available.
 
-## Progress snapshot — 2026-10-05
+## Progress snapshot — 2026-10-06
 
-Interpreting the founder's latest “done” as completion of the prescribed release checks and merge/pull, the canonical backlog contains **310 items: 64 complete (20.6%), 28 in progress (9.0%), and 218 not started (70.3%)**. Items are counted equally, with no fractional completion credit. Started work is **29.7%**; that is not a completion measure.
+Interpreting the founder's latest “done” as completion of the prescribed release checks and merge/pull, the canonical backlog contains **307 named items: 64 complete (20.8%), 30 in progress (9.8%), and 213 not started (69.4%)**. This corrects the previously reported denominator of 310 by recounting every named backlog row; it does not credit new completions. Items are counted equally, with no fractional completion credit. Started work is **30.6%**; that is not a completion measure.
 
 The denominator includes engineering, operations, design-partner validation, fundraising evidence, multi-currency, multi-language and later expansion. It measures the exhaustive roadmap, not usability of the existing app or a percentage of an $8M valuation. Native/CI completion here is founder-reported; independent CI URL archival remains open. Partially implemented suspension, real email delivery, hosted restore, disposal/segregation and recall deadline/external-recipient workflows stay open.
 
@@ -80,12 +80,13 @@ The denominator includes engineering, operations, design-partner validation, fun
 
 Select the next coherent batch from this queue. Completed-wave history and evidence are maintained in [`RELEASE_EVIDENCE.md`](RELEASE_EVIDENCE.md), rather than occupying the active queue.
 
-1. **Container security release — SEC-014:** dependency fixes are founder-reported merged. Multi-stage API runtime, supported Node 24 bases, unprivileged Nginx and fail-closed OS/library image scans implemented; founder confirmed release/merge/pull on 2026-10-05 after the package-manager correction. Remaining image/digest/build-tool scope stays open. The unpatched build-only braces advisory, third-party service images and digest promotion remain open. See `runbooks/CONTAINER_SECURITY.md`.
+1. **Container security release — SEC-014:** dependency fixes are founder-reported merged. Multi-stage API runtime, supported Node 24 bases, unprivileged Nginx and fail-closed OS/library image scans implemented; founder confirmed release/merge/pull on 2026-10-05 after the package-manager correction. Remaining image/digest/build-tool scope stays open. The unpatched build-only braces advisory, third-party service images and digest promotion remain open. 2026-10-06 language-wave advisory correction pins patched proxy-addr, fast-copy, selector parser and source-map-js; author production/full audit passes, founder native release confirmation pending. See `runbooks/CONTAINER_SECURITY.md`.
 2. **Unstarted bilateral cancellation — LOG-006, TRD-017:** scoped request/review, payment/security/transport guards, exact committed-stock release, estimated-fee voiding and immutable audit history implemented. Founder confirms cancellation merged and pulled. Paid cancellation, partial settlement, refunds and returns still require explicit financial and inventory policies.
 3. **Payment-term workflow extraction — ARC-006, ARC-019, QLT-007:** proposal/confirmation are moved from HTTP controllers into a typed transaction service; contract-first locking, closed-contract guards, retry and rollback regressions implemented. Founder confirms payment-term extraction merged and pulled. Continue other state-machine extraction incrementally.
 4. **Commercial operations — PAY-011–PAY-013:** recorded seller/completion fee policy, decimal fee snapshots, in-app commercial statements, separate payer submission/platform receipt verification, controlled rejection/write-off and currency-separated JSON reconciliation implemented. Founder confirms the fee ledger merged and pulled. Tax, real collection instructions, emailed invoices, bank reconciliation and production commercial approval remain open.
-5. **Trade currency foundation — CUR-001–CUR-003:** EUR/USD/GHS/GBP plus snapshotted JPY precision policy, offer/acceptance mismatch rejection, currency-preserving publication/buyer UI, exact decimal contract totals/deposit allocations, and payment/transport/settlement drift guards implemented. Founder confirms the four-currency foundation merged. JPY zero-decimal snapshot extension is implemented; native release/CI pending. Three-decimal currencies, refunds, FX and display preferences remain open. See `runbooks/CURRENCY_PRECISION.md`. See `runbooks/TRADE_CURRENCY.md`.
-6. **Controlled pilot and live environment gates — IDN-005, IDN-021, ENV-004–ENV-006, OPS-001–OPS-002, BST-002–BST-003:** actual approved design partners, real email delivery, private storage and a verified hosted restore under the zero-budget constraint. Provider eligibility and customer participation remain external dependencies.
+5. **Trade currency foundation — CUR-001–CUR-003:** EUR/USD/GHS/GBP plus snapshotted JPY precision policy, offer/acceptance mismatch rejection, currency-preserving publication/buyer UI, exact decimal contract totals/deposit allocations, and payment/transport/settlement drift guards implemented. Founder confirms the four-currency foundation merged. Founder confirms the JPY zero-decimal snapshot extension tested, merged and pulled on 2026-10-06; independent CI archival remains open. Three-decimal currencies, refunds, FX and display preferences remain open. See `runbooks/CURRENCY_PRECISION.md`. See `runbooks/TRADE_CURRENCY.md`.
+6. **Language foundation — LNG-001–LNG-003:** English/French shell catalogs, English fallback, account-separated device preferences, translated workspace navigation/search and locale display helpers implemented. New unit and browser regressions are included. Native browser/release confirmation pending. Full trade forms/dashboard actions, server-persisted cross-device preferences, recipient emails, localized input validation and pilot/human translation approval remain open. See `runbooks/LANGUAGE_FOUNDATION.md`.
+7. **Controlled pilot and live environment gates — IDN-005, IDN-021, ENV-004–ENV-006, OPS-001–OPS-002, BST-002–BST-003:** actual approved design partners, real email delivery, private storage and a verified hosted restore under the zero-budget constraint. Provider eligibility and customer participation remain external dependencies.
 
 The following deployment work is a **parallel external gate**, not repository-complete work: **ENV-004–ENV-006, UPL-002, OPS-001–OPS-002**. A named infrastructure owner must provision isolated staging resources, private encrypted object storage, HTTPS/secrets, managed database recovery and a recorded restore drill. Repository tests and local Docker do not close those items.
 

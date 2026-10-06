@@ -125,3 +125,26 @@ Founder native release run reached the browser suite and reported the prepayment
 ## Snapshotted currency precision — 2026-10-05
 
 Founder confirms the four-currency foundation and browser selector correction merged/pulled. CUR-001–CUR-003 precision extension adds JPY whole-yen money, server-created snapshots and database constraints, exact allocation/fee rounding, legacy precision-aware presentation and rejection of fractional receipts/zero deposit splits. Migration 030 retains all old amounts with default-2 metadata; down refuses history erasure. Local verification: 294 API units, quality, workspace/browser type checks, API/web builds and migration integrity passed. Supplemental PGlite serial tests verify JPY fulfillment/deposits/constraints/rollback/settlement/fee collection/reconciliation and EUR regression; a real 029->030 supplemental upgrade preserves fractional JPY. Native PostgreSQL/API/browser/concurrency/images/recovery remain unexecuted here because Docker is unavailable. Five added database cases and the GHS/JPY real fee browser journey await founder release-gate/CI results. Handoff: releases/CURRENCY_PRECISION_WINDOWS.md; PR: releases/CURRENCY_PRECISION_PR.md.
+
+
+## Language foundation — 2026-10-06
+
+Founder confirms the currency precision wave merged and pulled; native release completion is founder-reported, with independent CI archival still open. This wave introduces English/French workspace shell catalogs, account-separated device language preference, translated permission-aware command search and explicit navigation-only scope. Existing page bodies remain English with their own language attribute. No migration, currency rewrite, new external service, email change or dependency. Pure locale display helpers preserve currency snapshot precision and reject ambiguous calendar dates; full financial-view integration and localized input are follow-ups.
+
+Authoring evidence: six locale tests, quality checks, workspace/browser type checks, web production build and seven release-runner tests pass. Three real-identity buyer/supplier/storage-failure browser regressions authored; native Docker/PostgreSQL/browser/image/recovery release gate not available locally and required before merge. Existing bundle-size warning remains. LNG-001–LNG-003 remain IN PROGRESS with unchanged completion criteria. See runbooks/LANGUAGE_FOUNDATION.md and releases/LANGUAGE_FOUNDATION_WINDOWS.md.
+
+
+### Language-wave dependency advisory correction — 2026-10-06
+
+Founder release gate detected proxy-addr GHSA-jqcg-44mw-7w3h, fast-copy GHSA-jggr-w7fw-pc2j, postcss-selector-parser GHSA-rj75-hqrm-r3gf and source-map-js GHSA-68fv-2mgg-jv7q. Root overrides and the registry-generated lock now pin proxy-addr 2.0.8, fast-copy 4.1.2, postcss-selector-parser 7.1.6 and source-map-js 1.2.2. No added exception or severity downgrade. The existing time-limited, build-only braces exception remains unchanged. The parser crosses a major version to obtain the upstream fix; generated production CSS compares byte-identical before/after.
+
+Validation: clean npm ci installation; production and full dependency advisory gates passed at 2026-10-06T10:13:21Z; 294 API unit tests, nine dependency policy/Express tests, six locale tests, quality and workspace/browser types, API and web production builds passed. A new regression exercises the exact proxy-addr module resolved by Express: malformed mapped IPv6 trust prefixes cannot accept an unrelated client's spoofed forwarded address; valid IPv4/mapped trust still works. Full native Docker/browser/image/recovery checks remain required on the founder machine before merging. No database migration or financial/data rewrite.
+
+Registry-generated patched parser metadata was taken from an isolated fresh dependency resolution and applied without refreshing unrelated lock entries. npm's existing workspace-tree inspection can label a deliberate major-version override invalid; installed versions, clean lock installation, builds and the advisory gate were verified instead. See releases/LANGUAGE_DEPENDENCY_FIX_WINDOWS.md for applying only this correction to the already-applied language branch.
+
+
+### Language selector label correction — 2026-10-06
+
+Founder browser gate failed three new language tests at exact getByLabel('Language'). A focused Chromium reproduction confirmed the implicit wrapper label text included both option labels (LanguageEnglishFrançais), producing zero exact label matches despite the combobox's accessible name being Language. The production selector now uses a separate translated label linked by htmlFor to a React useId selector ID. Existing exact getByLabel tests, timeouts, account boundaries and permission checks remain unchanged.
+
+Authoring Chromium check on the actual AuthProvider/LanguageProvider/Layout/selector confirms exact English selection, exact French lookup after switching, French preference persistence through reload, and translated command-search results. This is an isolated component/layout check, not the real-identity Docker suite. Six locale tests, quality checks, web/browser type checks and web production build pass. Full native identity/browser/release confirmation remains mandatory before merge. No dependency, migration, secret or financial-data change. See releases/LANGUAGE_LABEL_FIX_WINDOWS.md.

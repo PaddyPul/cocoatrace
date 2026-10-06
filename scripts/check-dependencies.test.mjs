@@ -100,3 +100,22 @@ test('Express resolves patched qs and hostile constructor data does not crash se
   const parsed = qs.parse('x%5Bconstructor%5D%5BisBuffer%5D=y', { plainObjects: true });
   assert.doesNotThrow(() => qs.stringify(parsed));
 });
+
+// Exercise the production Express proxy dependency, not only advisory metadata.
+test('mapped IPv6 trust prefixes cannot turn unrelated clients into trusted proxies', () => {
+  const require = createRequire(import.meta.url);
+  const proxyaddr = createRequire(require.resolve('express'))('proxy-addr');
+  const request = {
+    connection: { remoteAddress: '198.51.100.7' },
+    headers: { 'x-forwarded-for': '1.2.3.4' },
+  };
+  for (const subnet of ['::ffff:10.0.0.0/8', '::/1']) {
+    assert.equal(proxyaddr(request, proxyaddr.compile(subnet)), '198.51.100.7');
+  }
+  const trusted = {
+    connection: { remoteAddress: '10.0.0.7' },
+    headers: { 'x-forwarded-for': '198.51.100.7' },
+  };
+  assert.equal(proxyaddr(trusted, proxyaddr.compile('10.0.0.0/8')), '198.51.100.7');
+  assert.equal(proxyaddr(trusted, proxyaddr.compile('::ffff:10.0.0.0/104')), '198.51.100.7');
+});
