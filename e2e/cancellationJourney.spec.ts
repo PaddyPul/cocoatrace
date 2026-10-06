@@ -6,7 +6,7 @@ import { tradeSnapshot } from './support/tradeDatabase';
 test('buyer requests cancellation, supplier approves and exact inventory is released without relisting', async ({page: supplier,browser}) => {
   test.setTimeout(180_000);
   const identity=await createWorkspace(supplier,browser,'supplier');
-  const buyerContext=await browser.newContext({baseURL});
+  const buyerContext=await browser.newContext({extraHTTPHeaders: { Origin: baseURL },baseURL});
   try {
     const buyer=await buyerContext.newPage(); await createWorkspace(buyer,browser,'buyer');
     const inventoryResponse=await supplier.request.post('/api/inventory/direct',{data:{commodity:'peanut',quantityKg:10,inventoryDate:new Date().toISOString().slice(0,10),sourceCountry:'GH',sourceName:identity.organization}});

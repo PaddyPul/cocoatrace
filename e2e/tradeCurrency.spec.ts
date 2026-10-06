@@ -5,7 +5,7 @@ import { createWorkspace } from './support/identity';
 test('GHS listing displays its currency and the buyer UI submits GHS rather than EUR', async ({page:seller,browser}) => {
   test.setTimeout(180_000);
   const identity=await createWorkspace(seller,browser,'supplier');
-  const context=await browser.newContext({baseURL});
+  const context=await browser.newContext({extraHTTPHeaders: { Origin: baseURL },baseURL});
   try {
     const buyer=await context.newPage();
     await createWorkspace(buyer,browser,'buyer');

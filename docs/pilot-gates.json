@@ -40,15 +40,15 @@
       "status": "partial",
       "title": "Cookie/proxy write boundaries resist abuse",
       "backlog": ["SAF-001", "SEC-007"],
-      "evidence": "Middleware present; bypass combinations not verified."
+      "evidence": "Unsafe origin/credential precedence and untrusted-forwarded-header regressions implemented. Local unit/type/build checks pass; native PostgreSQL/browser release verification pending."
     },
     {
       "id": "CORE-abuse",
       "scope": "core",
-      "status": "open",
+      "status": "partial",
       "title": "Shared per-account/IP public-endpoint limits hold across instances",
       "backlog": ["IDN-013", "SEC-011"],
-      "evidence": "Current sensitiveActionLimit uses process-memory Map."
+      "evidence": "Shared PostgreSQL account/token/user and immediate-peer IP budgets, atomic counters and fail-closed outages implemented. Native concurrency/release validation and broader public endpoint controls remain pending."
     },
     {
       "id": "CORE-privilege",

@@ -13,6 +13,8 @@ export default defineConfig({
   outputDir: 'browser-test-results/private',
   use: {
     baseURL,
+    // APIRequestContext cookie writes explicitly declare the disposable app origin.
+    extraHTTPHeaders: { Origin: baseURL },
     ...devices['Desktop Chrome'],
     // Traces include network credentials. Never publish them as CI artifacts.
     trace: !process.env.CI && process.env.COCOATRACE_BROWSER_PRIVATE_TRACES === 'true' ? 'retain-on-failure' : 'off',

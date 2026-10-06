@@ -8,6 +8,7 @@ export default defineConfig({
     environment: 'node',
     include: ['test/integration/**/*.integration.test.ts'],
     globalSetup: ['./test/integration/globalSetup.ts'],
+    setupFiles: ['./test/integration/rateLimitIsolation.ts'],
     fileParallelism: false,
     hookTimeout: 30_000,
     testTimeout: 15_000,

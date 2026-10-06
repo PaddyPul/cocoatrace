@@ -33,7 +33,7 @@ async function recordProgress(page: Page, shipmentId: string, milestone: string,
 test('full prepayment trade: offer, verified payment gate, document sharing, delivery and exact custody settlement', async ({ page: supplier, browser }) => {
   test.setTimeout(240_000);
   const supplierIdentity = await createWorkspace(supplier, browser, 'supplier');
-  const buyerContext = await browser.newContext({ baseURL });
+  const buyerContext = await browser.newContext({ extraHTTPHeaders: { Origin: baseURL }, baseURL });
   try {
     const buyer = await buyerContext.newPage();
     await createWorkspace(buyer, browser, 'buyer');
