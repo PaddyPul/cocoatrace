@@ -61,6 +61,10 @@
     "node": "^20.19.0 || ^22.13.0 || >=24"
   },
   "overrides": {
-    "vite": "6.4.3"
+    "vite": "6.4.3",
+    "proxy-addr": "2.0.8",
+    "fast-copy": "4.1.2",
+    "postcss-selector-parser": "7.1.6",
+    "source-map-js": "1.2.2"
   }
 }
