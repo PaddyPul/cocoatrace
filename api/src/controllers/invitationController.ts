@@ -46,7 +46,7 @@ export async function invitationDetails(req: Request, res: Response): Promise<vo
   const result = await query(
     `SELECT i.email,i.expires_at,i.accepted_at,o.name AS organization_name,o.type AS organization_type,r.name AS role
      FROM user_invitations i JOIN organizations o ON o.id=i.organization_id JOIN roles r ON r.id=i.role_id
-     WHERE i.token_hash=$1 AND i.revoked_at IS NULL`, [hashToken(req.params.token)]
+     WHERE i.token_hash=$1 AND i.revoked_at IS NULL AND o.access_suspended_at IS NULL`, [hashToken(req.params.token)]
   );
   const invitation = result.rows[0];
   if (!invitation || invitation.accepted_at || new Date(invitation.expires_at) <= new Date()) { res.status(410).json({ error: 'This invitation is invalid or has expired' }); return; }
@@ -57,12 +57,14 @@ export async function acceptInvitation(req: Request, res: Response): Promise<voi
   const client = await getClient();
   try {
     await client.query('BEGIN');
-    const invitationResult = await client.query(
+    const candidate = (await client.query('SELECT organization_id FROM user_invitations WHERE token_hash=$1', [hashToken(req.params.token)])).rows[0];
+    if (!candidate) { await client.query('ROLLBACK'); res.status(410).json({ error: 'This invitation is invalid or has expired' }); return; }
+    const organization = (await client.query('SELECT access_suspended_at FROM organizations WHERE id=$1 FOR SHARE', [candidate.organization_id])).rows[0];
+    const invitation = (await client.query(
       `SELECT * FROM user_invitations WHERE token_hash=$1 AND accepted_at IS NULL AND revoked_at IS NULL AND expires_at>NOW() FOR UPDATE`,
       [hashToken(req.params.token)]
-    );
-    const invitation = invitationResult.rows[0];
-    if (!invitation) { await client.query('ROLLBACK'); res.status(410).json({ error: 'This invitation is invalid or has expired' }); return; }
+    )).rows[0];
+    if (!invitation || !organization || organization.access_suspended_at) { await client.query('ROLLBACK'); res.status(410).json({ error: 'This invitation is invalid or has expired' }); return; }
     const passwordHash = await bcrypt.hash(req.body.password, 12);
     const userResult = await client.query(
       'INSERT INTO users (organization_id,email,password_hash,name) VALUES ($1,$2,$3,$4) RETURNING id,email,name',

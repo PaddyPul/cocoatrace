@@ -23,7 +23,7 @@ export async function requestPasswordReset(email: string): Promise<PasswordReset
   const userResult = await query(
     `SELECT u.id,u.email,u.name,u.organization_id
        FROM users u JOIN organizations o ON o.id=u.organization_id
-      WHERE u.email=$1 AND u.active=TRUE`,
+      WHERE u.email=$1 AND u.active=TRUE AND u.access_suspended_at IS NULL AND o.access_suspended_at IS NULL`,
     [normalizedEmail],
   );
   const user = userResult.rows[0];
@@ -69,8 +69,8 @@ export async function resetPassword(rawToken: string, password: string): Promise
     await client.query('BEGIN');
     const tokenResult = await client.query(
       `SELECT t.id,t.user_id,u.organization_id
-         FROM password_reset_tokens t JOIN users u ON u.id=t.user_id
-        WHERE t.token_hash=$1 AND t.used_at IS NULL AND t.expires_at>NOW() AND u.active=TRUE
+         FROM password_reset_tokens t JOIN users u ON u.id=t.user_id JOIN organizations o ON o.id=u.organization_id
+        WHERE t.token_hash=$1 AND t.used_at IS NULL AND t.expires_at>NOW() AND u.active=TRUE AND u.access_suspended_at IS NULL AND o.access_suspended_at IS NULL
         FOR UPDATE OF t`,
       [hashResetToken(rawToken)],
     );

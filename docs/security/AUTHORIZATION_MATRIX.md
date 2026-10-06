@@ -205,3 +205,13 @@ SEC-001 is complete when this matrix is maintained in the repository. SEC-002 th
 | Resolve | Initiating manager or explicit network manager, reason, exact-recall clean evidence, all acknowledgements and fully accounted nonquarantined stock |
 
 Every response mutation is recorded through the strict transactional trade audit. Resolved responses are read-only. The safety gate derives disposal blocks from recovery history as well as retained hold rows, so an accidentally removed hold does not make disposed stock tradable.
+
+## Account access controls — 2026-10-06 candidate
+
+| Resource/action | Platform administrator | Buyer/supplier organization administrator | Unauthenticated |
+| --- | --- | --- | --- |
+| List organizations/members for access review | Allowed, bounded cursor pages | Denied 403 | Denied 401 |
+| Suspend/restore ordinary organization/member | Live authorization + password confirmation + reason; atomic audit/revocation | Denied 403 | Denied 401 |
+| Suspend current/other privileged organization or member | Denied 409; separate privileged recovery required | Denied | Denied |
+
+Access flags are independent of verification/deactivation. Restoring an organization does not restore suspended members or revoked credentials. Scope and adversarial tests: accessSuspension.integration.test.ts; browser admin flow: accessSuspension.spec.ts. MFA and privileged recovery remain pilot blockers; new-request revocation does not abort requests already authorized before the suspension commit.

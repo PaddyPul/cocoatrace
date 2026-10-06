@@ -28,7 +28,8 @@ describe('logger redaction', () => {
     );
 
     testLogger.info({
-      req: { headers: { authorization: 'Bearer private-token', cookie: 'ct_session=private-cookie' } },
+      req: { headers: { authorization: 'Bearer private-token', cookie: 'ct_session=private-cookie' }, body: { currentPassword: 'private-reauth-password' } },
+      currentPassword: 'private-reauth-top-level',
       password: 'private-password',
       evidenceStorageSecretKey: 'private-storage-key',
     }, 'redaction check');
@@ -36,6 +37,8 @@ describe('logger redaction', () => {
     expect(output).not.toContain('private-token');
     expect(output).not.toContain('private-cookie');
     expect(output).not.toContain('private-password');
+    expect(output).not.toContain('private-reauth-password');
+    expect(output).not.toContain('private-reauth-top-level');
     expect(output).not.toContain('private-storage-key');
     expect(output).toContain('[REDACTED]');
   });

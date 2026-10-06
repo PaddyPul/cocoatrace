@@ -132,6 +132,10 @@
     {
       "path": "api/src/migrations/031_shared_auth_rate_limits.ts",
       "sha256": "7f59deba82fe0f5f8b4e62312732dc5dc0715ee80bb97ce4176ac1bd2a373618"
+    },
+    {
+      "path": "api/src/migrations/032_access_suspension.ts",
+      "sha256": "42e5bf1b0d04e2e7a656c91ac3977cce2e7d2fb5f1ee5517b6c117986da01860"
     }
   ]
 }
