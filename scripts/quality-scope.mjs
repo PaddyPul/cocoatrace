@@ -7,6 +7,7 @@ export const formattedPaths = [
   'api/src/middleware/auth.ts',
   'api/src/middleware/auth.test.ts',
   'api/src/middleware/security.ts',
+  'api/src/middleware/publicRateLimit.ts',
   'api/src/middleware/security.test.ts',
   'scripts/backlog-progress.mjs',
   'scripts/backlog-progress.test.mjs',

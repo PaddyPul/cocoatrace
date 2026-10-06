@@ -1,3 +1,4 @@
+import { publicActionLimiter } from '../middleware/publicRateLimit';
 import { Router } from 'express';
 import express from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth';
@@ -10,7 +11,7 @@ const router = Router();
 
 router.get('/evidence', requireAuth, requirePermission('evidence.read'), validate(evidenceListQuerySchema, 'query'), evidenceController.listEvidence);
 router.get('/evidence/:id/download', requireAuth, requirePermission('evidence.read'), evidenceController.downloadEvidence);
-router.post('/evidence/upload-intents', requireAuth, requirePermission('evidence.upload'), validate(createEvidenceUploadIntentSchema), evidenceController.createEvidenceUploadIntent);
-router.put('/evidence/upload-intents/:id/content', express.raw({ type: '*/*', limit: config.evidenceMaxFileBytes }), evidenceController.uploadEvidenceContent);
+router.post('/evidence/upload-intents', requireAuth, requirePermission('evidence.upload'), publicActionLimiter('uploadIntent'), validate(createEvidenceUploadIntentSchema), evidenceController.createEvidenceUploadIntent);
+router.put('/evidence/upload-intents/:id/content', publicActionLimiter('uploadContent'), express.raw({ type: '*/*', limit: config.evidenceMaxFileBytes }), evidenceController.uploadEvidenceContent);
 
 export = router;
