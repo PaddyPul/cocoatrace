@@ -7,7 +7,7 @@ export function requirePlatformAdministrator(permissions: string[]): void {
 export function requireSafeTarget(protectedAccount: boolean): void {
   if (protectedAccount)
     throw new AppError(
-      'Platform administration accounts require the separate privileged recovery procedure',
+      'Platform administration accounts require the two-reviewer privileged access procedure',
       409,
       'PRIVILEGED_ACCESS_PROTECTED',
     );

@@ -1,3 +1,4 @@
+import { lockAccessDecisions } from '../mfa/reviewers';
 import { assertMutationAssurance } from '../mfa/assurance';
 import type { AuthenticatedActor } from '../../services/authSessionService';
 import { query } from '../../db';
@@ -41,6 +42,7 @@ export async function changeAccess(
   passwordHash: string,
 ) {
   return inDatabaseTransaction(async (client) => {
+    await lockAccessDecisions(client);
     await assertMutationAssurance(client, actor);
     const actorRow = (
       await client.query(
