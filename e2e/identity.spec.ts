@@ -23,10 +23,10 @@ test('team invitations: create, resend, reject old link, revoke, reject revoked 
   const email = freshIdentity().email;
   await page.getByLabel('Work email', { exact: true }).fill(email);
   await page.getByRole('button', { name: 'Create invitation', exact: true }).click();
-  const first = await emailLink(page.request, email, 'invitation');
+  const first = await emailLink(email, 'invitation');
   const row = page.locator('div.rounded-2xl').filter({ has: page.getByText(email, { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Resend', exact: true }) });
   await row.getByRole('button', { name: 'Resend', exact: true }).click();
-  const resent = await emailLink(page.request, email, 'invitation', first.id);
+  const resent = await emailLink(email, 'invitation', first.id);
   const guest = await browser.newContext({ extraHTTPHeaders: { Origin: baseURL }, baseURL });
   try {
     const invited = await guest.newPage();
@@ -41,7 +41,7 @@ test('team invitations: create, resend, reject old link, revoke, reject revoked 
     const joinedEmail = freshIdentity().email;
     await page.getByLabel('Work email', { exact: true }).fill(joinedEmail);
     await page.getByRole('button', { name: 'Create invitation', exact: true }).click();
-    const joined = await emailLink(page.request, joinedEmail, 'invitation');
+    const joined = await emailLink(joinedEmail, 'invitation');
     await acceptInvitation(invited, joined.link, 'Browser Team Member');
     await signIn(invited, joinedEmail, accountPassword);
     await expect(invited).toHaveURL(/\/(home|onboarding)/);
@@ -57,7 +57,7 @@ test('password reset: real captured email, token single use, old password fails,
     await recovery.getByLabel('Work email').fill(identity.email);
     await recovery.getByRole('button', { name: 'Send reset instructions' }).click();
     await expect(recovery.getByRole('heading', { name: 'Check your email' })).toBeVisible();
-    const reset = await emailLink(recovery.request, identity.email, 'reset');
+    const reset = await emailLink(identity.email, 'reset');
     await recovery.goto(reset.link);
     await recovery.getByLabel('New password', { exact: true }).fill('BrowserResetPassword456!');
     await recovery.getByLabel('Confirm new password', { exact: true }).fill('BrowserResetPassword456!');
@@ -102,7 +102,7 @@ test('password change preserves this browser session and revokes another browser
 test('expired verification fails, retry rotates the link and only the newest email can verify', async ({ page, browser }) => {
   const identity = freshIdentity();
   await requestAccess(page, identity);
-  const first = await emailLink(page.request, identity.email, 'verification');
+  const first = await emailLink(identity.email, 'verification');
   await expireVerification(identity.email);
   const guest = await browser.newContext({ extraHTTPHeaders: { Origin: baseURL }, baseURL });
   try {
@@ -111,7 +111,7 @@ test('expired verification fails, retry rotates the link and only the newest ema
     await expect(verificationPage.getByRole('heading', { name: 'Verification unavailable' })).toBeVisible();
     await page.getByRole('button', { name: 'Retry verification email with these details' }).click();
     await page.getByRole('button', { name: 'Submit access request' }).click();
-    const latest = await emailLink(page.request, identity.email, 'verification', first.id);
+    const latest = await emailLink(identity.email, 'verification', first.id);
     await verificationPage.goto(first.link);
     await expect(verificationPage.getByRole('heading', { name: 'Verification unavailable' })).toBeVisible();
     await verificationPage.goto(latest.link);

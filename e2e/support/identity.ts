@@ -66,7 +66,7 @@ export async function acceptInvitation(page: Page, link: string, name: string): 
 export async function createWorkspace(page: Page, browser: Browser, role: 'buyer' | 'supplier' = 'supplier') {
   const identity = freshIdentity(role);
   await requestAccess(page, identity);
-  const verification = await emailLink(page.request, identity.email, 'verification');
+  const verification = await emailLink(identity.email, 'verification');
   await page.goto(verification.link);
   await expect(page.getByRole('heading', { name: 'Email address verified', exact: true })).toBeVisible();
   // Full reload ensures a reused link is tested against the server, not the
@@ -82,7 +82,7 @@ export async function createWorkspace(page: Page, browser: Browser, role: 'buyer
     await reviewPage.getByRole('button', { name: 'Approve and invite' }).click();
     await expect(reviewPage.getByText('Organization approved; invitation submitted to email provider', { exact: true })).toBeVisible();
   } finally { await reviewer.close(); }
-  const invitation = await emailLink(page.request, identity.email, 'invitation');
+  const invitation = await emailLink(identity.email, 'invitation');
   await acceptInvitation(page, invitation.link, identity.name);
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Invitation unavailable' })).toBeVisible();

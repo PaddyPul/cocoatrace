@@ -19,6 +19,11 @@ export const releaseChecks = [
     ],
     true,
   ],
+  [
+    'Browser inbox isolation',
+    ['--import', 'tsx', '--test', 'scripts/inbox-isolation.test.mjs'],
+    true,
+  ],
   ['Language foundation tests', ['run', 'test:locale']],
   ['API unit tests', ['run', 'test', '--workspace=api']],
   ['API build', ['run', 'build', '--workspace=api']],

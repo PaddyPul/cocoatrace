@@ -21,6 +21,7 @@ A malformed Authorization header can no longer bypass the browser-origin check a
 - Keep Express trust proxy explicitly false and use independent route/account-token-user and immediate-peer IP budgets.
 - Add migration 031 and atomic bounded PostgreSQL counters with keyed identifiers, bounded expired-row cleanup, Retry-After and fail-closed outages.
 - Derive limit targets from each route's actual identity field, preventing ignored JSON fields from rotating the budget.
+- Isolate captured inbox reads from app Origin, cookies and Authorization; reject inbox HTTP errors immediately with sanitized diagnostics. Add three transport regressions to the release gate.
 - Add unit, real-session/PostgreSQL concurrency and browser regressions; update cookie-based direct browser API fixtures to declare their disposable app origin.
 
 ## Security and data review
@@ -42,12 +43,12 @@ A malformed Authorization header can no longer bypass the browser-origin check a
 ## Verification
 
 - [x] Unit tests
-- [ ] Database/API integration tests
+- [x] Database/API integration tests
 - [ ] E2E/manual persona journey
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: author 319 API tests/45 files pass, including 28 focused boundary tests; quality checks and ten policy/contract tests pass; workspace/browser type checks, builds, migration integrity and backlog tests pass. Actual focused Chromium policy probe passes normal/foreign/missing-origin and malformed-header cases. Twelve PostgreSQL cases and one real-account browser case are included but native full execution is unavailable here. Before merge, run npm run verify:release, inspect the complete report and check integration/E2E only after success. Existing bundle-size warning remains tracked. Add actual native result/SHA/CI links here.
+- Evidence/results: author 319 API tests/45 files pass, including 28 focused boundary tests; quality checks and ten policy/contract tests pass; workspace/browser type checks, builds, migration integrity and backlog tests pass. Actual focused Chromium policy probe passes normal/foreign/missing-origin and malformed-header cases. Founder native run at 4adbd17b51ed7bb531db86635c55898c9753e034 passed all 191 PostgreSQL integration tests across 16 files and all gates before browser journeys. Browser journeys then failed in the shared inbox helper due to app Origin leakage; the correction isolates the inbox client. Three local transport regressions pass. Full native browser and backup/restore results on the corrected tip remain pending. Before merge, run npm run verify:release, inspect the complete report and check integration/E2E only after success. Existing bundle-size warning remains tracked. Add actual native result/SHA/CI links here.
 
 ## Product and operations
 
