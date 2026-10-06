@@ -21,6 +21,7 @@ Platform administrators can suspend a buyer/supplier member or organization from
 - Require live platform permission, current administrator password and a substantive decision reason; protect platform administration organizations from routine lockout.
 - Commit access flags, session/invitation revocation and audit/security events atomically; serialize identical decisions and new session issuance.
 - Keep restored sessions/invitations revoked; preserve separately suspended users and inactive/deactivated state.
+- Pin development runner shell-quote to 1.11.0 to repair GHSA-pqg4-j6r4-53mv; add two non-executing quoting regressions to the release gate. Keep advisory enforcement and existing exception policy unchanged.
 - Add administrator navigation and review forms, shell English/French labels, password redaction and automated unit/PostgreSQL/browser coverage.
 - Reconcile merged authentication work: SAF-001/IDN-013 closed on founder-reported release/merge confirmation. Broader abuse/ingress and privileged MFA/recovery remain open.
 
@@ -38,7 +39,7 @@ Platform administrators can suspend a buyer/supplier member or organization from
 - Migration required: yes — 032_access_suspension.ts adds nullable access_suspended_at columns to users/organizations; integrity manifest updated.
 - Backfill/lock implications: no customer-row backfill. ALTER TABLE takes brief metadata locks; schedule reviewed deployment. Access decisions lock target organization and selected user; session issuance uses organization-then-user order; invitation acceptance uses organization-then-invitation order.
 - Rollback or compensation: forward correction preferred. Restoring access is audited and does not revive credentials. An old API ignores access flags; restrict/stop exposure before any old-API rollback. Preserve security columns and application volumes.
-- Configuration/secrets changed: none; administrator password confirmation uses the existing password hash. No new provider or email credentials.
+- Configuration/secrets changed: none; administrator password confirmation uses the existing password hash. No new provider or email credentials. Root development dependency override/lockfile pins shell-quote 1.11.0; production dependencies unchanged.
 
 ## Verification
 
@@ -48,7 +49,7 @@ Platform administrators can suspend a buyer/supplier member or organization from
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: author 325 API unit tests/47 files pass; quality/policy/script checks, workspace/browser types, API/web builds, migration integrity, six locale tests and two backlog tests pass. Seven real PostgreSQL tests and one real-account browser regression added. Native Docker integration/browser/migration/recovery execution is unavailable in the authoring environment. Run npm run verify:release and add actual successful candidate commit/results and CI link before merging; tick integration/E2E only after success. Existing frontend bundle-size warning remains tracked under PER-005.
+- Evidence/results: author 325 API unit tests/47 files pass; quality/policy/script checks, workspace/browser types, API/web builds, migration integrity, six locale tests and two backlog tests pass. Seven real PostgreSQL tests and one real-account browser regression added. Dependency correction: clean installed shell-quote 1.11.0, both quoting regressions and production/complete advisory checks pass; the prior founder release stopped at advisories before application/infrastructure tests ran. Native Docker integration/browser/migration/recovery execution is unavailable in the authoring environment. Run npm run verify:release and add actual successful candidate commit/results and CI link before merging; tick integration/E2E only after success. Existing frontend bundle-size warning remains tracked under PER-005.
 
 ## Product and operations
 
