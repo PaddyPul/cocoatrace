@@ -32,3 +32,11 @@ test('image security is required before native migration and browser checks',()=
  assert.ok(imageIndex>=0 && imageIndex<migrationIndex);
  assert.deepEqual(releaseChecks[imageIndex][1],['run','check:containers']);
 });
+
+
+test('language regressions gate the release before Docker journeys',()=>{
+ const languageIndex=releaseChecks.findIndex(check=>check[0]==='Language foundation tests');
+ const browserIndex=releaseChecks.findIndex(check=>check[0]==='Browser journeys');
+ assert.ok(languageIndex>=0 && languageIndex<browserIndex);
+ assert.deepEqual(releaseChecks[languageIndex][1],['run','test:locale']);
+});

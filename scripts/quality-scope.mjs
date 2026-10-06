@@ -1,6 +1,9 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
   'eslint.config.mjs',
+  'web/src/i18n/**/*.ts',
+  'web/src/i18n/**/*.tsx',
+  'scripts/locale.test.mjs',
   'scripts/check-container-security.mjs',
   'scripts/check-container-security.test.mjs',
   'api/scripts/check-runtime-image.mjs',

@@ -21,3 +21,6 @@ api/src/modules/cancellation/** text eol=lf
 api/src/modules/fees/** text eol=lf
 
 api/src/services/tradeMoney*.ts text eol=lf
+
+web/src/i18n/** text eol=lf
+scripts/locale.test.mjs text eol=lf
