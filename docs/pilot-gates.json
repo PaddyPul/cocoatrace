@@ -1,0 +1,326 @@
+{
+  "reviewedAt": "2026-10-06",
+  "method": "Equal gate count, no partial credit. Provider launch also requires every core gate. This is closure evidence, not a safety probability or valuation measure.",
+  "gates": [
+    {
+      "id": "CORE-release",
+      "scope": "core",
+      "status": "partial",
+      "title": "Current release passes every gate on the candidate commit",
+      "backlog": ["QLT-001", "SEC-014", "LNG-001"],
+      "evidence": "Previous releases founder-reported green; current language label correction still needs native acknowledgement."
+    },
+    {
+      "id": "CORE-isolation",
+      "scope": "core",
+      "status": "blocked",
+      "title": "Hosted staging/production resources are isolated and private",
+      "backlog": ["ENV-004", "ENV-005", "ENV-006"],
+      "evidence": "No independently provisioned hosted environment verified."
+    },
+    {
+      "id": "CORE-identity",
+      "scope": "core",
+      "status": "complete",
+      "title": "Approved invite-only buyer/supplier identity lifecycle works",
+      "backlog": ["IDN-002", "IDN-004", "IDN-006", "IDN-007", "IDN-009", "IDN-010"],
+      "evidence": "Identity/email waves founder-tested/merged; API/browser regressions."
+    },
+    {
+      "id": "CORE-tenant",
+      "scope": "core",
+      "status": "partial",
+      "title": "All pilot resource families pass negative authorization tests",
+      "backlog": ["SEC-002", "QLT-002", "SEC-006"],
+      "evidence": "Existing two-tenant matrix green; full protected-route matrix remains."
+    },
+    {
+      "id": "CORE-origin",
+      "scope": "core",
+      "status": "partial",
+      "title": "Cookie/proxy write boundaries resist abuse",
+      "backlog": ["SAF-001", "SEC-007"],
+      "evidence": "Middleware present; bypass combinations not verified."
+    },
+    {
+      "id": "CORE-abuse",
+      "scope": "core",
+      "status": "open",
+      "title": "Shared per-account/IP public-endpoint limits hold across instances",
+      "backlog": ["IDN-013", "SEC-011"],
+      "evidence": "Current sensitiveActionLimit uses process-memory Map."
+    },
+    {
+      "id": "CORE-privilege",
+      "scope": "core",
+      "status": "open",
+      "title": "Privileged MFA/recovery and suspension are enforced",
+      "backlog": ["IDN-011", "IDN-012", "SAF-004"],
+      "evidence": "Live active checks exist; administration lifecycle incomplete."
+    },
+    {
+      "id": "CORE-files",
+      "scope": "core",
+      "status": "complete",
+      "title": "Private upload/download rejects unsafe files and unrelated tenants",
+      "backlog": ["UPL-001", "SEC-005", "LOG-009"],
+      "evidence": "Founder-tested private evidence/malware/payment document waves; hosted provisioning assessed separately."
+    },
+    {
+      "id": "CORE-claims",
+      "scope": "core",
+      "status": "complete",
+      "title": "Pilot supply distinguishes declaration from independent review",
+      "backlog": ["DAT-008", "DAT-009"],
+      "evidence": "Founder-tested trust waves; no claim of universal regulatory compliance."
+    },
+    {
+      "id": "CORE-inventory",
+      "scope": "core",
+      "status": "complete",
+      "title": "Accepted goods preserve exact committed quantities under concurrency",
+      "backlog": ["TRD-009", "QLT-003"],
+      "evidence": "Trading integrity suite and founder-reported native release."
+    },
+    {
+      "id": "CORE-payment",
+      "scope": "core",
+      "status": "complete",
+      "title": "Supported recorded payment plans gate dispatch and document release",
+      "backlog": ["PAY-008", "TRD-013"],
+      "evidence": "Payment-plan integration/browser waves founder-tested; records are not escrow or bank settlement."
+    },
+    {
+      "id": "CORE-delivery",
+      "scope": "core",
+      "status": "complete",
+      "title": "Buyer acceptance gates completion and exact custody settlement",
+      "backlog": ["LOG-009", "ARC-012"],
+      "evidence": "Delivery acceptance wave founder-tested/merged; broader transport policy remains below."
+    },
+    {
+      "id": "CORE-currency",
+      "scope": "core",
+      "status": "complete",
+      "title": "Supported contract currencies retain tested rounding and snapshots",
+      "backlog": ["TRD-013", "CUR-003"],
+      "evidence": "Founder-confirmed four-currency and JPY precision waves; CUR-003 broader refund scope remains partial."
+    },
+    {
+      "id": "CORE-sourcing",
+      "scope": "core",
+      "status": "partial",
+      "title": "Buyer sourcing and conventional/source-traceable creation are coherent",
+      "backlog": ["PRD-003", "PRD-004", "PRD-005", "QLT-009"],
+      "evidence": "Editable matching exists; empty-state and end-to-end persistence gaps."
+    },
+    {
+      "id": "CORE-actions",
+      "scope": "core",
+      "status": "partial",
+      "title": "Dashboard/deal room share one permitted next action",
+      "backlog": ["PRD-006", "PRD-011"],
+      "evidence": "Separate decisions remain."
+    },
+    {
+      "id": "CORE-transport",
+      "scope": "core",
+      "status": "partial",
+      "title": "Pilot milestone authority and required route information are explicit",
+      "backlog": ["LOG-001", "LOG-002", "LOG-003", "LOG-004", "GEO-001"],
+      "evidence": "Manual transport works; unrestricted party/milestone assumptions need policy tests."
+    },
+    {
+      "id": "CORE-exceptions",
+      "scope": "core",
+      "status": "partial",
+      "title": "Pilot cancellation/issue limits are explicit and auditable",
+      "backlog": ["LOG-006", "TRD-017"],
+      "evidence": "Unstarted cancellation works; paid refunds/returns unsupported and must be excluded or built."
+    },
+    {
+      "id": "CORE-trace",
+      "scope": "core",
+      "status": "partial",
+      "title": "Scoped recall/trace is bounded and safety fails closed",
+      "backlog": ["PER-002", "ARC-008"],
+      "evidence": "Live recall workflows exist; graph resource bounds and incomplete-state proof open."
+    },
+    {
+      "id": "CORE-workers",
+      "scope": "core",
+      "status": "partial",
+      "title": "Scheduled notifications/reminders retry with monitored dead-letter recovery",
+      "backlog": ["OPS-010", "ARC-014"],
+      "evidence": "Durable domain queues exist; deployed scheduler/operations incomplete."
+    },
+    {
+      "id": "CORE-email",
+      "scope": "core",
+      "status": "blocked",
+      "title": "Real staging inboxes receive lifecycle/trade notifications",
+      "backlog": ["IDN-021", "PRD-008"],
+      "evidence": "Captured test emails work; external inbox/delivery setup not evidenced."
+    },
+    {
+      "id": "CORE-observability",
+      "scope": "core",
+      "status": "partial",
+      "title": "Release-tagged logs/alerts reach a named incident owner",
+      "backlog": ["OPS-003", "OPS-004", "OPS-006", "OPS-007"],
+      "evidence": "Structured logs exist; collector, alerts and assigned response missing."
+    },
+    {
+      "id": "CORE-restore",
+      "scope": "core",
+      "status": "partial",
+      "title": "Hosted database and private file bytes restore within agreed RPO/RTO",
+      "backlog": ["OPS-001", "OPS-002", "OPS-012"],
+      "evidence": "Local rehearsal exists; hosted full recovery unverified."
+    },
+    {
+      "id": "CORE-performance",
+      "scope": "core",
+      "status": "open",
+      "title": "Representative load meets approved capacity/SLO budgets",
+      "backlog": ["PER-001", "PER-003", "PER-004"],
+      "evidence": "No measured representative baseline."
+    },
+    {
+      "id": "CORE-legal",
+      "scope": "core",
+      "status": "blocked",
+      "title": "Pilot terms/privacy/fees/corridor and custody meaning are approved",
+      "backlog": ["IDN-015", "GEO-001", "DEC-008", "DEC-009"],
+      "evidence": "Founder/professional decisions and actual policy acceptance outstanding."
+    },
+    {
+      "id": "CORE-partners",
+      "scope": "core",
+      "status": "blocked",
+      "title": "Named participants, scope and success criteria are agreed",
+      "backlog": ["IDN-005", "GEO-001"],
+      "evidence": "No actual design-partner roster or success commitments verified."
+    },
+    {
+      "id": "CORE-support",
+      "scope": "core",
+      "status": "open",
+      "title": "Pilot support, incident and rollback drills have named ownership",
+      "backlog": ["GOV-002", "OPS-007", "OPS-008", "OPS-009"],
+      "evidence": "Runbooks exist; operational ownership/drills incomplete."
+    },
+    {
+      "id": "CORE-branding",
+      "scope": "core",
+      "status": "open",
+      "title": "BetterTrade customer identity and compatibility map are validated",
+      "backlog": ["BRD-001", "BRD-002", "BRD-004"],
+      "evidence": "Planning approved by user request; runtime rename not performed."
+    },
+    {
+      "id": "CORE-reconciliation",
+      "scope": "core",
+      "status": "partial",
+      "title": "Goods/payment/fee reconciliation is scheduled and discrepancies actionable",
+      "backlog": ["OPS-010", "PAY-013"],
+      "evidence": "Tools and ledger exist; deployed monitoring/runbook operation incomplete."
+    },
+    {
+      "id": "PROVIDER-01",
+      "scope": "provider",
+      "status": "open",
+      "title": "Add logistics organization application and reviewer approval with capability/insurance/license scope and expiry",
+      "backlog": ["SVC-001"],
+      "evidence": "New provider marketplace scope; no implementation credited."
+    },
+    {
+      "id": "PROVIDER-02",
+      "scope": "provider",
+      "status": "open",
+      "title": "Publish provider capabilities, operating areas, modes and cargo constraints",
+      "backlog": ["SVC-002"],
+      "evidence": "New provider marketplace scope; no implementation credited."
+    },
+    {
+      "id": "PROVIDER-03",
+      "scope": "provider",
+      "status": "open",
+      "title": "Generate scoped fulfillment RFQs from agreed versioned goods terms",
+      "backlog": ["SVC-003"],
+      "evidence": "New provider marketplace scope; no implementation credited."
+    },
+    {
+      "id": "PROVIDER-04",
+      "scope": "provider",
+      "status": "open",
+      "title": "Support immutable expiring service quotations including currency, taxes, insurance, exclusions and collection window",
+      "backlog": ["SVC-004"],
+      "evidence": "New provider marketplace scope; no implementation credited."
+    },
+    {
+      "id": "PROVIDER-05",
+      "scope": "provider",
+      "status": "open",
+      "title": "Award one active service order atomically with provider acceptance and explicit payer/coordinator authority",
+      "backlog": ["SVC-005"],
+      "evidence": "New provider marketplace scope; no implementation credited."
+    },
+    {
+      "id": "PROVIDER-06",
+      "scope": "provider",
+      "status": "open",
+      "title": "Enforce least-privilege assigned-job grants, unrelated-provider denial and access revocation",
+      "backlog": ["SVC-006"],
+      "evidence": "New provider marketplace scope; no implementation credited."
+    },
+    {
+      "id": "PROVIDER-07",
+      "scope": "provider",
+      "status": "open",
+      "title": "Implement provider job progress/POD and party acknowledgement",
+      "backlog": ["SVC-007"],
+      "evidence": "New provider marketplace scope; no implementation credited."
+    },
+    {
+      "id": "PROVIDER-08",
+      "scope": "provider",
+      "status": "open",
+      "title": "Support provider rejection, cancellation, delay, replacement and dispute with versioned history and notifications",
+      "backlog": ["SVC-008"],
+      "evidence": "New provider marketplace scope; no implementation credited."
+    },
+    {
+      "id": "PROVIDER-09",
+      "scope": "provider",
+      "status": "open",
+      "title": "Keep logistics service charges, service payments and any service commission separate from goods installments/platform trade fees",
+      "backlog": ["SVC-009"],
+      "evidence": "New provider marketplace scope; no implementation credited."
+    },
+    {
+      "id": "PROVIDER-10",
+      "scope": "provider",
+      "status": "open",
+      "title": "Extend private evidence policy to service orders and provider verification",
+      "backlog": ["SVC-010"],
+      "evidence": "New provider marketplace scope; no implementation credited."
+    },
+    {
+      "id": "PROVIDER-11",
+      "scope": "provider",
+      "status": "open",
+      "title": "Automate complete three-persona provider fulfillment plus adversarial concurrency/access journeys",
+      "backlog": ["SVC-011"],
+      "evidence": "New provider marketplace scope; no implementation credited."
+    },
+    {
+      "id": "PROVIDER-12",
+      "scope": "provider",
+      "status": "open",
+      "title": "Run an invited provider pilot after core pilot gates, signed service terms and incident contacts",
+      "backlog": ["SVC-012"],
+      "evidence": "New provider marketplace scope; no implementation credited."
+    }
+  ]
+}

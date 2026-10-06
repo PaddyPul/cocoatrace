@@ -24,3 +24,6 @@ api/src/services/tradeMoney*.ts text eol=lf
 
 web/src/i18n/** text eol=lf
 scripts/locale.test.mjs text eol=lf
+scripts/backlog-progress.mjs text eol=lf
+scripts/backlog-progress.test.mjs text eol=lf
+docs/pilot-gates.json text eol=lf

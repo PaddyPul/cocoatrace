@@ -1,61 +1,23 @@
-# CocoaTrace pilot operating model
+# BetterTrade pilot operating model
 
-## The product decision
+Updated 2026-10-06; replaces the cocoa-only/certifier-required pilot assumptions. See [pilot plan](BETTERTRADE_PILOT_PLAN.md) for launch gates and capacity proposals.
 
-CocoaTrace is a product identity and safety network for trusted food trade. It begins with the Ghana-to-EU cocoa corridor. It is not a marketplace, generic farm ERP, blockchain product, or replacement for a national traceability system.
+## Core invited pilot
 
-The paying wedge is the exporter or cooperative compliance and operations team. Their job is to assemble a buyer-accepted, traceable product lot without chasing evidence through spreadsheets and messaging apps.
+Founder selects one narrow commodity/corridor and named buyer/supplier design partners. Each organization is reviewed and its administrators invited; shared demo accounts never enter the real-data environment. Start with a small cohort and an assigned incident/support owner. Participants agree known limitations, privacy/retention, fee/currency policy, fulfillment and payment terms and measures of success.
 
-| Participant | Job in CocoaTrace | First successful outcome |
-| --- | --- | --- |
-| Exporter/cooperative operator | Own the product record and release decision | Prepare one buyer-ready export lot |
-| Farmer/field operator | Contribute origin facts | Capture a farm, plot and harvest batch |
-| Certifier/auditor | Verify a bounded claim | Attest a batch against source evidence |
-| Logistics partner | Add custody milestones | Connect shipment events to the lot |
-| Buyer/importer | Review assurance before acceptance | Inspect a product passport and its evidence |
-| Regulator | Investigate exceptions | Trace backward and forward with quantities |
-| Public scanner | Understand the product | Scan the QR and see provenance and safety state |
+Conventional supply: create inventory → publish → receive/respond to offers → agree terms → fulfill → buyer accepts → settle recorded trade. Source-traceable supply: register relevant source records, record harvest/production/inventory and appropriate evidence, then follow the same commercial flow. Existing farm/plot vocabulary is material-specific, not universal. Evidence contribution begins from an actual record/request. A platform certifier login is not a prerequisite to trading; declarations and independently reviewed claims remain clearly distinguished.
 
-The primary metric is **buyer-accepted traceable product volume**. QR scans are useful engagement telemetry, not the business outcome.
+Customers may arrange transport externally. An external transport form records agreed coordinator, booking/contact/route and relevant identifiers; it is not a carrier booking or guaranteed acceptance. Incoterm, goods payment schedule, service payer and buyer delivery acceptance remain independent concepts. Define which party can record each milestone and required data for the chosen mode before pilot. Paid cancellation/refunds/returns are unavailable unless their policy and implementation are explicitly approved; disclose supported exception routes.
 
-## Product planes
+## Provider-enabled pilot
 
-1. **Identity** — stable product passport, lot code and QR destination.
-2. **Network** — farms, organizations, custody and transformation relationships.
-3. **Assurance** — evidence, attestations, completeness and buyer review.
-4. **Response** — quantity-aware trace-back, trace-forward and public safety notices.
+After core gates, invite a small curated provider cohort. Review identity, route/cargo capability, licenses/insurance and validity. A coordinator sees eligible providers, sends minimized RFQs, compares quotes and requests an award. Provider acceptance creates a separate service order. Provider updates never authorize goods payment/custody settlement or substitute for buyer acceptance. No DHL/FedEx/other carrier API account is required. See [service marketplace specification](BETTERTRADE_SERVICE_MARKETPLACE.md).
 
-Commodity-specific fields belong in configurable schemas. Identity, event, evidence and recall primitives stay shared, allowing expansion after the cocoa workflow is repeatable.
+## Daily operation and evidence
 
-## Four-week design-partner pilot
+Record actual onboarding completion, time to publish/source, response/acceptance rate, time to fulfilled/accepted trade, recurring usage, exception frequency, support time and reconciled revenue/costs. Schedule payment/fee/inventory reconciliation and monitored notification workers. Assign support escalation, incident response and rollback responsibility; test recovery of database and private objects. Gather participant feedback after each first trade and review weekly.
 
-Recruit 3 exporters/cooperatives, 2 buyers, 1 certifier and 1 logistics partner. Use named accounts created through **Pilot team**; do not share demo credentials.
+Only synthetic fixtures are used in demos/tests. Real parties, documents and delivery evidence stay in isolated hosted resources with approved retention/access. Hosted inbox/restore/alert checks cannot be replaced by a demo verification link. USD 0/month does not waive security; missing safe hosting remains a launch blocker.
 
-Each exporter runs one real but non-public lot through five tasks:
-
-1. Create or confirm the farm and plot.
-2. Create the harvest batch and attach source evidence.
-3. Obtain an attestation and create the product passport.
-4. Give the buyer the passport for an independent review.
-5. Run a tabletop recall from a suspect quantity and confirm every downstream recipient.
-
-Participants use the explicit **Pilot feedback** control after each task. The platform stores a 1–5 clarity score and a written note. It does not record hidden clickstreams, fingerprints or public QR visitor identities.
-
-### Pilot exit criteria
-
-| Signal | Target |
-| --- | --- |
-| Export lot prepared without product-team intervention | 80% of pilot lots |
-| Buyer finds required evidence in under 3 minutes | 80% of buyer reviews |
-| Trace-back identifies all contributing source lots | 100% of tabletop tests |
-| Trace-forward quantity reconciles and lists all recipients | 100% of tabletop tests |
-| Median task clarity rating | at least 4/5 |
-| Critical authorization or data-isolation defects | zero |
-
-Do not add another commodity until two exporters complete the workflow twice and at least one buyer accepts the output as usable in its assurance process.
-
-## AI boundary
-
-The readiness assistant operates on named database counts and deterministic recommendations. An optional language model may rewrite the summary, but it receives only the aggregate facts shown in the interface. It may not invent source data, certify a claim, declare legal compliance or silently change operational records. Every recommendation exposes the fields it used.
-
-Future high-value AI candidates are evidence extraction with human confirmation, anomaly detection across quantities and dates, and natural-language investigation over authorized trace graphs. None should become an autonomous compliance decision.
+Previous planning detail is retained in [the historical archive](archive/pre-bettertrade-2026-10-06/PILOT_OPERATING_MODEL.md); its obsolete deployment/product assumptions do not apply.

@@ -1,5 +1,8 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'scripts/backlog-progress.mjs',
+  'scripts/backlog-progress.test.mjs',
+  'docs/pilot-gates.json',
   'eslint.config.mjs',
   'web/src/i18n/**/*.ts',
   'web/src/i18n/**/*.tsx',
