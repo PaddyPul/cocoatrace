@@ -287,3 +287,58 @@ describe('extracted payment-term use cases at the API boundary', () => {
     expect((await query("SELECT COUNT(*)::int n FROM audit_events WHERE entity_id=$1 AND action='payment.terms.confirm'", [d.contractId])).rows[0].n).toBe(1);
   });
 });
+
+describe('shared dashboard and deal-room action contract', () => {
+  async function sameAction(d: Awaited<ReturnType<typeof deal>>, principal: Actor, expected: Record<string, unknown>) {
+    const workspace = await get('/trade-actions', principal);
+    const detail = await get(`/contracts/${d.contractId}`, principal);
+    expect(workspace.status).toBe(200);
+    expect(detail.status).toBe(200);
+    expect(detail.body.nextAction).toMatchObject(expected);
+    expect(workspace.body.find((item: { contractId: string }) => item.contractId === d.contractId)).toEqual(detail.body.nextAction);
+  }
+  it('uses the same proposed, agreed, submitted, verified and FOB handoff decisions for both parties', async () => {
+    const d = await deal('pay_before_dispatch', false, 'FOB', false);
+    await sameAction(d, buyer, { operation: 'confirm_terms', requiresAction: true });
+    await sameAction(d, seller, { operation: 'view', requiresAction: false });
+    expect((await post(`/contracts/${d.contractId}/payment-terms/confirm`, buyer)).status).toBe(200);
+    const installment = (await state(d)).installments[0];
+    await sameAction(d, buyer, { operation: 'submit_payment', installmentId: installment.id });
+    await sameAction(d, seller, { requiresAction: false, title: 'Awaiting buyer payment' });
+    expect((await post(`/payment-installments/${installment.id}/submit`, buyer, { transactionReference: 'SHARED-ACTION-PAYMENT' })).status).toBe(200);
+    await sameAction(d, seller, { operation: 'verify_payment', installmentId: installment.id });
+    await sameAction(d, buyer, { requiresAction: false });
+    expect((await post(`/payment-installments/${installment.id}/confirm`, seller)).status).toBe(200);
+    await sameAction(d, buyer, { operation: 'transport', title: 'Next transport action: booked' });
+    await sameAction(d, seller, { requiresAction: false, title: 'Awaiting buyer: booked' });
+    expect((await progress(d, 'loaded')).status).toBe(200);
+    await sameAction(d, buyer, { operation: 'transport', title: 'Next transport action: departed' });
+    await sameAction(d, seller, { requiresAction: false, title: 'Awaiting buyer: departed' });
+    const outside = await get('/trade-actions', outsider);
+    expect(outside.status).toBe(200);
+    expect(outside.body.some((item: { contractId: string }) => item.contractId === d.contractId)).toBe(false);
+    expect((await get(`/contracts/${d.contractId}`, outsider)).status).toBe(404);
+  });
+  it('does not leak trade facts through the action endpoint to an account without resource permissions', async () => {
+    const restricted = await actor('importer');
+    await query(`UPDATE roles SET permissions=ARRAY[]::text[] WHERE id IN (SELECT role_id FROM user_roles WHERE user_id=$1)`, [restricted.userId]);
+    const response = await get('/trade-actions', restricted);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([]);
+  });
+});
+
+
+it('uses the same document-presentation prerequisite after DPU unloading', async () => {
+  const d = await deal('documentary_collection', false, 'DPU');
+  for(const [milestone,principal] of [['loaded',seller],['departed',seller],['arrived',seller],['customs_cleared',buyer],['unloaded',seller]] as const) {
+    expect((await post(`/shipments/${d.shipmentId}/milestones`,principal,{milestone})).status).toBe(200);
+  }
+  const detail=await get(`/contracts/${d.contractId}`,seller);
+  expect(detail.body.nextAction).toMatchObject({operation:'documents',requiresAction:true});
+  await documents(d);
+  const presented=await post(`/payment-requests/${d.paymentId}/submit-documents`,seller);
+  expect(presented.status).toBe(200);
+  const buyerDetail=await get(`/contracts/${d.contractId}`,buyer);
+  expect(buyerDetail.body.nextAction.operation).toBe('submit_payment');
+});

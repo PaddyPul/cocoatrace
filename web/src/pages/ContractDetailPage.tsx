@@ -165,25 +165,13 @@ export default function ContractDetailPage() {
   ];
   const uploadChoices = isSeller ? SELLER_DOCUMENTS : BUYER_DOCUMENTS;
 
-  let nextAction = 'Review the contract and shared documents.';
-  if (c.status === 'cancelled') nextAction = 'Trade cancelled by agreement. Review the archived documents and released inventory.';
-  else if (isSeller && c.payment_terms_status !== 'agreed') nextAction = 'Propose the payment protection plan for buyer confirmation.';
-  else if (isBuyer && c.payment_terms_status === 'proposed') nextAction = 'Review and confirm the seller’s payment protection plan.';
-  else if (isTransportCoordinator && !c.service_provider_name && !c.booking_reference) nextAction = `Open the transport workspace and record the external arrangement. Your organization coordinates transport under ${c.incoterm}.`;
-  else if (isSeller && missingDocuments.length > 0) nextAction = `Upload the remaining trade documents (${missingDocuments.length} missing).`;
-  else if (isTransportCoordinator && !transportDocumentsReady) nextAction = 'Update transport progress and record the applicable transport-document reference.';
-  else if (isSeller && ['deposit_balance','documentary_collection','bank_secured'].includes(c.payment_plan) && !c.documents_presented_at && c.payment_terms_status === 'agreed') nextAction = 'Present the complete document set to make payment due.';
-  else if (isBuyer && c.payment_status === 'requested') nextAction = 'Settle through your bank, then record the transaction reference.';
-  else if (c.payment_status === 'settled' && c.current_milestone !== 'delivered') nextAction = 'Track the shipment through delivery.';
-  else if (c.status === 'settled') nextAction = 'Trade complete: payment verified and delivered goods accepted.';
-
   return (
     <Layout currentPage="contracts" actions={<button className="btn btn-sm" onClick={() => navigate('/contracts')}><ArrowLeft size={14} /> Back</button>}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-5">
           <FeeStatement contractId={c.id}/><ContractCancellation contractId={id!} organizationId={user?.organizationId || ''} onChanged={loadContract} />
           <DeliveryAcceptance contractId={c.id} organizationId={user?.organizationId || ''} onChanged={loadContract} />
-          <div className="bg-brand-500/10 border border-brand-500/30 rounded p-4"><div className="text-[10px] text-brand-400 uppercase tracking-wider mb-1">Your next action</div><div className="text-sm font-semibold">{nextAction}</div></div>
+          <div className="bg-brand-500/10 border border-brand-500/30 rounded p-4"><div className="text-[10px] text-brand-400 uppercase tracking-wider mb-1">Your next action</div><div data-testid="contract-next-action" data-action-id={c.nextAction?.id}><div className="text-sm font-semibold">{c.nextAction?.title || 'Next action unavailable'}</div><p className="mt-1 text-xs">{c.nextAction?.description || 'Refresh the contract before continuing.'}</p><button className="btn btn-sm mt-2" onClick={() => navigate(`/deal-room/${c.id}`)}>Open guided deal</button></div></div>
 
           <div className="bg-surface border border-border rounded p-5">
             <div className="flex items-start justify-between mb-5"><div><h1 className="text-lg font-bold">Sales Contract</h1><p className="font-mono text-xs text-text-muted mt-0.5">{c.id}</p></div><StatusBadge status={c.status} /></div>

@@ -41,3 +41,9 @@ api/src/modules/transport/** text eol=lf
 api/src/middleware/publicRateLimit.ts text eol=lf
 
 api/src/modules/mfa/** text eol=lf
+
+api/src/services/tradeNextAction*.ts text eol=lf
+api/src/services/tradeActionRepository*.ts text eol=lf
+api/src/modules/tradeActions/**/*.ts text eol=lf
+web/src/components/trading/TradeAction.ts text eol=lf
+web/src/components/trading/DealNextAction.tsx text eol=lf

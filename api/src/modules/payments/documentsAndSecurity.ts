@@ -1,3 +1,4 @@
+import { documentsCanBePresentedAt } from './documentPolicy';
 import { activatePaymentInstallments } from './dueDates';
 import { evidenceStorage } from '../../services/evidenceStorage';
 import { ConflictError, ValidationError } from '../../errors';
@@ -27,11 +28,7 @@ export async function presentDocuments(actor: TradeActor, id: string) {
         [contract.id],
       )
     ).rows[0];
-    if (
-      !['handed_over', 'loaded', 'departed', 'arrived', 'customs_cleared', 'delivered'].includes(
-        shipment?.current_milestone,
-      )
-    ) {
+    if (!documentsCanBePresentedAt(shipment?.current_milestone)) {
       throw new ValidationError(
         'The goods must be handed to the transport provider before presenting documents',
       );

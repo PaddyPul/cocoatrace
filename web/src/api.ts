@@ -1,3 +1,4 @@
+import type {TradeAction} from './components/trading/TradeAction';
 const API_BASE = '/api';
 
 let token: string | null = null;
@@ -122,7 +123,7 @@ export const workspace = {
     api<import('./types').OnboardingState>('PUT', '/onboarding', data),
   sendFeedback: (data: { page: string; task: string; rating: number; comment: string }) =>
     api<any>('POST', '/pilot-feedback', data),
-  tradeActions: () => api<any[]>('GET', '/trade-actions'),
+  tradeActions: () => api<TradeAction[]>('GET', '/trade-actions'),
   listFeedback: () => api<any[]>('GET', '/pilot-feedback'),
 };
 
