@@ -7,6 +7,8 @@ export const formattedPaths = [
   'web/src/pages/SourceFarmsPage.tsx',
   'web/src/pages/SourceBatchesPage.tsx',
   'e2e/sourceRecordPages.spec.ts',
+  'web/src/pages/EvidenceRecordsPage.tsx',
+  'e2e/evidencePages.spec.ts',
   'e2e/catalogPages.spec.ts',
   'e2e/transferPages.spec.ts',
   'api/src/services/recallTrace*.ts',

@@ -280,6 +280,7 @@ export const holdings = {
 };
 
 export const evidence = {
+  page: (parameters: Record<string,string>) => api<CatalogPage<import('./types').Evidence>>('GET', `/evidence/page?${new URLSearchParams(parameters)}`),
   list: (entityType?: string, entityId?: string) => {
     const qs = entityType && entityId ? `?entityType=${encodeURIComponent(entityType)}&entityId=${encodeURIComponent(entityId)}` : '';
     return api<import('./types').Evidence[]>('GET', `/evidence${qs}`);

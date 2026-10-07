@@ -6,45 +6,18 @@ import {
   canAccessEvidenceEntity,
   EVIDENCE_ENTITY_TYPES,
   EvidenceEntityType,
-  hasExplicitPermission,
 } from '../services/resourcePolicy';
 import { completeUploadIntent, createUploadIntent } from '../services/evidenceUploadService';
 import { evidenceStorage } from '../services/evidenceStorage';
-
-const evidenceColumns = `id,type,file_name,file_size_bytes,mime_type,detected_mime_type,
-  sha256_hash,validation_status,malware_scan_status,malware_scanner_engine,malware_scanned_at,
-  review_status,linked_entity_type,linked_entity_id,claim_description,created_at`;
+import { legacyEvidenceList } from '../modules/catalog/evidenceRecords';
+import { withCatalogRead } from '../modules/catalog/paging';
 
 function isEvidenceEntityType(value: unknown): value is EvidenceEntityType {
   return typeof value === 'string' && (EVIDENCE_ENTITY_TYPES as readonly string[]).includes(value);
 }
 
 export async function listEvidence(req: Request, res: Response): Promise<void> {
-  const { entityType, entityId } = req.query;
-  if (entityType || entityId) {
-    if (!isEvidenceEntityType(entityType) || typeof entityId !== 'string') {
-      res.status(400).json({ error: 'A supported entityType and entityId are required together' });
-      return;
-    }
-    if (!await canAccessEvidenceEntity(req.user!, entityType, entityId)) {
-      res.status(403).json({ error: 'Access denied' });
-      return;
-    }
-    const result = await query(
-      `SELECT ${evidenceColumns} FROM evidence_items
-       WHERE linked_entity_type=$1 AND linked_entity_id=$2 ORDER BY created_at DESC`,
-      [entityType, entityId],
-    );
-    res.json(result.rows);
-    return;
-  }
-
-  let sql = `SELECT ${evidenceColumns} FROM evidence_items`;
-  const params: any[] = [req.user!.organizationId];
-  if (!hasExplicitPermission(req.user!, 'evidence.read.all')) sql += ' WHERE uploader_organization_id=$1';
-  else params.length = 0;
-  const { rows } = await query(sql + ' ORDER BY created_at DESC', params);
-  res.json(rows);
+  res.json(await withCatalogRead((execute) => legacyEvidenceList(execute, req.user!, req.query)));
 }
 
 export async function createEvidenceUploadIntent(req: Request, res: Response): Promise<void> {
