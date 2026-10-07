@@ -1,6 +1,7 @@
+import FarmBatches from '../components/catalog/FarmBatches';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { farms as farmsApi, batches as batchesApi } from '../api';
+import { farms as farmsApi } from '../api';
 import { Farm } from '../types';
 import { StatusBadge, fmtDate } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
@@ -27,7 +28,6 @@ export default function FarmDetailPage() {
   const [farm, setFarm] = useState<Farm | null>(null);
   const [plots, setPlots] = useState<any[]>([]);
   const [certificates, setCertificates] = useState<any[]>([]);
-  const [batchList, setBatchList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -44,16 +44,9 @@ export default function FarmDetailPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    Promise.all([
-      farmsApi.get(id),
-      batchesApi.list(),
-    ])
-      .then(([farmData, batches]) => {
-        setFarm(farmData.farm);
-        setPlots(farmData.plots || []);
-        setCertificates(farmData.certificates || []);
-        setBatchList(batches.filter((b: any) => b.farm_id === id));
-      })
+    farmsApi.get(id).then(farmData=>{
+      setFarm(farmData.farm);setPlots(farmData.plots||[]);setCertificates(farmData.certificates||[]);
+    })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [id]);
@@ -143,22 +136,8 @@ export default function FarmDetailPage() {
             </div>
           )}
 
-          {batchList.length > 0 && (
-            <div className="bg-surface border border-border rounded p-5">
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">📦 Batches ({batchList.length})</h3>
-              <div className="space-y-2">
-                {batchList.map((b: any) => (
-                  <div key={b.id} className="cursor-pointer bg-surface-darker border border-border rounded p-3 text-xs hover:bg-brand-500/5" onClick={() => navigate(`/batches/${b.id}`)}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-mono font-medium">{b.id.slice(0, 8)}…</span>
-                      <StatusBadge status={b.organic_claim_status} />
-                    </div>
-                    <div className="text-text-muted">{b.crop} · {fmtDate(b.harvest_date)} · {Number(b.quantity_kg || 0).toLocaleString()} kg</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {canDo('batch.read') && <FarmBatches farmId={id!} />}
+
         </div>
 
         <div className="space-y-4">
@@ -167,8 +146,6 @@ export default function FarmDetailPage() {
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between"><span className="text-text-muted">Plots</span><span className="font-medium">{plots.length}</span></div>
               <div className="flex items-center justify-between"><span className="text-text-muted">Certificates</span><span className="font-medium">{certificates.length}</span></div>
-              <div className="flex items-center justify-between"><span className="text-text-muted">Batches</span><span className="font-medium">{batchList.length}</span></div>
-              <div className="flex items-center justify-between"><span className="text-text-muted">Total volume</span><span className="font-medium">{batchList.reduce((sum: number, batch: any) => sum + Number(batch.quantity_kg || 0), 0).toLocaleString()} kg</span></div>
             </div>
             {canDo('farm.create') && <button className="btn w-full justify-center mt-4 text-xs" onClick={() => setShowPlot(true)}>+ Add Plot</button>}
             <button className="btn w-full justify-center mt-2 text-xs" onClick={() => navigate('/farms')}>All Farms →</button>

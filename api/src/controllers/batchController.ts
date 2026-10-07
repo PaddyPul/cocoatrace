@@ -1,3 +1,5 @@
+import { legacySourceList } from '../modules/catalog/sourceRecords';
+import { withCatalogRead } from '../modules/catalog/paging';
 import { lockRecallBoundary, assertBatchNotRecalled } from '../modules/recall/safety';
 import { Request, Response } from 'express';
 import { query, getClient } from '../db';
@@ -94,26 +96,7 @@ export async function pushToMarketplace(req: Request, res: Response): Promise<vo
 }
 
 export async function listBatches(req: Request, res: Response): Promise<void> {
-  const seeAll = hasExplicitPermission(req.user!, 'batch.read.all');
-  let sql = `SELECT b.*, f.name as farm_name, o.name as holder_name
-             FROM harvest_batches b
-             LEFT JOIN farms f ON f.id = b.farm_id
-             JOIN organizations o ON o.id = b.current_holder_id`;
-  const params: any[] = [];
-  if (!seeAll) {
-    sql += ` WHERE b.current_holder_id=$1 OR f.farmer_organization_id=$1 OR f.cooperative_organization_id=$1
-      OR EXISTS (SELECT 1 FROM batch_holdings h WHERE h.batch_id=b.id AND h.holder_organization_id=$1)
-      OR EXISTS (SELECT 1 FROM batch_attestations a WHERE a.batch_id=b.id AND a.certifier_organization_id=$1)
-      OR EXISTS (
-        SELECT 1 FROM batch_holdings h JOIN sales_contracts c ON c.holding_id=h.id
-        WHERE h.batch_id=b.id AND (c.seller_organization_id=$1 OR c.buyer_organization_id=$1)
-      )`;
-    params.push(req.user!.organizationId);
-  }
-  sql += ' ORDER BY b.harvest_date DESC';
-  const { rows } = await query(sql, params);
-  const trust = await loadBatchTrust(rows.map(row => row.id));
-  res.json(rows.map(row => ({ ...row, recorded_organic_claim_status: row.organic_claim_status, organic_claim_status: trust.has(row.id) ? legacyOrganicStatus(trust.get(row.id)!) : 'self_declared', trust: trust.get(row.id) })));
+  res.json(await withCatalogRead(execute=>legacySourceList(execute,req.user!,'batches')));
 }
 
 export async function getBatch(req: Request, res: Response): Promise<void> {

@@ -3,14 +3,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Building2, CheckCircle2, FileCheck2, Handshake, PackageCheck, Search, ShieldCheck, Sparkles, Sprout, TriangleAlert } from 'lucide-react';
 import Layout from '../components/layout/Layout';
-import { contracts, farms, holdings, listings, offers, sourcing, workspace, HoldingSummary, ListingSummary } from '../api';
-import { Contract, Farm, Holding, Listing, Offer, SourcingRequest } from '../types';
+import { contracts, farms, holdings, listings, offers, sourcing, workspace, HoldingSummary, ListingSummary, FarmSummary } from '../api';
+import { Contract, Offer, SourcingRequest } from '../types';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 
 type Mode = 'buy' | 'sell';
 import type { TradeAction } from '../components/trading/TradeAction';
-type HomeData = { actionsUnavailable?:boolean; listingSummary: ListingSummary | null; requests: SourcingRequest[]; offers: Offer[]; contracts: Contract[]; holdingSummary: HoldingSummary | null; farms: Farm[]; actions:TradeAction[] };
-const empty: HomeData = { listingSummary: null, requests: [], offers: [], contracts: [], holdingSummary: null, farms: [], actions:[] };
+type HomeData = { actionsUnavailable?:boolean; listingSummary: ListingSummary | null; requests: SourcingRequest[]; offers: Offer[]; contracts: Contract[]; holdingSummary: HoldingSummary | null; farmSummary: FarmSummary | null; actions:TradeAction[] };
+const empty: HomeData = { listingSummary: null, requests: [], offers: [], contracts: [], holdingSummary: null, farmSummary: null, actions:[] };
 
 export default function ExperienceHomePage() {
   const { user, canDo, onboarding } = useAuthCtx();
@@ -33,8 +33,8 @@ export default function ExperienceHomePage() {
     const load=()=>Promise.all([
         canDo('listing.read') ? listings.summary().catch(() => null) : Promise.resolve(null), sourcing.list().catch(() => []),
         safe(canDo('offer.respond') || canDo('offer.create'), offers.list), safe(canDo('contract.read'), contracts.list),
-        canDo('holding.read') ? holdings.summary().catch(() => null) : Promise.resolve(null), safe(canDo('farm.read'), farms.list), workspace.tradeActions().then(rows=>{if(active)setActionError(false);return rows;}).catch(() => {if(active)setActionError(true);return [];}),
-      ]).then(([listingRows,requestRows,offerRows,contractRows,holdingRows,farmRows,actionRows])=>{if(active){setCatalogError(!listingRows || (mode === 'sell' && !holdingRows));setData({listingSummary:listingRows,requests:requestRows,offers:offerRows,contracts:contractRows,holdingSummary:holdingRows,farms:farmRows,actions:actionRows});}}).finally(()=>{if(active)setLoading(false);});
+        canDo('holding.read') ? holdings.summary().catch(() => null) : Promise.resolve(null), canDo('farm.read') ? farms.summary().then(row=>{if(typeof row.count!=='number'||typeof row.owned_count!=='number')throw new Error('Invalid farm summary');return row;}).catch(()=>null) : Promise.resolve({count:0,owned_count:0}), workspace.tradeActions().then(rows=>{if(active)setActionError(false);return rows;}).catch(() => {if(active)setActionError(true);return [];}),
+      ]).then(([listingRows,requestRows,offerRows,contractRows,holdingRows,farmRows,actionRows])=>{if(active){setCatalogError(!listingRows || (mode === 'sell' && (!holdingRows || !farmRows)));setData({listingSummary:listingRows,requests:requestRows,offers:offerRows,contracts:contractRows,holdingSummary:holdingRows,farmSummary:farmRows,actions:actionRows});}}).finally(()=>{if(active)setLoading(false);});
     load();
     const interval=window.setInterval(load,15000);
     window.addEventListener('focus',load);
@@ -68,7 +68,7 @@ function SellerHome({ data, organizationId, firstName, navigate }: { data: HomeD
   const myListingCount = data.listingSummary?.own_count || 0;
   const commodities = new Set(data.holdingSummary?.commodities || []);
   const openRequest = data.requests.find((item) => item.status === 'open' && item.buyer_organization_id !== organizationId && commodities.has(normalizedCommodity(item.commodity)));
-  const hasInventory = (data.holdingSummary?.count || 0) > 0; const hasFarm = data.farms.length > 0;
+  const hasInventory = (data.holdingSummary?.count || 0) > 0; const hasFarm = (data.farmSummary?.owned_count || 0) > 0;
   const guidedStart = localStorage.getItem('ct_guided_fresh_start') === 'sell';
   const showSetupChoice = guidedStart || (!hasInventory && !hasFarm);
   const goHero = () => document.getElementById(showSetupChoice ? 'supplier-path' : 'create-supply')?.scrollIntoView({ behavior: 'smooth' });
