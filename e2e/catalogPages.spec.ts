@@ -95,11 +95,18 @@ async function mock(page: Page, failedTotals = false, malformedTransfers = false
           }
         : path === '/api/onboarding'
           ? { status: 'completed', primary_goal: 'sell' }
-          : path === '/api/holdings/summary'
-            ? { count: 1005, available_count: 1005, available_kg: '1005', commodities: ['peanut'] }
-            : path === '/api/listings/summary'
-              ? { count: 2000, own_count: 1005, quantity_kg: '2000' }
-              : [];
+          : path === '/api/farms/summary'
+            ? { count: 0, owned_count: 0 }
+            : path === '/api/holdings/summary'
+              ? {
+                  count: 1005,
+                  available_count: 1005,
+                  available_kg: '1005',
+                  commodities: ['peanut'],
+                }
+              : path === '/api/listings/summary'
+                ? { count: 2000, own_count: 1005, quantity_kg: '2000' }
+                : [];
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -191,4 +198,25 @@ test('malformed transfer page stays a panel error and does not hide inventory', 
   await expect(
     transfers.getByRole('button', { name: 'Refresh transfers', exact: true }),
   ).toBeEnabled();
+});
+
+test('supplier source guidance uses full owned farm totals when inventory is absent', async ({
+  page,
+}) => {
+  await mock(page);
+  await page.route('**/api/farms/summary', (route) =>
+    route.fulfill({ json: { count: 1005, owned_count: 1005 } }),
+  );
+  await page.route('**/api/holdings/summary', (route) =>
+    route.fulfill({ json: { count: 0, available_count: 0, available_kg: '0', commodities: [] } }),
+  );
+  await page.route('**/api/listings/summary', (route) =>
+    route.fulfill({ json: { count: 0, own_count: 0, quantity_kg: '0' } }),
+  );
+  await page.goto('/home?mode=sell');
+  const nextAction = page.locator('#supplier-path');
+  await expect(
+    nextAction.getByRole('button', { name: /^Record the harvested quantity/ }),
+  ).toBeVisible();
+  await expect(nextAction.getByTestId('supply-path-choice')).toHaveCount(0);
 });

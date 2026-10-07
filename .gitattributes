@@ -62,3 +62,7 @@ web/src/pages/InventoryPage.tsx text eol=lf
 e2e/catalogPages.spec.ts text eol=lf
 
 e2e/transferPages.spec.ts text eol=lf
+
+web/src/pages/SourceFarmsPage.tsx text eol=lf
+web/src/pages/SourceBatchesPage.tsx text eol=lf
+e2e/sourceRecordPages.spec.ts text eol=lf

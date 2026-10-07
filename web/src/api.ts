@@ -134,8 +134,11 @@ export const readiness = {
   get: () => api<any>('GET', '/readiness'),
 };
 
+export interface FarmSummary { count: number; owned_count: number; }
 export const farms = {
   list: () => api<import('./types').Farm[]>('GET', '/farms'),
+  page: (parameters: Record<string,string> = {}) => api<CatalogPage<import('./types').Farm>>('GET', `/farms/page?${new URLSearchParams({limit:'50',...parameters})}`),
+  summary: () => api<FarmSummary>('GET','/farms/summary'),
   get: (id: string) => api<{ farm: import('./types').Farm; plots: any[]; certificates: any[] }>('GET', `/farms/${id}`),
   create: (data: { name: string; country?: string; region: string; district: string; community?: string; officialTraceabilityId?: string }) =>
     api<import('./types').Farm>('POST', '/farms', data),
@@ -144,7 +147,9 @@ export const farms = {
 };
 
 export const batches = {
+  summary: (farm?: string) => api<{count:number;recorded_quantity_kg:string}>('GET', `/batches/summary${farm?'?'+new URLSearchParams({farm}):''}`),
   list: () => api<import('./types').Batch[]>('GET', '/batches'),
+  page: (parameters: Record<string,string> = {}) => api<CatalogPage<import('./types').Batch>>('GET', `/batches/page?${new URLSearchParams({limit:'50',...parameters})}`),
   get: (id: string) => api<{ batch: import('./types').Batch; evidence: import('./types').Evidence[] }>('GET', `/batches/${id}`),
   create: (data: { farmId: string; plotIds?: string[]; crop?: string; harvestDate: string; quantityKg: number; moisturePercent?: number; grade?: string }) =>
     api<import('./types').Batch>('POST', '/batches', data),

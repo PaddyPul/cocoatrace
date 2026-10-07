@@ -4,7 +4,11 @@ import validate from '../middleware/validate';
 import { createBatchSchema, createDirectInventorySchema, attestBatchSchema, pushToMarketplaceSchema } from '../validation';
 import * as batchController from '../controllers/batchController';
 
+import { listBatchPage, summarizeBatches } from '../modules/catalog/sourceRecords';
+
 const router = Router();
+router.get('/batches/summary', requireAuth, requirePermission('batch.read'), summarizeBatches);
+router.get('/batches/page', requireAuth, requirePermission('batch.read'), listBatchPage);
 
 router.get('/batches', requireAuth, requirePermission('batch.read'), batchController.listBatches);
 router.get('/batches/:id', requireAuth, requirePermission('batch.read'), batchController.getBatch);

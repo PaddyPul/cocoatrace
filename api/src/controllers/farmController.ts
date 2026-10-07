@@ -1,24 +1,12 @@
+import { legacySourceList } from '../modules/catalog/sourceRecords';
+import { withCatalogRead } from '../modules/catalog/paging';
 import { Request, Response } from 'express';
 import { query } from '../db';
 import { inTradeTransaction as inTransaction, recordTradeAudit } from '../modules/trading/transaction';
 import { hasExplicitPermission, hasFarmRelationship } from '../services/resourcePolicy';
 
 export async function listFarms(req: Request, res: Response): Promise<void> {
-  const canSeeAll = hasExplicitPermission(req.user!, 'farm.read.all');
-  let sql: string, params: any[];
-  if (canSeeAll) {
-    sql = `SELECT f.*, o.name as farmer_org_name FROM farms f JOIN organizations o ON o.id = f.farmer_organization_id ORDER BY f.name`;
-    params = [];
-  } else {
-    sql = `SELECT DISTINCT f.*, o.name as farmer_org_name
-      FROM farms f JOIN organizations o ON o.id=f.farmer_organization_id
-      LEFT JOIN organic_certificates c ON c.farm_id=f.id AND c.certifier_organization_id=$1
-      WHERE f.farmer_organization_id=$1 OR f.cooperative_organization_id=$1 OR c.id IS NOT NULL
-      ORDER BY f.name`;
-    params = [req.user!.organizationId];
-  }
-  const { rows } = await query(sql, params);
-  res.json(rows);
+  res.json(await withCatalogRead(execute=>legacySourceList(execute,req.user!,'farms')));
 }
 
 export async function getFarm(req: Request, res: Response): Promise<void> {

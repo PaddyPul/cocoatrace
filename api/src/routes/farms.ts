@@ -4,7 +4,11 @@ import validate from '../middleware/validate';
 import { createFarmSchema, createPlotSchema } from '../validation';
 import * as farmController from '../controllers/farmController';
 
+import { listFarmPage, summarizeFarms } from '../modules/catalog/sourceRecords';
+
 const router = Router();
+router.get('/farms/page', requireAuth, requirePermission('farm.read'), listFarmPage);
+router.get('/farms/summary', requireAuth, requirePermission('farm.read'), summarizeFarms);
 
 router.get('/farms', requireAuth, requirePermission('farm.read'), farmController.listFarms);
 router.get('/farms/:id', requireAuth, requirePermission('farm.read'), farmController.getFarm);
