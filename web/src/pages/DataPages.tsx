@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { farms as farmsApi, batches as batchesApi, contracts as contractsApi, shipments as shipmentsApi, holdings as holdingsApi, payments as paymentsApi, evidence as evidenceApi, audit as auditApi, certificates as certApi, organizations as organizationsApi } from '../api';
-import { Farm, Batch, Contract, Shipment, Holding, Payment, Evidence, AuditEvent, Certificate } from '../types';
+import { farms as farmsApi, batches as batchesApi, contracts as contractsApi, shipments as shipmentsApi, holdings as holdingsApi, payments as paymentsApi, audit as auditApi, certificates as certApi, organizations as organizationsApi } from '../api';
+import { Farm, Batch, Contract, Shipment, Holding, Payment, AuditEvent, Certificate } from '../types';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
@@ -75,25 +75,7 @@ export function PaymentsPage() {
   </div>}</Layout>;
 }
 
-export function EvidencePage() {
-  const { canDo } = useAuthCtx();
-  const { data, loading, error } = useFetch(() => evidenceApi.list());
-  const [search, setSearch] = useState('');
-  const evs = data as Evidence[];
-
-  const navigate=useNavigate();
-  const filtered = evs.filter((e) => !search || e.file_name.toLowerCase().includes(search.toLowerCase()) || (e.type || '').toLowerCase().includes(search.toLowerCase()) || e.linked_entity_type.toLowerCase().includes(search.toLowerCase()) || (e.review_status || '').toLowerCase().includes(search.toLowerCase()));
-  return <Layout currentPage="evidence">{loading ? <SkeletonTable rows={5} cols={6} /> : error ? <Err msg={error} /> : <div className="table-wrap">
-    <div className="flex flex-wrap items-center gap-3 mb-3">
-      <div className="relative flex-1 min-w-[180px]"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input type="text" placeholder="Search evidence…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
-      <div className="text-xs text-text-muted">{filtered.length} file{filtered.length !== 1 ? 's' : ''}</div>
-      {canDo('evidence.upload') && <button className="btn btn-sm btn-primary" onClick={() => navigate('/evidence/contribute')}>+ Upload</button>}
-    </div>
-    <table><thead><tr><th>File</th><th>Type</th><th>SHA-256</th><th>Linked Entity</th><th>Status</th><th>Uploaded</th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((e) => <tr key={e.id} className="hover:bg-brand-500/5"><td className="text-text-primary font-medium">{e.file_name}</td><td>{(e.type || '').replace(/_/g, ' ')}</td><td className="font-mono text-[10px] max-w-[200px] truncate">{e.sha256_hash}</td><td className="font-mono text-[10px]">{e.linked_entity_type}/{e.linked_entity_id.slice(0, 8)}…</td><td><StatusBadge status={e.review_status} /></td><td className="text-[11px]">{fmtDate(e.created_at)}</td></tr>) : evs.length === 0 ? <tr><td colSpan={99}><EmptyState icon="🗂" title="No evidence uploaded" description="Choose an actual record and explain the claim or requirement before attaching a document." action={canDo('evidence.upload') ? <button className="btn btn-sm btn-primary" onClick={() => navigate('/evidence/contribute')}>+ Upload Evidence</button> : undefined} /></td></tr> : <tr><td colSpan={99}><EmptyState icon="🔍" title="No evidence match" description="Try adjusting your search." /></td></tr>}</tbody></table>
-  </div>}
-
-  </Layout>;
-}
+export { default as EvidencePage } from './EvidenceRecordsPage';
 
 const AUDIT_ENTITY_ROUTES: Record<string, string> = {
   harvest_batch: '/batches',

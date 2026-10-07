@@ -1,6 +1,9 @@
 import { query } from '../db';
 import { JwtPayload } from '../middleware/auth';
 
+// Callers can supply their transaction/snapshot executor without coupling policies to a feature module.
+type PolicyRead = (sql: string, parameters?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>;
+
 export type Actor = Pick<JwtPayload, 'organizationId' | 'permissions'>;
 
 export const EVIDENCE_ENTITY_TYPES = [
@@ -12,12 +15,12 @@ export function hasExplicitPermission(actor: Actor, ...permissions: string[]): b
   return actor.permissions.includes('*') || permissions.some((permission) => actor.permissions.includes(permission));
 }
 
-async function policyExists(sql: string, params: unknown[]): Promise<boolean> {
-  const result = await query(`SELECT EXISTS(${sql}) AS allowed`, params as any[]);
+async function policyExists(sql: string, params: unknown[], execute: PolicyRead = query): Promise<boolean> {
+  const result = await execute(`SELECT EXISTS(${sql}) AS allowed`, params);
   return Boolean(result.rows[0]?.allowed);
 }
 
-export async function hasFarmRelationship(actor: Actor, farmId: string): Promise<boolean> {
+export async function hasFarmRelationship(actor: Actor, farmId: string, execute: PolicyRead = query): Promise<boolean> {
   return policyExists(
     `SELECT 1 FROM farms f
       WHERE f.id=$1 AND (
@@ -33,11 +36,11 @@ export async function hasFarmRelationship(actor: Actor, farmId: string): Promise
           WHERE b.farm_id=f.id AND (c.seller_organization_id=$2 OR c.buyer_organization_id=$2)
         )
       )`,
-    [farmId, actor.organizationId],
+    [farmId, actor.organizationId], execute,
   );
 }
 
-export async function hasCertificateRelationship(actor: Actor, certificateId: string): Promise<boolean> {
+export async function hasCertificateRelationship(actor: Actor, certificateId: string, execute: PolicyRead = query): Promise<boolean> {
   return policyExists(
     `SELECT 1 FROM organic_certificates cert
       WHERE cert.id=$1 AND (
@@ -50,11 +53,11 @@ export async function hasCertificateRelationship(actor: Actor, certificateId: st
             AND (c.seller_organization_id=$2 OR c.buyer_organization_id=$2)
         )
       )`,
-    [certificateId, actor.organizationId],
+    [certificateId, actor.organizationId], execute,
   );
 }
 
-export async function hasBatchRelationship(actor: Actor, batchId: string): Promise<boolean> {
+export async function hasBatchRelationship(actor: Actor, batchId: string, execute: PolicyRead = query): Promise<boolean> {
   return policyExists(
     `SELECT 1 FROM harvest_batches b
       LEFT JOIN farms f ON f.id=b.farm_id
@@ -78,19 +81,19 @@ export async function hasBatchRelationship(actor: Actor, batchId: string): Promi
             AND (s.logistics_organization_id=$2 OR s.transport_coordinator_organization_id=$2)
         )
       )`,
-    [batchId, actor.organizationId],
+    [batchId, actor.organizationId], execute,
   );
 }
 
-export async function hasContractRelationship(actor: Actor, contractId: string): Promise<boolean> {
+export async function hasContractRelationship(actor: Actor, contractId: string, execute: PolicyRead = query): Promise<boolean> {
   return policyExists(
     `SELECT 1 FROM sales_contracts c
       WHERE c.id=$1 AND (c.seller_organization_id=$2 OR c.buyer_organization_id=$2)`,
-    [contractId, actor.organizationId],
+    [contractId, actor.organizationId], execute,
   );
 }
 
-export async function hasShipmentRelationship(actor: Actor, shipmentId: string): Promise<boolean> {
+export async function hasShipmentRelationship(actor: Actor, shipmentId: string, execute: PolicyRead = query): Promise<boolean> {
   return policyExists(
     `SELECT 1 FROM shipments s
       JOIN sales_contracts c ON c.id=s.contract_id
@@ -98,13 +101,13 @@ export async function hasShipmentRelationship(actor: Actor, shipmentId: string):
         c.seller_organization_id=$2 OR c.buyer_organization_id=$2
         OR s.logistics_organization_id=$2 OR s.transport_coordinator_organization_id=$2
       )`,
-    [shipmentId, actor.organizationId],
+    [shipmentId, actor.organizationId], execute,
   );
 }
 
-export async function hasProductProfileRelationship(actor: Actor, profileId: string): Promise<boolean> {
-  const result = await query('SELECT batch_id FROM product_profiles WHERE id=$1', [profileId]);
-  return Boolean(result.rows[0]) && hasBatchRelationship(actor, result.rows[0].batch_id);
+export async function hasProductProfileRelationship(actor: Actor, profileId: string, execute: PolicyRead = query): Promise<boolean> {
+  const result = await execute('SELECT batch_id FROM product_profiles WHERE id=$1', [profileId]);
+  return Boolean(result.rows[0]) && hasBatchRelationship(actor, String(result.rows[0].batch_id), execute);
 }
 
 export async function canAccessEvidenceEntity(
@@ -112,17 +115,18 @@ export async function canAccessEvidenceEntity(
   entityType: EvidenceEntityType,
   entityId: string,
   networkPermission: string | null = 'evidence.read.all',
+  execute: PolicyRead = query,
 ): Promise<boolean> {
   if (networkPermission && hasExplicitPermission(actor, networkPermission)) return true;
   switch (entityType) {
     case 'recall': return policyExists(`SELECT 1 FROM recall_notices notice WHERE notice.id=$1 AND
       (notice.initiated_by_organization_id=$2 OR $3::boolean OR EXISTS(SELECT 1 FROM recall_participants p WHERE p.recall_id=notice.id AND p.organization_id=$2))`,
-      [entityId,actor.organizationId,hasExplicitPermission(actor,'recall.manage.all')]);
-    case 'farm': return hasFarmRelationship(actor, entityId);
-    case 'batch': return hasBatchRelationship(actor, entityId);
-    case 'certificate': return hasCertificateRelationship(actor, entityId);
-    case 'contract': return hasContractRelationship(actor, entityId);
-    case 'product_profile': return hasProductProfileRelationship(actor, entityId);
-    case 'shipment': return hasShipmentRelationship(actor, entityId);
+      [entityId,actor.organizationId,hasExplicitPermission(actor,'recall.manage.all')], execute);
+    case 'farm': return hasFarmRelationship(actor, entityId, execute);
+    case 'batch': return hasBatchRelationship(actor, entityId, execute);
+    case 'certificate': return hasCertificateRelationship(actor, entityId, execute);
+    case 'contract': return hasContractRelationship(actor, entityId, execute);
+    case 'product_profile': return hasProductProfileRelationship(actor, entityId, execute);
+    case 'shipment': return hasShipmentRelationship(actor, entityId, execute);
   }
 }

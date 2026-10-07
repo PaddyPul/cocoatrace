@@ -7,7 +7,11 @@ import { createEvidenceUploadIntentSchema, evidenceListQuerySchema } from '../va
 import * as evidenceController from '../controllers/evidenceController';
 import { config } from '../config/env';
 
+import { listEvidencePage } from '../modules/catalog/evidenceRecords';
+
 const router = Router();
+
+router.get('/evidence/page', requireAuth, requirePermission('evidence.read'), listEvidencePage);
 
 router.get('/evidence', requireAuth, requirePermission('evidence.read'), validate(evidenceListQuerySchema, 'query'), evidenceController.listEvidence);
 router.get('/evidence/:id/download', requireAuth, requirePermission('evidence.read'), evidenceController.downloadEvidence);
