@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import app from '../../src/app';
 import { pool, query } from '../../src/db';
 import { withCatalogRead, parsePage } from '../../src/modules/catalog/paging';
-import { holdingPage } from '../../src/modules/catalog/repository';
+import { holdingPage, holdingSelect } from '../../src/modules/catalog/repository';
 
 type Actor = {org:string; token:string; user:string};
 type Stock = {batch:string; holdings:{id:string}[]; listings:{id:string}[]};
@@ -69,12 +69,19 @@ describe('inventory/marketplace pages and aggregate totals',()=>{
     await query("UPDATE batch_holdings SET status='available' WHERE id=$1",[later.id]);
 
     await withCatalogRead(async execute=>{
-      await holdingPage(async(sql,parameters)=>{
-        const explained=await execute(`EXPLAIN (ANALYZE,BUFFERS,FORMAT JSON) ${sql}`,parameters);
-        const root=(explained.rows[0]['QUERY PLAN'] as {Plan:Record<string,unknown>}[])[0].Plan;
-        expect(root['Node Type']).toBe('Limit');expect(Number(root['Actual Rows'])).toBeLessThanOrEqual(101);
+      let pagePlansChecked=0;
+      const page=await holdingPage(async(sql,parameters)=>{
+        if(sql.startsWith(holdingSelect)) {
+          const explained=await execute(`EXPLAIN (ANALYZE,BUFFERS,FORMAT JSON) ${sql}`,parameters);
+          const root=(explained.rows[0]['QUERY PLAN'] as {Plan:Record<string,unknown>}[])[0].Plan;
+          expect(root['Node Type']).toBe('Limit');expect(Number(root['Actual Rows'])).toBeLessThanOrEqual(101);
+          pagePlansChecked++;
+        }
         return execute(sql,parameters);
       },seller.org,parsePage({limit:'100'},[seller.org],[]),false);
+      expect(pagePlansChecked).toBe(1);
+      expect(page.items).toHaveLength(100);
+      expect(page.items.every(item=>item.trust!==undefined)).toBe(true);
     });
     const recall=(await query(`INSERT INTO recall_notices(reference_code,title,reason,instructions,severity,initiated_by_user_id,initiated_by_organization_id)
       VALUES($1,'Paging safety fixture','Read hold regression','Do not dispatch','warning',$2,$3) RETURNING id`,[crypto.randomUUID(),seller.user,seller.org])).rows[0].id;
