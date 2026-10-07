@@ -50,3 +50,8 @@ web/src/components/trading/DealNextAction.tsx text eol=lf
 
 web/src/components/supply/** text eol=lf
 web/src/pages/EvidenceContributionPage.tsx text eol=lf
+
+api/src/modules/trace/** text eol=lf
+api/src/services/recallTrace*.ts text eol=lf
+api/src/services/traceGraphRepository*.ts text eol=lf
+api/scripts/benchmark-trace.ts text eol=lf

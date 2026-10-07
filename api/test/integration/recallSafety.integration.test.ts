@@ -265,3 +265,64 @@ describe('real PostgreSQL recall containment', () => {
     expect(heldIds).toEqual(holdings.map(h => h.id).sort());
   });
 });
+
+// Corrupt/oversized fixtures are confined to the disposable PostgreSQL stack.
+// Every fixture is removed so later resource-boundary tests remain independent.
+describe('bounded recall analysis atomicity', () => {
+  it('rejects cyclic analysis and activation without partial notices, holds or inventory changes', async () => {
+    const s = await supply();
+    const otherLot = (await query(`INSERT INTO material_lots(lot_code,lot_type,product_name,quantity_kg,owner_organization_id)
+      VALUES($1,'production','Cycle fixture',10,$2) RETURNING id`, [`cycle-${crypto.randomUUID()}`, seller.organizationId])).rows[0].id;
+    const event = (await query(`INSERT INTO transformation_events(event_code,event_type,facility_organization_id,occurred_at)
+      VALUES($1,'blend',$2,NOW()) RETURNING id`, [`cycle-${crypto.randomUUID()}`, seller.organizationId])).rows[0].id;
+    const before = await snapshot(s);
+    const noticeCount = Number((await query('SELECT COUNT(*) FROM recall_notices')).rows[0].count);
+    try {
+      await query(`INSERT INTO lot_genealogy_edges(transformation_event_id,source_lot_id,destination_lot_id,allocated_input_kg)
+        VALUES($1,$2,$3,10),($1,$3,$2,10)`, [event, s.lotId, otherLot]);
+      const traced = await request(app).get(`/traceability/lots/${s.lotId}/trace-forward`).set('Authorization', `Bearer ${seller.token}`);
+      expect(traced.status).toBe(422);
+      expect(traced.body).toMatchObject({ code: 'TRACE_ANALYSIS_INCOMPLETE', analysis: { status: 'incomplete', reason: 'CYCLE', safetyClearance: false } });
+      expect(traced.body.impactedLots).toBeUndefined();
+      const activation = await recall(s);
+      expect(activation.status).toBe(422);
+      expect(activation.body.analysis.reason).toBe('CYCLE');
+      expect(Number((await query('SELECT COUNT(*) FROM recall_notices')).rows[0].count)).toBe(noticeCount);
+      expect((await query('SELECT 1 FROM recall_safety_holds WHERE entity_id=$1', [s.lotId])).rows).toEqual([]);
+      expect(await snapshot(s)).toEqual(before);
+      const listing = (await query('SELECT active FROM listings WHERE id=$1', [s.listingId])).rows[0];
+      expect(listing.active).toBe(true);
+      // Failure to activate is explicitly reported: this is not a clearance.
+    } finally {
+      await query('DELETE FROM transformation_events WHERE id=$1', [event]);
+      await query('DELETE FROM material_lots WHERE id=$1', [otherLot]);
+    }
+  });
+
+  it('does not load an unrelated oversized component and denies foreign seeds before analyzing them', async () => {
+    const { TRACE_LIMITS } = await import('../../src/modules/trace/limits');
+    const s = await supply();
+    const prefix = `oversize-${crypto.randomUUID()}-`;
+    const lots = (await query(`INSERT INTO material_lots(lot_code,lot_type,product_name,quantity_kg,owner_organization_id)
+      SELECT $1||n,'production','Capacity fixture',1,$2 FROM generate_series(1,$3::int) n RETURNING id`, [prefix, outsider.organizationId, TRACE_LIMITS.lots + 1])).rows;
+    const event = (await query(`INSERT INTO transformation_events(event_code,event_type,facility_organization_id,occurred_at)
+      VALUES($1,'blend',$2,NOW()) RETURNING id`, [prefix, outsider.organizationId])).rows[0].id;
+    const root = lots[0].id;
+    try {
+      await query(`INSERT INTO lot_genealogy_edges(transformation_event_id,source_lot_id,destination_lot_id,allocated_input_kg)
+        SELECT $1,$2,unnest($3::uuid[]),1`, [event, root, lots.slice(1).map(lot => lot.id)]);
+      const small = await request(app).get(`/traceability/lots/${s.lotId}/trace-forward`).set('Authorization', `Bearer ${seller.token}`);
+      expect(small.status).toBe(200);
+      expect(small.body.analysis.status).toBe('complete');
+      expect(small.body.impactedLots).toHaveLength(1);
+      const foreign = await request(app).get(`/traceability/lots/${root}/trace-forward`).set('Authorization', `Bearer ${seller.token}`);
+      expect(foreign.status).toBe(403);
+      const large = await request(app).get(`/traceability/lots/${root}/trace-forward`).set('Authorization', `Bearer ${outsider.token}`);
+      expect(large.status).toBe(422);
+      expect(large.body.analysis).toEqual({ status: 'incomplete', reason: 'LOTS_LIMIT', safetyClearance: false });
+    } finally {
+      await query('DELETE FROM transformation_events WHERE id=$1', [event]);
+      await query('DELETE FROM material_lots WHERE id=ANY($1::uuid[])', [lots.map(lot => lot.id)]);
+    }
+  });
+});

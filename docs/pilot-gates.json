@@ -1,5 +1,5 @@
 {
-  "reviewedAt": "2026-10-06",
+  "reviewedAt": "2026-10-07",
   "method": "Equal gate count, no partial credit. Provider launch also requires every core gate. This is closure evidence, not a safety probability or valuation measure.",
   "gates": [
     {
@@ -8,7 +8,7 @@
       "status": "partial",
       "title": "Current release passes every gate on the candidate commit",
       "backlog": ["QLT-001", "SEC-014", "LNG-001"],
-      "evidence": "Founder confirms unified trade-action candidate release checks passed and merge/pull completed 2026-10-06. Current local acceptance is founder-reported; no CI URL or hosted staging evidence independently archived. Each later candidate requires its own commit-specific release report."
+      "evidence": "Founder confirms source/evidence-entry candidate full release checks passed and merge/pull completed 2026-10-07 after import and accessible-selector corrections. Local native acceptance is founder-reported; no CI URL or hosted staging evidence independently archived. Every later candidate requires a fresh commit-specific release report."
     },
     {
       "id": "CORE-isolation",
@@ -112,7 +112,7 @@
       "status": "partial",
       "title": "Buyer sourcing and conventional/source-traceable creation are coherent",
       "backlog": ["PRD-003", "PRD-004", "PRD-005", "QLT-009"],
-      "evidence": "Editable matching exists; empty-state and end-to-end persistence gaps."
+      "evidence": "Founder-confirmed 2026-10-07 release/merge acceptance covers conventional inventory, source/farm/plot/harvest, record-based evidence and reviewed sourcing creation/save/reload journeys. PRD-004 closed. Request-specific evidence guidance and reopening/editing saved sourcing briefs remain open; this gate stays partial."
     },
     {
       "id": "CORE-actions",
@@ -144,7 +144,7 @@
       "status": "partial",
       "title": "Scoped recall/trace is bounded and safety fails closed",
       "backlog": ["PER-002", "ARC-008"],
-      "evidence": "Live recall workflows exist; graph resource bounds and incomplete-state proof open."
+      "evidence": "Bounded connected trace analysis, explicit incomplete metadata, iterative cycle/work/depth limits and atomic bulk recall writes implemented 2026-10-07. Unit/capacity checks and native API/browser regressions added; founder native acceptance pending. Hosted operational/capacity proof remains open."
     },
     {
       "id": "CORE-workers",

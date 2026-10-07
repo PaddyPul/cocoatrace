@@ -234,3 +234,11 @@ Founder release typecheck caught missing `Sprout` in PublishSupplyPage after the
 ### Sourcing selector accessible-name correction — 2026-10-07
 
 Founder native browser run reached the sourcing journey but timed out locating exact Visibility label. Select option text sat inside its wrapping label. Visibility and Incoterm now have explicit accessible names; focused fixture test switches visibility both ways and selects FOB. This presentation test uses mocked reads and does not claim persistence coverage. The existing real PostgreSQL sourcing journey is unchanged. Author type/build/quality checks passed; browser execution unavailable because no Chromium executable is installed. Founder full release acceptance pending.
+
+## Founder acceptance — source/evidence entry — 2026-10-07 00:36 UTC
+
+Founder confirms release checks passed and merge/pull completed after import and selector corrections. This acknowledges the full native release, including sourceEvidenceEntry and sourcingLabels browser cases. PRD-004 closed. PRD-003/PRD-005/QLT-009 remain partial for request-specific evidence guidance and reopening/editing saved sourcing briefs. No CI URL or hosted staging evidence independently archived. Next proposed engineering slice: PER-002 bounded trace/recall safety.
+
+## Bounded trace safety candidate — 2026-10-07
+
+Implemented connected-component reads, row/seed/depth/work/time limits, explicit incomplete/no-clearance errors, iterative allocation/cycle handling and atomic bulk recall scope/hold writes. Author unit, quality, types, native-file compilation, builds, migration integrity and backlog checks passed. Synthetic in-memory rehearsal is documented under performance/TRACE_BOUNDS_2026-10-07.md. Native PostgreSQL rollback/isolation and browser error cases are added but execution is pending because Docker/Chromium are unavailable here. PER-002 remains in progress; no hosted capacity claim. Prior source-entry release/merge acknowledgement is included.

@@ -445,6 +445,7 @@ export interface TraceLotResult extends MaterialLot {
 }
 
 export interface TraceBackResult {
+  analysis?: { status: 'complete'; workUnits: number; safetyClearance: false };
   direction: 'trace-back';
   targetLot: MaterialLot;
   queryQuantityKg: number;
@@ -456,6 +457,7 @@ export interface TraceBackResult {
 }
 
 export interface RecallImpactResult {
+  analysis?: { status: 'complete'; workUnits: number; safetyClearance: false };
   direction: 'trace-forward';
   impactedLots: TraceLotResult[];
   leafLots: TraceLotResult[];
