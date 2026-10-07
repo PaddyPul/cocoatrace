@@ -149,7 +149,18 @@ test('supplier home uses full aggregate counts, not the first inventory page', a
   await mock(page);
   await page.goto('/home?mode=sell');
   await expect(page.getByText('1005', { exact: true })).toBeVisible();
-  await expect(page.getByTestId('supply-path-choice')).toHaveCount(0);
+  const nextAction = page.locator('#supplier-path');
+  await expect(nextAction.getByTestId('supply-path-choice')).toHaveCount(0);
+  await expect(
+    nextAction.getByText('Keep published supply current', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    nextAction.getByRole('button', { name: 'View listings', exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('#create-supply').getByTestId('supply-path-choice')).toBeVisible();
+  await expect(
+    page.locator('#create-supply').getByRole('button', { name: 'Create inventory', exact: true }),
+  ).toBeVisible();
 });
 
 test('failed supply summaries pause setup recommendations instead of showing an empty inventory', async ({
