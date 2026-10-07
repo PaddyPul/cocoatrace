@@ -20,6 +20,7 @@ A new supplier can choose conventional inventory without creating a farm, or reg
 - Add a separate typed evidence contribution page with permitted record lists, document purpose, explanation and contextual farm/batch links.
 - Preserve existing private upload, scan, quota and server resource-authorization controls.
 - Distinguish failed reads from empty records; clear pending files/explanations when the record changes.
+- Give Visibility and Incoterm stable accessible names and add a focused selector regression.
 - Add four browser cases covering real conventional inventory, farm/plot/harvest, evidence upload/context and sourcing edited quantity persistence; one failed-read scenario uses a controlled API failure.
 - Record founder acknowledgement of the previous shared-action release and merge.
 

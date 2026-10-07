@@ -230,3 +230,7 @@ Shared setup chooser, contextual evidence picker and four browser cases implemen
 ### Source entry import correction
 
 Founder release typecheck caught missing `Sprout` in PublishSupplyPage after the final import cleanup. The earlier author success report did not cover that final cleanup; it was inaccurate for the delivered candidate. The corrected import passed rerun workspace/browser type checks, web production build and quality checks (10 policy tests). Full native release acceptance remains pending.
+
+### Sourcing selector accessible-name correction — 2026-10-07
+
+Founder native browser run reached the sourcing journey but timed out locating exact Visibility label. Select option text sat inside its wrapping label. Visibility and Incoterm now have explicit accessible names; focused fixture test switches visibility both ways and selects FOB. This presentation test uses mocked reads and does not claim persistence coverage. The existing real PostgreSQL sourcing journey is unchanged. Author type/build/quality checks passed; browser execution unavailable because no Chromium executable is installed. Founder full release acceptance pending.
