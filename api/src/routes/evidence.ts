@@ -7,9 +7,12 @@ import { createEvidenceUploadIntentSchema, evidenceListQuerySchema } from '../va
 import * as evidenceController from '../controllers/evidenceController';
 import { config } from '../config/env';
 
+import { listEvidenceOptions } from '../modules/catalog/evidenceOptions';
 import { listEvidencePage } from '../modules/catalog/evidenceRecords';
 
 const router = Router();
+
+router.get('/evidence/record-options', requireAuth, requirePermission('evidence.upload'), listEvidenceOptions);
 
 router.get('/evidence/page', requireAuth, requirePermission('evidence.read'), listEvidencePage);
 

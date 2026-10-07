@@ -105,7 +105,7 @@ test('contribution onboarding explains missing records and a failed read never e
   await expect(page).toHaveURL(/\/evidence\/contribute$/);
   await expect(page.getByTestId('supply-path-choice')).toBeVisible();
   await expect(page.getByLabel('Evidence file', { exact: true })).toHaveCount(0);
-  await page.route('**/api/farms', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Unavailable' }) }));
+  await page.route('**/api/evidence/record-options?*', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Unavailable' }) }));
   await page.goto('/evidence/contribute?entityType=farm');
   await expect(page.getByRole('alert')).toContainText('Records could not be loaded');
   await expect(page.getByRole('button', { name: 'Attach evidence', exact: true })).toHaveCount(0);

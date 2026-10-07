@@ -279,7 +279,9 @@ export const holdings = {
     api<any>('POST', `/holdings/${id}/split`, data),
 };
 
+export interface EvidenceRecordOption { id: string; label: string }
 export const evidence = {
+  recordOptions: (parameters: Record<string,string>) => api<CatalogPage<EvidenceRecordOption>>('GET', `/evidence/record-options?${new URLSearchParams(parameters)}`),
   page: (parameters: Record<string,string>) => api<CatalogPage<import('./types').Evidence>>('GET', `/evidence/page?${new URLSearchParams(parameters)}`),
   list: (entityType?: string, entityId?: string) => {
     const qs = entityType && entityId ? `?entityType=${encodeURIComponent(entityType)}&entityId=${encodeURIComponent(entityId)}` : '';

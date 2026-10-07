@@ -1,49 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { batches, contracts, evidence, farms, shipments } from '../api';
+import { evidence, EvidenceRecordOption } from '../api';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import Layout from '../components/layout/Layout';
-import SupplyPathChoice from '../components/supply/SupplyPathChoice';
+import EvidenceRecordPicker from '../components/catalog/EvidenceRecordPicker';
 
 type RecordKind = 'farm' | 'batch' | 'contract' | 'shipment';
-type Option = { id: string; label: string };
 const sources = {
-  farm: {
-    label: 'Source farm (including its plots)',
-    permission: 'farm.read',
-    load: async () => (await farms.list()).map((row) => ({ id: row.id, label: row.name })),
-  },
-  batch: {
-    label: 'Batch or conventional inventory',
-    permission: 'batch.read',
-    load: async () =>
-      (await batches.list()).map((row) => ({
-        id: row.id,
-        label: `${row.crop || 'Material'} · ${row.id.slice(0, 8)}`,
-      })),
-  },
-  contract: {
-    label: 'Trade contract',
-    permission: 'contract.read',
-    load: async () =>
-      (await contracts.list()).map((row) => ({
-        id: row.id,
-        label: `${row.id.slice(0, 8)} · ${row.status}`,
-      })),
-  },
-  shipment: {
-    label: 'Shipment',
-    permission: 'shipment.read',
-    load: async () =>
-      (await shipments.list()).map((row) => ({
-        id: row.id,
-        label: `${row.id.slice(0, 8)} · ${row.current_milestone || 'Planning'}`,
-      })),
-  },
-} satisfies Record<
-  RecordKind,
-  { label: string; permission: string; load: () => Promise<Option[]> }
->;
+  farm: { label: 'Source farm (including its plots)', permission: 'farm.read' },
+  batch: { label: 'Batch or conventional inventory', permission: 'batch.read' },
+  contract: { label: 'Trade contract', permission: 'contract.read' },
+  shipment: { label: 'Shipment', permission: 'shipment.read' },
+};
 const purposes = [
   ['origin_document', 'Origin or plot evidence'],
   ['certificate_pdf', 'External certificate or assurance evidence'],
@@ -53,7 +21,7 @@ const purposes = [
 ] as const;
 
 export default function EvidenceContributionPage() {
-  const { canDo } = useAuthCtx();
+  const { user, canDo } = useAuthCtx();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const requestedKind = params.get('entityType');
@@ -63,50 +31,24 @@ export default function EvidenceContributionPage() {
   const [kind, setKind] = useState<RecordKind>(
     kinds.find((value) => value === requestedKind) || kinds[0] || 'farm',
   );
-  const [records, setRecords] = useState<Option[]>([]);
-  const [recordId, setRecordId] = useState('');
+  const [selected, setSelected] = useState<EvidenceRecordOption | null>(null);
+  const [ready, setReady] = useState(false);
+  const recordId = selected?.id || '';
   const [purpose, setPurpose] = useState('origin_document');
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<File>();
-  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  useEffect(() => {
-    let active = true;
+  const chooseRecord = useCallback((record: EvidenceRecordOption | null) => {
+    setSelected(record);
     setDescription('');
-    setLoading(true);
-    setRecords([]);
-    setRecordId('');
     setFile(undefined);
     setError('');
     setSuccess('');
-    if (!canDo(sources[kind].permission)) {
-      setLoading(false);
-      return;
-    }
-    sources[kind]
-      .load()
-      .then((rows) => {
-        if (!active) return;
-        setRecords(rows);
-        const requested = params.get('entityId');
-        if (requested && rows.some((row) => row.id === requested)) setRecordId(requested);
-      })
-      .catch(() => {
-        if (active)
-          setError('Records could not be loaded. Reload to retry; no upload was started.');
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [kind, params]);
-  const selected = records.find((record) => record.id === recordId);
+  }, []);
   const upload = async () => {
-    if (!selected || !file || !description.trim() || busy) return;
+    if (!selected || !ready || !file || !description.trim() || busy) return;
     setBusy(true);
     setError('');
     setSuccess('');
@@ -153,7 +95,11 @@ export default function EvidenceContributionPage() {
                   aria-label="Evidence record type"
                   className="form-select mt-2"
                   value={kind}
-                  onChange={(event) => setKind(event.target.value as RecordKind)}
+                  onChange={(event) => {
+                    chooseRecord(null);
+                    setReady(false);
+                    setKind(event.target.value as RecordKind);
+                  }}
                 >
                   {kinds.map((value) => (
                     <option key={value} value={value}>
@@ -162,102 +108,69 @@ export default function EvidenceContributionPage() {
                   ))}
                 </select>
               </label>
-              {loading ? (
-                <p role="status">Loading permitted records…</p>
-              ) : !error && records.length === 0 ? (
-                <>
-                  <p role="status">
-                    No {sources[kind].label.toLowerCase()} records are available. Create the
-                    relevant source or inventory record first, or ask your trade colleague to create
-                    it.
+              <EvidenceRecordPicker
+                key={`${user?.id}:${kind}:${params.get('entityId') || ''}`}
+                kind={kind}
+                selected={selected}
+                requestedId={requestedKind === kind ? params.get('entityId') || '' : ''}
+                onChange={chooseRecord}
+                onReady={setReady}
+                disabled={busy}
+                onDashboard={() => navigate('/home')}
+              />
+              {selected && (
+                <div
+                  data-testid="evidence-context"
+                  className="rounded-2xl border border-border p-5 space-y-4"
+                >
+                  <p>
+                    Supporting record: <strong>{selected.label}</strong>
                   </p>
-                  {kind === 'farm' || kind === 'batch' ? (
-                    <SupplyPathChoice />
-                  ) : (
-                    <button className="btn" onClick={() => navigate('/home')}>
-                      Return to trade dashboard
-                    </button>
-                  )}
-                </>
-              ) : null}
-              {!loading && records.length > 0 && (
-                <>
                   <label className="block">
-                    Choose record
+                    Document purpose
                     <select
-                      aria-label="Evidence record"
+                      aria-label="Document purpose"
                       className="form-select mt-2"
-                      value={recordId}
-                      onChange={(event) => {
-                        setDescription('');
-                        setRecordId(event.target.value);
-                        setFile(undefined);
-                        setSuccess('');
-                      }}
+                      value={purpose}
+                      onChange={(event) => setPurpose(event.target.value)}
                     >
-                      <option value="">Select the record this evidence supports</option>
-                      {records.map((record) => (
-                        <option key={record.id} value={record.id}>
-                          {record.label}
+                      {purposes.map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
                         </option>
                       ))}
                     </select>
                   </label>
-                  {selected && (
-                    <div
-                      data-testid="evidence-context"
-                      className="rounded-2xl border border-border p-5 space-y-4"
-                    >
-                      <p>
-                        Supporting record: <strong>{selected.label}</strong>
-                      </p>
-                      <label className="block">
-                        Document purpose
-                        <select
-                          aria-label="Document purpose"
-                          className="form-select mt-2"
-                          value={purpose}
-                          onChange={(event) => setPurpose(event.target.value)}
-                        >
-                          {purposes.map(([value, label]) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="block">
-                        What does this evidence support?
-                        <textarea
-                          aria-label="Evidence explanation"
-                          className="form-input mt-2"
-                          maxLength={2000}
-                          value={description}
-                          onChange={(event) => setDescription(event.target.value)}
-                          placeholder="Describe the claim, source or plot code, and any requested requirement."
-                        />
-                      </label>
-                      <label className="block">
-                        Evidence file (PDF, JPEG or PNG)
-                        <input
-                          key={`${kind}:${recordId}:${success}`}
-                          aria-label="Evidence file"
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                          className="form-input mt-2"
-                          onChange={(event) => setFile(event.target.files?.[0])}
-                        />
-                      </label>
-                      <button
-                        className="btn btn-primary"
-                        disabled={!file || !description.trim()}
-                        onClick={upload}
-                      >
-                        {busy ? 'Uploading…' : 'Attach evidence'}
-                      </button>
-                    </div>
-                  )}
-                </>
+                  <label className="block">
+                    What does this evidence support?
+                    <textarea
+                      aria-label="Evidence explanation"
+                      className="form-input mt-2"
+                      maxLength={2000}
+                      value={description}
+                      onChange={(event) => setDescription(event.target.value)}
+                      placeholder="Describe the claim, source or plot code, and any requested requirement."
+                    />
+                  </label>
+                  <label className="block">
+                    Evidence file (PDF, JPEG or PNG)
+                    <input
+                      key={`${kind}:${recordId}:${success}`}
+                      aria-label="Evidence file"
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                      className="form-input mt-2"
+                      onChange={(event) => setFile(event.target.files?.[0])}
+                    />
+                  </label>
+                  <button
+                    className="btn btn-primary"
+                    disabled={!ready || busy || !file || !description.trim()}
+                    onClick={upload}
+                  >
+                    {busy ? 'Uploading…' : 'Attach evidence'}
+                  </button>
+                </div>
               )}
             </fieldset>
           </>
