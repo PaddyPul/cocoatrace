@@ -22,6 +22,7 @@ Suppliers can find inventory beyond the first page and publish the holding they 
 - Extract InventoryPage from DataPages; add search and Previous/Next controls to inventory, publication, marketplace and own listings.
 - Resolve newly created holdings and off-page published listings explicitly. Bound shortlists to 20 entries and scope them by account; comparison uses exact listing lookups.
 - Reject oversized legacy list reads rather than silently truncating them. Bound linked proof reads and query duration.
+- Select the supplier task by its accessible card title and verify clicking it opens own listings.
 - Correct the supplier aggregate browser assertion to distinguish the next action from the separate Create another supply section.
 - Scope the inventory query-plan assertion to the actual page query; verify enrichment still completes.
 - Correct the default listing cursor parameter typing after the first native run exposed PostgreSQL HTTP 500 errors. Add a unit regression for every SQL parameter slot.

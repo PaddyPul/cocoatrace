@@ -155,12 +155,14 @@ test('supplier home uses full aggregate counts, not the first inventory page', a
     nextAction.getByText('Keep published supply current', { exact: true }),
   ).toBeVisible();
   await expect(
-    nextAction.getByRole('button', { name: 'View listings', exact: true }),
+    nextAction.getByRole('button', { name: /^Keep published supply current/ }),
   ).toBeVisible();
   await expect(page.locator('#create-supply').getByTestId('supply-path-choice')).toBeVisible();
   await expect(
     page.locator('#create-supply').getByRole('button', { name: 'Create inventory', exact: true }),
   ).toBeVisible();
+  await nextAction.getByRole('button', { name: /^Keep published supply current/ }).click();
+  await expect(page).toHaveURL(/\/my-listings(?:\?|$)/);
 });
 
 test('failed supply summaries pause setup recommendations instead of showing an empty inventory', async ({
