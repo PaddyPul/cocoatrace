@@ -10,7 +10,7 @@ test('incomplete trace explains the safety boundary without publishing a partial
     }
     const body = path === '/api/me' ? { id: 'manager', organization_id: 'supplier', roles: ['supplier_admin'], permissions: ['*'], name: 'Manager' }
       : path === '/api/onboarding' ? { status: 'completed' }
-      : path === '/api/traceability/lots' ? [{ id: 'lot', lotCode: 'LOT-1', lotType: 'source', productName: 'Material', quantityKg: 10, downstreamLotCount: 1 }] : [];
+      : path === '/api/traceability/lots/page' ? { items: [{ id: 'lot', lotCode: 'LOT-1', lotType: 'source', productName: 'Material', quantityKg: 10, downstreamLotCount: 1 }], nextCursor: null, hasMore: false } : [];
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
   });
   await page.goto('/recalls');

@@ -5,6 +5,7 @@ export const formattedPaths = [
   'api/src/services/traceGraphRepository*.ts',
   'api/scripts/benchmark-trace.ts',
   'web/src/components/supply/**/*.tsx',
+  'e2e/traceLotPages.spec.ts',
   'web/src/pages/EvidenceContributionPage.tsx',
   'api/src/services/tradeNextAction*.ts',
   'api/src/modules/tradeActions/**/*.ts',

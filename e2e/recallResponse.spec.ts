@@ -9,7 +9,7 @@ async function mock(page: Page, manager = false, unavailableTrace = false) {
   await page.addInitScript(({ manager }) => localStorage.setItem('ct_user', JSON.stringify({ id: 'buyer', organizationId: 'buyer-org', roles: ['buyer_admin'], permissions: manager ? ['*'] : ['lot.read', 'evidence.read', 'evidence.upload'], name: 'Buyer' })), { manager });
   await page.route('**/api/**', async route => {
     const path = new URL(route.request().url()).pathname;
-    if (unavailableTrace && path === '/api/traceability/lots') { await route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ error: 'Investigation access required' }) }); return; }
+    if (unavailableTrace && path === '/api/traceability/lots/page') { await route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ error: 'Investigation access required' }) }); return; }
     if (['POST', 'PUT', 'PATCH'].includes(route.request().method())) {
       requests.push({ path, body: route.request().postDataJSON() });
       if (path.endsWith('/acknowledge')) acknowledged = true;
@@ -20,6 +20,7 @@ async function mock(page: Page, manager = false, unavailableTrace = false) {
     if (acknowledged) view.participants[0].acknowledged_at = '2026-10-02' as any;
     const body = path === '/api/me' ? { id: 'buyer', organization_id: 'buyer-org', roles: ['buyer_admin'], permissions: manager ? ['*'] : ['lot.read', 'evidence.read', 'evidence.upload'], name: 'Buyer' }
       : path === '/api/onboarding' ? { status: 'completed' }
+      : path === '/api/traceability/lots/page' ? { items: [], nextCursor: null, hasMore: false }
       : path === '/api/recalls' ? [notice]
       : path.endsWith('/response') ? view : [];
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });

@@ -6,6 +6,14 @@ import { ValidationError } from '../errors';
 import { query } from '../db';
 import { TRACE_LIMITS, checkTraceSize } from '../modules/trace/limits';
 import { hasExplicitPermission } from '../services/resourcePolicy';
+import { parseLotPage, readLotPage } from '../modules/trace/lotPage';
+
+export async function listLotPage(req: Request, res: Response): Promise<void> {
+  const seeAll = canSeeAll(req);
+  const input = parseLotPage(req.query, req.user!.organizationId, seeAll);
+  const page = await withTraceRead(execute => readLotPage(execute, req.user!.organizationId, seeAll, input));
+  res.json(page);
+}
 
 function canSeeAll(req: Request): boolean {
   return hasExplicitPermission(req.user!, 'traceability.read.network', 'recall.manage.all');

@@ -8,6 +8,8 @@ import { getClient, pool, query } from '../../src/db';
 import { up as backfillRecallHolds } from '../../src/migrations/022_recall_safety_holds';
 import { reconcileRecallSafety } from '../../src/modules/recall/reconciliation';
 import { evidenceStorage } from '../../src/services/evidenceStorage';
+import { parseLotPage, readLotPage } from '../../src/modules/trace/lotPage';
+import { withTraceRead } from '../../src/services/traceGraphRepository';
 
 type Actor = { id: string; organizationId: string; token: string };
 type Supply = { batchId: string; holdingId: string; lotId: string; listingId: string };
@@ -81,6 +83,73 @@ function blocked(response: { status: number; body: { code?: string } }) {
 }
 
 beforeAll(async () => { seller = await actor('exporter'); buyer = await actor('importer'); outsider = await actor('exporter'); unprivileged = await actor('exporter', false); });
+
+describe('bounded trace lot selector', () => {
+  it('pages beyond the graph cap, searches before limiting and rejects foreign cursors without leaking lots', async () => {
+    const prefix = `page-${crypto.randomUUID()}-`;
+    const fixtures = (await query(`INSERT INTO material_lots(lot_code,lot_type,product_name,quantity_kg,owner_organization_id)
+      SELECT $1||n,'production','Page fixture',1,$2 FROM generate_series(1,2501) n RETURNING id,lot_code`, [prefix, seller.organizationId])).rows;
+    const foreign = (await query(`INSERT INTO material_lots(lot_code,lot_type,product_name,quantity_kg,owner_organization_id)
+      VALUES($1,'production','Page fixture',1,$2) RETURNING id`, [prefix + 'FOREIGN', outsider.organizationId])).rows[0];
+    const get = (parameters: Record<string, string>, principal = seller) => request(app).get('/traceability/lots/page').query(parameters).set('Authorization', `Bearer ${principal.token}`);
+    try {
+      const first = await get({ search: prefix, limit: '100' });
+      expect(first.status).toBe(200);
+      expect(first.body.items).toHaveLength(100);
+      expect(first.body.hasMore).toBe(true);
+      // Measure the actual PostgreSQL plan against 2,501 permitted records.
+      // Assertion is structural, not a hardware-dependent wall-clock threshold.
+      await withTraceRead(async execute => {
+        await readLotPage(async (sql, parameters) => {
+          const explained = await execute(`EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${sql}`, parameters);
+          const report = explained.rows[0]['QUERY PLAN'][0];
+          expect(report['Execution Time']).toBeGreaterThanOrEqual(0);
+          const pending = [report.Plan];
+          let boundedPageFound = false;
+          while (pending.length) {
+            const node = pending.pop();
+            if (node['Node Type'] === 'Limit') { expect(node['Actual Rows']).toBeLessThanOrEqual(101); boundedPageFound = true; }
+            pending.push(...(node.Plans || []));
+          }
+          expect(boundedPageFound).toBe(true);
+          return execute(sql, parameters);
+        }, seller.organizationId, false, parseLotPage({ search: prefix, limit: '100' }, seller.organizationId, false));
+      });
+      const second = await get({ search: prefix, limit: '100', cursor: first.body.nextCursor });
+      expect(second.status).toBe(200);
+      expect(second.body.items).toHaveLength(100);
+      const ids = [...first.body.items, ...second.body.items].map((lot: { id: string }) => lot.id);
+      expect(new Set(ids).size).toBe(200);
+      expect(ids).toEqual([...ids].sort());
+      expect(ids).not.toContain(foreign.id);
+      const beyond = fixtures.find(lot => !ids.includes(lot.id))!;
+      const found = await get({ search: beyond.id });
+      expect(found.status).toBe(200);
+      expect(found.body.items.map((lot: { id: string }) => lot.id)).toEqual([beyond.id]);
+      expect(found.body.nextCursor).toBeNull();
+      await query('UPDATE material_lots SET owner_organization_id=$1 WHERE id=$2', [outsider.organizationId, beyond.id]);
+      expect((await get({ search: beyond.id })).body.items).toEqual([]);
+      expect((await get({ search: foreign.id })).body.items).toEqual([]);
+      expect((await get({ search: prefix, cursor: first.body.nextCursor }, outsider)).status).toBe(400);
+      expect((await get({ search: 'different', cursor: first.body.nextCursor })).status).toBe(400);
+      for (const parameters of [{ limit: '101' }, { search: 'x'.repeat(81) }, { cursor: 'invalid' }] as Record<string, string>[]) expect((await get(parameters)).status).toBe(400);
+      expect((await get({}, unprivileged)).status).toBe(403);
+      expect((await request(app).get('/traceability/lots/page')).status).toBe(401);
+    } finally {
+      await query('DELETE FROM material_lots WHERE id=ANY($1::uuid[])', [[...fixtures.map(lot => lot.id), foreign.id]]);
+    }
+  });
+
+  it('includes recorded custody and trade access without duplicating a lot', async () => {
+    const s = await supply();
+    const offer = await makeOffer(s);
+    expect(offer.status).toBe(201);
+    expect((await accept(offer.body.id)).status).toBe(200);
+    const result = await request(app).get('/traceability/lots/page').query({ search: s.lotId }).set('Authorization', `Bearer ${buyer.token}`);
+    expect(result.status).toBe(200);
+    expect(result.body.items.map((lot: { id: string }) => lot.id)).toEqual([s.lotId]);
+  });
+});
 afterAll(async () => {
   const ids = [...resolutionEvidence.values()];
   if (ids.length) {

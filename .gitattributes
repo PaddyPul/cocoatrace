@@ -55,3 +55,4 @@ api/src/modules/trace/** text eol=lf
 api/src/services/recallTrace*.ts text eol=lf
 api/src/services/traceGraphRepository*.ts text eol=lf
 api/scripts/benchmark-trace.ts text eol=lf
+e2e/traceLotPages.spec.ts text eol=lf

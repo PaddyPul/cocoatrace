@@ -8,7 +8,7 @@
       "status": "partial",
       "title": "Current release passes every gate on the candidate commit",
       "backlog": ["QLT-001", "SEC-014", "LNG-001"],
-      "evidence": "Founder confirms source/evidence-entry candidate full release checks passed and merge/pull completed 2026-10-07 after import and accessible-selector corrections. Local native acceptance is founder-reported; no CI URL or hosted staging evidence independently archived. Every later candidate requires a fresh commit-specific release report."
+      "evidence": "Founder confirms bounded trace-safety candidate full release checks passed and merge/pull completed 2026-10-07 01:15 UTC. Local native acceptance is founder-reported; independent CI URL and hosted staging evidence remain unarchived. Each subsequent candidate requires its own release report."
     },
     {
       "id": "CORE-isolation",
@@ -144,7 +144,7 @@
       "status": "partial",
       "title": "Scoped recall/trace is bounded and safety fails closed",
       "backlog": ["PER-002", "ARC-008"],
-      "evidence": "Bounded connected trace analysis, explicit incomplete metadata, iterative cycle/work/depth limits and atomic bulk recall writes implemented 2026-10-07. Unit/capacity checks and native API/browser regressions added; founder native acceptance pending. Hosted operational/capacity proof remains open."
+      "evidence": "PER-002 closed: founder confirms bounded trace-safety release checks passed and merge/pull completed 2026-10-07 01:15 UTC. Scoped reads, bounds, explicit incomplete/no-clearance results, atomic rollback and browser failure presentation accepted. Broader ARC-008 policy/repository separation remains partial; hosted capacity/operations are separate gates."
     },
     {
       "id": "CORE-workers",
@@ -184,7 +184,7 @@
       "status": "open",
       "title": "Representative load meets approved capacity/SLO budgets",
       "backlog": ["PER-001", "PER-003", "PER-004"],
-      "evidence": "No measured representative baseline."
+      "evidence": "Trace-selector paging candidate adds a 2,501-record native query-plan and tenant-isolation rehearsal; native execution pending. No hosted representative capacity/SLO baseline. Universal list/export bounds and load acceptance remain open."
     },
     {
       "id": "CORE-legal",
