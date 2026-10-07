@@ -34,6 +34,21 @@ async function fixture() {
   return {farm,batch,certificate,listing,slug};
 }
 const getListing=(id:string)=>request(app).get(`/listings/${id}`).set('Authorization',`Bearer ${token}`);
+describe('paged marketplace organic predicate agrees with authoritative assessment',()=>{
+  it.each(['valid','revoked','expired','wrong_crop','direct_inventory','self_certifier','future_attestation'])('does not bypass %s evidence state',async state=>{
+    const f=await fixture();
+    if(state==='revoked') await query("UPDATE organic_certificates SET status='revoked' WHERE id=$1",[f.certificate]);
+    if(state==='expired') await query('UPDATE organic_certificates SET valid_to=CURRENT_DATE-1 WHERE id=$1',[f.certificate]);
+    if(state==='wrong_crop') await query("UPDATE organic_certificates SET crop_scope=ARRAY['shea'] WHERE id=$1",[f.certificate]);
+    if(state==='direct_inventory') await query("UPDATE harvest_batches SET source_mode='direct_inventory' WHERE id=$1",[f.batch]);
+    if(state==='self_certifier') await query('UPDATE organic_certificates SET certifier_organization_id=$1 WHERE id=$2',[org,f.certificate]);
+    if(state==='future_attestation') await query("UPDATE batch_attestations SET attested_at=NOW()+INTERVAL '1 day' WHERE batch_id=$1",[f.batch]);
+    const detail=await getListing(f.listing);expect(detail.status).toBe(200);
+    const filtered=await request(app).get('/listings/page').query({id:f.listing,organic:'true'}).set('Authorization',`Bearer ${token}`);
+    expect(filtered.status).toBe(200);
+    expect(filtered.body.items.map((item:{id:string})=>item.id)).toEqual(detail.body.trust.organic.status==='reviewed'?[f.listing]:[]);
+  });
+});
 describe('authoritative trust across marketplace, passport and provenance',()=>{
   it('derives revoked certificate state at read time across public and private surfaces',async()=>{
     const f=await fixture(); expect((await getListing(f.listing)).body.trust.organic.status).toBe('reviewed');

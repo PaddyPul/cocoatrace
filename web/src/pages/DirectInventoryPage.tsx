@@ -15,9 +15,9 @@ export default function DirectInventoryPage() {
   const submit = async () => {
     setBusy(true); setError('');
     try {
-      await batches.createDirectInventory({ commodity: form.commodity, quantityKg: Number(form.quantityKg), inventoryDate: form.inventoryDate, sourceName: form.sourceName || undefined, sourceCountry: form.sourceCountry, sourceRegion: form.sourceRegion || undefined, warehouseLocation: form.warehouseLocation || undefined, grade: form.grade || undefined, moisturePercent: form.moisturePercent ? Number(form.moisturePercent) : undefined });
+      const created = await batches.createDirectInventory({ commodity: form.commodity, quantityKg: Number(form.quantityKg), inventoryDate: form.inventoryDate, sourceName: form.sourceName || undefined, sourceCountry: form.sourceCountry, sourceRegion: form.sourceRegion || undefined, warehouseLocation: form.warehouseLocation || undefined, grade: form.grade || undefined, moisturePercent: form.moisturePercent ? Number(form.moisturePercent) : undefined });
       toast('success', 'Conventional inventory recorded. It is ready for commercial listing.');
-      navigate('/supply/new');
+      navigate(`/supply/new?holding=${created.holding_id}`);
     } catch (err: any) { setError(err.message || 'Could not create inventory'); } finally { setBusy(false); }
   };
   return <Layout currentPage="inventory-new" actions={<button className="btn" onClick={() => navigate('/home?mode=sell')}><ArrowLeft size={14} />Back</button>}>

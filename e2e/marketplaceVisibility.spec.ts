@@ -12,10 +12,11 @@ async function mockWorkspace(page: Page, quantity: () => number) {
     localStorage.setItem('ct_active_sourcing_request', 'cocoa-request');
   });
   await page.route('**/api/**', async (route) => {
-    const path = new URL(route.request().url()).pathname;
+    const url = new URL(route.request().url());
+    const path = url.pathname;
     const body = path === '/api/me' ? { id: 'buyer', organization_id: 'buyer-org', org_name: 'Buyer Org', name: 'Buyer', roles: ['buyer_admin'], permissions: ['*'] }
       : path === '/api/onboarding' ? { status: 'completed' }
-      : path === '/api/listings' ? [peanut(quantity())]
+      : path === '/api/listings/page' ? {items: url.searchParams.get('commodity') === 'cocoa' || url.searchParams.get('id') === 'unavailable-listing' ? [] : [peanut(quantity())], nextCursor:null, hasMore:false}
       : path === '/api/sourcing-requests' ? [requestBrief] : [];
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
   });

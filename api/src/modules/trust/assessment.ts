@@ -65,9 +65,9 @@ export function legacyOrganicStatus(trust: TrustSummary): string {
   return trust.organic.status === 'reviewed' ? 'attested' : trust.organic.status === 'not_claimed' ? 'none' : 'self_declared';
 }
 
-export async function loadBatchTrust(batchIds: string[]): Promise<Map<string, TrustSummary>> {
+export async function loadBatchTrust(batchIds: string[], runQuery: (sql: string, params?: any[]) => Promise<{ rows: any[] }> = query, bounded = false): Promise<Map<string, TrustSummary>> {
   if (!batchIds.length) return new Map();
-  const batches = await query(`SELECT b.*, f.farmer_organization_id,
+  const batches = await runQuery(`SELECT b.*, f.farmer_organization_id,
     au.organization_id AS attestation_user_org,a.batch_id AS attestation_batch_id,a.certifier_organization_id AS attestation_certifier_id,a.attested_at,
     c.status AS certificate_status,c.farm_id AS certificate_farm_id,c.farmer_organization_id AS certificate_farmer_id,
     c.certifier_organization_id AS certificate_certifier_id,c.crop_scope AS certificate_crop_scope,
@@ -77,9 +77,9 @@ export async function loadBatchTrust(batchIds: string[]): Promise<Map<string, Tr
     LEFT JOIN organizations o ON o.id=c.certifier_organization_id WHERE b.id=ANY($1::uuid[])`, [batchIds]);
   const farmIds = batches.rows.map(b => b.farm_id).filter(Boolean);
   const [plots,reviews] = await Promise.all([
-    query('SELECT * FROM farm_plots WHERE farm_id=ANY($1::uuid[])',[farmIds]),
-    query(`SELECT r.*,o.name AS reviewer_name FROM trust_claim_reviews r JOIN organizations o ON o.id=r.reviewer_organization_id JOIN users u ON u.id=r.reviewer_user_id AND u.organization_id=r.reviewer_organization_id
-      WHERE (r.entity_type='batch' AND r.entity_id=ANY($1::uuid[])) OR (r.entity_type='farm' AND r.entity_id=ANY($2::uuid[]))`,[batchIds,farmIds])
+    runQuery('SELECT * FROM farm_plots WHERE farm_id=ANY($1::uuid[])' + (bounded ? ' LIMIT 5001' : ''),[farmIds]),
+    runQuery(`SELECT r.*,o.name AS reviewer_name FROM trust_claim_reviews r JOIN organizations o ON o.id=r.reviewer_organization_id JOIN users u ON u.id=r.reviewer_user_id AND u.organization_id=r.reviewer_organization_id
+      WHERE (r.entity_type='batch' AND r.entity_id=ANY($1::uuid[])) OR (r.entity_type='farm' AND r.entity_id=ANY($2::uuid[]))` + (bounded ? ' LIMIT 5001' : ''),[batchIds,farmIds])
   ]);
   return new Map(batches.rows.map(b => [b.id,assessBatchTrust(b,plots.rows.filter(p => p.farm_id===b.farm_id),reviews.rows)]));
 }

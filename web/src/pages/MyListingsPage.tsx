@@ -1,3 +1,5 @@
+import { useCatalogPage } from '../components/catalog/useCatalogPage';
+import PageNavigation from '../components/catalog/PageNavigation';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listings } from '../api';
@@ -13,34 +15,24 @@ import EmptyState from '../components/shared/EmptyState';
 export default function MyListingsPage() {
   const navigate = useNavigate();
   const { user } = useAuthCtx();
-  const [all, setAll] = useState<Listing[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-
-  useEffect(() => {
-    setLoading(true);
-    listings.list()
-      .then(setAll)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const mine = all.filter((l) => l.seller_organization_id === user?.organizationId);
-  const filtered = mine.filter((l) => !search || l.farm_name?.toLowerCase().includes(search.toLowerCase()) || l.farm_region?.toLowerCase().includes(search.toLowerCase()) || (l.grade || '').toLowerCase().includes(search.toLowerCase()));
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const page = useCatalogPage(listings.page, {mine: 'true', search: appliedSearch});
+  const {items: mine, loading, error} = page;
+  const filtered = mine;
 
   return (
     <Layout currentPage="my-listings">
-      {loading ? <SkeletonTable rows={4} cols={4} /> : error ? <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{error}</div> : <div>
+      {loading ? <SkeletonTable rows={4} cols={4} /> : error ? <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400" role="alert">{error}<button className="btn ml-3" onClick={page.refresh}>Retry listings</button></div> : <div>
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <div className="relative flex-1 min-w-[200px]">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-            <input type="text" placeholder="Search my listings…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input type="text" aria-label="Search my listings" maxLength={80} placeholder="Search my listings…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
-          <div className="text-xs text-text-muted">{filtered.length} listing{filtered.length !== 1 ? 's' : ''}</div>
+          <button className="btn" onClick={() => { setAppliedSearch(search.trim()); page.refresh(); }}>Search listings</button><PageNavigation page={page} label="listings" /><div className="text-xs text-text-muted">On this page: {filtered.length} listing{filtered.length !== 1 ? 's' : ''}</div>
         </div>
 
-        {filtered.length === 0 && mine.length === 0 ? (
+        {filtered.length === 0 && mine.length === 0 && !appliedSearch && page.pageNumber === 1 ? (
           <EmptyState icon="🏷" title="No listings yet" description="Create or select inventory, then publish the quantity and terms buyers can review." action={<button className="btn btn-sm btn-primary" onClick={() => navigate('/supply/new')}>Publish supply →</button>} />
         ) : filtered.length === 0 ? (
           <EmptyState icon="🔍" title="No listings match" description="Try adjusting your search." />

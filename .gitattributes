@@ -56,3 +56,7 @@ api/src/services/recallTrace*.ts text eol=lf
 api/src/services/traceGraphRepository*.ts text eol=lf
 api/scripts/benchmark-trace.ts text eol=lf
 e2e/traceLotPages.spec.ts text eol=lf
+api/src/modules/catalog/** text eol=lf
+web/src/components/catalog/** text eol=lf
+web/src/pages/InventoryPage.tsx text eol=lf
+e2e/catalogPages.spec.ts text eol=lf

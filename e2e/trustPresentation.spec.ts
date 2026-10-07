@@ -7,10 +7,11 @@ const listing = { id: 'lot', batch_id: 'batch', seller_name: 'Supplier One', cro
 async function mock(page: Page, publicProduct?: () => object) {
   await page.addInitScript(() => localStorage.setItem('ct_user', JSON.stringify({ id: 'buyer', organizationId: 'buyer-org', roles: ['buyer_admin'], permissions: ['*'], name: 'Buyer' })));
   await page.route('**/api/**', async route => {
-    const path = new URL(route.request().url()).pathname;
+    const url = new URL(route.request().url());
+    const path = url.pathname;
     const body = path === '/api/me' ? { id: 'buyer', organization_id: 'buyer-org', name: 'Buyer', roles: ['buyer_admin'], permissions: ['*'] }
       : path === '/api/onboarding' ? { status: 'completed' }
-      : path === '/api/listings' ? [listing]
+      : path === '/api/listings/page' ? {items: url.searchParams.get('organic') === 'true' && listing.trust?.organic?.status !== 'reviewed' ? [] : [listing],nextCursor:null,hasMore:false}
       : path === '/api/listings/lot' ? listing
       : path.startsWith('/api/public/products/') ? publicProduct?.() || {}
       : [];
