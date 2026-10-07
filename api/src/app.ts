@@ -1,3 +1,4 @@
+import { TraceIncompleteError } from './modules/trace/limits';
 import 'express-async-errors';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
@@ -106,6 +107,7 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     res.status(err.statusCode).json({
       error: err.message,
       code: err.code,
+      ...(err instanceof TraceIncompleteError ? { analysis: err.analysis } : {}),
     });
     return;
   }
