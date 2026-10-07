@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 import { holdings as holdingsApi } from '../api';
@@ -10,45 +10,16 @@ import { SkeletonTable } from '../components/shared/Skeleton';
 import EmptyState from '../components/shared/EmptyState';
 import { useCatalogPage } from '../components/catalog/useCatalogPage';
 import PageNavigation from '../components/catalog/PageNavigation';
+import TransferRecords from '../components/catalog/TransferRecords';
 
 export default function InventoryPage() {
   const navigate = useNavigate();
-  const { user, canDo } = useAuthCtx();
+  const { canDo } = useAuthCtx();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
   const page = useCatalogPage(holdingsApi.page, { search: appliedSearch });
   const { items: holdings, loading, error, refresh: refetch } = page;
-
-  // Incoming transfers
-  const [transfers, setTransfers] = useState<any[]>([]);
-  const [transfersLoading, setTransfersLoading] = useState(false);
-  const [acceptingTransferId, setAcceptingTransferId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (canDo('custody.transfer.request')) {
-      setTransfersLoading(true);
-      holdingsApi
-        .listTransfers()
-        .then((t) => setTransfers(t.filter((x: any) => x.status === 'requested')))
-        .catch(() => {})
-        .finally(() => setTransfersLoading(false));
-    }
-  }, [canDo]);
-
-  const handleAcceptTransfer = async (transferId: string) => {
-    setAcceptingTransferId(transferId);
-    try {
-      await holdingsApi.acceptTransfer(transferId);
-      setTransfers((prev) => prev.filter((t) => t.id !== transferId));
-      refetch();
-      toast('success', 'Transfer accepted — holding added to your inventory');
-    } catch (e: any) {
-      toast('error', e.message);
-    } finally {
-      setAcceptingTransferId(null);
-    }
-  };
 
   // Create holding
   const [showCreate, setShowCreate] = useState(false);
@@ -193,32 +164,7 @@ export default function InventoryPage() {
         )}
       </div>
 
-      {transfers.length > 0 && (
-        <div className="bg-surface border border-border rounded mt-4">
-          <div className="px-4 py-3 border-b border-border">
-            <h3 className="text-sm font-semibold">Incoming Transfers ({transfers.length})</h3>
-          </div>
-          <div className="divide-y divide-border">
-            {transfers.map((t) => (
-              <div key={t.id} className="px-4 py-3 flex items-center justify-between text-xs">
-                <div>
-                  <div className="font-medium">{t.from_org_name}</div>
-                  <div className="text-text-muted">
-                    {t.quantity_kg} kg{t.warehouse_location ? ` · ${t.warehouse_location}` : ''}
-                  </div>
-                </div>
-                <button
-                  className="btn btn-sm btn-primary"
-                  onClick={() => handleAcceptTransfer(t.id)}
-                  disabled={acceptingTransferId === t.id}
-                >
-                  {acceptingTransferId === t.id ? 'Accepting…' : 'Accept'}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {canDo('custody.transfer.request') && <TransferRecords onAccepted={refetch} />}
 
       {showCreate && (
         <div className="modal-overlay" onClick={() => !chLoading && setShowCreate(false)}>

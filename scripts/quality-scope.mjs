@@ -5,6 +5,7 @@ export const formattedPaths = [
   'web/src/components/catalog/**/*.{ts,tsx}',
   'web/src/pages/InventoryPage.tsx',
   'e2e/catalogPages.spec.ts',
+  'e2e/transferPages.spec.ts',
   'api/src/services/recallTrace*.ts',
   'api/src/services/traceGraphRepository*.ts',
   'api/scripts/benchmark-trace.ts',

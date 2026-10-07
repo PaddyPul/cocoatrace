@@ -252,6 +252,12 @@ export const shipments = {
     api<any>('POST', `/shipments/${id}/milestones`, data),
 };
 
+export interface CustodyTransfer {
+  id: string; holding_id: string; from_organization_id: string; to_organization_id: string;
+  from_org_name: string; to_org_name: string; quantity_kg: string | number; status: string;
+  requested_at: string; responded_at: string | null; warehouse_location: string | null;
+  crop: string; activeRecall: boolean;
+}
 export const holdings = {
   list: () => api<import('./types').Holding[]>('GET', '/holdings'),
   page: (parameters: Record<string,string> = {}) => api<CatalogPage<import('./types').Holding>>('GET', `/holdings/page?${new URLSearchParams({limit: '50', ...parameters})}`),
@@ -261,7 +267,8 @@ export const holdings = {
     api<import('./types').Holding>('POST', '/holdings', data),
   transfer: (id: string, data: { toOrganizationId: string; quantityKg: number; reason?: string }) =>
     api<any>('POST', `/holdings/${id}/transfer`, data),
-  listTransfers: () => api<any[]>('GET', '/transfers'),
+  listTransfers: () => api<CustodyTransfer[]>('GET', '/transfers'),
+  transferPage: (parameters: Record<string,string> = {}) => api<CatalogPage<CustodyTransfer>>('GET', `/transfers/page?${new URLSearchParams({limit:'50', ...parameters})}`),
   acceptTransfer: (id: string) => api<any>('POST', `/transfers/${id}/accept`),
   split: (id: string, data: { quantities: number[] }) =>
     api<any>('POST', `/holdings/${id}/split`, data),
