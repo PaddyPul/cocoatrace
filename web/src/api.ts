@@ -357,6 +357,7 @@ export const recalls = {
 
 export const traceability = {
   listLots: () => api<import('./types').MaterialLot[]>('GET', '/traceability/lots'),
+  listLotPage: (search = '', cursor?: string) => api<{ items: import('./types').MaterialLot[]; nextCursor: string | null; hasMore: boolean }>('GET', `/traceability/lots/page?${new URLSearchParams({ search, limit: '50', ...(cursor ? { cursor } : {}) })}`),
   traceBack: (lotId: string, quantityKg?: number) => api<import('./types').TraceBackResult>(
     'GET', `/traceability/lots/${lotId}/trace-back${quantityKg ? `?quantityKg=${quantityKg}` : ''}`
   ),

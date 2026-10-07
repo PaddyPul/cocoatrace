@@ -5,7 +5,7 @@
 **Pilot launch plan:** [`BETTERTRADE_PILOT_PLAN.md`](BETTERTRADE_PILOT_PLAN.md)
 **Progress audit:** [`BACKLOG_GROOMING_2026-10-06.md`](BACKLOG_GROOMING_2026-10-06.md)
 **Architecture direction:** [`ARCHITECTURE_MODERNIZATION.md`](./ARCHITECTURE_MODERNIZATION.md)
-**Last triaged:** 2026-10-06
+**Last triaged:** 2026-10-07
 **Next formal review:** Weekly, before selecting new work
 
 ## How to use this file
@@ -78,7 +78,7 @@ Run `npm run backlog:progress` for an exact recount. The generated counts are re
 
 ## Current execution queue
 
-1. **Bounded trace/recall safety (PER-002 / ARC-024)**: enforce graph node/edge/depth/work limits, explicit incomplete analysis and safe behavior for oversized/cyclic genealogy. Automate adversarial and representative capacity cases. Source setup PRD-004 and shared actions PRD-006 are accepted and merged; do not repeat their implementation.
+1. **Bounded tenant reads and pagination (PER-001 / ARC-024)**: inventory list/search/export endpoints, implement enforced page/search limits and cursor navigation in focused resource slices, set SQL timeouts and collect representative query plans. Trace-selector slice implemented in the current candidate: scoped keyset pages, search, navigation and native large-workspace/query-plan cases; release acceptance pending. Next: inventory/marketplace with truthful dashboard counts and server-side matching filters. PER-002 bounded trace safety, PRD-004 supplier setup and PRD-006 shared actions are release-tested and merged; do not repeat them.
 2. **Remaining security/operational acceptance**: SAF-004, IDN-012/018/019 and IDN-014. Physical/hosted factor review, actual reviewer independence, recovery drills, alerts and emergency bootstrap are separate pilot prerequisites. Shared abuse protection SEC-011, origin/session protection and all-term permissions LOG-001 are already merged.
 3. **Core pilot product coherence**: PRD-003–006, PRD-010/011, QLT-009/010. Request-specific evidence checklists, saved-brief reopening/editing and remaining empty/error states. BetterTrade customer branding follows a compatibility inventory (BRD-001/002).
 4. **Pilot operations and performance**: OPS-002–012, PER-001–004, ENV-004–014, IDN-021. Assign an owner, isolate hosted resources, prove private object-byte/database recovery, inbox delivery and monitored worker operation. Do not expose real data through the synthetic temporary preview.
@@ -149,7 +149,7 @@ Keep at most three independent engineering slices active; finish failing release
 - [ ] **ARC-021 · P2 · Phase 3:** Publish and maintain an OpenAPI specification.
 - [ ] **ARC-022 · P2 · Phase 3:** Generate or strongly type the frontend API boundary from the OpenAPI contract.
 - [ ] **ARC-023 · P2 · Phase 3:** Introduce stable error codes and a consistent API error envelope.
-- [ ] **ARC-024 · P2 · Phase 3:** Add pagination and bounded queries to list/export endpoints.
+- [ ] **ARC-024 · P2 · Phase 3 · IN PROGRESS:** Add pagination and bounded queries to list/export endpoints. 2026-10-07: trace selector gains opt-in keyset page API and searchable navigation; legacy summary callers retain explicit bounded overflow behavior. Other lists/exports and summary semantics remain open.
 - [x] **ARC-025 · P2 · Phase 3:** Authoritative database sessions, hashed tokens, live actor/organization checks and revocation are implemented. CLOSED 2026-10-06 grooming: authSessionService.ts and identity/session integration/browser regressions; founder previously tested and merged identity/email waves. MFA and admin suspension tooling remain separate IDN items.
 - [ ] **ARC-026 · P3 · Phase 4:** Add commodity policy/configuration interfaces before onboarding the second commodity.
 - [ ] **ARC-027 · P3 · Phase 4:** Add transformation workflow ports and domain types only when a validated customer requires blending/repacking.
@@ -454,8 +454,8 @@ See [BetterTrade pilot plan](BETTERTRADE_PILOT_PLAN.md) and [service marketplace
 - [ ] **SVC-010 · P1 · Phase 2:** Extend private evidence policy to service orders and provider verification. Completion: scan-clean, expiry, download, reassignment and unrelated-provider tests.
 - [ ] **SVC-011 · P1 · Phase 2:** Automate complete three-persona provider fulfillment plus adversarial concurrency/access journeys. Completion: real PostgreSQL and buyer/supplier/provider browser tests with empty/new accounts.
 - [ ] **SVC-012 · P1 · Phase 2:** Run an invited provider pilot after core pilot gates, signed service terms and incident contacts. Completion: real provider accepts and fulfills a supervised job; portal works without carrier APIs.
-- [ ] **PER-001 · P1 · Phase 1:** Enforce cursor pagination, bounded search/export and SQL timeouts with measured query plans. Completion: documented cardinality/limits and representative benchmark; no unbounded tenant lists.
-- [-] **PER-002 · P0 · Phase 1:** Bound trace/recall nodes, edges, depth and computation; replace recursive/high-copy scans where needed. Completion: oversized/cyclic graphs report incomplete analysis and never falsely clear safety. IN PROGRESS 2026-10-07: connected-component reads with row/depth/time limits, iterative cycle checks, work budget, linear indexing/aggregation and atomic bulk recall scope writes implemented. Incomplete responses carry no safety clearance; suspect goods require isolation/escalation. Unit/capacity checks and native API/browser regressions added. Full native release acceptance pending; no hosted capacity claim.
+- [ ] **PER-001 · P1 · Phase 1 · IN PROGRESS:** Enforce cursor pagination, bounded search/export and SQL timeouts with measured query plans. Completion: documented cardinality/limits and representative benchmark; no unbounded tenant lists. 2026-10-07: trace-selector candidate searches authorized records before LIMIT, returns maximum 100 rows, binds cursor scope and rechecks access each page under existing SQL deadlines. PostgreSQL 2,501-record pagination/authorization and EXPLAIN cases plus browser navigation/error checks added; native run pending. Universal inventory/marketplace/export coverage, hosted plans/index tuning and load benchmarks remain outstanding; no completion credit.
+- [x] **PER-002 · P0 · Phase 1:** Bound trace/recall nodes, edges, depth and computation; replace recursive/high-copy scans where needed. Completion: oversized/cyclic graphs report incomplete analysis and never falsely clear safety. IN PROGRESS 2026-10-07: connected-component reads with row/depth/time limits, iterative cycle checks, work budget, linear indexing/aggregation and atomic bulk recall scope writes implemented. Incomplete responses carry no safety clearance; suspect goods require isolation/escalation. Unit/capacity checks and native API/browser regressions added. CLOSED 2026-10-07 01:15 UTC: founder confirms full release checks passed and merge/pull completed. Native atomicity/isolation and browser error acceptance are founder-reported; hosted concurrent capacity remains a separate requirement.
 - [ ] **PER-003 · P1 · Phase 1:** Bound upload/download memory, tenant concurrency, scanner timeouts and worker backpressure. Completion: parallel maximum-size file stress test stays within declared memory budget and fails safely.
 - [ ] **PER-004 · P1 · Phase 1:** Set pilot capacity/SLO budgets and automate read/write/trace load scenarios. Completion: archived hardware/data/concurrency plus p95/p99 results; targets are not claimed measurements.
 - [ ] **PER-005 · P1 · Phase 2:** Split heavy frontend routes and establish mobile performance/accessibility budgets. Completion: measured production bundles and buyer/supplier mobile journey with regression thresholds.
@@ -557,7 +557,7 @@ An item is complete only when applicable criteria are met:
 | Private files or database unrecoverable | Critical | Local recovery/scanner regressions exist; hosted DB plus object-byte restore not evidenced | OPS-001/002, UPL-002 |
 | Incorrect stock/payment/service awards under retries | High | Goods trading/payment concurrency tests exist; general coverage and future service awards remain | QLT-002/013, SVC-005/006 |
 | Claims exceed evidence or commodity suitability | High | Live claim-source/status labels tested; claim policies and corridor-specific requirements remain | DAT-010/011, GEO-004/005 |
-| Unbounded lists/graphs/files exhaust resources | High | Size checks exist; no representative capacity proof, graph bounds or universal pagination | PER-001–004, ARC-024 |
+| Unbounded lists/graphs/files exhaust resources | High | Trace graph bounds and refusal behavior are accepted; hosted capacity, file concurrency and universal pagination remain open | PER-001–004, ARC-024 |
 | Notifications stop without customer/owner awareness | High | Durable outboxes exist; scheduling, monitoring and real inbox delivery incomplete | OPS-006/010, IDN-021, PRD-008 |
 | Navigation disagrees with permitted next step | High | Shared dashboard/deal-room policy release-tested and merged; remaining source/empty-state coherence pending | PRD-003–006 |
 | External logistics grant reveals goods/bank data | Critical for provider pilot | Provider portal and service-order authorization not yet implemented | SVC-003/005/006/010 |

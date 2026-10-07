@@ -242,3 +242,17 @@ Founder confirms release checks passed and merge/pull completed after import and
 ## Bounded trace safety candidate — 2026-10-07
 
 Implemented connected-component reads, row/seed/depth/work/time limits, explicit incomplete/no-clearance errors, iterative allocation/cycle handling and atomic bulk recall scope/hold writes. Author unit, quality, types, native-file compilation, builds, migration integrity and backlog checks passed. Synthetic in-memory rehearsal is documented under performance/TRACE_BOUNDS_2026-10-07.md. Native PostgreSQL rollback/isolation and browser error cases are added but execution is pending because Docker/Chromium are unavailable here. PER-002 remains in progress; no hosted capacity claim. Prior source-entry release/merge acknowledgement is included.
+
+## Founder acceptance — bounded trace safety — 2026-10-07 01:15 UTC
+
+Founder confirms full release checks passed and merge/pull completed. PER-002 closed. Native PostgreSQL cyclic activation rollback, unrelated oversized-component isolation, foreign-seed denial and browser incomplete-result presentation are accepted through the release run. No independently archived CI URL or hosted concurrent capacity evidence supplied. PER-001/PER-003/PER-004 and broader ARC-008 boundaries remain separate. Next planned slice: bounded tenant list/search reads and pagination.
+
+## Candidate — paged trace selector — 2026-10-07
+
+PER-001 / ARC-024 first resource slice: maximum 100-row authorized keyset API, literal bounded search before LIMIT, organization/search-bound cursor positions, repeatable-read SQL deadlines and searchable previous/next UI. Native regression definitions cover 2,501 owned lots, foreign isolation, stable pages, off-page search, invalid input and EXPLAIN bounded-page structure; browser presentation covers navigation/miss/failure. No schema/configuration changes. Native Docker/browser execution and founder merge acceptance pending; no hosted capacity or universal pagination completion claimed. Previous bounded trace safety accepted at 01:15 UTC.
+
+Author candidate checks: 450 API unit tests, quality policy checks, workspace/browser types, native integration-file compilation, API/web builds, migration integrity and backlog validation passed. Native release execution remains pending.
+
+## Candidate correction — exact trace-selector labels — 2026-10-07
+
+Founder native browser run found Playwright's partial `Trace lot` label locator also matched `Search trace lots`. Correct the selector and search locators to exact labels in the new pagination browser case. No application, API, schema or permission behavior changes. Browser type checks and quality gates passed author-side; native release rerun pending. PER-001 / ARC-024 remain in progress.
