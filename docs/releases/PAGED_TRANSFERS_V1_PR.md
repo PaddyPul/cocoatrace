@@ -16,6 +16,7 @@ Inventory users can review incoming transfer requests and search their transfer 
 
 ## Change summary
 
+- Complete the inventory fixture for the transfer-page API; validate page envelopes so a malformed transfer response becomes a panel error instead of crashing inventory. Add a malformed-response browser regression.
 - Add max-100-row, server-filtered transfer pages with scoped UUID cursors and read deadlines.
 - Extract a focused transfer-records component from InventoryPage; default to incoming requests and expose outgoing/history filters, search, navigation and retry.
 - Render acceptance only for a pending receiving-party request with acceptance permission; show and block recalled supply.

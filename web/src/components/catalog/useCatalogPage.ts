@@ -33,6 +33,17 @@ export function useCatalogPage<T>(
     }));
     fetch({ ...parameters, ...(cursor ? { cursor } : {}) })
       .then((page) => {
+        if (
+          !page ||
+          !Array.isArray(page.items) ||
+          typeof page.hasMore !== 'boolean' ||
+          !(
+            page.nextCursor === null ||
+            (typeof page.nextCursor === 'string' && page.nextCursor.length > 0)
+          ) ||
+          page.hasMore !== (page.nextCursor !== null)
+        )
+          throw new Error('Invalid page response. Retry or contact the platform operator.');
         if (active)
           setState((current) => ({
             ...current,
