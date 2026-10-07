@@ -61,6 +61,25 @@ describe('catalog SQL boundaries', () => {
       expect(sql).toMatch(new RegExp('\\$' + index + '(?![0-9])'));
     }
   });
+  it('assesses recall once per tenant batch before aggregating totals', async () => {
+    const execute = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [{ count: 0, available_count: 0, available_kg: '0' }] })
+      .mockResolvedValueOnce({ rows: [] });
+    expect(await holdingSummary(execute, 'tenant')).toEqual({
+      count: 0,
+      available_count: 0,
+      available_kg: '0',
+      commodities: [],
+    });
+    const [sql, parameters] = execute.mock.calls[0];
+    expect(sql).toContain('stock AS MATERIALIZED');
+    expect(sql).toContain('assessed AS MATERIALIZED');
+    expect(sql).toContain('WHERE h.holder_organization_id=$1 GROUP BY h.batch_id');
+    expect(sql).toContain('FILTER (WHERE NOT held)');
+    expect(sql.match(/SELECT 1 FROM recall_notices/g)).toHaveLength(1);
+    expect(parameters).toEqual(['tenant']);
+  });
   it('does not invent a partial commodity summary', async () => {
     const execute = vi
       .fn()

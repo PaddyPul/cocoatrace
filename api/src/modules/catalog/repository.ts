@@ -123,8 +123,19 @@ export async function listingPage(
 }
 export async function holdingSummary(execute: Execute, organizationId: string) {
   const totals = await execute(
-    `SELECT COUNT(*)::int AS count,COUNT(*) FILTER (WHERE h.status='available' AND NOT ${activeBatchRecallSql('b.id')})::int AS available_count,
-    COALESCE(SUM(h.quantity_kg) FILTER (WHERE h.status='available' AND NOT ${activeBatchRecallSql('b.id')}),0)::text AS available_kg ${holdingFrom} WHERE h.holder_organization_id=$1`,
+    `WITH stock AS MATERIALIZED (
+      SELECT h.batch_id,COUNT(*)::int AS count,
+        COUNT(*) FILTER (WHERE h.status='available')::int AS available_count,
+        COALESCE(SUM(h.quantity_kg) FILTER (WHERE h.status='available'),0) AS available_kg
+      FROM batch_holdings h JOIN harvest_batches b ON b.id=h.batch_id
+      WHERE h.holder_organization_id=$1 GROUP BY h.batch_id
+    ), assessed AS MATERIALIZED (
+      SELECT stock.*,${activeBatchRecallSql('stock.batch_id')} AS held FROM stock
+    )
+    SELECT COALESCE(SUM(count),0)::int AS count,
+      COALESCE(SUM(available_count) FILTER (WHERE NOT held),0)::int AS available_count,
+      COALESCE(SUM(available_kg) FILTER (WHERE NOT held),0)::text AS available_kg
+    FROM assessed`,
     [organizationId],
   );
   const commodities = await execute(

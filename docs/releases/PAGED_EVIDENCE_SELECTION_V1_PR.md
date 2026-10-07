@@ -20,6 +20,7 @@ Suppliers and buyers can select older source or trade records when attaching evi
 - Reuse farm/batch list scopes; restrict contract/shipment options to seller/buyer parties. Exact lookup retains those same boundaries.
 - Introduce a focused picker with search, paging, retained selection, exact-link resolution, retries and clear missing/failed states.
 - Keep upload resource authorization, file/scanner controls and payment-protected downloads intact.
+- Aggregate inventory by tenant/batch and materialize one recall safety assessment per batch; retain all existing recall predicates and read deadlines. Summary regression failures now identify HTTP status and safe error code.
 - Add unit, large-workspace native and browser regressions; update the existing real-flow failed-read fixture and record acceptance of evidence-library paging.
 
 ## Security and data review
@@ -46,7 +47,7 @@ Suppliers and buyers can select older source or trade records when attaching evi
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: author passes 522 API unit tests/64 files, quality policy checks, API/web/browser type checks, strict native test-source compilation and production builds. Six native definitions use 1,005 farms/batches/contracts/shipments for paging/search/exact links, option-only projection, foreign denial, seller/buyer vs logistics/read-all scope, relationship/permission rechecks and input validation. Five browser definitions cover retained selection and upload target, off-page link/kind reset, page retry, lookup retry/missing links and malformed response. Existing real source/evidence journeys remain included. Author has no native Docker/PostgreSQL/browser runtime. Before merge run `npm run verify:release`, check API/browser boxes only after success and attach the exact tested SHA/report or CI URL.
+- Evidence/results: author passes 523 API unit tests/64 files, quality policy checks, API/web/browser type checks, strict native test-source compilation and production builds. Six native definitions use 1,005 farms/batches/contracts/shipments for paging/search/exact links, option-only projection, foreign denial, seller/buyer vs logistics/read-all scope, relationship/permission rechecks and input validation. Five browser definitions cover retained selection and upload target, off-page link/kind reset, page retry, lookup retry/missing links and malformed response. Existing real source/evidence journeys remain included. The first founder release run passed 279/280 integration cases; a summary response lacked its expected count. The correction removes repeated batch safety assessments and improves diagnostics; the original error status was not established. Author has no native Docker/PostgreSQL/browser runtime. Before merge run `npm run verify:release`, check API/browser boxes only after success and attach the exact tested SHA/report or CI URL.
 
 ## Product and operations
 
