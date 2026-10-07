@@ -67,20 +67,20 @@ test('trace selector pages and searches without treating a filtered miss or fail
     });
   });
   await page.goto('/recalls');
-  await expect(page.getByLabel('Trace lot')).toHaveValue('LOT-1');
+  await expect(page.getByLabel('Trace lot', { exact: true })).toHaveValue('LOT-1');
   await page.getByRole('button', { name: 'Next lots', exact: true }).click();
-  await expect(page.getByLabel('Trace lot')).toHaveValue('LOT-51');
+  await expect(page.getByLabel('Trace lot', { exact: true })).toHaveValue('LOT-51');
   await page.getByRole('button', { name: 'Previous lots', exact: true }).click();
-  await expect(page.getByLabel('Trace lot')).toHaveValue('LOT-1');
-  await page.getByLabel('Search trace lots').fill('Peanut');
+  await expect(page.getByLabel('Trace lot', { exact: true })).toHaveValue('LOT-1');
+  await page.getByLabel('Search trace lots', { exact: true }).fill('Peanut');
   await page.getByRole('button', { name: 'Search lots', exact: true }).click();
-  await expect(page.getByLabel('Trace lot')).toHaveValue('FOUND-LATER');
+  await expect(page.getByLabel('Trace lot', { exact: true })).toHaveValue('FOUND-LATER');
   await expect(page.getByRole('button', { name: 'Previous lots', exact: true })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Next lots', exact: true })).toBeDisabled();
   expect(
     requests.some((search) => search.includes('search=Peanut') && !search.includes('cursor=')),
   ).toBe(true);
-  await page.getByLabel('Search trace lots').fill('absent');
+  await page.getByLabel('Search trace lots', { exact: true }).fill('absent');
   await page.getByRole('button', { name: 'Search lots', exact: true }).click();
   await expect(
     page.getByText('No permitted lots match this search. Change the search to try again.'),

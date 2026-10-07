@@ -252,3 +252,7 @@ Founder confirms full release checks passed and merge/pull completed. PER-002 cl
 PER-001 / ARC-024 first resource slice: maximum 100-row authorized keyset API, literal bounded search before LIMIT, organization/search-bound cursor positions, repeatable-read SQL deadlines and searchable previous/next UI. Native regression definitions cover 2,501 owned lots, foreign isolation, stable pages, off-page search, invalid input and EXPLAIN bounded-page structure; browser presentation covers navigation/miss/failure. No schema/configuration changes. Native Docker/browser execution and founder merge acceptance pending; no hosted capacity or universal pagination completion claimed. Previous bounded trace safety accepted at 01:15 UTC.
 
 Author candidate checks: 450 API unit tests, quality policy checks, workspace/browser types, native integration-file compilation, API/web builds, migration integrity and backlog validation passed. Native release execution remains pending.
+
+## Candidate correction — exact trace-selector labels — 2026-10-07
+
+Founder native browser run found Playwright's partial `Trace lot` label locator also matched `Search trace lots`. Correct the selector and search locators to exact labels in the new pagination browser case. No application, API, schema or permission behavior changes. Browser type checks and quality gates passed author-side; native release rerun pending. PER-001 / ARC-024 remain in progress.

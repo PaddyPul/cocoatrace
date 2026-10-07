@@ -20,6 +20,7 @@ A supplier with more than 2,000 accessible lots can find and select an individua
 - Apply existing owner/custody/trade/distribution permissions in SQL on every page; bind cursor positions to organization, normalized search and visibility scope.
 - Materialize the bounded page before decorating recall state and linked-record counts; reuse repeatable-read transactions and existing SQL deadlines.
 - Add accessible search and previous/next controls, cancellation of stale search responses, truthful page counts and distinct failure/no-match states.
+- Use exact accessible-label locators in the pagination browser test so the lot selector cannot also match the search textbox.
 - Add parser/query unit coverage, PostgreSQL 2,501-record, query-plan and access regressions, and browser navigation/error tests. Update existing browser mocks to the new page envelope.
 - Keep legacy summary callers on their existing bounded array endpoint, with explicit overflow errors, pending separate aggregate/paging work.
 
