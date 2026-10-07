@@ -47,3 +47,6 @@ api/src/services/tradeActionRepository*.ts text eol=lf
 api/src/modules/tradeActions/**/*.ts text eol=lf
 web/src/components/trading/TradeAction.ts text eol=lf
 web/src/components/trading/DealNextAction.tsx text eol=lf
+
+web/src/components/supply/** text eol=lf
+web/src/pages/EvidenceContributionPage.tsx text eol=lf

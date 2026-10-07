@@ -8,7 +8,7 @@
       "status": "partial",
       "title": "Current release passes every gate on the candidate commit",
       "backlog": ["QLT-001", "SEC-014", "LNG-001"],
-      "evidence": "Founder reports privileged access lifecycle release checks passed and merge/pull completed 2026-10-06. Each subsequent candidate, including shared trade actions, requires its own commit-specific full native release report; hosted staging evidence remains separate."
+      "evidence": "Founder confirms unified trade-action candidate release checks passed and merge/pull completed 2026-10-06. Current local acceptance is founder-reported; no CI URL or hosted staging evidence independently archived. Each later candidate requires its own commit-specific release report."
     },
     {
       "id": "CORE-isolation",
@@ -117,10 +117,10 @@
     {
       "id": "CORE-actions",
       "scope": "core",
-      "status": "partial",
+      "status": "complete",
       "title": "Dashboard/deal room share one permitted next action",
       "backlog": ["PRD-006", "PRD-011"],
-      "evidence": "Shared permitted next-action policy candidate implemented 2026-10-06 with scoped read projection, commercial/fulfilment/closeout modules and actual UI transition coverage. Author units/types/builds/quality passed; native API/browser release and merge acknowledgement pending. Other platform empty states remain open."
+      "evidence": "Founder confirms shared trade-action release checks passed and merge/pull completed 2026-10-06. Dashboard and contract/deal room share the scoped typed policy; native API/browser acceptance is founder-reported. CI URLs are not independently archived. Whole-platform empty states remain separately open under PRD-011."
     },
     {
       "id": "CORE-transport",

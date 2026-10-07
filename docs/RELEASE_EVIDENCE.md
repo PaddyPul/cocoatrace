@@ -218,3 +218,19 @@ The dashboard and contract endpoint now share a permission-scoped fact repositor
 Author checks passed: 424 API unit tests across 55 files, 10 quality/script-policy tests, API/web/browser type checks, native integration-file TypeScript, API and web builds, frozen migration integrity and two backlog-register tests. No migration or dependency change. The web build retains the existing large-bundle warning; performance acceptance is still open.
 
 Three new native API cases cover shared dashboard/contract actions, unrelated/no-permission accounts and document presentation after DPU unloading. One new real browser journey checks both personas' displayed guidance through offer acceptance, payment terms, receipt verification and FOB booking handoff. Existing five complete payment-plan journeys remain. Native PostgreSQL, Docker browser and full candidate release execution are not claimed in the author environment; run `npm run verify:release` and record the tested SHA before merge. PRD-006 remains in progress pending that acceptance and merge acknowledgement; PRD-011 remains partial for other platform empty states. Instructions and exact PR body: `docs/releases/UNIFIED_TRADE_ACTIONS_V1_WINDOWS.md` and `UNIFIED_TRADE_ACTIONS_V1_PR.md`.
+
+### 2026-10-06 founder acknowledgement: unified permitted trade actions
+
+At 23:41 Accra time the founder confirms release checks passed and merge/pull completed for the shared trade-action wave. PRD-006 and the narrowly scoped CORE-actions gate are closed on that reported native acceptance. PRD-011 stays partial for other platform empty states. No CI URL or hosted performance/security acceptance is inferred. Next implementation priority: source/evidence entry coherence and automated supplier source/sourcing persistence journeys (PRD-003, PRD-004, QLT-009).
+
+## Source and evidence entry candidate — 2026-10-06
+
+Shared setup chooser, contextual evidence picker and four browser cases implemented. Author quality (10 policy checks), workspace/browser types, API units (424 across 55 files), API/web builds, migration integrity and backlog checks passed. No migration or dependency change. Native browser/integration/release execution is pending: Docker is unavailable here. Request-specific evidence checklists and saved-brief reopening/editing remain open; no completion credit for those gaps.
+
+### Source entry import correction
+
+Founder release typecheck caught missing `Sprout` in PublishSupplyPage after the final import cleanup. The earlier author success report did not cover that final cleanup; it was inaccurate for the delivered candidate. The corrected import passed rerun workspace/browser type checks, web production build and quality checks (10 policy tests). Full native release acceptance remains pending.
+
+### Sourcing selector accessible-name correction — 2026-10-07
+
+Founder native browser run reached the sourcing journey but timed out locating exact Visibility label. Select option text sat inside its wrapping label. Visibility and Incoterm now have explicit accessible names; focused fixture test switches visibility both ways and selects FOB. This presentation test uses mocked reads and does not claim persistence coverage. The existing real PostgreSQL sourcing journey is unchanged. Author type/build/quality checks passed; browser execution unavailable because no Chromium executable is installed. Founder full release acceptance pending.

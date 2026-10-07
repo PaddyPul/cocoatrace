@@ -1,3 +1,4 @@
+import EvidenceContributionPage from './pages/EvidenceContributionPage';
 import PasskeysPage from './pages/PasskeysPage';
 import { LanguageProvider } from './i18n/LanguageProvider';
 import PlatformFeesPage from './pages/PlatformFeesPage';
@@ -111,6 +112,7 @@ export default function App() {
           <Route path="/platform-fees/:id" element={<ProtectedRoute><PlatformFeesPage /></ProtectedRoute>} />
           <Route path="/payments" element={<ProtectedRoute><PaymentsPage /></ProtectedRoute>} />
           <Route path="/payments/:id" element={<ProtectedRoute><PaymentDetailPage /></ProtectedRoute>} />
+          <Route path="/evidence/contribute" element={<ProtectedRoute><EvidenceContributionPage /></ProtectedRoute>} />
           <Route path="/evidence" element={<ProtectedRoute><EvidencePage /></ProtectedRoute>} />
           <Route path="/recalls" element={<ProtectedRoute><RecallCenterPage /></ProtectedRoute>} />
           <Route path="/audit" element={<ProtectedRoute><AuditPage /></ProtectedRoute>} />
