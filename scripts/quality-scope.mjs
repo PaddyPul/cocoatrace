@@ -1,6 +1,10 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
   'api/src/modules/trace/**/*.ts',
+  'api/src/modules/catalog/**/*.ts',
+  'web/src/components/catalog/**/*.{ts,tsx}',
+  'web/src/pages/InventoryPage.tsx',
+  'e2e/catalogPages.spec.ts',
   'api/src/services/recallTrace*.ts',
   'api/src/services/traceGraphRepository*.ts',
   'api/scripts/benchmark-trace.ts',

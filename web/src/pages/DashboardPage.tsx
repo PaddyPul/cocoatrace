@@ -27,7 +27,7 @@ export default function DashboardPage() {
         if (hasAny('contract.read')) promises.contracts = contracts.list();
         if (hasAny('shipment.read', 'shipment.update')) promises.shipments = shipments.list();
         if (hasAny('farm.read', 'farm.create')) promises.farms = farms.list();
-        if (hasAny('listing.read', 'listing.create')) promises.listings = listings.list();
+        if (hasAny('listing.read', 'listing.create')) promises.listingSummary = listings.summary();
         if (hasAny('audit.read')) promises.audit = audit.list();
         if (hasAny('offer.respond', 'offer.create')) promises.offers = offersApi.list();
         if (hasAny('certificate.read', 'certificate.issue')) promises.certs = certsApi.list();
@@ -111,13 +111,13 @@ function ExporterDash({ data, navigate }: { data: any; navigate: any }) {
   const contracts: Contract[] = data.contracts || [];
   const shipments: Shipment[] = data.shipments || [];
   const offers: Offer[] = data.offers || [];
-  const listingsArr: Listing[] = data.listings || [];
+  const listingCount = data.listingSummary?.count || 0;
   const pendingOffers = offers.filter((o) => o.status === 'pending');
   const inTransit = contracts.filter((c) => c.status === 'in_transit');
   const delivered = contracts.filter((c) => c.status === 'delivered');
   const pendingPay = contracts.filter((c) => c.status === 'delivered');
   const myBatches = user ? batches.filter((b) => b.current_holder_id === user.organizationId) : [];
-  const unlisted = myBatches.filter((b) => !listingsArr.some((l) => l.batch_id === b.id));
+
 
   return (
     <>
@@ -130,7 +130,7 @@ function ExporterDash({ data, navigate }: { data: any; navigate: any }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <ActionWidget icon="📨" title="Pending Offers" count={pendingOffers.length} label="Review offers" onClick={() => navigate('/offers')} urgent={pendingOffers.length > 0} />
-        <ActionWidget icon="🏷" title="Unlisted Batches" count={unlisted.length} label="List on marketplace" onClick={() => navigate('/batches')} urgent={unlisted.length > 0} />
+        <ActionWidget icon="🏷" title="Review batch supply" count={myBatches.length} label="Review marketplace readiness" onClick={() => navigate('/batches')} urgent={false} />
         <ActionWidget icon="🚢" title="Active Shipments" count={inTransit.length} label="Track shipments" onClick={() => navigate('/shipments')} />
         <ActionWidget icon="💰" title="Awaiting Payment" count={delivered.length} label="Request payment" onClick={() => navigate('/payments')} urgent={delivered.length > 0} />
       </div>
@@ -144,8 +144,8 @@ function FarmerDash({ data, navigate, canDo }: { data: any; navigate: any; canDo
   const { user } = useAuthCtx();
   const farms: Farm[] = data.farms || [];
   const batches: Batch[] = data.batches || [];
-  const listingsArr: Listing[] = data.listings || [];
-  const myListings = listingsArr.filter((l) => l.seller_organization_id === user?.organizationId);
+  const listingCount = data.listingSummary?.count || 0;
+  const ownListingCount = data.listingSummary?.own_count || 0;
   const unattested = batches.filter((b) => b.organic_claim_status === 'pending_attestation');
 
   return (
@@ -154,13 +154,13 @@ function FarmerDash({ data, navigate, canDo }: { data: any; navigate: any; canDo
         <div className="stat-card stat-card-accent"><div className="stat-label">My Farms</div><div className="stat-value">{farms.length}</div></div>
         <div className="stat-card"><div className="stat-label">Batches</div><div className="stat-value">{batches.length}</div></div>
         <div className="stat-card"><div className="stat-label">Organic reviewed</div><div className="stat-value text-brand-400">{batches.filter((b) => isReviewed(b.trust?.organic)).length}</div></div>
-        <div className="stat-card"><div className="stat-label">My Listings</div><div className="stat-value">{myListings.length}</div></div>
+        <div className="stat-card"><div className="stat-label">My Listings</div><div className="stat-value">{ownListingCount}</div></div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         {canDo('farm.create') && <ActionWidget icon="🏡" title="Farms" count={farms.length} label={farms.length === 0 ? 'Register your first farm' : 'View farms'} onClick={() => navigate('/farms')} urgent={farms.length === 0} />}
         {canDo('batch.create') && <ActionWidget icon="📦" title="Batches This Season" count={batches.length} label={batches.length === 0 ? 'Create first batch' : 'View batches'} onClick={() => navigate('/batches')} urgent={batches.length === 0} />}
-        <ActionWidget icon="🏷" title="Active Listings" count={myListings.length} label={myListings.length === 0 ? 'List on marketplace' : 'Manage listings'} onClick={() => navigate('/my-listings')} urgent={myListings.length === 0 && batches.length > 0} />
+        <ActionWidget icon="🏷" title="Active Listings" count={ownListingCount} label={ownListingCount === 0 ? 'List on marketplace' : 'Manage listings'} onClick={() => navigate('/my-listings')} urgent={ownListingCount === 0 && batches.length > 0} />
       </div>
 
       {unattested.length > 0 && <ActionPrompt>{unattested.length} batch{unattested.length > 1 ? 'es' : ''} pending certifier attestation — track on Batches page →</ActionPrompt>}
@@ -193,7 +193,7 @@ function CertifierDash({ data, navigate }: { data: any; navigate: any }) {
 }
 
 function ImporterDash({ data, navigate }: { data: any; navigate: any }) {
-  const listingsArr: Listing[] = data.listings || [];
+  const listingCount = data.listingSummary?.count || 0;
   const contracts: Contract[] = data.contracts || [];
   const offers: Offer[] = data.offers || [];
   const myOffers = offers.filter((o) => o.status === 'pending');
@@ -202,13 +202,13 @@ function ImporterDash({ data, navigate }: { data: any; navigate: any }) {
   return (
     <>
       <div className="grid grid-cols-3 gap-3 mb-5">
-        <div className="stat-card stat-card-accent"><div className="stat-label">Available Listings</div><div className="stat-value">{listingsArr.length}</div></div>
+        <div className="stat-card stat-card-accent"><div className="stat-label">Available Listings</div><div className="stat-value">{listingCount}</div></div>
         <div className="stat-card"><div className="stat-label">My Contracts</div><div className="stat-value">{contracts.length}</div></div>
         <div className="stat-card"><div className="stat-label">In Transit</div><div className="stat-value text-yellow-400">{inTransit.length}</div></div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-        <ActionWidget icon="🏪" title="Marketplace" count={listingsArr.length} label="Browse listings" onClick={() => navigate('/marketplace')} />
+        <ActionWidget icon="🏪" title="Marketplace" count={listingCount} label="Browse listings" onClick={() => navigate('/marketplace')} />
         <ActionWidget icon="📨" title="My Offers" count={myOffers.length} label="View offer status" onClick={() => navigate('/offers')} />
         <ActionWidget icon="🚢" title="Incoming Shipments" count={inTransit.length} label="Track shipments" onClick={() => navigate('/shipments')} urgent={inTransit.length > 0} />
       </div>

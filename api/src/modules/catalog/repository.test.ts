@@ -1,0 +1,57 @@
+import { describe, expect, it, vi } from 'vitest';
+vi.mock('../trust/assessment', () => ({
+  loadBatchTrust: vi.fn(async () => new Map()),
+  legacyOrganicStatus: vi.fn(),
+}));
+import { holdingPage, listingPage, holdingSummary } from './repository';
+import { parsePage } from './paging';
+describe('catalog SQL boundaries', () => {
+  it('filters stock status, recall and tenant before keyset limit', async () => {
+    const execute = vi.fn().mockResolvedValue({ rows: [] });
+    await holdingPage(
+      execute,
+      'tenant',
+      parsePage({ search: '%_', limit: '7' }, ['tenant'], []),
+      true,
+    );
+    const [sql, parameters] = execute.mock.calls[0];
+    expect(sql).toContain('h.holder_organization_id=$1');
+    expect(sql).toContain("h.status='available'");
+    expect(sql).toContain('ORDER BY h.id LIMIT $6');
+    expect(parameters).toEqual(['tenant', null, true, '%_', '%\\%\\_%', 8]);
+  });
+  it('filters commodity, evidence, own supplier, origin and exact ID before ordered limit', async () => {
+    const execute = vi.fn().mockResolvedValue({ rows: [] });
+    await listingPage(
+      execute,
+      'tenant',
+      parsePage({ sort: 'quantity' }, ['tenant'], [], ['id', 'quantity']),
+      {
+        mine: true,
+        commodity: 'raw shea nuts',
+        origin: '%_',
+        minimum: '35',
+        organic: true,
+        id: 'id',
+        currency: '',
+      },
+    );
+    const [sql, parameters] = execute.mock.calls[0];
+    expect(sql).toContain('l.seller_organization_id=$1');
+    expect(sql).toContain("c.status='active'");
+    expect(sql).toContain('c.farmer_organization_id=cf.farmer_organization_id');
+    expect(sql).toContain('ORDER BY l.available_quantity_kg DESC,l.id DESC LIMIT $12');
+    expect(parameters.slice(6)).toEqual(['shea', '%_', '%\\%\\_%', '35', true, 51, 'id', '']);
+  });
+  it('does not invent a partial commodity summary', async () => {
+    const execute = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [{ count: 5000 }] })
+      .mockResolvedValueOnce({
+        rows: Array.from({ length: 101 }, (_, n) => ({ commodity: String(n) })),
+      });
+    await expect(holdingSummary(execute, 'tenant')).rejects.toMatchObject({
+      code: 'CATALOG_READ_LIMIT',
+    });
+  });
+});

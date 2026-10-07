@@ -256,3 +256,13 @@ Author candidate checks: 450 API unit tests, quality policy checks, workspace/br
 ## Candidate correction — exact trace-selector labels — 2026-10-07
 
 Founder native browser run found Playwright's partial `Trace lot` label locator also matched `Search trace lots`. Correct the selector and search locators to exact labels in the new pagination browser case. No application, API, schema or permission behavior changes. Browser type checks and quality gates passed author-side; native release rerun pending. PER-001 / ARC-024 remain in progress.
+
+## Founder acceptance — paged trace selector and label correction — 2026-10-07 02:09 UTC
+
+Founder confirms full release checks passed and merge/pull completed for the paged trace selector, including the exact accessible-label correction. This records founder-reported native integration/browser release acceptance. No independently archived CI URL or hosted capacity evidence was supplied. PER-001 / ARC-024 remain in progress: inventory/marketplace, other list/export endpoints, dashboard aggregate semantics and representative hosted query plans/load measurements are outstanding. Next implementation slice: inventory and marketplace pagination with server-side filtering and truthful dashboard counts.
+
+## Candidate — paged inventory and marketplace — 2026-10-07
+
+PER-001 / ARC-024 resource slice adds tenant-filtered inventory pages, server-filtered marketplace pages, exact NUMERIC/currency ordering, scoped cursor positions, full supply aggregates, available-stock publishing, off-page listing availability and bounded account shortlists. Inventory UI extracted from shared DataPages. Legacy arrays fail explicitly beyond 1,000 records; proof enrichment refuses linked-record overflow. Native 1,005-record/hold/query-plan and seven organic-predicate parity cases plus browser navigation/aggregate/error cases added; native release acceptance pending. No migration/dependency/configuration change. Broad remaining list/export and hosted capacity scope remain open. Previous trace selector and exact-label correction accepted by founder 2026-10-07 02:09 UTC.
+
+Final author checks for this candidate: 467 API unit tests across 60 files, quality checks including 10 policy/script tests, API/web/browser type checks, strict compilation of the new native integration sources, API/web production builds, frozen migration integrity and two backlog tests passed. Build retains the existing large-chunk warning; bundle-size/performance acceptance remains open. No Docker/PostgreSQL/Chromium execution or hosted capacity acceptance is claimed. Founder must run the exact candidate through `npm run verify:release` before push/merge.

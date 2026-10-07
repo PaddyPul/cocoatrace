@@ -1,5 +1,8 @@
 import type {TradeAction} from './components/trading/TradeAction';
 const API_BASE = '/api';
+export type CatalogPage<T> = { items: T[]; hasMore: boolean; nextCursor: string | null };
+export type HoldingSummary = { count: number; available_count: number; available_kg: string; commodities: string[] };
+export type ListingSummary = { count: number; own_count: number; quantity_kg: string };
 
 let token: string | null = null;
 
@@ -146,7 +149,7 @@ export const batches = {
   create: (data: { farmId: string; plotIds?: string[]; crop?: string; harvestDate: string; quantityKg: number; moisturePercent?: number; grade?: string }) =>
     api<import('./types').Batch>('POST', '/batches', data),
   createDirectInventory: (data: { commodity: string; quantityKg: number; inventoryDate: string; sourceName?: string; sourceCountry: string; sourceRegion?: string; warehouseLocation?: string; moisturePercent?: number; grade?: string }) =>
-    api<import('./types').Batch>('POST', '/inventory/direct', data),
+    api<import('./types').Batch & {holding_id:string}>('POST', '/inventory/direct', data),
   pushToMarketplace: (id: string, data: { quantityKg: number; pricePerKg: number; currency?: string; incoterm?: string; originLocation: string; destinationLocation: string }) =>
     api<import('./types').Listing>('POST', `/batches/${id}/push-to-marketplace`, data),
   attest: (id: string, data: { certificateId: string; notes?: string }) =>
@@ -155,6 +158,8 @@ export const batches = {
 
 export const listings = {
   list: () => api<import('./types').Listing[]>('GET', '/listings'),
+  page: (parameters: Record<string,string> = {}) => api<CatalogPage<import('./types').Listing>>('GET', `/listings/page?${new URLSearchParams({limit: '50', ...parameters})}`),
+  summary: () => api<ListingSummary>('GET','/listings/summary'),
   get: (id: string) => api<import('./types').Listing>('GET', `/listings/${id}`),
   create: (data: { holdingId: string; availableQuantityKg: number; pricePerKg: number; currency?: string; incoterm?: string; originLocation: string; destinationLocation: string }) =>
     api<import('./types').Listing>('POST', '/listings', data),
@@ -249,6 +254,8 @@ export const shipments = {
 
 export const holdings = {
   list: () => api<import('./types').Holding[]>('GET', '/holdings'),
+  page: (parameters: Record<string,string> = {}) => api<CatalogPage<import('./types').Holding>>('GET', `/holdings/page?${new URLSearchParams({limit: '50', ...parameters})}`),
+  summary: () => api<HoldingSummary>('GET','/holdings/summary'),
   get: (id: string) => api<{ holding: import('./types').Holding; batch: import('./types').Batch | null }>('GET', `/holdings/${id}`),
   create: (data: { batchId: string; quantityKg: number; warehouseLocation?: string }) =>
     api<import('./types').Holding>('POST', '/holdings', data),

@@ -184,7 +184,7 @@
       "status": "open",
       "title": "Representative load meets approved capacity/SLO budgets",
       "backlog": ["PER-001", "PER-003", "PER-004"],
-      "evidence": "Trace-selector paging candidate adds a 2,501-record native query-plan and tenant-isolation rehearsal; native execution pending. No hosted representative capacity/SLO baseline. Universal list/export bounds and load acceptance remain open."
+      "evidence": "Trace-selector paging and exact-label correction accepted: founder confirms full release checks passed and merge/pull completed 2026-10-07 02:09 UTC, including the 2,501-record native query-plan and tenant-isolation rehearsal. Inventory/marketplace paging and aggregate-count candidate adds native 1,005-record and organic-predicate parity coverage; execution pending. No hosted representative capacity/SLO baseline. Universal list/export bounds and load acceptance remain open."
     },
     {
       "id": "CORE-legal",

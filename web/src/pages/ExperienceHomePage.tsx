@@ -3,14 +3,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Building2, CheckCircle2, FileCheck2, Handshake, PackageCheck, Search, ShieldCheck, Sparkles, Sprout, TriangleAlert } from 'lucide-react';
 import Layout from '../components/layout/Layout';
-import { contracts, farms, holdings, listings, offers, sourcing, workspace } from '../api';
+import { contracts, farms, holdings, listings, offers, sourcing, workspace, HoldingSummary, ListingSummary } from '../api';
 import { Contract, Farm, Holding, Listing, Offer, SourcingRequest } from '../types';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 
 type Mode = 'buy' | 'sell';
 import type { TradeAction } from '../components/trading/TradeAction';
-type HomeData = { actionsUnavailable?:boolean; listings: Listing[]; requests: SourcingRequest[]; offers: Offer[]; contracts: Contract[]; holdings: Holding[]; farms: Farm[]; actions:TradeAction[] };
-const empty: HomeData = { listings: [], requests: [], offers: [], contracts: [], holdings: [], farms: [], actions:[] };
+type HomeData = { actionsUnavailable?:boolean; listingSummary: ListingSummary | null; requests: SourcingRequest[]; offers: Offer[]; contracts: Contract[]; holdingSummary: HoldingSummary | null; farms: Farm[]; actions:TradeAction[] };
+const empty: HomeData = { listingSummary: null, requests: [], offers: [], contracts: [], holdingSummary: null, farms: [], actions:[] };
 
 export default function ExperienceHomePage() {
   const { user, canDo, onboarding } = useAuthCtx();
@@ -22,6 +22,7 @@ export default function ExperienceHomePage() {
   const requestedMode = params.get('mode') === 'sell' ? 'sell' : params.get('mode') === 'buy' ? 'buy' : (localStorage.getItem(`ct_experience_mode:${user?.id}`) as Mode | null);
   const mode: Mode = requestedMode === 'buy' && canBuy ? 'buy' : requestedMode === 'sell' && canSell ? 'sell' : defaultMode;
   const [data, setData] = useState<HomeData>(empty);
+  const [catalogError, setCatalogError] = useState(false);
   const [actionError, setActionError] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -30,10 +31,10 @@ export default function ExperienceHomePage() {
     const safe = <T,>(allowed: boolean, call: () => Promise<T[]>) => allowed ? call().catch(() => []) : Promise.resolve([] as T[]);
     let active=true;
     const load=()=>Promise.all([
-        safe(canDo('listing.read'), listings.list), sourcing.list().catch(() => []),
+        canDo('listing.read') ? listings.summary().catch(() => null) : Promise.resolve(null), sourcing.list().catch(() => []),
         safe(canDo('offer.respond') || canDo('offer.create'), offers.list), safe(canDo('contract.read'), contracts.list),
-        safe(canDo('holding.read') || canDo('holding.create'), holdings.list), safe(canDo('farm.read'), farms.list), workspace.tradeActions().then(rows=>{if(active)setActionError(false);return rows;}).catch(() => {if(active)setActionError(true);return [];}),
-      ]).then(([listingRows,requestRows,offerRows,contractRows,holdingRows,farmRows,actionRows])=>{if(active)setData({listings:listingRows,requests:requestRows,offers:offerRows,contracts:contractRows,holdings:holdingRows,farms:farmRows,actions:actionRows});}).finally(()=>{if(active)setLoading(false);});
+        canDo('holding.read') ? holdings.summary().catch(() => null) : Promise.resolve(null), safe(canDo('farm.read'), farms.list), workspace.tradeActions().then(rows=>{if(active)setActionError(false);return rows;}).catch(() => {if(active)setActionError(true);return [];}),
+      ]).then(([listingRows,requestRows,offerRows,contractRows,holdingRows,farmRows,actionRows])=>{if(active){setCatalogError(!listingRows || (mode === 'sell' && !holdingRows));setData({listingSummary:listingRows,requests:requestRows,offers:offerRows,contracts:contractRows,holdingSummary:holdingRows,farms:farmRows,actions:actionRows});}}).finally(()=>{if(active)setLoading(false);});
     load();
     const interval=window.setInterval(load,15000);
     window.addEventListener('focus',load);
@@ -43,46 +44,46 @@ export default function ExperienceHomePage() {
   const switchMode = (next: Mode) => { if (user?.id) localStorage.setItem(`ct_experience_mode:${user.id}`, next); setParams({ mode: next }); };
   return <Layout currentPage="home" actions={canBuy && canSell ? <div className="hidden rounded-xl border border-border bg-surface-darker p-1 sm:flex"><ModeButton active={mode === 'buy'} onClick={() => switchMode('buy')} icon={Search}>Buy</ModeButton><ModeButton active={mode === 'sell'} onClick={() => switchMode('sell')} icon={Sprout}>Sell</ModeButton></div> : undefined}>
     {actionError && <div role="alert" className="mb-4 rounded-xl border border-amber-300/30 p-4 text-sm">Trade actions could not be refreshed. Reload the page to retry before continuing a trade.</div>}
-    {loading ? <div className="loading"><div className="spinner" />Preparing your workspace…</div> : mode === 'buy' ? <BuyerHome data={{...data,actionsUnavailable:actionError}} organizationId={user?.organizationId || ''} firstName={user?.name?.split(' ')[0] || 'there'} navigate={navigate} /> : <SellerHome data={{...data,actionsUnavailable:actionError}} organizationId={user?.organizationId || ''} firstName={user?.name?.split(' ')[0] || 'there'} navigate={navigate} />}
+    {loading ? <div className="loading"><div className="spinner" />Preparing your workspace…</div> : catalogError ? <><p role="alert" className="mb-4 text-sm text-amber-300">Supply totals could not be refreshed. Reload to retry; setup recommendations are paused.</p><ActionCenter failed={actionError} actions={data.actions} navigate={navigate} /></> : mode === 'buy' ? <BuyerHome data={{...data,actionsUnavailable:actionError}} organizationId={user?.organizationId || ''} firstName={user?.name?.split(' ')[0] || 'there'} navigate={navigate} /> : <SellerHome data={{...data,actionsUnavailable:actionError}} organizationId={user?.organizationId || ''} firstName={user?.name?.split(' ')[0] || 'there'} navigate={navigate} />}
   </Layout>;
 }
 
 function BuyerHome({ data, organizationId, firstName, navigate }: { data: HomeData; organizationId: string; firstName: string; navigate: ReturnType<typeof useNavigate> }) {
-  const qualified = data.listings.reduce((sum, item) => sum + Number(item.available_quantity_kg || 0), 0);
+  const qualified = Number(data.listingSummary?.quantity_kg || 0);
   const pendingOffers = data.offers.filter((item) => item.status === 'pending').length;
   const myRequests = data.requests.filter((item) => item.buyer_organization_id === organizationId);
   const activeRequest = myRequests.find((item) => item.status === 'open');
   return <>
     <Hero eyebrow="Evidence-aware procurement" title={`Good ${dayPart()}, ${firstName}. Source raw materials with the right proof.`} copy="Describe what you need once. CocoaTrace matches commodity, quantity, origin, assurance and delivery terms, then preserves the record through fulfilment." action="Create sourcing brief" onClick={() => navigate('/source/new')} />
     <ActionCenter failed={data.actionsUnavailable} actions={data.actions} navigate={navigate} />
-    <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4"><Metric label="Qualified supply" value={`${compactKg(qualified)} kg`} note={`${data.listings.length} published lots`} /><Metric label="Open sourcing needs" value={String(myRequests.filter((item) => item.status === 'open').length)} note="matched suppliers can respond" /><Metric label="Offers to decide" value={String(pendingOffers)} note="price and assurance together" /><Metric label="Active orders" value={String(data.contracts.length)} note="commercial + trace record" /></div>
+    <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4"><Metric label="Published supply" value={`${compactKg(qualified)} kg`} note={`${data.listingSummary?.count || 0} published lots`} /><Metric label="Open sourcing needs" value={String(myRequests.filter((item) => item.status === 'open').length)} note="matched suppliers can respond" /><Metric label="Offers to decide" value={String(pendingOffers)} note="price and assurance together" /><Metric label="Active orders" value={String(data.contracts.length)} note="commercial + trace record" /></div>
     <section className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]"><Panel eyebrow="Sourcing setup" title="Move procurement forward">{activeRequest ? <Task icon={Search} title={`Review matches for ${activeRequest.commodity}`} copy={`${Number(activeRequest.quantity_kg).toLocaleString()} kg requested for ${activeRequest.delivery_location}. Results are ranked against these requirements.`} action="Review matches" onClick={() => navigate(`/marketplace?request=${activeRequest.id}`)} /> : <Task icon={FileCheck2} title="Describe your sourcing need" copy="Create a structured, editable request before reviewing supply." action="Create brief" onClick={() => navigate('/source/new')} />}{data.contracts[0] && <Task icon={Handshake} title="Continue the active deal" copy="Payment, documents and transport actions stay in one guided record." action="Deal room" onClick={() => navigate(`/deal-room/${data.contracts[0].id}`)} />}</Panel><Copilot title="Recommendation based on your records" text={activeRequest ? `Your open request is for ${activeRequest.commodity}. Review its matched results; any quantity, origin or assurance gaps will be shown explicitly.` : 'Create a sourcing brief first. The reviewed fields become the request used to rank marketplace supply.'} /></section>
     <Journey active={1} labels={['Define need', 'Match supply', 'Review proof', 'Contract', 'Receive']} />
   </>;
 }
 
 function SellerHome({ data, organizationId, firstName, navigate }: { data: HomeData; organizationId: string; firstName: string; navigate: ReturnType<typeof useNavigate> }) {
-  const inventory = data.holdings.filter((item) => item.status === 'available').reduce((sum, item) => sum + Number(item.quantity_kg || 0), 0);
+  const inventory = Number(data.holdingSummary?.available_kg || 0);
   const received = data.offers.filter((item) => item.status === 'pending').length;
-  const myListings = data.listings.filter((item) => item.seller_organization_id === organizationId);
-  const commodities = new Set(data.holdings.map((item) => normalizedCommodity(item.crop)));
+  const myListingCount = data.listingSummary?.own_count || 0;
+  const commodities = new Set(data.holdingSummary?.commodities || []);
   const openRequest = data.requests.find((item) => item.status === 'open' && item.buyer_organization_id !== organizationId && commodities.has(normalizedCommodity(item.commodity)));
-  const hasInventory = data.holdings.length > 0; const hasFarm = data.farms.length > 0;
+  const hasInventory = (data.holdingSummary?.count || 0) > 0; const hasFarm = data.farms.length > 0;
   const guidedStart = localStorage.getItem('ct_guided_fresh_start') === 'sell';
   const showSetupChoice = guidedStart || (!hasInventory && !hasFarm);
   const goHero = () => document.getElementById(showSetupChoice ? 'supplier-path' : 'create-supply')?.scrollIntoView({ behavior: 'smooth' });
   return <>
     <Hero eyebrow="Market access" title={`Good ${dayPart()}, ${firstName}. Turn inventory into buyer-ready supply.`} copy="Choose the evidence path that matches the material you actually sell. Organic or origin-verified supply starts at source; conventional supply starts with inventory." action={showSetupChoice ? 'Choose how to create supply' : 'Create new supply'} onClick={goHero} />
     <ActionCenter failed={data.actionsUnavailable} actions={data.actions} navigate={navigate} />
-    <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4"><Metric label="Available inventory" value={`${compactKg(inventory)} kg`} note="physical and uncommitted" /><Metric label="Published supply" value={String(myListings.length)} note="visible to qualified buyers" /><Metric label="Matching buyer requests" value={String(data.requests.filter((item) => item.status === 'open' && item.buyer_organization_id !== organizationId && commodities.has(normalizedCommodity(item.commodity))).length)} note="compatible with your inventory" /><Metric label="Offers received" value={String(received)} note="awaiting commercial decision" /></div>
+    <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4"><Metric label="Available inventory" value={`${compactKg(inventory)} kg`} note="physical and uncommitted" /><Metric label="Published supply" value={String(myListingCount)} note="visible to qualified buyers" /><Metric label="Matching buyer requests" value={String(data.requests.filter((item) => item.status === 'open' && item.buyer_organization_id !== organizationId && commodities.has(normalizedCommodity(item.commodity))).length)} note="compatible with your inventory" /><Metric label="Offers received" value={String(received)} note="awaiting commercial decision" /></div>
     <section id="supplier-path" className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]">
       <Panel eyebrow={data.actions.length ? "Supply setup · separate from active trades" : "Start your supply journey"} title={showSetupChoice ? 'How will you sell this material?' : 'Continue your supply journey'}>
-        {showSetupChoice ? <SupplyPathChoice /> : hasFarm && !hasInventory ? <Task icon={PackageCheck} title="Record the harvested quantity" copy="Your source is registered. Create the batch that becomes available inventory." action="Record harvest" onClick={() => navigate('/batches')} /> : received ? <Task icon={Handshake} title="Review the new buyer offer" copy="Decide on the commercial offer before any contract is created." action="Review offer" onClick={() => navigate('/offers')} /> : myListings.length === 0 ? <Task icon={PackageCheck} title="Publish available inventory" copy={`You have ${compactKg(inventory)} kg available. Add price, quantity, Incoterm and destination.`} action="Publish supply" onClick={() => navigate('/supply/new')} /> : openRequest ? <Task icon={Building2} title={`Demand for ${openRequest.commodity}`} copy={`${Number(openRequest.quantity_kg).toLocaleString()} kg · ${openRequest.incoterm} ${openRequest.delivery_location}. This is shown because it matches your recorded commodity.`} action="Review your listing" onClick={() => navigate('/my-listings')} /> : <Task icon={PackageCheck} title="Keep published supply current" copy="No compatible open buyer request is recorded. Your listing remains visible without presenting unrelated demand." action="View listings" onClick={() => navigate('/my-listings')} />}
+        {showSetupChoice ? <SupplyPathChoice /> : hasFarm && !hasInventory ? <Task icon={PackageCheck} title="Record the harvested quantity" copy="Your source is registered. Create the batch that becomes available inventory." action="Record harvest" onClick={() => navigate('/batches')} /> : received ? <Task icon={Handshake} title="Review the new buyer offer" copy="Decide on the commercial offer before any contract is created." action="Review offer" onClick={() => navigate('/offers')} /> : myListingCount === 0 ? <Task icon={PackageCheck} title="Publish available inventory" copy={`You have ${compactKg(inventory)} kg available. Add price, quantity, Incoterm and destination.`} action="Publish supply" onClick={() => navigate('/supply/new')} /> : openRequest ? <Task icon={Building2} title={`Demand for ${openRequest.commodity}`} copy={`${Number(openRequest.quantity_kg).toLocaleString()} kg · ${openRequest.incoterm} ${openRequest.delivery_location}. This is shown because it matches your recorded commodity.`} action="Review your listing" onClick={() => navigate('/my-listings')} /> : <Task icon={PackageCheck} title="Keep published supply current" copy="No compatible open buyer request is recorded. Your listing remains visible without presenting unrelated demand." action="View listings" onClick={() => navigate('/my-listings')} />}
       </Panel>
-      <Copilot title="Why this is next" text={showSetupChoice ? 'Choose the path based on the claim you can support. Organic and field-origin supply needs source records; conventional supply does not.' : hasFarm && !hasInventory ? 'A farm alone is not sellable inventory. Record the quantity harvested from it next.' : myListings.length === 0 ? 'Inventory is recorded but not visible to buyers. Publishing it is the next dependency.' : received ? 'A buyer is waiting for your decision. Accepting creates the guided contract workflow.' : 'Your supply is published. Only compatible demand and real buyer actions will appear here.'} />
+      <Copilot title="Why this is next" text={showSetupChoice ? 'Choose the path based on the claim you can support. Organic and field-origin supply needs source records; conventional supply does not.' : hasFarm && !hasInventory ? 'A farm alone is not sellable inventory. Record the quantity harvested from it next.' : myListingCount === 0 ? 'Inventory is recorded but not visible to buyers. Publishing it is the next dependency.' : received ? 'A buyer is waiting for your decision. Accepting creates the guided contract workflow.' : 'Your supply is published. Only compatible demand and real buyer actions will appear here.'} />
     </section>
     {!showSetupChoice && <section id="create-supply" className="mt-5"><Panel eyebrow="Create another supply" title="Choose the evidence path for the new material"><SupplyPathChoice /></Panel></section>}
-    <Journey active={!hasInventory ? 0 : myListings.length ? 2 : 1} labels={['Record inventory', 'Publish supply', 'Review offers', 'Fulfil order', 'Build history']} />
+    <Journey active={!hasInventory ? 0 : myListingCount ? 2 : 1} labels={['Record inventory', 'Publish supply', 'Review offers', 'Fulfil order', 'Build history']} />
   </>;
 }
 

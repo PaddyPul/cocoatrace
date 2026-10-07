@@ -1,3 +1,5 @@
+import { AppError } from '../errors';
+import { withCatalogRead } from '../modules/catalog/paging';
 import { lockRecallBoundary, assertBatchNotRecalled, activeBatchRecallSql } from '../modules/recall/safety';
 import { Request, Response } from 'express';
 import { query, getClient } from '../db';
@@ -29,16 +31,20 @@ export async function getHolding(req: Request, res: Response): Promise<void> {
 }
 
 export async function listHoldings(req: Request, res: Response): Promise<void> {
-  const { rows } = await query(
+  const result = await withCatalogRead(async execute => {
+  const { rows } = await execute(
     `SELECT h.*, ${activeBatchRecallSql('h.batch_id')} AS "activeRecall", b.crop, b.harvest_date, b.organic_claim_status, b.grade, b.source_mode, b.source_name, b.source_country, b.source_region, f.name as farm_name
      FROM batch_holdings h
      JOIN harvest_batches b ON b.id = h.batch_id
      LEFT JOIN farms f ON f.id = b.farm_id
      WHERE h.holder_organization_id = $1
-     ORDER BY h.created_at DESC`,
+     ORDER BY h.created_at DESC LIMIT 1001`,
     [req.user!.organizationId]
   );
-  res.json(rows);
+  if (rows.length > 1000) throw new AppError('Inventory list exceeds the legacy limit. Use the paged inventory view.',422,'CATALOG_READ_LIMIT');
+  return rows;
+  });
+  res.json(result);
 }
 
 export async function createHolding(req: Request, res: Response): Promise<void> {
