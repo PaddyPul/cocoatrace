@@ -88,7 +88,9 @@ export async function listingPage(
         : '';
   const direction = input.sort === 'quantity' ? 'DESC' : 'ASC';
   const relation = direction === 'DESC' ? '<' : '>';
-  const boundary = key ? `(l.${key},l.id) ${relation} ($2::numeric,$3::uuid)` : `l.id>$3::uuid`;
+  const boundary = key
+    ? `(l.${key},l.id) ${relation} ($2::numeric,$3::uuid)`
+    : `(l.id>$3::uuid AND $2::numeric IS NULL)`;
   const result = await execute(
     `${listingSelect} ${listingFrom} WHERE ${listingVisible}
     AND (NOT $4::boolean OR l.seller_organization_id=$1) AND ($13::uuid IS NULL OR l.id=$13) AND ($14='' OR l.currency=$14)

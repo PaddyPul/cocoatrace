@@ -43,6 +43,24 @@ describe('catalog SQL boundaries', () => {
     expect(sql).toContain('ORDER BY l.available_quantity_kg DESC,l.id DESC LIMIT $12');
     expect(parameters.slice(6)).toEqual(['shea', '%_', '%\\%\\_%', '35', true, 51, 'id', '']);
   });
+  it('types every cursor parameter for default ID order even without a numeric sort key', async () => {
+    const execute = vi.fn().mockResolvedValue({ rows: [] });
+    await listingPage(execute, 'tenant', parsePage({}, ['tenant'], []), {
+      mine: false,
+      commodity: '',
+      origin: '',
+      minimum: '0',
+      organic: false,
+      id: '',
+      currency: '',
+    });
+    const [sql, parameters] = execute.mock.calls[0];
+    expect(sql).toContain('(l.id>$3::uuid AND $2::numeric IS NULL)');
+    expect(parameters[1]).toBeNull();
+    for (let index = 1; index <= parameters.length; index++) {
+      expect(sql).toMatch(new RegExp('\\$' + index + '(?![0-9])'));
+    }
+  });
   it('does not invent a partial commodity summary', async () => {
     const execute = vi
       .fn()

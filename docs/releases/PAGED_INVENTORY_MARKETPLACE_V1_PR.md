@@ -22,6 +22,7 @@ Suppliers can find inventory beyond the first page and publish the holding they 
 - Extract InventoryPage from DataPages; add search and Previous/Next controls to inventory, publication, marketplace and own listings.
 - Resolve newly created holdings and off-page published listings explicitly. Bound shortlists to 20 entries and scope them by account; comparison uses exact listing lookups.
 - Reject oversized legacy list reads rather than silently truncating them. Bound linked proof reads and query duration.
+- Correct the default listing cursor parameter typing after the first native run exposed PostgreSQL HTTP 500 errors. Add a unit regression for every SQL parameter slot.
 - Add unit, PostgreSQL and browser regressions; record acceptance of the previous trace selector correction.
 
 ## Security and data review
@@ -48,7 +49,7 @@ Suppliers can find inventory beyond the first page and publish the holding they 
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: author checks include 467 passing API unit tests, quality checks, workspace/browser type checks, native test-source compilation, API/web builds, migration integrity and backlog tests. Author environment has no Docker/PostgreSQL/browser runtime; native execution is pending. Before merge, run `npm run verify:release`, check the integration/browser boxes only after success, and record the candidate SHA and CI/report evidence. Added native coverage includes 1,005 holdings/listings, tenant isolation, cursor/filter/order agreement, recall exclusion and seven organic trust parity cases. Browser coverage includes paging, search, exact supply selection and failed summaries.
+- Evidence/results: author checks include 468 passing API unit tests, quality checks, workspace/browser type checks, native test-source compilation, API/web builds, migration integrity and backlog tests. Author environment has no Docker/PostgreSQL/browser runtime; native execution is pending. Before merge, run `npm run verify:release`, check the integration/browser boxes only after success, and record the candidate SHA and CI/report evidence. Added native coverage includes 1,005 holdings/listings, tenant isolation, cursor/filter/order agreement, recall exclusion and seven organic trust parity cases. Browser coverage includes paging, search, exact supply selection and failed summaries.
 
 ## Product and operations
 
