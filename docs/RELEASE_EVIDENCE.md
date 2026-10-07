@@ -274,3 +274,17 @@ Founder corrected native run: 263/264 passed; nine previous listing failures cle
 Founder browser run exposed an overly broad aggregate-dashboard assertion: existing suppliers intentionally retain a supply-path choice under Create another supply. Test correction scopes the absent first-supply prompt to #supplier-path, asserts the existing-supply next action and verifies creation remains available under #create-supply. Failed-summary assertions remain unchanged. Production code unchanged; complete native release rerun pending.
 
 Supplier aggregate browser selector correction: Task renders a single button with the task title/description; View listings is a hidden hover child label, not its exact accessible name. Test now selects the card by title and verifies actual navigation to /my-listings. Prior exact View listings assertion was incorrect. Production code unchanged; native rerun pending.
+
+## Founder acceptance — paged inventory/marketplace and corrections — 2026-10-07 11:32 UTC
+
+Founder confirms release checks passed and merge/pull completed, superseding the pending acceptance for this slice and its SQL/test corrections. Records founder-reported complete native release acceptance; no independent CI URL supplied. Inventory/marketplace pages, supply aggregates, exact stock/listing selection, organic filtering and browser journeys accepted. PER-001 / ARC-024 remain IN PROGRESS for remaining lists/exports and hosted capacity/query-plan/load acceptance. CORE-performance remains open.
+
+## Candidate — bounded custody transfer history — 2026-10-07
+
+Adds scoped transfer pages and an extracted transfer-records component with direction/status/search filters, receiving-party acceptance presentation, recall hold state and explicit read retries. Legacy arrays refuse overflow beyond 1,000 and use requested_at rather than nonexistent created_at. Existing acceptance transaction, permission and audits are unchanged. Unit SQL/type/cursor/overflow coverage, native 1,005-transfer party/cursor/acceptance case and four browser checks added. Author: 475 API unit tests passed; final quality/type/build and native-source compilation evidence recorded separately. Docker/native browser execution unavailable; exact candidate full release required before merge. No schema/dependency/configuration change. PER-001 / ARC-024 remain IN PROGRESS.
+
+Final transfer candidate author validation: 475 API unit tests/61 files, quality checks (10 policy tests), workspace/browser type checks, strict compilation of catalog native test source, API/web production builds, migration integrity and two backlog tests pass. New browser source includes recall-blocked acceptance; browser types/format rerun after that addition. Existing large web chunk warning remains. Full native release pending; no Docker execution claimed.
+
+Transfer browser correction: catalogPages inventory fixture fell through to an old [] response for new /transfers/page. TransferRecords consequently crashed rendering and hid the inventory table. Fixture supplies a valid empty page; shared hook validates page envelopes to isolate malformed API responses as read errors. Added browser regression ensures malformed transfer response leaves inventory visible and transfer retry available. Native release pending.
+
+Transfer fixture correction author checks: quality, API/web/browser type checks, web production build and diff whitespace check pass. Browser execution unavailable author-side; native full release rerun required. Existing chunk-size warning remains.

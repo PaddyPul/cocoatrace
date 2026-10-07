@@ -16,7 +16,7 @@ async function actor():Promise<Actor> {
   const org=(await query("INSERT INTO organizations(name,type,jurisdiction,verification_status) VALUES($1,'exporter','GH','verified') RETURNING id",[`Paging ${suffix}`])).rows[0].id;
   const email=`paging-${suffix}@integration.test`;
   const user=(await query('INSERT INTO users(organization_id,email,password_hash,name) VALUES($1,$2,$3,$4) RETURNING id',[org,email,await bcrypt.hash('PagingPassword123!',4),'Paging regression'])).rows[0].id;
-  const role=(await query('INSERT INTO roles(name,permissions) VALUES($1,$2) RETURNING id',[`paging-${suffix}`,['holding.read','listing.read']])).rows[0].id;
+  const role=(await query('INSERT INTO roles(name,permissions) VALUES($1,$2) RETURNING id',[`paging-${suffix}`,['holding.read','listing.read','custody.transfer.request','custody.transfer.accept']])).rows[0].id;
   await query('INSERT INTO user_roles(user_id,role_id) VALUES($1,$2)',[user,role]);
   const login=await request(app).post('/auth/login').send({email,password:'PagingPassword123!'});expect(login.status).toBe(200);
   return {org,token:login.body.accessToken,user};
@@ -31,6 +31,7 @@ const get=(path:string,parameters:Record<string,string>={},owner?:Actor)=>reques
 beforeAll(async()=>{seller=await actor();outsider=await actor();});
 afterAll(async()=>{
   for(const s of stocks) {
+    await query('DELETE FROM custody_transfers WHERE holding_id=ANY($1::uuid[])',[s.holdings.map(h=>h.id)]);
     await query('DELETE FROM listings WHERE holding_id=ANY($1::uuid[])',[s.holdings.map(h=>h.id)]);
     await query('DELETE FROM batch_holdings WHERE batch_id=$1',[s.batch]);
     await query('DELETE FROM harvest_batches WHERE id=$1',[s.batch]);
@@ -115,5 +116,36 @@ describe('inventory/marketplace pages and aggregate totals',()=>{
     expect(new Set(ids).size).toBe(4);expect(ids).toEqual([...ids].sort().reverse());
     for(const parameters of [{limit:'101'},{search:'x'.repeat(81)},{available:'yes'}] as Record<string,string>[]) expect((await get('/holdings/page',parameters)).status).toBe(400);
     expect((await request(app).get('/holdings/page')).status).toBe(401);
+  });
+});
+
+
+describe('bounded transfer history',()=>{
+  it('pages both party views, excludes unrelated tenants, filters before limiting and preserves receiving-party acceptance',async()=>{
+    const material=await stock(seller,1005,`Transfers ${crypto.randomUUID()}`);
+    const inserted=(await query(`INSERT INTO custody_transfers(holding_id,from_organization_id,to_organization_id,quantity_kg)
+      SELECT id,$1,$2,1 FROM batch_holdings WHERE batch_id=$3 RETURNING id`,[seller.org,outsider.org,material.batch])).rows;
+    const stranger=await actor();
+    const first=await get('/transfers/page',{direction:'outgoing',limit:'100'});expect(first.status).toBe(200);expect(first.body.items).toHaveLength(100);
+    const next=await get('/transfers/page',{direction:'outgoing',limit:'100',cursor:first.body.nextCursor});expect(next.status).toBe(200);
+    const ids=[...first.body.items,...next.body.items].map((item:{id:string})=>item.id);
+    expect(new Set(ids).size).toBe(200);expect(ids).toEqual([...ids].sort());
+    const later=inserted.find(item=>!ids.includes(item.id))!.id;
+    const exact=await get('/transfers/page',{direction:'outgoing',search:later});expect(exact.status).toBe(200);expect(exact.body.items.map((item:{id:string})=>item.id)).toEqual([later]);
+    const incoming=await get('/transfers/page',{search:later},outsider);expect(incoming.status).toBe(200);expect(incoming.body.items[0].id).toBe(later);
+    expect((await get('/transfers/page',{direction:'all'},stranger)).body.items).toEqual([]);
+    expect((await get('/transfers/page',{direction:'incoming'},seller)).body.items).toEqual([]);
+    expect((await get('/transfers/page',{direction:'outgoing',search:'%'})).body.items).toEqual([]);
+    for(const changed of [{direction:'incoming'},{direction:'outgoing',status:'accepted'},{direction:'outgoing',search:'changed'}] as Record<string,string>[])
+      expect((await get('/transfers/page',{...changed,cursor:first.body.nextCursor})).status).toBe(400);
+    expect((await get('/transfers/page',{direction:'outgoing',cursor:first.body.nextCursor},stranger)).status).toBe(400);
+    expect((await get('/transfers')).status).toBe(422);
+    expect((await request(app).post(`/transfers/${later}/accept`).set('Authorization',`Bearer ${seller.token}`)).status).toBe(404);
+    expect((await request(app).post(`/transfers/${later}/accept`).set('Authorization',`Bearer ${outsider.token}`)).status).toBe(200);
+    expect((await get('/transfers/page',{search:later},outsider)).body.items).toEqual([]);
+    expect((await get('/transfers/page',{search:later,status:'accepted'},outsider)).body.items[0].id).toBe(later);
+    expect((await request(app).post(`/transfers/${later}/accept`).set('Authorization',`Bearer ${outsider.token}`)).status).toBe(409);
+    for(const invalid of [{limit:'101'},{direction:'foreign'},{status:'invalid'},{search:'x'.repeat(81)}] as Record<string,string>[]) expect((await get('/transfers/page',invalid)).status).toBe(400);
+    expect((await request(app).get('/transfers/page')).status).toBe(401);
   });
 });

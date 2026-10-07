@@ -60,3 +60,5 @@ api/src/modules/catalog/** text eol=lf
 web/src/components/catalog/** text eol=lf
 web/src/pages/InventoryPage.tsx text eol=lf
 e2e/catalogPages.spec.ts text eol=lf
+
+e2e/transferPages.spec.ts text eol=lf

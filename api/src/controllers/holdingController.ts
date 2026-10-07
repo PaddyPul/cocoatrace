@@ -1,4 +1,5 @@
 import { AppError } from '../errors';
+import { legacyTransferList } from '../modules/catalog/transfers';
 import { withCatalogRead } from '../modules/catalog/paging';
 import { lockRecallBoundary, assertBatchNotRecalled, activeBatchRecallSql } from '../modules/recall/safety';
 import { Request, Response } from 'express';
@@ -100,17 +101,7 @@ export async function transferHolding(req: Request, res: Response): Promise<void
 }
 
 export async function listTransfers(req: Request, res: Response): Promise<void> {
-  const { rows } = await query(
-    `SELECT ct.*, o.name as from_org_name, dest.name as to_org_name, h.warehouse_location
-     FROM custody_transfers ct
-     JOIN organizations o ON o.id = ct.from_organization_id
-     JOIN organizations dest ON dest.id = ct.to_organization_id
-     JOIN batch_holdings h ON h.id = ct.holding_id
-     WHERE ct.to_organization_id=$1 OR ct.from_organization_id=$1
-     ORDER BY ct.created_at DESC`,
-    [req.user!.organizationId]
-  );
-  res.json(rows);
+  res.json(await withCatalogRead(execute => legacyTransferList(execute, req.user!.organizationId)));
 }
 
 export async function acceptTransfer(req: Request, res: Response): Promise<void> {

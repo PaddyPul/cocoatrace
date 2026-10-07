@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 
-async function mock(page: Page, failedTotals = false) {
+async function mock(page: Page, failedTotals = false, malformedTransfers = false) {
   await page.addInitScript(() =>
     localStorage.setItem(
       'ct_user',
@@ -23,6 +23,12 @@ async function mock(page: Page, failedTotals = false) {
         status: 503,
         contentType: 'application/json',
         body: JSON.stringify({ error: 'Summary unavailable' }),
+      });
+      return;
+    }
+    if (path === '/api/transfers/page') {
+      await route.fulfill({
+        json: malformedTransfers ? [] : { items: [], hasMore: false, nextCursor: null },
       });
       return;
     }
@@ -172,4 +178,17 @@ test('failed supply summaries pause setup recommendations instead of showing an 
   await page.goto('/home?mode=sell');
   await expect(page.getByRole('alert')).toContainText('Supply totals could not be refreshed');
   await expect(page.getByTestId('supply-path-choice')).toHaveCount(0);
+});
+
+test('malformed transfer page stays a panel error and does not hide inventory', async ({
+  page,
+}) => {
+  await mock(page, false, true);
+  await page.goto('/holdings');
+  await expect(page.getByRole('cell', { name: 'peanut', exact: true })).toBeVisible();
+  const transfers = page.getByRole('region', { name: 'Custody transfer records', exact: true });
+  await expect(transfers.getByRole('alert')).toContainText('Transfer records could not be loaded');
+  await expect(
+    transfers.getByRole('button', { name: 'Refresh transfers', exact: true }),
+  ).toBeEnabled();
 });
