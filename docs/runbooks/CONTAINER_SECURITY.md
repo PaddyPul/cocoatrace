@@ -12,7 +12,7 @@ High, critical, unknown-severity findings, scanner/download failures, malformed 
 - Original migration files, names and manifest checks remain unchanged. Compiled code, database baseline and reviewed TS sources/maintenance scripts remain; test files, type declarations and source maps are removed from runtime.
 - Startup invokes installed tsx through node --import, without npx downloading tooling. Tracked Compose/test commands invoke Node directly. Runtime npm, npx, Yarn and Corepack are removed after installation; host npm commands remain available.
 - Container demo/test/deployed profiles use structured logs. The pretty formatter is limited to local development. Redaction stays enabled.
-- Web build uses Node 24; serving uses nginxinc/nginx-unprivileged:stable-alpine, retains port 3000 and existing API proxy configuration. The config check maps api to loopback only inside its short-lived check container.
+- Web build uses Node 24; serving uses nginxinc/nginx-unprivileged:stable-alpine-slim, retains port 3000 and existing API proxy configuration. The config check maps api to loopback only inside its short-lived check container.
 - Build contexts exclude local env files, evidence/upload directories, node_modules, dist and Git bundles. Application evidence volumes and database storage are not reset.
 
 ## Evidence and remaining work
@@ -26,3 +26,5 @@ References:
 - https://github.com/nginx/docker-nginx-unprivileged
 - https://trivy.dev/docs/latest/references/configuration/cli/trivy_image/
 - https://trivy.dev/docs/latest/guide/coverage/language/nodejs/
+
+The static web runtime uses the upstream slim variant, omitting optional image-processing modules. The runtime check requires non-root execution, TIFF package absence and a valid nginx configuration before scanning. High/critical findings still block, including newly discovered advisories. No CVE exception is added. Native image build and scan must pass before merge.

@@ -24,6 +24,8 @@ The workspace overview remains usable beyond 1,000 records without downloading e
 - Add five unit cases, four PostgreSQL definitions with 1,005 records and four browser definitions. Record accepted payment release.
 - Assess marketplace recall/organic eligibility once per distinct candidate batch before the page limit, preserving scope, literal filters, numeric ordering and SQL deadlines. Add a real query-plan assertion and response-code diagnostics for quantity paging.
 
+- Use the unprivileged slim Nginx runtime to omit unused image-processing dependencies; require TIFF absence alongside non-root/configuration checks. Keep the full vulnerability gate unchanged.
+
 ## Security and data review
 
 - [x] Resource authorization and unrelated-tenant behavior considered
@@ -48,7 +50,7 @@ The workspace overview remains usable beyond 1,000 records without downloading e
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: author 563 units/69 files, quality, workspace/browser types, strict native-source compilation, builds, migration integrity/backlog pass. Correction: repository unit tests and API build pass; native quantity-page plan and release confirmation remain pending. Docker/PostgreSQL/browser unavailable here. Run verify:release on exact candidate, attach SHA/report or CI URL and check native/browser boxes after pass. Large frontend chunk warning remains open.
+- Evidence/results: author 563 units/69 files, quality, workspace/browser types, strict native-source compilation, builds, migration integrity/backlog pass. Corrections: repository unit tests/API build and container runner policy tests pass; native quantity-page plan and release confirmation remain pending. Docker/PostgreSQL/browser unavailable here. Run verify:release on exact candidate, attach SHA/report or CI URL and check native/browser boxes after pass. Large frontend chunk warning remains open.
 
 ## Product and operations
 

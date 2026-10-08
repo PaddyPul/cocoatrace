@@ -73,6 +73,11 @@ test('both runtime images are checked and scanned without Docker socket access',
   );
   assert.ok(calls.some((args) => args.includes('api/scripts/check-runtime-image.mjs')));
   assert.ok(calls.some((args) => args.includes('api:127.0.0.1')));
+  assert.ok(
+    calls.some((args) =>
+      args.some((value) => value.includes('! apk info -e tiff') && value.includes('nginx -t')),
+    ),
+  );
   assert.ok(calls.some((args) => args.includes('C:\\Private temp:/scan:ro')));
 });
 test('a completed scan with findings cannot report a passing release', () => {
