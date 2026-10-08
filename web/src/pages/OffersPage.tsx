@@ -1,3 +1,6 @@
+import { useCatalogPage } from '../components/catalog/useCatalogPage';
+import PageNavigation from '../components/catalog/PageNavigation';
+import type { OfferSummary } from '../api';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { offers as offersApi } from '../api';
@@ -11,26 +14,18 @@ import ConfirmDialog from '../components/shared/ConfirmDialog';
 import { useToast } from '../components/shared/ToastProvider';
 import { Search, Check, X } from 'lucide-react';
 
-function useFetch<T>(fetcher: () => Promise<T[]>) {
-  const [data, setData] = useState<T[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const doFetch = () => {
-    setLoading(true); setError('');
-    return fetcher().then(setData).catch((e) => setError(e.message)).finally(() => setLoading(false));
-  };
-  useEffect(() => { doFetch(); }, []);
-  return { data, loading, error, refetch: doFetch };
-}
-
 export default function OffersPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const { user, canDo } = useAuthCtx();
+  const { canDo } = useAuthCtx();
   const { toast } = useToast();
-  const { data, loading, error, refetch } = useFetch(() => offersApi.list());
   const [tab, setTab] = useState<'received' | 'sent'>(() => params.get('tab') === 'sent' || (!canDo('offer.respond') && canDo('offer.create')) ? 'sent' : 'received');
   const [search, setSearch] = useState('');
+  const page = useCatalogPage(offersApi.page,{direction:tab,search});
+  const {items:data,loading,error,refresh:refetch}=page;
+  const [summary,setSummary]=useState<OfferSummary|null>(null);
+  const [summaryError,setSummaryError]=useState(false);
+  useEffect(()=>{let active=true;const load=()=>offersApi.summary().then(row=>{if(!row||!['received_count','sent_count','received_pending','sent_pending'].every(key=>Number.isInteger(row[key as keyof OfferSummary])&&row[key as keyof OfferSummary]>=0))throw new Error('Invalid offer totals');if(active){setSummary(row);setSummaryError(false);}}).catch(()=>{if(active){setSummary(null);setSummaryError(true);}});load();const focus=()=>{page.refresh();load();};window.addEventListener('focus',focus);return()=>{active=false;window.removeEventListener('focus',focus);};},[data]);
   const [confirmReject, setConfirmReject] = useState<string | null>(null);
   const [processing, setProcessing] = useState('');
 
@@ -54,23 +49,22 @@ export default function OffersPage() {
   };
 
   const offers = data as Offer[];
-  const received = offers.filter((o) => o.seller_organization_id === user?.organizationId);
-  const sent = offers.filter((o) => o.buyer_organization_id === user?.organizationId);
-  const visible = (tab === 'received' ? received : sent).filter((o) => !search || o.listing_id.toLowerCase().includes(search.toLowerCase()) || (o.buyer_name || '').toLowerCase().includes(search.toLowerCase()) || (o.seller_name || '').toLowerCase().includes(search.toLowerCase()) || o.status.toLowerCase().includes(search.toLowerCase()));
+  const visible = offers;
   const pending = visible.filter((o) => o.status === 'pending');
   const history = visible.filter((o) => o.status !== 'pending');
   const selectTab = (next: 'received' | 'sent') => { setTab(next); setParams({ tab: next }, { replace: true }); };
 
   return (
     <Layout currentPage="offers">
-      {loading ? <SkeletonTable rows={5} cols={6} /> : error ? <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{error}</div> : <div className="table-wrap">
+      {summaryError && <p role="alert">Offer totals could not be refreshed. Reload or return to this window to retry.</p>}
+      {loading ? <SkeletonTable rows={5} cols={6} /> : error ? <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{error}<button className="btn ml-3" onClick={refetch}>Retry offers</button></div> : <div className="table-wrap">
         <div className="flex flex-wrap items-center gap-3 mb-3">
           <div className="flex gap-1 bg-surface-darker rounded p-0.5">
-            {canDo('offer.respond') && <button className={`btn btn-sm ${tab === 'received' ? 'btn-primary' : ''}`} onClick={() => selectTab('received')}>Received ({received.length})</button>}
-            {canDo('offer.create') && <button className={`btn btn-sm ${tab === 'sent' ? 'btn-primary' : ''}`} onClick={() => selectTab('sent')}>Sent ({sent.length})</button>}
+            {canDo('offer.respond') && <button className={`btn btn-sm ${tab === 'received' ? 'btn-primary' : ''}`} onClick={() => selectTab('received')}>Received ({summary?.received_count ?? '—'})</button>}
+            {canDo('offer.create') && <button className={`btn btn-sm ${tab === 'sent' ? 'btn-primary' : ''}`} onClick={() => selectTab('sent')}>Sent ({summary?.sent_count ?? '—'})</button>}
           </div>
-          <div className="relative flex-1 min-w-[160px]"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input type="text" placeholder="Search offers…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
-          <div className="text-xs text-text-muted">{visible.length} offer{visible.length !== 1 ? 's' : ''}</div>
+          <div className="relative flex-1 min-w-[160px]"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input type="text" aria-label="Search offers" maxLength={80} placeholder="Search offers…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+          <div className="text-xs text-text-muted">{visible.length} offers on this page</div>
         </div>
 
         {pending.length > 0 && (
@@ -126,8 +120,9 @@ export default function OffersPage() {
           </>
         )}
 
-        {visible.length === 0 && <EmptyState icon="📨" title={tab === 'received' ? 'No offers received' : 'No offers sent'} description={tab === 'received' ? 'When buyers make offers on your listings, they appear here.' : 'When you make offers on marketplace listings, they appear here.'} action={<button className="btn btn-sm" onClick={() => navigate('/marketplace')}>Browse Marketplace →</button>} />}
+        {visible.length === 0 && <EmptyState icon="📨" title={search ? 'No matching offers' : tab === 'received' ? 'No offers on this page' : 'No offers on this page'} description={tab === 'received' ? 'When buyers make offers on your listings, they appear here.' : 'When you make offers on marketplace listings, they appear here.'} action={<button className="btn btn-sm" onClick={() => navigate('/marketplace')}>Browse Marketplace →</button>} />}
       </div>}
+      <PageNavigation page={page} label="offers" />
       <ConfirmDialog
         open={!!confirmReject}
         title="Reject Offer"

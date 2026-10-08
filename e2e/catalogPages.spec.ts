@@ -26,6 +26,12 @@ async function mock(page: Page, failedTotals = false, malformedTransfers = false
       });
       return;
     }
+    if (path === '/api/offers/summary') {
+      await route.fulfill({
+        json: { received_count: 0, sent_count: 0, received_pending: 0, sent_pending: 0 },
+      });
+      return;
+    }
     if (path === '/api/transfers/page') {
       await route.fulfill({
         json: malformedTransfers ? [] : { items: [], hasMore: false, nextCursor: null },

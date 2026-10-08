@@ -565,3 +565,10 @@ An item is complete only when applicable criteria are met:
 | Investor narrative outpaces traction/control evidence | High | Synthetic preview and engineering history exist; design partners, retention, economics and independent review remain | INV-*, GOV-006, SEC-018 |
 
 Owners and risk-review dates must be assigned under GOV-002/008; this table is a risk inventory, not completed operational ownership. Historical test evidence is in RELEASE_EVIDENCE.md; current launch gates are in pilot-gates.json.
+
+
+## Delivery checkpoint — 2026-10-08
+
+- Founder accepted paged evidence selection and inventory-summary correction: full release passed, merge/pull complete.
+- PER-001 / ARC-024: offers page and home offer totals are the next candidate slice, native release/merge pending. Max-100 pages, same party boundaries, separate full counts, explicit unavailable/retry states and legacy overflow refusal.
+- Remaining: contracts, shipments, payments, compare-offer consumers, control-tower aggregates, embedded detail arrays/exports and representative hosted concurrent-load acceptance. Do not check these broad items complete based on this slice.

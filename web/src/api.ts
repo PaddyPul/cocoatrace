@@ -328,7 +328,10 @@ export const audit = {
   export: () => `${API_BASE}/audit/export`,
 };
 
+export interface OfferSummary { received_count:number; sent_count:number; received_pending:number; sent_pending:number }
 export const offers = {
+  page: (parameters: Record<string,string> = {}) => api<CatalogPage<import('./types').Offer>>('GET', `/offers/page?${new URLSearchParams({limit:'50',...parameters})}`),
+  summary: () => api<OfferSummary>('GET','/offers/summary'),
   list: () => api<import('./types').Offer[]>('GET', '/offers'),
   create: (listingId: string, data: { quantityKg: number; offeredPricePerKg: number; currency?: string; validUntil?: string }) =>
     api('POST', `/listings/${listingId}/offers`, data),
