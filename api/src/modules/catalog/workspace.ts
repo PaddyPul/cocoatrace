@@ -47,11 +47,12 @@ export async function lotTotals(execute: Execute, actor: Actor) {
     )
   ).rows[0];
 }
+export const recallScope = `($2::boolean OR r.initiated_by_organization_id=$1::uuid OR EXISTS(SELECT 1 FROM recall_participants p WHERE p.recall_id=r.id AND p.organization_id=$1::uuid))`;
 export async function recallTotals(execute: Execute, actor: Actor) {
   return (
     await execute(
       `SELECT COUNT(*)::int AS count,COUNT(*) FILTER(WHERE r.status='active')::int AS active_count FROM recall_notices r
- WHERE ($2::boolean OR r.initiated_by_organization_id=$1::uuid OR EXISTS(SELECT 1 FROM recall_participants p WHERE p.recall_id=r.id AND p.organization_id=$1::uuid))`,
+ WHERE ${recallScope}`,
       [actor.organizationId, hasExplicitPermission(actor, 'recall.manage.all')],
     )
   ).rows[0];

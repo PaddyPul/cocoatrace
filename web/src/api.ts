@@ -387,6 +387,8 @@ export const productProfiles = {
 };
 
 export const recalls = {
+  page: (parameters: Record<string,string>) => api<CatalogPage<import('./types').RecallRegisterRow>>('GET',`/recalls/page?${new URLSearchParams(parameters)}`),
+  summary: () => api<{count:number;active_count:number}>('GET','/recalls/summary'),
   list: () => api<import('./types').RecallNotice[]>('GET', '/recalls'),
   create: (data: { referenceCode: string; title: string; reason: string; instructions: string; severity: 'advisory' | 'warning' | 'critical'; batchIds?: string[]; lots?: Array<{ lotId: string; quantityKg?: number }> }) =>
     api<import('./types').RecallNotice>('POST', '/recalls', data),

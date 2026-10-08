@@ -21,7 +21,8 @@ async function mock(page: Page, manager = false, unavailableTrace = false) {
     const body = path === '/api/me' ? { id: 'buyer', organization_id: 'buyer-org', roles: ['buyer_admin'], permissions: manager ? ['*'] : ['lot.read', 'evidence.read', 'evidence.upload'], name: 'Buyer' }
       : path === '/api/onboarding' ? { status: 'completed' }
       : path === '/api/traceability/lots/page' ? { items: [], nextCursor: null, hasMore: false }
-      : path === '/api/recalls' ? [notice]
+      : path === '/api/recalls/page' ? {items:[{...notice,batch_count:1,affected_lot_count:0}],hasMore:false,nextCursor:null}
+      : path === '/api/recalls/summary' ? {count:1,active_count:1}
       : path.endsWith('/response') ? view : [];
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
   });

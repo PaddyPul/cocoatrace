@@ -1,3 +1,4 @@
+import { listRecallPage, summarizeRecalls } from '../modules/catalog/recallRecords';
 import { listProductPage, summarizeProducts } from '../modules/catalog/productProfiles';
 import { publicActionLimiter } from '../middleware/publicRateLimit';
 import { Router } from 'express';
@@ -20,6 +21,8 @@ router.get('/product-profiles/batch/:batchId', requireAuth, requirePermission('b
 router.post('/product-profiles', requireAuth, requirePermission('batch.create'), validate(productProfileSchema), controller.upsertProfile);
 router.post('/product-profiles/:id/publish', requireAuth, requirePermission('batch.create'), controller.publishProfile);
 
+router.get('/recalls/page', requireAuth, listRecallPage);
+router.get('/recalls/summary', requireAuth, summarizeRecalls);
 router.get('/recalls', requireAuth, controller.listRecalls);
 router.post('/recalls', requireAuth, requirePermission('recall.manage'), validate(createRecallSchema), controller.createRecall);
 router.get('/recalls/:id/response', requireAuth, recallResponse.response);

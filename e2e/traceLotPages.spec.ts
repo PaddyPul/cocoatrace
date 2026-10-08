@@ -48,6 +48,14 @@ test('trace selector pages and searches without treating a filtered miss or fail
       });
       return;
     }
+    if (path === '/api/recalls/page') {
+      await route.fulfill({ json: { items: [], hasMore: false, nextCursor: null } });
+      return;
+    }
+    if (path === '/api/recalls/summary') {
+      await route.fulfill({ json: { count: 0, active_count: 0 } });
+      return;
+    }
     const body =
       path === '/api/me'
         ? {
