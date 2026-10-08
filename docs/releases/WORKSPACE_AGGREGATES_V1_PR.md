@@ -22,6 +22,7 @@ The workspace overview remains usable beyond 1,000 records without downloading e
 - Remove hard-coded corridor/readiness percentage and healthy-network claim; distinguish recorded evidence/source volume from approved files/available inventory.
 - Replace readiness full-history trust hydration with a bounded SQL reviewed count; retain existing advice scope/policy.
 - Add five unit cases, four PostgreSQL definitions with 1,005 records and four browser definitions. Record accepted payment release.
+- Assess marketplace recall/organic eligibility once per distinct candidate batch before the page limit, preserving scope, literal filters, numeric ordering and SQL deadlines. Add a real query-plan assertion and response-code diagnostics for quantity paging.
 
 ## Security and data review
 
@@ -47,7 +48,7 @@ The workspace overview remains usable beyond 1,000 records without downloading e
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: author 563 units/69 files, quality, workspace/browser types, strict native-source compilation, builds, migration integrity/backlog pass. Docker/PostgreSQL/browser unavailable here. Run verify:release on exact candidate, attach SHA/report or CI URL and check native/browser boxes after pass. Large frontend chunk warning remains open.
+- Evidence/results: author 563 units/69 files, quality, workspace/browser types, strict native-source compilation, builds, migration integrity/backlog pass. Correction: repository unit tests and API build pass; native quantity-page plan and release confirmation remain pending. Docker/PostgreSQL/browser unavailable here. Run verify:release on exact candidate, attach SHA/report or CI URL and check native/browser boxes after pass. Large frontend chunk warning remains open.
 
 ## Product and operations
 
