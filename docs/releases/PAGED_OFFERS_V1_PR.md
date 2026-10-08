@@ -20,6 +20,7 @@ Buyers and suppliers can search older offers and browse bounded pages without do
 - Preserve seller/buyer row boundaries, fee estimates and currency precision.
 - Add independent aggregate counts; switch offers UI and home offer counts to bounded/aggregate reads.
 - Refuse legacy arrays beyond 1,000 explicitly; preserve existing accept/reject workflow.
+- Correct the browser fixture identity response and completed-onboarding state; scope the supply failure assertion to its own alert, and assert destination URLs before testing controls.
 - Add eight unit cases, a 1,005-offer native scenario and five browser definitions. Record founder acceptance of the previous evidence slice.
 
 ## Security and data review
@@ -46,7 +47,7 @@ Buyers and suppliers can search older offers and browse bounded pages without do
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: author 531 unit tests/65 files, quality checks, workspace/browser types, strict native-source compilation, production builds, migration integrity and backlog tests pass. Docker/PostgreSQL/browser execution unavailable here. Before merge run verify:release, record exact tested SHA and passing report/CI URL, then check native/browser boxes. Existing large web chunk warning remains open.
+- Evidence/results: author 531 unit tests/65 files, quality checks, workspace/browser types, strict native-source compilation, production builds, migration integrity and backlog tests pass. Docker/PostgreSQL/browser execution unavailable here. Founder first browser run exposed incorrect fixture onboarding/identity shapes and an ambiguous alert locator; these are corrected without relaxing app guards. Browser types/quality pass after correction. Before merge run verify:release, record exact tested SHA and passing report/CI URL, then check native/browser boxes. Existing large web chunk warning remains open.
 
 ## Product and operations
 

@@ -22,13 +22,17 @@ async function mock(page: Page, fail = false, malformed = false) {
       await route.fulfill({
         json: {
           id: 'offer-seller',
-          organizationId: 'seller',
-          orgType: 'exporter',
+          organization_id: 'seller',
+          org_type: 'exporter',
           roles: ['supplier_admin'],
           permissions: ['*'],
           name: 'Offer Seller',
         },
       });
+      return;
+    }
+    if (path === '/api/onboarding') {
+      await route.fulfill({ json: { status: 'completed', primary_goal: 'sell' } });
       return;
     }
     if (path === '/api/offers/summary') {
@@ -94,6 +98,7 @@ test('offer pages search server-side, retain full totals and reset pagination on
 }) => {
   const seen = await mock(page);
   await page.goto('/offers');
+  await expect(page).toHaveURL(/\/offers(?:\?|$)/);
   await expect(page.getByRole('button', { name: 'Received (1005)', exact: true })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'First Buyer', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Next offers', exact: true }).click();
@@ -125,6 +130,7 @@ test('offer failures retry and malformed envelopes never claim an empty history'
 }) => {
   await mock(page, true);
   await page.goto('/offers');
+  await expect(page).toHaveURL(/\/offers(?:\?|$)/);
   await expect(page.getByText('Offers unavailable', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Retry offers', exact: true }).click();
   await expect(page.getByRole('cell', { name: 'First Buyer', exact: true })).toBeVisible();
@@ -132,12 +138,14 @@ test('offer failures retry and malformed envelopes never claim an empty history'
 test('offer malformed page has explicit error', async ({ page }) => {
   await mock(page, false, true);
   await page.goto('/offers');
+  await expect(page).toHaveURL(/\/offers(?:\?|$)/);
   await expect(page.getByText('Invalid page response.', { exact: false })).toBeVisible();
   await expect(page.getByText('No offers on this page', { exact: true })).toHaveCount(0);
 });
 test('received offer can still reject and refresh its current page', async ({ page }) => {
   await mock(page);
   await page.goto('/offers');
+  await expect(page).toHaveURL(/\/offers(?:\?|$)/);
   await page.getByRole('button', { name: 'Reject', exact: true }).click();
   await page.getByRole('button', { name: 'Reject', exact: true }).last().click();
   await expect(page.getByText('History (1)', { exact: true })).toBeVisible();
@@ -157,6 +165,7 @@ test('supplier home reads aggregate offer counts instead of an array', async ({ 
     route.fulfill({ json: { count: 0, owned_count: 0 } }),
   );
   await page.goto('/home?mode=sell');
+  await expect(page).toHaveURL(/\/home\?mode=sell$/);
   await expect(page.getByText('Offers received', { exact: true })).toBeVisible();
   await expect(page.getByText('1005', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Review offer', exact: true })).toBeVisible();

@@ -329,3 +329,8 @@ Founder confirmed full release checks passed and GitHub merge/local main pull co
 ## Candidate — paged offers and party dashboard totals — 2026-10-08
 
 Offers page uses max-100 scoped keyset pages, literal server search and direction/status filters; existing buyer/seller relationship boundary and fee calculations retained. Aggregate received/sent and pending totals do not depend on page/search. Home uses these aggregates, distinguishes unavailable totals and pauses offer-dependent recommendations. Legacy list refuses >1,000 rather than truncating. No mutation, migration, seed, configuration or dependency change. Native/browser execution pending founder exact-candidate release gate; author 531 units/65 files, quality, types, builds, migration integrity/backlog and strict native test-source compilation pass. One native 1,005-offer scenario and five browser definitions added. General contract/shipment/payment lists, compare-offer consumers and hosted performance remain open.
+
+
+### Offers browser fixture correction — 2026-10-08
+
+Founder native release browser failures identified mock onboarding returning [] (redirected to onboarding) and /me camelCase instead of API snake_case identity fields. Corrected both, added URL assertions, and scoped supply-summary alert locator when offer/supply failure messages coexist. No application or guard change. Browser types and quality pass author-side; native browser/full release still pending.

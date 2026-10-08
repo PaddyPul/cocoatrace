@@ -189,7 +189,9 @@ test('failed supply summaries pause setup recommendations instead of showing an 
 }) => {
   await mock(page, true);
   await page.goto('/home?mode=sell');
-  await expect(page.getByRole('alert')).toContainText('Supply totals could not be refreshed');
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Supply totals could not be refreshed' }),
+  ).toBeVisible();
   await expect(page.getByTestId('supply-path-choice')).toHaveCount(0);
 });
 
