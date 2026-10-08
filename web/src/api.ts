@@ -251,7 +251,10 @@ export const payments = {
   approveIssueResolution: (id: string) => api<PaymentOperationIssue>('POST', `/payment-issues/${id}/approve-resolution`, {}),
 };
 
+export interface ShipmentSummary {count:number;active_count:number;delivered_count:number;cancelled_count:number}
 export const shipments = {
+ page:(parameters:Record<string,string>={})=>api<CatalogPage<import('./types').Shipment>>('GET',`/shipments/page?${new URLSearchParams({limit:'50',...parameters})}`),
+ summary:()=>api<ShipmentSummary>('GET','/shipments/summary'),
   list: () => api<import('./types').Shipment[]>('GET', '/shipments'),
   get: (id: string) => api<{ shipment: import('./types').Shipment; milestones: any[]; permissions: { canArrange: boolean; supported: boolean; milestones: string[]; responsibilities: Record<string, string | null> } }>('GET', `/shipments/${id}`),
   updateDetails: (id: string, data: { serviceProviderName?: string; bookingReference?: string; transportMode?: string; transportDocumentType?: string; transportDocumentReference?: string; trackingUrl?: string; vesselName?: string; containerReference?: string; originLocation?: string; destinationLocation?: string; etaArrival?: string }) =>

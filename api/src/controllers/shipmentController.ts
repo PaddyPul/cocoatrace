@@ -1,3 +1,5 @@
+import {legacyShipments} from '../modules/catalog/shipments';
+import {withCatalogRead} from '../modules/catalog/paging';
 import { loadOriginConfirmations } from '../modules/transport/confirmations';
 import { canArrange, canRecord, progressPrerequisite, transportPermissions, milestoneOrder } from '../modules/transport/responsibilities';
 import { activatePaymentInstallments } from '../modules/payments/dueDates';
@@ -11,18 +13,7 @@ import { completeTradeIfReady } from '../services/tradeSettlement';
 const MILESTONE_ORDER: readonly string[] = milestoneOrder;
 
 export async function listShipments(req: Request, res: Response): Promise<void> {
-  const { rows } = await query(
-    `SELECT sh.*,c.seller_organization_id,c.buyer_organization_id,c.payment_plan,c.payment_terms_status,p.amount_confirmed,p.dispatch_required_amount,p.security_status,p.release_status,
-            coordinator.name as transport_coordinator_name
-     FROM shipments sh
-     JOIN sales_contracts c ON c.id=sh.contract_id
-     LEFT JOIN organizations coordinator ON coordinator.id=sh.transport_coordinator_organization_id
-     LEFT JOIN LATERAL(SELECT * FROM payment_requests WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1)p ON TRUE
-     WHERE c.seller_organization_id=$1 OR c.buyer_organization_id=$1
-     ORDER BY sh.created_at DESC`,
-    [req.user!.organizationId]
-  );
-  res.json(rows);
+  res.json(await withCatalogRead(execute=>legacyShipments(execute,req.user!.organizationId)));
 }
 
 export async function getShipment(req: Request, res: Response): Promise<void> {

@@ -150,6 +150,7 @@ export interface Contract {
 }
 
 export interface Shipment {
+ incoterm?:string;
   id: string;
   contract_id: string;
   transport_coordinator_organization_id?: string;
