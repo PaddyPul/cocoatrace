@@ -20,6 +20,10 @@ Active, resolved and draft explanations are distinct. Resolved status does not r
 
 ## Verification and remaining work
 
-Ten new unit cases, four PostgreSQL definitions (1,005 notices, 1,005 linked batches, filtered/full counts, issuer/recipient isolation, revoked membership, explicit network scope and overflow) and five browser definitions cover this slice. Existing response and trace mock contracts are updated to page/summary envelopes; real recall recovery/safety journeys remain in the release. Fixture teardown deletes child memberships/links before notices and always closes the pool.
+Ten new unit cases, four PostgreSQL definitions (1,005 notices, 1,005 linked batches, filtered/full counts, issuer/recipient isolation, revoked membership, explicit network scope and overflow) and seven browser definitions cover this slice. Existing response and trace mock contracts are updated to page/summary envelopes; real recall recovery/safety journeys remain in the release. Fixture teardown deletes child memberships/links before notices and always closes the pool.
 
 Native Docker execution is unavailable in the author environment. Strict test-source compilation does not substitute for the founder's exact-candidate verify:release. No migration/backfill/configuration/data reset. Roll back API/UI together; no data compensation. Remaining: recall response collections, public product histories, exports and representative hosted performance/index acceptance.
+
+## Same-page refresh correction
+
+The shared page hook has an opt-in retainDuringRefresh option used only by RecallRegister. Existing rows stay mounted while the same user/filter/page read is pending, so focus refreshes or response mutations cannot detach the recovery form or erase its unsaved quantities, notes or selected file. aria-busy marks that pending read. Successful reads replace row data under stable notice IDs; removed notices disappear. Failed reads clear prior rows and actions, and page/filter/user changes clear context immediately. Other catalog consumers retain their default loading behavior. Mutation authorization remains server-enforced. Browser regressions cover delayed focus refresh with dirty recovery values and access-revoked refresh clearing stale actions.

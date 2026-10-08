@@ -631,3 +631,5 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 
 - Authenticated recall pages and full scoped totals replace unbounded history/nested-array UI reads. Register exposes linked counts; recipient/manager response actions remain independently authorized. Native acceptance pending.
 - PER-001/ARC-024 remain IN PROGRESS: recall response detail collections, public product histories, exports and hosted performance acceptance remain open.
+
+- Recall register candidate correction: founder browser output identified ambiguous totals headings and response form detachment during background refresh. Named totals selectors and opt-in same-page row retention preserve drafts while pending; failed reads and changed contexts clear stale actions. Two browser regressions added. Full exact-candidate release/merge/pull acceptance remains pending.

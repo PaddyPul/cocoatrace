@@ -20,7 +20,8 @@ Large recall histories can be searched and paged without downloading every notic
 - Share issuer/participant/explicit manager scope and full workspace totals across register/dashboard reads.
 - Bound legacy notices and combined linked references to 1,000; overflow rejects before nested arrays load.
 - Extract RecallRegister with full totals, explicit retry, unknown totals on failure and closed stale response context on page/filter changes. Activation, recovery and resolution transactions remain unchanged.
-- Add ten unit cases, four database definitions and five browser definitions; update existing response/trace mock contracts. Record accepted product register release and corrections.
+- Preserve open recovery drafts during same-page background reads; failed reads clear stale notice actions, and page/filter/user changes still reset context. Narrow totals assertions to the register heading instead of notice headings.
+- Add ten unit cases, four database definitions and seven browser definitions; update existing response/trace mock contracts. Record accepted product register release and corrections.
 
 ## Security and data review
 

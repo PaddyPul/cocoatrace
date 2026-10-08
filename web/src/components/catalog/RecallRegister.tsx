@@ -12,7 +12,11 @@ export default function RecallRegister() {
     [severity, setSeverity] = useState('all');
   const [openResponseId, setOpenResponseId] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
-  const page = useCatalogPage(recalls.page, { search, status, severity, limit: '50' });
+  const page = useCatalogPage(
+    recalls.page,
+    { search, status, severity, limit: '50' },
+    { retainDuringRefresh: true },
+  );
   const key = JSON.stringify([user?.id, version]);
   const [totals, setTotals] = useState<{ key: string; count: number; active_count: number } | null>(
       null,
@@ -55,7 +59,7 @@ export default function RecallRegister() {
   const current = totals?.key === key ? totals : null;
   const items = page.items;
   return (
-    <section aria-label="Recall register">
+    <section aria-label="Recall register" aria-busy={page.loading}>
       <h2 className="text-base font-semibold">
         Recall notices — {current ? current.count.toLocaleString() : 'total unavailable'} recorded ·{' '}
         {current ? current.active_count.toLocaleString() : '—'} active
@@ -101,7 +105,7 @@ export default function RecallRegister() {
         </button>
       </div>
       {totalError && <p role="alert">{totalError}</p>}
-      {page.loading ? (
+      {page.loading && !items.length ? (
         <p role="status">Loading recalls…</p>
       ) : page.error ? (
         <p role="alert">Recall notices unavailable. {page.error}</p>

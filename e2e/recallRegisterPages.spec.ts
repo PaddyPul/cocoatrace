@@ -97,7 +97,14 @@ async function mock(
           canManage: false,
           myOrganizationId: 'buyer-org',
           participants: [],
-          holdings: [],
+          holdings: [
+            {
+              id: 'holding-one',
+              batch_id: 'batch-one',
+              holder_organization_id: 'buyer-org',
+              quantity_kg: 10,
+            },
+          ],
           recoveries: [],
           evidence: [],
         },
@@ -114,7 +121,9 @@ test('recall register pages and searches notices with full totals and linked cou
   const seen = await mock(page);
   await page.goto('/recalls');
   const panel = page.getByRole('region', { name: 'Recall register', exact: true });
-  await expect(panel.getByRole('heading')).toContainText('1,005 recorded · 1,004 active');
+  await expect(panel.getByRole('heading', { name: /^Recall notices —/ })).toContainText(
+    '1,005 recorded · 1,004 active',
+  );
   await expect(panel.getByText('1005 source batches', { exact: true })).toBeVisible();
   await panel.getByRole('button', { name: 'Next recall notices', exact: true }).click();
   await expect(panel.getByText('LATE RECALL', { exact: true })).toBeVisible();
@@ -168,10 +177,64 @@ test('unavailable recall totals stay unknown while scoped notice response remain
   await page.goto('/recalls');
   const panel = page.getByRole('region', { name: 'Recall register', exact: true });
   await expect(panel.getByRole('alert')).toContainText('Recall totals unavailable');
-  await expect(panel.getByRole('heading')).toContainText('total unavailable');
+  await expect(panel.getByRole('heading', { name: /^Recall notices —/ })).toContainText(
+    'total unavailable',
+  );
   await expect(panel.getByText('FIRST RECALL', { exact: true })).toBeVisible();
   await panel.getByRole('button', { name: 'Open response', exact: true }).click();
   await expect(
     panel.getByRole('heading', { name: 'Recall response and recovery', exact: true }),
   ).toBeVisible();
+});
+
+test('same-page focus refresh retains the open recovery form and unsaved quantities', async ({
+  page,
+}) => {
+  await mock(page);
+  await page.goto('/recalls');
+  const panel = page.getByRole('region', { name: 'Recall register', exact: true });
+  await panel.getByRole('button', { name: 'Open response', exact: true }).click();
+  await panel.getByLabel('Your affected holding', { exact: true }).selectOption('holding-one');
+  await panel.getByLabel('Destroyed (kg)', { exact: true }).fill('6');
+  await panel.getByLabel('Recovery note', { exact: true }).fill('Unsaved recovery explanation');
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/api/recalls/page**', async (route) => {
+    await pending;
+    await route.fallback();
+  });
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(panel).toHaveAttribute('aria-busy', 'true');
+  await expect(panel.getByLabel('Destroyed (kg)', { exact: true })).toHaveValue('6');
+  await expect(panel.getByLabel('Recovery note', { exact: true })).toHaveValue(
+    'Unsaved recovery explanation',
+  );
+  release();
+  await expect(panel).toHaveAttribute('aria-busy', 'false');
+  await expect(panel.getByLabel('Destroyed (kg)', { exact: true })).toHaveValue('6');
+  await expect(panel.getByLabel('Recovery note', { exact: true })).toHaveValue(
+    'Unsaved recovery explanation',
+  );
+});
+test('failed same-page refresh clears stale notice actions instead of retaining inaccessible rows', async ({
+  page,
+}) => {
+  await mock(page);
+  await page.goto('/recalls');
+  const panel = page.getByRole('region', { name: 'Recall register', exact: true });
+  await panel.getByRole('button', { name: 'Open response', exact: true }).click();
+  await expect(
+    panel.getByRole('heading', { name: 'Recall response and recovery', exact: true }),
+  ).toBeVisible();
+  await page.route('**/api/recalls/page**', (route) =>
+    route.fulfill({ status: 403, json: { error: 'Access revoked' } }),
+  );
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(panel.getByRole('alert')).toContainText('Recall notices unavailable');
+  await expect(
+    panel.getByRole('heading', { name: 'Recall response and recovery', exact: true }),
+  ).toHaveCount(0);
+  await expect(panel.getByRole('button', { name: 'Open response', exact: true })).toHaveCount(0);
 });
