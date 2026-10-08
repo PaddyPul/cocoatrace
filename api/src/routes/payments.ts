@@ -1,3 +1,4 @@
+import {listPaymentPage,summarizePayments} from '../modules/catalog/payments';
 import { Router } from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth';
 import validate from '../middleware/validate';
@@ -7,6 +8,8 @@ import * as paymentOperationsController from '../controllers/paymentOperationsCo
 
 const router = Router();
 
+router.get('/payment-requests/page', requireAuth, requirePermission('payment.read'), listPaymentPage);
+router.get('/payment-requests/summary', requireAuth, requirePermission('payment.read'), summarizePayments);
 router.get('/payment-requests', requireAuth, requirePermission('payment.read'), paymentController.listPaymentRequests);
 router.get('/payment-requests/:id', requireAuth, requirePermission('payment.read'), paymentController.getPaymentRequest);
 router.get('/payment-requests/:id/operations', requireAuth, requirePermission('payment.read'), paymentOperationsController.operations);

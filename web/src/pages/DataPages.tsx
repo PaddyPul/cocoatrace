@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { farms as farmsApi, batches as batchesApi, holdings as holdingsApi, payments as paymentsApi, audit as auditApi, certificates as certApi, organizations as organizationsApi } from '../api';
-import { Farm, Batch, Holding, Payment, AuditEvent, Certificate } from '../types';
+import { farms as farmsApi, batches as batchesApi, holdings as holdingsApi, audit as auditApi, certificates as certApi, organizations as organizationsApi } from '../api';
+import { Farm, Batch, Holding, AuditEvent, Certificate } from '../types';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
@@ -34,20 +34,7 @@ export {default as ContractsPage} from './ContractRecordsPage';
 
 export {default as ShipmentsPage} from './ShipmentRecordsPage';
 
-export function PaymentsPage() {
-  const navigate = useNavigate();
-  const { data, loading, error } = useFetch(() => paymentsApi.list());
-  const [search, setSearch] = useState('');
-  const payments = data as Payment[];
-  const filtered = payments.filter((p) => !search || p.status.toLowerCase().includes(search.toLowerCase()) || p.currency.toLowerCase().includes(search.toLowerCase()) || (p.payment_reference_external || '').toLowerCase().includes(search.toLowerCase()) || p.contract_id.toLowerCase().includes(search.toLowerCase()));
-  return <Layout currentPage="payments">{loading ? <SkeletonTable rows={5} cols={6} /> : error ? <Err msg={error} /> : <div className="table-wrap">
-    <div className="flex flex-wrap items-center gap-3 mb-3">
-      <div className="relative flex-1 min-w-[180px]"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input type="text" placeholder="Search payments…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
-      <div className="text-xs text-text-muted">{filtered.length} payment{filtered.length !== 1 ? 's' : ''}</div>
-    </div>
-    <table><thead><tr><th>Payment ID</th><th>Contract</th><th>Amount</th><th>Currency</th><th>Status</th><th>Reference</th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((p) => <tr key={p.id} className="cursor-pointer hover:bg-brand-500/5" onClick={() => navigate(`/payments/${p.id}`)}><td className="font-mono text-[11px]">{p.id.slice(0, 8)}…</td><td className="font-mono text-[11px]">{p.contract_id.slice(0, 8)}…</td><td className="text-brand-400 font-mono">{fmtMoney(p.amount_total, p.currency, p.currency_minor_units)}</td><td>{p.currency}</td><td><StatusBadge status={p.status} /></td><td className="font-mono text-[10px]">{p.payment_reference_external || '—'}</td></tr>) : payments.length === 0 ? <tr><td colSpan={99}><EmptyState icon="💰" title="No payment workflows yet" description="A documentary-payment workflow is created automatically when an offer is accepted." action={<button className="btn btn-sm" onClick={() => navigate('/contracts')}>Open Contracts →</button>} /></td></tr> : <tr><td colSpan={99}><EmptyState icon="🔍" title="No payments match" description="Try adjusting your search." /></td></tr>}</tbody></table>
-  </div>}</Layout>;
-}
+export {default as PaymentsPage} from './PaymentRecordsPage';
 
 export { default as EvidencePage } from './EvidenceRecordsPage';
 

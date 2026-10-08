@@ -233,7 +233,10 @@ export interface PaymentOperationsData {
   reminders: Array<{ id: string; created_at: string; installment_id?: string; message?: string; email_recipient_count?: number; email_sent_count?: number; email_failed_count?: number; email_suppressed_count?: number; email_pending_count?: number }>;
 }
 
+export interface PaymentSummary {count:number;open_count:number;settled_count:number;cancelled_count:number}
 export const payments = {
+ page:(parameters:Record<string,string>={})=>api<CatalogPage<import('./types').Payment>>('GET',`/payment-requests/page?${new URLSearchParams({limit:'50',...parameters})}`),
+ summary:()=>api<PaymentSummary>('GET','/payment-requests/summary'),
   list: () => api<import('./types').Payment[]>('GET', '/payment-requests'),
   get: (id: string) => api<any>('GET', `/payment-requests/${id}`),
   pay: (id: string, data: { transactionReference: string }) =>
