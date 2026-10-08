@@ -21,6 +21,7 @@ Users can search and navigate large product registers without loading every pass
 - Materialize limited candidates before scan/evidence counts and bound trust decoration to the returned page. Legacy register explicitly rejects overflow above 1,000.
 - Preserve active severity and retained inventory holds; distinguish missing origin and recorded evidence from verified claims.
 - Add seven unit cases, three database definitions and five browser definitions; record accepted farm plot/batch evidence release.
+- Give the existing migration integrity fixture/process tests local 30-second bounds and checker subprocesses a 15-second cap with explicit errors. Hash and tampering assertions remain unchanged; global test timeouts are unchanged.
 
 ## Security and data review
 

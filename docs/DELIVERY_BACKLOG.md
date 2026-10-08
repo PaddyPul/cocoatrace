@@ -622,3 +622,5 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 
 - Product-profile pages and full scoped totals replace complete-history UI reads. Literal search/filtering precedes page limits; retained recall holds remain visible, and evidence metadata counts no longer imply approval. Native acceptance pending.
 - PER-001/ARC-024 remain IN PROGRESS: public product detail histories, recall collections, exports and hosted performance acceptance remain open.
+
+- Product register candidate correction: founder Windows unit run hit the default five-second CRLF fixture/process test timeout (not a reported hash mismatch). Added local suite/hook allowances and bounded checker subprocess diagnostics; unchanged integrity assertions. Full candidate acceptance remains pending.
