@@ -95,3 +95,41 @@ export async function legacyEvidenceList(
 export async function listEvidencePage(req: Request, res: Response) {
   res.json(await withCatalogRead((execute) => evidencePage(execute, req.user!, req.query)));
 }
+
+export async function evidenceSummary(
+  execute: Execute,
+  actor: Actor,
+  parameters: Record<string, unknown>,
+) {
+  if (Object.keys(parameters).some((key) => !['entityType', 'entityId'].includes(key)))
+    throw new ValidationError('Unknown evidence totals parameter');
+  const { entityType, entityId, all } = await scope(execute, actor, parameters);
+  return (
+    await execute(`SELECT COUNT(*)::int AS count FROM evidence_items WHERE ${visible}`, [
+      actor.organizationId,
+      all,
+      entityType,
+      entityId || null,
+    ])
+  ).rows[0];
+}
+export async function summarizeEvidence(req: Request, res: Response) {
+  res.json(await withCatalogRead((execute) => evidenceSummary(execute, req.user!, req.query)));
+}
+// The enclosing batch must already have passed its detail authorization.
+export async function batchEvidenceCollection(
+  execute: Execute,
+  actor: Actor,
+  batchId: string,
+  mode: unknown,
+) {
+  if (mode !== undefined && mode !== 'paged')
+    throw new ValidationError('Invalid evidence collection mode');
+  if (!hasExplicitPermission(actor, 'evidence.read'))
+    return { evidence: null, evidence_collection: 'unavailable' };
+  if (mode === 'paged') return { evidence: null, evidence_collection: 'paged' };
+  return {
+    evidence: await legacyEvidenceList(execute, actor, { entityType: 'batch', entityId: batchId }),
+    evidence_collection: 'legacy',
+  };
+}

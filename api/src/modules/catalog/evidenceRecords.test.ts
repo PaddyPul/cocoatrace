@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { evidencePage, legacyEvidenceList } from './evidenceRecords';
+import {
+  evidencePage,
+  legacyEvidenceList,
+  evidenceSummary,
+  batchEvidenceCollection,
+} from './evidenceRecords';
 const actor = {
   organizationId: '11111111-1111-1111-1111-111111111111',
   permissions: ['evidence.read'],
@@ -81,5 +86,42 @@ describe('bounded evidence metadata reads', () => {
       code: 'CATALOG_READ_LIMIT',
     });
     expect(execute.mock.calls[0][0]).toContain('LIMIT 1001');
+  });
+  it('evidence totals authorize the entity before counting and reject unrelated records', async () => {
+    const execute = vi.fn().mockImplementation(async (sql: string) => ({
+      rows: sql.includes('SELECT EXISTS') ? [{ allowed: true }] : [{ count: 1005 }],
+    }));
+    expect(
+      (await evidenceSummary(execute, actor, { entityType: 'batch', entityId: id })).count,
+    ).toBe(1005);
+    expect(execute.mock.calls.at(-1)?.[0]).toContain('COUNT(*)::int');
+    await expect(
+      evidenceSummary(vi.fn().mockResolvedValue({ rows: [{ allowed: false }] }), actor, {
+        entityType: 'batch',
+        entityId: id,
+      }),
+    ).rejects.toMatchObject({ statusCode: 403 });
+    await expect(evidenceSummary(execute, actor, { search: 'x' })).rejects.toMatchObject({
+      statusCode: 400,
+    });
+  });
+  it('batch detail with no evidence permission or paged mode never fetches embedded files', async () => {
+    const execute = vi.fn();
+    expect(await batchEvidenceCollection(execute, actor, id, 'paged')).toEqual({
+      evidence: null,
+      evidence_collection: 'paged',
+    });
+    expect(
+      await batchEvidenceCollection(
+        execute,
+        { ...actor, permissions: ['batch.read'] },
+        id,
+        undefined,
+      ),
+    ).toEqual({ evidence: null, evidence_collection: 'unavailable' });
+    expect(execute).not.toHaveBeenCalled();
+    await expect(batchEvidenceCollection(execute, actor, id, 'all')).rejects.toMatchObject({
+      statusCode: 400,
+    });
   });
 });

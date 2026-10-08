@@ -610,5 +610,10 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 
 ## Delivery checkpoint — embedded certificates candidate, 2026-10-08
 
-- Farm detail opts out of embedded certificate arrays and uses independently authorized farm-scoped pages/totals. Legacy farm certificates respect certificate permission/list relationships and explicit overflow. Batch attestation selector pages/searches with retained selections and visible failures. Native acceptance pending.
+- Farm detail opts out of embedded certificate arrays and uses independently authorized farm-scoped pages/totals. Legacy farm certificates respect certificate permission/list relationships and explicit overflow. Batch attestation selector pages/searches with retained selections and visible failures. Accepted by founder 2026-10-08 18:10 UTC: full release checks passed and merge/pull completed.
 - Broad PER-001/ARC-024 remain IN PROGRESS: plots, batch evidence, product/recall collections, exports and hosted load/query-plan verification remain open.
+
+## Delivery checkpoint — source detail collections candidate, 2026-10-08
+
+- Farm plot pages/totals and batch evidence pages/totals replace embedded histories. Legacy detail arrays explicitly refuse overflow; evidence requires its own read permission and entity relationship. Native acceptance pending.
+- PER-001/ARC-024 remain IN PROGRESS: other embedded source metadata, product/recall collections, exports and hosted performance acceptance remain open.
