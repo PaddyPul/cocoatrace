@@ -1,3 +1,4 @@
+import { farmPlotCollection } from '../modules/catalog/farmPlots';
 import { farmCertificateCollection } from '../modules/catalog/certificates';
 import { legacySourceList } from '../modules/catalog/sourceRecords';
 import { withCatalogRead } from '../modules/catalog/paging';
@@ -21,9 +22,9 @@ export async function getFarm(req: Request, res: Response): Promise<void> {
     res.status(403).json({ error: 'Access denied' });
     return;
   }
-  const plotRes = await query('SELECT * FROM farm_plots WHERE farm_id = $1 ORDER BY plot_code', [req.params.id]);
+  const plotCollection = await withCatalogRead(execute=>farmPlotCollection(execute,req.params.id as string,req.query.plotMode));
   const certificateCollection = await withCatalogRead(execute=>farmCertificateCollection(execute,req.user!,req.params.id as string,req.query.certificateMode));
-  res.json({ farm: farmRes.rows[0], plots: plotRes.rows, ...certificateCollection });
+  res.json({ farm: farmRes.rows[0], ...plotCollection, ...certificateCollection });
 }
 
 export async function createFarm(req: Request, res: Response): Promise<void> {

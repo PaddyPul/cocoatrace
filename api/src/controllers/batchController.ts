@@ -1,3 +1,4 @@
+import { batchEvidenceCollection } from '../modules/catalog/evidenceRecords';
 import { legacySourceList } from '../modules/catalog/sourceRecords';
 import { withCatalogRead } from '../modules/catalog/paging';
 import { lockRecallBoundary, assertBatchNotRecalled } from '../modules/recall/safety';
@@ -121,14 +122,9 @@ export async function getBatch(req: Request, res: Response): Promise<void> {
     res.status(403).json({ error: 'Access denied' });
     return;
   }
-  const evidenceRes = await query(
-    `SELECT id,type,file_name,file_size_bytes,mime_type,
-            sha256_hash,review_status,linked_entity_type,linked_entity_id,claim_description,created_at
-       FROM evidence_items WHERE linked_entity_type='batch' AND linked_entity_id=$1`,
-    [req.params.id],
-  );
+  const evidenceCollection = await withCatalogRead(execute=>batchEvidenceCollection(execute,req.user!,req.params.id as string,req.query.evidenceMode));
   const trust = (await loadBatchTrust([rows[0].id])).get(rows[0].id);
-  res.json({ batch: { ...rows[0], recorded_organic_claim_status: rows[0].organic_claim_status, organic_claim_status: trust ? legacyOrganicStatus(trust) : 'self_declared', trust }, evidence: evidenceRes.rows });
+  res.json({ batch: { ...rows[0], recorded_organic_claim_status: rows[0].organic_claim_status, organic_claim_status: trust ? legacyOrganicStatus(trust) : 'self_declared', trust }, ...evidenceCollection });
 }
 
 export async function createBatch(req: Request, res: Response): Promise<void> {

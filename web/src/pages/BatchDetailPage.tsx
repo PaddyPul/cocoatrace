@@ -1,13 +1,14 @@
+import BatchEvidence from '../components/catalog/BatchEvidence';
 import CertificatePicker from '../components/catalog/CertificatePicker';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { batches as batchesApi, productProfiles as productProfilesApi } from '../api';
-import { Batch, Evidence, ProductProfile } from '../types';
+import { Batch, ProductProfile } from '../types';
 import { StatusBadge, fmtDate } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
 import Layout from '../components/layout/Layout';
-import { ArrowLeft, Shield, FileText, ChevronRight, QrCode, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Shield, ChevronRight, QrCode, ExternalLink } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 
 export default function BatchDetailPage() {
@@ -16,7 +17,6 @@ export default function BatchDetailPage() {
   const { user, canDo } = useAuthCtx();
   const { toast } = useToast();
   const [batch, setBatch] = useState<Batch | null>(null);
-  const [evidence, setEvidence] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [productProfile, setProductProfile] = useState<ProductProfile | null>(null);
@@ -48,7 +48,6 @@ export default function BatchDetailPage() {
     batchesApi.get(id)
       .then((d) => {
         setBatch(d.batch);
-        setEvidence(d.evidence || []);
         setPqty(d.batch.quantity_kg || 0);
         setPorigin(d.batch.region ? `${d.batch.region}, Ghana` : 'Tema, Ghana');
         setPdest('Rotterdam, Netherlands');
@@ -69,7 +68,6 @@ export default function BatchDetailPage() {
       toast('success', 'Batch attested successfully');
       const d = await batchesApi.get(batch.id);
       setBatch(d.batch);
-      setEvidence(d.evidence || []);
     } catch (e: any) { setAttErr(e.message); } finally { setAttesting(false); }
   };
 
@@ -183,22 +181,7 @@ export default function BatchDetailPage() {
             </div>
           )}
 
-          {evidence.length > 0 && (
-            <div className="bg-surface border border-border rounded p-5">
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><FileText size={16} className="text-brand-400" /> Evidence ({evidence.length})</h3>
-              <div className="space-y-2">
-                {evidence.map((e) => (
-                  <div key={e.id} className="bg-surface-darker border border-border rounded p-3 text-xs flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{e.file_name}</div>
-                      <div className="text-text-muted">{(e.type || '').replace(/_/g, ' ')} · {e.sha256_hash?.slice(0, 16)}…</div>
-                    </div>
-                    <StatusBadge status={e.review_status} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <BatchEvidence key={id} batchId={id!}/>
         </div>
 
         <div className="space-y-4">

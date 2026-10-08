@@ -1,25 +1,16 @@
+import FarmPlots from '../components/catalog/FarmPlots';
 import FarmCertificates from '../components/catalog/FarmCertificates';
 import FarmBatches from '../components/catalog/FarmBatches';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { farms as farmsApi } from '../api';
 import { Farm } from '../types';
-import { StatusBadge } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
 import Layout from '../components/layout/Layout';
-import EmptyState from '../components/shared/EmptyState';
-import { ArrowLeft, MapPin, Sprout } from 'lucide-react';
+import { ArrowLeft, MapPin } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 import { X } from 'lucide-react';
-
-function formatCoordinates(latitude: unknown, longitude: unknown): string {
-  if (latitude == null || longitude == null) return '';
-  const lat = Number(latitude);
-  const lng = Number(longitude);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return '';
-  return ` · ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-}
 
 export default function FarmDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -27,7 +18,7 @@ export default function FarmDetailPage() {
   const { canDo } = useAuthCtx();
   const { toast } = useToast();
   const [farm, setFarm] = useState<Farm | null>(null);
-  const [plots, setPlots] = useState<any[]>([]);
+  const [plotVersion,setPlotVersion]=useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -45,7 +36,7 @@ export default function FarmDetailPage() {
     if (!id) return;
     setLoading(true);
     farmsApi.get(id).then(farmData=>{
-      setFarm(farmData.farm);setPlots(farmData.plots||[]);
+      setFarm(farmData.farm);
     })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -57,8 +48,7 @@ export default function FarmDetailPage() {
     try {
       await farmsApi.createPlot(id, { plotCode, areaHectares: Number(plotArea), crops: plotCrops.split(',').map((s) => s.trim()), gpsLat: plotGpsLat ? Number(plotGpsLat) : undefined, gpsLng: plotGpsLng ? Number(plotGpsLng) : undefined });
       setShowPlot(false); setPlotCode(''); setPlotArea(0); setPlotCrops('cocoa'); setPlotGpsLat(''); setPlotGpsLng('');
-      const farmData = await farmsApi.get(id);
-      setPlots(farmData.plots || []);
+      setPlotVersion(value=>value+1);
       toast('success', 'Plot added successfully');
     } catch (e: any) { setPlotError(e.message); } finally { setPlotLoading(false); }
   };
@@ -96,28 +86,7 @@ export default function FarmDetailPage() {
             </div>
           </div>
 
-          {plots.length > 0 && (
-            <div className="bg-surface border border-border rounded p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold flex items-center gap-2"><MapPin size={16} className="text-brand-400" /> Plots ({plots.length})</h3>
-                {canDo('farm.create') && <button className="btn btn-sm" onClick={() => setShowPlot(true)}>+ Add Plot</button>}
-              </div>
-              <div className="space-y-2">
-                {plots.map((p: any) => (
-                  <div key={p.id} className="bg-surface-darker border border-border rounded p-3 text-xs">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-mono font-medium">{p.plot_code}</span>
-                      <span className="badge badge-blue">{p.area_hectares} ha</span>
-                    </div>
-                    <div className="text-text-muted">{(p.crops || []).join(', ') || 'cocoa'}{formatCoordinates(p.gps_lat, p.gps_lng)}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {plots.length === 0 && (
-            <EmptyState icon="🗺️" title="No plots registered" description="Growing areas (plots) help track provenance at the sub-farm level." action={canDo('farm.create') ? <button className="btn btn-sm btn-primary" onClick={() => setShowPlot(true)}><Sprout size={14} /> Add Plot</button> : undefined} />
-          )}
+          <FarmPlots key={`${id}:${plotVersion}`} farmId={id!} onCreate={canDo('farm.create')?()=>setShowPlot(true):undefined}/>
 
           <FarmCertificates key={id} farmId={id!} />
 
@@ -129,7 +98,7 @@ export default function FarmDetailPage() {
           <div className="bg-surface border border-border rounded p-5 sticky top-6">
             <div className="text-xs text-text-muted uppercase tracking-wider mb-3">Summary</div>
             <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between"><span className="text-text-muted">Plots</span><span className="font-medium">{plots.length}</span></div>
+              <div className="flex items-center justify-between"><span className="text-text-muted">Plots</span><span className="font-medium">See plot panel</span></div>
               <div className="flex items-center justify-between"><span className="text-text-muted">Certificates</span><span className="font-medium">See certificate panel</span></div>
             </div>
             {canDo('farm.create') && <button className="btn w-full justify-center mt-4 text-xs" onClick={() => setShowPlot(true)}>+ Add Plot</button>}

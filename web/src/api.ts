@@ -1,3 +1,4 @@
+export interface FarmPlot {id:string;plot_code:string;area_hectares:string|number;crops:string[];gps_lat?:string|number|null;gps_lng?:string|number|null;}
 import type {TradeAction} from './components/trading/TradeAction';
 const API_BASE = '/api';
 export type CatalogPage<T> = { items: T[]; hasMore: boolean; nextCursor: string | null };
@@ -136,10 +137,12 @@ export const readiness = {
 
 export interface FarmSummary { count: number; owned_count: number; }
 export const farms = {
+  plotsPage: (id:string,parameters:Record<string,string>) => api<CatalogPage<FarmPlot>>('GET',`/farms/${id}/plots/page?${new URLSearchParams(parameters)}`),
+  plotsSummary: (id:string) => api<{count:number}>('GET',`/farms/${id}/plots/summary`),
   list: () => api<import('./types').Farm[]>('GET', '/farms'),
   page: (parameters: Record<string,string> = {}) => api<CatalogPage<import('./types').Farm>>('GET', `/farms/page?${new URLSearchParams({limit:'50',...parameters})}`),
   summary: () => api<FarmSummary>('GET','/farms/summary'),
-  get: (id: string) => api<{ farm: import('./types').Farm; plots: any[]; certificates: null; certificate_collection: 'paged'|'unavailable' }>('GET', `/farms/${id}?certificateMode=paged`),
+  get: (id: string) => api<{ farm: import('./types').Farm; plots: null; plot_collection: 'paged'; certificates: null; certificate_collection: 'paged'|'unavailable' }>('GET', `/farms/${id}?certificateMode=paged&plotMode=paged`),
   create: (data: { name: string; country?: string; region: string; district: string; community?: string; officialTraceabilityId?: string }) =>
     api<import('./types').Farm>('POST', '/farms', data),
   createPlot: (farmId: string, data: { plotCode: string; areaHectares: number; crops?: string[]; gpsLat?: number; gpsLng?: number; geolocationSource?: string }) =>
@@ -150,7 +153,7 @@ export const batches = {
   summary: (farm?: string) => api<{count:number;recorded_quantity_kg:string}>('GET', `/batches/summary${farm?'?'+new URLSearchParams({farm}):''}`),
   list: () => api<import('./types').Batch[]>('GET', '/batches'),
   page: (parameters: Record<string,string> = {}) => api<CatalogPage<import('./types').Batch>>('GET', `/batches/page?${new URLSearchParams({limit:'50',...parameters})}`),
-  get: (id: string) => api<{ batch: import('./types').Batch; evidence: import('./types').Evidence[] }>('GET', `/batches/${id}`),
+  get: (id: string) => api<{ batch: import('./types').Batch; evidence: null; evidence_collection: 'paged'|'unavailable' }>('GET', `/batches/${id}?evidenceMode=paged`),
   create: (data: { farmId: string; plotIds?: string[]; crop?: string; harvestDate: string; quantityKg: number; moisturePercent?: number; grade?: string }) =>
     api<import('./types').Batch>('POST', '/batches', data),
   createDirectInventory: (data: { commodity: string; quantityKg: number; inventoryDate: string; sourceName?: string; sourceCountry: string; sourceRegion?: string; warehouseLocation?: string; moisturePercent?: number; grade?: string }) =>
@@ -290,6 +293,7 @@ export const holdings = {
 
 export interface EvidenceRecordOption { id: string; label: string }
 export const evidence = {
+  summary: (parameters:Record<string,string>={})=>api<{count:number}>('GET',`/evidence/summary?${new URLSearchParams(parameters)}`),
   recordOptions: (parameters: Record<string,string>) => api<CatalogPage<EvidenceRecordOption>>('GET', `/evidence/record-options?${new URLSearchParams(parameters)}`),
   page: (parameters: Record<string,string>) => api<CatalogPage<import('./types').Evidence>>('GET', `/evidence/page?${new URLSearchParams(parameters)}`),
   list: (entityType?: string, entityId?: string) => {
