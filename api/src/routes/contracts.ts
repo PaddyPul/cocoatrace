@@ -1,3 +1,4 @@
+import { listOfferPage, summarizeOffers } from '../modules/catalog/offers';
 import { Router } from 'express';
 import { z } from 'zod';
 import * as cancellationController from '../controllers/cancellationController';
@@ -11,6 +12,8 @@ import * as contractController from '../controllers/contractController';
 const router = Router();
 
 router.get('/offers', requireAuth, requireAnyPermission('offer.respond', 'offer.create'), contractController.listOffers);
+router.get('/offers/page', requireAuth, requireAnyPermission('offer.respond','offer.create'), listOfferPage);
+router.get('/offers/summary', requireAuth, requireAnyPermission('offer.respond','offer.create'), summarizeOffers);
 router.post('/listings/:id/offers', requireAuth, requirePermission('offer.create'), validate(createOfferSchema), contractController.makeOffer);
 router.post('/offers/:id/accept', requireAuth, requirePermission('offer.respond'), validate(z.object({feeRateBps:z.number().int().min(0).max(1000).optional()}).default({})), contractController.acceptOffer);
 router.post('/offers/:id/reject', requireAuth, requirePermission('offer.respond'), contractController.rejectOffer);

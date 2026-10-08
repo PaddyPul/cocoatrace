@@ -26,6 +26,12 @@ async function mock(page: Page, failedTotals = false, malformedTransfers = false
       });
       return;
     }
+    if (path === '/api/offers/summary') {
+      await route.fulfill({
+        json: { received_count: 0, sent_count: 0, received_pending: 0, sent_pending: 0 },
+      });
+      return;
+    }
     if (path === '/api/transfers/page') {
       await route.fulfill({
         json: malformedTransfers ? [] : { items: [], hasMore: false, nextCursor: null },
@@ -183,7 +189,9 @@ test('failed supply summaries pause setup recommendations instead of showing an 
 }) => {
   await mock(page, true);
   await page.goto('/home?mode=sell');
-  await expect(page.getByRole('alert')).toContainText('Supply totals could not be refreshed');
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Supply totals could not be refreshed' }),
+  ).toBeVisible();
   await expect(page.getByTestId('supply-path-choice')).toHaveCount(0);
 });
 
