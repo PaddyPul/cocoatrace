@@ -168,5 +168,11 @@ test('supplier home reads aggregate offer counts instead of an array', async ({ 
   await expect(page).toHaveURL(/\/home\?mode=sell$/);
   await expect(page.getByText('Offers received', { exact: true })).toBeVisible();
   await expect(page.getByText('1005', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Review offer', exact: true })).toBeVisible();
+  const review = page
+    .locator('#supplier-path')
+    .getByRole('button', { name: /^Review the new buyer offer/ });
+  await expect(review).toBeVisible();
+  await review.click();
+  await expect(page).toHaveURL(/\/offers(?:\?|$)/);
+  await expect(page.getByRole('button', { name: 'Received (1005)', exact: true })).toBeVisible();
 });

@@ -334,3 +334,8 @@ Offers page uses max-100 scoped keyset pages, literal server search and directio
 ### Offers browser fixture correction — 2026-10-08
 
 Founder native release browser failures identified mock onboarding returning [] (redirected to onboarding) and /me camelCase instead of API snake_case identity fields. Corrected both, added URL assertions, and scoped supply-summary alert locator when offer/supply failure messages coexist. No application or guard change. Browser types and quality pass author-side; native browser/full release still pending.
+
+
+### Offers home action locator correction — 2026-10-08
+
+Founder rerun reported only home Review offer exact-name locator failure. Task button accessible name comprises title/copy; hover action text is not its exact name. Scoped title-prefix role locator now checks visibility, clicks the card and verifies Offers URL plus Received (1005) aggregate. Test-only correction; application behavior unchanged. Quality/browser types pass; native release acceptance pending.

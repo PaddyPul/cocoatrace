@@ -20,7 +20,7 @@ Buyers and suppliers can search older offers and browse bounded pages without do
 - Preserve seller/buyer row boundaries, fee estimates and currency precision.
 - Add independent aggregate counts; switch offers UI and home offer counts to bounded/aggregate reads.
 - Refuse legacy arrays beyond 1,000 explicitly; preserve existing accept/reject workflow.
-- Correct the browser fixture identity response and completed-onboarding state; scope the supply failure assertion to its own alert, and assert destination URLs before testing controls.
+- Correct the browser fixture identity response and completed-onboarding state; scope the supply failure assertion to its own alert, assert destination URLs before testing controls, and locate the supplier action card by its accessible title while verifying navigation to Offers.
 - Add eight unit cases, a 1,005-offer native scenario and five browser definitions. Record founder acceptance of the previous evidence slice.
 
 ## Security and data review
