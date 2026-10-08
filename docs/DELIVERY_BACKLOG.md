@@ -579,3 +579,10 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 - Founder accepted offers paging/counts and fixture corrections: release passed, merge/pull complete.
 - PER-001 / ARC-024 next candidate: contracts paging and home active-order aggregate/latest active shortcut; native release/merge pending.
 - Remaining: shipment/payment pages, legacy persona/control-tower aggregates, comparison consumers, detail collections/exports and hosted load/query-plan acceptance. Broad items stay IN PROGRESS.
+
+
+## Delivery checkpoint — shipments slice, 2026-10-08
+
+- Founder accepted contract paging/totals: release passed, merge/pull complete.
+- PER-001 / ARC-024 candidate: paged shipment list and full transport totals, native release/merge pending. Existing Incoterm action ownership unchanged; regression cases cover all eleven terms.
+- Remaining: payment pages, legacy persona/control-tower aggregates, comparisons, detail collections/exports and hosted load/query-plan acceptance. Broad items stay IN PROGRESS. Provider-marketplace access is separate future SVC work.

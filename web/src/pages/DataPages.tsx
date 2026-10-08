@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { farms as farmsApi, batches as batchesApi, shipments as shipmentsApi, holdings as holdingsApi, payments as paymentsApi, audit as auditApi, certificates as certApi, organizations as organizationsApi } from '../api';
-import { Farm, Batch, Shipment, Holding, Payment, AuditEvent, Certificate } from '../types';
+import { farms as farmsApi, batches as batchesApi, holdings as holdingsApi, payments as paymentsApi, audit as auditApi, certificates as certApi, organizations as organizationsApi } from '../api';
+import { Farm, Batch, Holding, Payment, AuditEvent, Certificate } from '../types';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
@@ -32,20 +32,7 @@ export {default as BatchesPage} from './SourceBatchesPage';
 
 export {default as ContractsPage} from './ContractRecordsPage';
 
-export function ShipmentsPage() {
-  const navigate = useNavigate();
-  const { data, loading, error } = useFetch(() => shipmentsApi.list());
-  const [search, setSearch] = useState('');
-  const shipments = data as Shipment[];
-  const filtered = shipments.filter((s) => !search || (s.service_provider_name || '').toLowerCase().includes(search.toLowerCase()) || (s.booking_reference || '').toLowerCase().includes(search.toLowerCase()) || (s.transport_document_reference || '').toLowerCase().includes(search.toLowerCase()) || s.origin_port.toLowerCase().includes(search.toLowerCase()) || s.destination_port.toLowerCase().includes(search.toLowerCase()) || s.current_milestone.toLowerCase().includes(search.toLowerCase()));
-  return <Layout currentPage="shipments">{loading ? <SkeletonTable rows={5} cols={6} /> : error ? <Err msg={error} /> : <div className="table-wrap">
-    <div className="flex flex-wrap items-center gap-3 mb-3">
-      <div className="relative flex-1 min-w-[180px]"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input type="text" placeholder="Search shipments…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
-      <div className="text-xs text-text-muted">{filtered.length} shipment{filtered.length !== 1 ? 's' : ''}</div>
-    </div>
-    <table><thead><tr><th>External Provider</th><th>Coordinator</th><th>Mode</th><th>Route</th><th>ETA</th><th>Document Ref.</th><th>Status</th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((s) => <tr key={s.id} className="cursor-pointer hover:bg-brand-500/5" onClick={() => navigate(`/shipments/${s.id}`)}><td className="text-text-primary font-medium">{s.service_provider_name || 'Not arranged'}</td><td>{s.transport_coordinator_name || '—'}</td><td>{s.transport_mode === 'unspecified' ? '—' : (s.transport_mode || '—').replace(/_/g, ' ')}</td><td className="text-[11px]">{s.origin_port} → {s.destination_port}</td><td>{fmtDate(s.eta_arrival)}</td><td className="font-mono text-[11px]">{s.transport_document_reference || '—'}</td><td><StatusBadge status={s.current_milestone} /></td></tr>) : shipments.length === 0 ? <tr><td colSpan={99}><EmptyState icon="🚢" title="No transport workspaces yet" description="A transport workspace is created automatically when an offer is accepted." action={<button className="btn btn-sm" onClick={() => navigate('/contracts')}>Open Contracts →</button>} /></td></tr> : <tr><td colSpan={99}><EmptyState icon="🔍" title="No transport records match" description="Try adjusting your search." /></td></tr>}</tbody></table>
-  </div>}</Layout>;
-}
+export {default as ShipmentsPage} from './ShipmentRecordsPage';
 
 export function PaymentsPage() {
   const navigate = useNavigate();
