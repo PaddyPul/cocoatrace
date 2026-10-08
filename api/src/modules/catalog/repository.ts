@@ -14,7 +14,9 @@ export const holdingFrom = `FROM batch_holdings h JOIN harvest_batches b ON b.id
 export const holdingSelect = `SELECT h.*,${activeBatchRecallSql('h.batch_id')} AS "activeRecall",b.crop,b.harvest_date,b.organic_claim_status,b.grade,b.source_mode,b.source_name,b.source_country,b.source_region,f.name AS farm_name`;
 export const listingFrom = `FROM listings l JOIN organizations o ON o.id=l.seller_organization_id JOIN batch_holdings h ON h.id=l.holding_id JOIN harvest_batches b ON b.id=h.batch_id LEFT JOIN farms f ON f.id=b.farm_id`;
 export const listingVisible = `l.active=TRUE AND l.available_quantity_kg>0 AND NOT ${activeBatchRecallSql('b.id')} AND h.status='available' AND h.holder_organization_id=l.seller_organization_id`;
-export const listingSelect = `SELECT l.*,o.name AS seller_name,h.batch_id,b.crop,b.organic_claim_status,b.grade,b.harvest_date,b.source_mode,b.source_name,b.source_country,b.source_region,${activeBatchRecallSql('b.id')} AS "activeRecall",f.name AS farm_name,f.region AS farm_region,f.country AS farm_country`;
+const listingProjection = (held: string) =>
+  `SELECT l.*,o.name AS seller_name,h.batch_id,b.crop,b.organic_claim_status,b.grade,b.harvest_date,b.source_mode,b.source_name,b.source_country,b.source_region,${held} AS "activeRecall",f.name AS farm_name,f.region AS farm_region,f.country AS farm_country`;
+export const listingSelect = listingProjection(activeBatchRecallSql('b.id'));
 
 // This predicate mirrors assessBatchTrust's certificate branch, never legacy attested flags.
 export const reviewedOrganicSql = `EXISTS (SELECT 1 FROM batch_attestations a
@@ -92,15 +94,24 @@ export async function listingPage(
     ? `(l.${key},l.id) ${relation} ($2::numeric,$3::uuid)`
     : `(l.id>$3::uuid AND $2::numeric IS NULL)`;
   const result = await execute(
-    `${listingSelect} ${listingFrom} WHERE ${listingVisible}
-    AND (NOT $4::boolean OR l.seller_organization_id=$1) AND ($13::uuid IS NULL OR l.id=$13) AND ($14='' OR l.currency=$14)
-    AND ($3::uuid IS NULL OR ${boundary})
-    AND ($5='' OR concat_ws(' ',l.id,o.name,f.name,b.source_name,f.region,b.source_region,b.crop,b.grade) ILIKE $6 ESCAPE '\\')
-    AND ($7='' OR ${normalizedCommoditySql('b.crop')}=$7)
-    AND ($8='' OR concat_ws(' ',f.region,b.source_region,l.origin_location) ILIKE $9 ESCAPE '\\')
-    AND l.available_quantity_kg >= $10::numeric
-    AND (NOT $11::boolean OR ${reviewedOrganicSql})
-    ORDER BY ${key ? `l.${key} ${direction},` : ''}l.id ${direction} LIMIT $12`,
+    `WITH candidates AS MATERIALIZED (
+      SELECT l.id,h.batch_id ${listingFrom}
+      WHERE l.active=TRUE AND l.available_quantity_kg>0 AND h.status='available' AND h.holder_organization_id=l.seller_organization_id
+      AND (NOT $4::boolean OR l.seller_organization_id=$1::uuid) AND ($13::uuid IS NULL OR l.id=$13::uuid) AND ($14::text='' OR l.currency=$14::text)
+      AND ($3::uuid IS NULL OR ${boundary})
+      AND ($5::text='' OR concat_ws(' ',l.id,o.name,f.name,b.source_name,f.region,b.source_region,b.crop,b.grade) ILIKE $6::text ESCAPE '\\')
+      AND ($7::text='' OR ${normalizedCommoditySql('b.crop')}=$7::text)
+      AND ($8::text='' OR concat_ws(' ',f.region,b.source_region,l.origin_location) ILIKE $9::text ESCAPE '\\')
+      AND l.available_quantity_kg >= $10::numeric
+    ), assessed AS MATERIALIZED (
+      SELECT b.id AS batch_id,${activeBatchRecallSql('b.id')} AS held,
+        CASE WHEN $11::boolean THEN ${reviewedOrganicSql} ELSE FALSE END AS reviewed
+      FROM harvest_batches b JOIN (SELECT DISTINCT batch_id FROM candidates) batch_keys ON batch_keys.batch_id=b.id
+    )
+    ${listingProjection('assessment.held')} ${listingFrom}
+    JOIN candidates candidate ON candidate.id=l.id JOIN assessed assessment ON assessment.batch_id=b.id
+    WHERE NOT assessment.held AND (NOT $11::boolean OR assessment.reviewed)
+    ORDER BY ${key ? `l.${key} ${direction},` : ''}l.id ${direction} LIMIT $12::int`,
     [
       organizationId,
       input.cursor?.key || null,

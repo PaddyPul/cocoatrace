@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import app from '../../src/app';
 import { pool, query } from '../../src/db';
 import { withCatalogRead, parsePage } from '../../src/modules/catalog/paging';
-import { holdingPage, holdingSelect } from '../../src/modules/catalog/repository';
+import { holdingPage, holdingSelect,listingPage } from '../../src/modules/catalog/repository';
 
 type Actor = {org:string; token:string; user:string};
 type Stock = {batch:string; holdings:{id:string}[]; listings:{id:string}[]};
@@ -116,8 +116,25 @@ describe('inventory/marketplace pages and aggregate totals',()=>{
     expect((await get('/listings/page',{sort:'price'})).status).toBe(400);
     expect((await get('/listings/page',{mine:'true',currency:'USD',sort:'price',cursor:first.body.nextCursor})).status).toBe(400);
     const largest=await get('/listings/page',{mine:'true',sort:'quantity',limit:'2'});
+    expect(largest.status,`Quantity page: HTTP ${largest.status}; code=${String(largest.body.code||'none')}`).toBe(200);
     const more=await get('/listings/page',{mine:'true',sort:'quantity',limit:'2',cursor:largest.body.nextCursor});
-    expect(largest.status).toBe(200);expect(more.status).toBe(200);
+    expect(more.status,`Quantity cursor page: HTTP ${more.status}; code=${String(more.body.code||'none')}`).toBe(200);
+    await withCatalogRead(async execute=>{
+      let inspected=false;
+      const input=parsePage({sort:'quantity',limit:'2'},[seller.org],[],['quantity']);
+      const page=await listingPage(async(sql,parameters)=>{
+        if(sql.includes('candidates AS MATERIALIZED')){
+          const explained=await execute(`EXPLAIN (ANALYZE,BUFFERS,FORMAT JSON) ${sql}`,parameters);
+          const plan=(explained.rows[0]['QUERY PLAN'] as {Plan:Record<string,unknown>}[])[0].Plan;
+          const walk=(node:Record<string,unknown>):Record<string,unknown>[]=>[node,...((node.Plans||[]) as Record<string,unknown>[]).flatMap(walk)];
+          const assessment=walk(plan).find(node=>node['Subplan Name']==='CTE assessed');
+          expect(assessment).toBeDefined();expect(Number(assessment!['Actual Rows'])).toBe(1);
+          expect(Number(plan['Actual Rows'])).toBeLessThanOrEqual(3);inspected=true;
+        }
+        return execute(sql,parameters);
+      },seller.org,input,{mine:true,commodity:'',origin:'',minimum:'0',organic:false,id:'',currency:''});
+      expect(inspected).toBe(true);expect(page.items).toHaveLength(2);
+    });
     const ids=[...largest.body.items,...more.body.items].map((l:{id:string})=>l.id);
     expect(new Set(ids).size).toBe(4);expect(ids).toEqual([...ids].sort().reverse());
     for(const parameters of [{limit:'101'},{search:'x'.repeat(81)},{available:'yes'}] as Record<string,string>[]) expect((await get('/holdings/page',parameters)).status).toBe(400);

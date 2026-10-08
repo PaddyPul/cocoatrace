@@ -1,15 +1,15 @@
-import { loadBatchTrust } from '../modules/trust/assessment';
+import {reviewedOrganicSql} from '../modules/catalog/repository';
+import {withCatalogRead} from '../modules/catalog/paging';
 import { Request, Response } from 'express';
-import { query } from '../db';
 import { adviseReadiness, ReadinessFacts } from '../services/readinessAdvisor';
 import { createReadinessNarrative } from '../services/readinessNarrative';
 import { hasExplicitPermission } from '../services/resourcePolicy';
 
 export async function getReadiness(req: Request, res: Response): Promise<void> {
   const networkScope = hasExplicitPermission(req.user!, 'analytics.read.network');
-  const result = await query(
+  const result = await withCatalogRead(execute => execute(
     `WITH scoped_batches AS (
-       SELECT b.id, b.organic_claim_status FROM harvest_batches b
+       SELECT b.id, ${reviewedOrganicSql} AS reviewed FROM harvest_batches b
        WHERE $1::boolean OR b.current_holder_id=$2
      ), scoped_products AS (
        SELECT pp.id, pp.batch_id, pp.visibility FROM product_profiles pp
@@ -17,7 +17,7 @@ export async function getReadiness(req: Request, res: Response): Promise<void> {
      )
      SELECT
        (SELECT COUNT(*) FROM scoped_batches)::int AS batches_total,
-       (SELECT COUNT(*) FROM scoped_batches WHERE organic_claim_status='attested')::int AS batches_attested,
+       (SELECT COUNT(*) FROM scoped_batches WHERE reviewed)::int AS batches_attested,
        (SELECT COUNT(*) FROM scoped_products)::int AS products_total,
        (SELECT COUNT(*) FROM scoped_products WHERE visibility='published')::int AS products_published,
        (SELECT COUNT(*) FROM scoped_products pp WHERE EXISTS (
@@ -27,16 +27,13 @@ export async function getReadiness(req: Request, res: Response): Promise<void> {
        (SELECT COUNT(*) FROM shipments s JOIN sales_contracts c ON c.id=s.contract_id
         WHERE s.delivered_at IS NULL AND ($1::boolean OR c.seller_organization_id=$2 OR c.buyer_organization_id=$2 OR s.logistics_organization_id=$2))::int AS shipments_in_progress`,
     [networkScope, req.user!.organizationId]
-  );
+  ));
   const row = result.rows[0];
-  const batches = await query('SELECT id FROM harvest_batches WHERE $1::boolean OR current_holder_id=$2', [networkScope, req.user!.organizationId]);
-  const trusts = await loadBatchTrust(batches.rows.map(b => b.id));
-  row.batches_attested = [...trusts.values()].filter(trust => trust.organic.status === 'reviewed').length;
   const facts: ReadinessFacts = {
-    batchesTotal: row.batches_total, batchesAttested: row.batches_attested,
-    productsTotal: row.products_total, productsPublished: row.products_published,
-    productsWithEvidence: row.products_with_evidence, activeRecalls: row.active_recalls,
-    shipmentsInProgress: row.shipments_in_progress,
+    batchesTotal: Number(row.batches_total), batchesAttested: Number(row.batches_attested),
+    productsTotal: Number(row.products_total), productsPublished: Number(row.products_published),
+    productsWithEvidence: Number(row.products_with_evidence), activeRecalls: Number(row.active_recalls),
+    shipmentsInProgress: Number(row.shipments_in_progress),
   };
   const advice = adviseReadiness(facts);
   const narrative = await createReadinessNarrative(advice.score, facts, advice.recommendations);

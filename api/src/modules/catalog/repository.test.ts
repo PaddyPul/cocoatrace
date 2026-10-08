@@ -40,7 +40,14 @@ describe('catalog SQL boundaries', () => {
     expect(sql).toContain('l.seller_organization_id=$1');
     expect(sql).toContain("c.status='active'");
     expect(sql).toContain('c.farmer_organization_id=cf.farmer_organization_id');
-    expect(sql).toContain('ORDER BY l.available_quantity_kg DESC,l.id DESC LIMIT $12');
+    expect(sql).toContain('ORDER BY l.available_quantity_kg DESC,l.id DESC LIMIT $12::int');
+    expect(sql).toContain('candidates AS MATERIALIZED');
+    expect(sql).toContain('assessed AS MATERIALIZED');
+    expect(sql).toContain('SELECT DISTINCT batch_id FROM candidates');
+    expect(sql).toContain(
+      'WHERE NOT assessment.held AND (NOT $11::boolean OR assessment.reviewed)',
+    );
+    expect(sql.match(/SELECT 1 FROM recall_notices/g)).toHaveLength(1);
     expect(parameters.slice(6)).toEqual(['shea', '%_', '%\\%\\_%', '35', true, 51, 'id', '']);
   });
   it('types every cursor parameter for default ID order even without a numeric sort key', async () => {

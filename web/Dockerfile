@@ -11,8 +11,8 @@ ARG VITE_DEMO_PREVIEW=false
 ENV VITE_DEMO_PREVIEW=$VITE_DEMO_PREVIEW
 RUN npm run build --workspace=web
 
-# Stage 2: Serve via Nginx
-FROM nginxinc/nginx-unprivileged:stable-alpine
+# Stage 2: Static serving and API proxy need no image-processing modules.
+FROM nginxinc/nginx-unprivileged:stable-alpine-slim
 COPY --from=builder /app/web/dist /usr/share/nginx/html
 COPY web/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 3000

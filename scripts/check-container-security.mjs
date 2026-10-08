@@ -71,7 +71,7 @@ export function runImageChecks(execute, root, reports, archives) {
         'sh',
         image.tag,
         '-c',
-        'test "$(id -u)" != 0 && nginx -t',
+        'test "$(id -u)" != 0 && ! apk info -e tiff && nginx -t',
       ]);
     }
     execute(['save', '--output', path.join(archives, `${image.name}.tar`), image.tag]);

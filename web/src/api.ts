@@ -418,3 +418,19 @@ export const platformFees = {
   writeOff:(id:string,reason:string)=>api('POST',`/contracts/${id}/fee/write-off`,{reason}),
   reconcile:()=>api<FeeReconciliation>('GET','/platform-fees/reconciliation'),
 };
+
+
+export interface WorkspaceOverview {
+ batches:{count:number;reviewed_count:number}|null;
+ products:{count:number;published_count:number;held_count:number}|null;
+ lots:{count:number;source_kg:string}|null;
+ recalls:{count:number;active_count:number};
+ evidence:{count:number}|null;
+ shipments:ShipmentSummary|null;
+ farms:{count:number;owned_count:number}|null;
+ listings:{count:number;own_count:number;quantity_kg:string}|null;
+ contracts:{count:number;active_count:number;settled_count:number;cancelled_count:number;latest_active_id:string|null}|null;
+ offers:{received_count:number;sent_count:number;received_pending:number;sent_pending:number}|null;
+ payments:PaymentSummary|null;
+}
+export const workspaceOverview=()=>api<WorkspaceOverview>('GET','/workspace/overview');
