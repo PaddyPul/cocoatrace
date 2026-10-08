@@ -572,3 +572,10 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 - Founder accepted paged evidence selection and inventory-summary correction: full release passed, merge/pull complete.
 - PER-001 / ARC-024: offers page and home offer totals are the next candidate slice, native release/merge pending. Max-100 pages, same party boundaries, separate full counts, explicit unavailable/retry states and legacy overflow refusal.
 - Remaining: contracts, shipments, payments, compare-offer consumers, control-tower aggregates, embedded detail arrays/exports and representative hosted concurrent-load acceptance. Do not check these broad items complete based on this slice.
+
+
+## Delivery checkpoint — contracts slice, 2026-10-08
+
+- Founder accepted offers paging/counts and fixture corrections: release passed, merge/pull complete.
+- PER-001 / ARC-024 next candidate: contracts paging and home active-order aggregate/latest active shortcut; native release/merge pending.
+- Remaining: shipment/payment pages, legacy persona/control-tower aggregates, comparison consumers, detail collections/exports and hosted load/query-plan acceptance. Broad items stay IN PROGRESS.

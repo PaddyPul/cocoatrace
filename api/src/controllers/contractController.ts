@@ -1,3 +1,4 @@
+import { legacyContracts } from '../modules/catalog/contracts';
 import { legacyOffers } from '../modules/catalog/offers';
 import { withCatalogRead } from '../modules/catalog/paging';
 import { loadTradeActions } from '../services/tradeActionRepository';
@@ -28,17 +29,7 @@ export async function rejectOffer(req: Request, res: Response): Promise<void> {
 }
 
 export async function listContracts(req: Request, res: Response): Promise<void> {
-  const { rows } = await query(
-    `SELECT c.*, s.name as seller_name, b.name as buyer_name, h.quantity_kg as holding_qty
-     FROM sales_contracts c
-     JOIN organizations s ON s.id = c.seller_organization_id
-     JOIN organizations b ON b.id = c.buyer_organization_id
-     JOIN batch_holdings h ON h.id = c.holding_id
-     WHERE c.seller_organization_id=$1 OR c.buyer_organization_id=$1
-     ORDER BY c.created_at DESC`,
-    [req.user!.organizationId]
-  );
-  res.json(rows);
+  res.json(await withCatalogRead(execute=>legacyContracts(execute,req.user!.organizationId)));
 }
 
 export async function getContract(req: Request, res: Response): Promise<void> {

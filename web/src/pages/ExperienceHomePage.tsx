@@ -3,14 +3,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Building2, CheckCircle2, FileCheck2, Handshake, PackageCheck, Search, ShieldCheck, Sparkles, Sprout, TriangleAlert } from 'lucide-react';
 import Layout from '../components/layout/Layout';
-import { contracts, farms, holdings, listings, offers, sourcing, workspace, HoldingSummary, ListingSummary, FarmSummary, OfferSummary } from '../api';
-import { Contract, SourcingRequest } from '../types';
+import { contracts, farms, holdings, listings, offers, sourcing, workspace, HoldingSummary, ListingSummary, FarmSummary, OfferSummary, ContractSummary } from '../api';
+import { SourcingRequest } from '../types';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 
 type Mode = 'buy' | 'sell';
 import type { TradeAction } from '../components/trading/TradeAction';
-type HomeData = { actionsUnavailable?:boolean; listingSummary: ListingSummary | null; requests: SourcingRequest[]; offerSummary: OfferSummary | null; contracts: Contract[]; holdingSummary: HoldingSummary | null; farmSummary: FarmSummary | null; actions:TradeAction[] };
-const empty: HomeData = { listingSummary: null, requests: [], offerSummary: null, contracts: [], holdingSummary: null, farmSummary: null, actions:[] };
+type HomeData = { actionsUnavailable?:boolean; listingSummary: ListingSummary | null; requests: SourcingRequest[]; offerSummary: OfferSummary | null; contractSummary: ContractSummary | null; holdingSummary: HoldingSummary | null; farmSummary: FarmSummary | null; actions:TradeAction[] };
+const empty: HomeData = { listingSummary: null, requests: [], offerSummary: null, contractSummary: null, holdingSummary: null, farmSummary: null, actions:[] };
 
 export default function ExperienceHomePage() {
   const { user, canDo, onboarding } = useAuthCtx();
@@ -28,13 +28,12 @@ export default function ExperienceHomePage() {
 
   useEffect(() => {
     if (user?.id) localStorage.setItem(`ct_experience_mode:${user.id}`, mode);
-    const safe = <T,>(allowed: boolean, call: () => Promise<T[]>) => allowed ? call().catch(() => []) : Promise.resolve([] as T[]);
     let active=true;
     const load=()=>Promise.all([
         canDo('listing.read') ? listings.summary().catch(() => null) : Promise.resolve(null), sourcing.list().catch(() => []),
-        canDo('offer.respond') || canDo('offer.create') ? offers.summary().then(row=>{if(!row||!['received_count','sent_count','received_pending','sent_pending'].every(key=>Number.isInteger(row[key as keyof OfferSummary])&&row[key as keyof OfferSummary]>=0))throw new Error('Invalid offer summary');return row;}).catch(()=>null) : Promise.resolve({received_count:0,sent_count:0,received_pending:0,sent_pending:0}), safe(canDo('contract.read'), contracts.list),
+        canDo('offer.respond') || canDo('offer.create') ? offers.summary().then(row=>{if(!row||!['received_count','sent_count','received_pending','sent_pending'].every(key=>Number.isInteger(row[key as keyof OfferSummary])&&row[key as keyof OfferSummary]>=0))throw new Error('Invalid offer summary');return row;}).catch(()=>null) : Promise.resolve({received_count:0,sent_count:0,received_pending:0,sent_pending:0}), canDo('contract.read') ? contracts.summary().then(row=>{if(!row||!['count','active_count','settled_count','cancelled_count'].every(key=>Number.isInteger(row[key as keyof ContractSummary])&&Number(row[key as keyof ContractSummary])>=0)||!(row.latest_active_id===null||typeof row.latest_active_id==='string'))throw new Error('Invalid contract summary');return row;}).catch(()=>null) : Promise.resolve({count:0,active_count:0,settled_count:0,cancelled_count:0,latest_active_id:null}),
         canDo('holding.read') ? holdings.summary().catch(() => null) : Promise.resolve(null), canDo('farm.read') ? farms.summary().then(row=>{if(typeof row.count!=='number'||typeof row.owned_count!=='number')throw new Error('Invalid farm summary');return row;}).catch(()=>null) : Promise.resolve({count:0,owned_count:0}), workspace.tradeActions().then(rows=>{if(active)setActionError(false);return rows;}).catch(() => {if(active)setActionError(true);return [];}),
-      ]).then(([listingRows,requestRows,offerRows,contractRows,holdingRows,farmRows,actionRows])=>{if(active){setCatalogError(!listingRows || (mode === 'sell' && (!holdingRows || !farmRows)));setData({listingSummary:listingRows,requests:requestRows,offerSummary:offerRows,contracts:contractRows,holdingSummary:holdingRows,farmSummary:farmRows,actions:actionRows});}}).finally(()=>{if(active)setLoading(false);});
+      ]).then(([listingRows,requestRows,offerRows,contractRows,holdingRows,farmRows,actionRows])=>{if(active){setCatalogError(!listingRows || (mode === 'sell' && (!holdingRows || !farmRows)));setData({listingSummary:listingRows,requests:requestRows,offerSummary:offerRows,contractSummary:contractRows,holdingSummary:holdingRows,farmSummary:farmRows,actions:actionRows});}}).finally(()=>{if(active)setLoading(false);});
     load();
     const interval=window.setInterval(load,15000);
     window.addEventListener('focus',load);
@@ -44,12 +43,14 @@ export default function ExperienceHomePage() {
   const switchMode = (next: Mode) => { if (user?.id) localStorage.setItem(`ct_experience_mode:${user.id}`, next); setParams({ mode: next }); };
   return <Layout currentPage="home" actions={canBuy && canSell ? <div className="hidden rounded-xl border border-border bg-surface-darker p-1 sm:flex"><ModeButton active={mode === 'buy'} onClick={() => switchMode('buy')} icon={Search}>Buy</ModeButton><ModeButton active={mode === 'sell'} onClick={() => switchMode('sell')} icon={Sprout}>Sell</ModeButton></div> : undefined}>
     {!loading && !data.offerSummary && <p role="alert" className="mb-4">Offer totals could not be refreshed. Reload to retry; no zero count is assumed.</p>}
+    {!loading && !data.contractSummary && <p role="alert" className="mb-4">Order totals could not be refreshed. Reload to retry; no zero count is assumed.</p>}
     {actionError && <div role="alert" className="mb-4 rounded-xl border border-amber-300/30 p-4 text-sm">Trade actions could not be refreshed. Reload the page to retry before continuing a trade.</div>}
     {loading ? <div className="loading"><div className="spinner" />Preparing your workspace…</div> : catalogError ? <><p role="alert" className="mb-4 text-sm text-amber-300">Supply totals could not be refreshed. Reload to retry; setup recommendations are paused.</p><ActionCenter failed={actionError} actions={data.actions} navigate={navigate} /></> : mode === 'buy' ? <BuyerHome data={{...data,actionsUnavailable:actionError}} organizationId={user?.organizationId || ''} firstName={user?.name?.split(' ')[0] || 'there'} navigate={navigate} /> : <SellerHome data={{...data,actionsUnavailable:actionError}} organizationId={user?.organizationId || ''} firstName={user?.name?.split(' ')[0] || 'there'} navigate={navigate} />}
   </Layout>;
 }
 
 function BuyerHome({ data, organizationId, firstName, navigate }: { data: HomeData; organizationId: string; firstName: string; navigate: ReturnType<typeof useNavigate> }) {
+  const latestActiveId = data.contractSummary?.latest_active_id;
   const qualified = Number(data.listingSummary?.quantity_kg || 0);
   const pendingOffers = data.offerSummary?.sent_pending;
   const myRequests = data.requests.filter((item) => item.buyer_organization_id === organizationId);
@@ -57,8 +58,8 @@ function BuyerHome({ data, organizationId, firstName, navigate }: { data: HomeDa
   return <>
     <Hero eyebrow="Evidence-aware procurement" title={`Good ${dayPart()}, ${firstName}. Source raw materials with the right proof.`} copy="Describe what you need once. CocoaTrace matches commodity, quantity, origin, assurance and delivery terms, then preserves the record through fulfilment." action="Create sourcing brief" onClick={() => navigate('/source/new')} />
     <ActionCenter failed={data.actionsUnavailable} actions={data.actions} navigate={navigate} />
-    <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4"><Metric label="Published supply" value={`${compactKg(qualified)} kg`} note={`${data.listingSummary?.count || 0} published lots`} /><Metric label="Open sourcing needs" value={String(myRequests.filter((item) => item.status === 'open').length)} note="matched suppliers can respond" /><Metric label="Offers to decide" value={pendingOffers == null ? 'Unavailable' : String(pendingOffers)} note="price and assurance together" /><Metric label="Active orders" value={String(data.contracts.length)} note="commercial + trace record" /></div>
-    <section className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]"><Panel eyebrow="Sourcing setup" title="Move procurement forward">{activeRequest ? <Task icon={Search} title={`Review matches for ${activeRequest.commodity}`} copy={`${Number(activeRequest.quantity_kg).toLocaleString()} kg requested for ${activeRequest.delivery_location}. Results are ranked against these requirements.`} action="Review matches" onClick={() => navigate(`/marketplace?request=${activeRequest.id}`)} /> : <Task icon={FileCheck2} title="Describe your sourcing need" copy="Create a structured, editable request before reviewing supply." action="Create brief" onClick={() => navigate('/source/new')} />}{data.contracts[0] && <Task icon={Handshake} title="Continue the active deal" copy="Payment, documents and transport actions stay in one guided record." action="Deal room" onClick={() => navigate(`/deal-room/${data.contracts[0].id}`)} />}</Panel><Copilot title="Recommendation based on your records" text={activeRequest ? `Your open request is for ${activeRequest.commodity}. Review its matched results; any quantity, origin or assurance gaps will be shown explicitly.` : 'Create a sourcing brief first. The reviewed fields become the request used to rank marketplace supply.'} /></section>
+    <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4"><Metric label="Published supply" value={`${compactKg(qualified)} kg`} note={`${data.listingSummary?.count || 0} published lots`} /><Metric label="Open sourcing needs" value={String(myRequests.filter((item) => item.status === 'open').length)} note="matched suppliers can respond" /><Metric label="Offers to decide" value={pendingOffers == null ? 'Unavailable' : String(pendingOffers)} note="price and assurance together" /><Metric label="Active orders" value={data.contractSummary ? String(data.contractSummary.active_count) : 'Unavailable'} note="commercial + trace record" /></div>
+    <section className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]"><Panel eyebrow="Sourcing setup" title="Move procurement forward">{activeRequest ? <Task icon={Search} title={`Review matches for ${activeRequest.commodity}`} copy={`${Number(activeRequest.quantity_kg).toLocaleString()} kg requested for ${activeRequest.delivery_location}. Results are ranked against these requirements.`} action="Review matches" onClick={() => navigate(`/marketplace?request=${activeRequest.id}`)} /> : <Task icon={FileCheck2} title="Describe your sourcing need" copy="Create a structured, editable request before reviewing supply." action="Create brief" onClick={() => navigate('/source/new')} />}{latestActiveId && <Task icon={Handshake} title="Continue the active deal" copy="Payment, documents and transport actions stay in one guided record." action="Deal room" onClick={() => navigate(`/deal-room/${latestActiveId}`)} />}</Panel><Copilot title="Recommendation based on your records" text={activeRequest ? `Your open request is for ${activeRequest.commodity}. Review its matched results; any quantity, origin or assurance gaps will be shown explicitly.` : 'Create a sourcing brief first. The reviewed fields become the request used to rank marketplace supply.'} /></section>
     <Journey active={1} labels={['Define need', 'Match supply', 'Review proof', 'Contract', 'Receive']} />
   </>;
 }
