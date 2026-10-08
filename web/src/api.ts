@@ -349,6 +349,8 @@ export const offers = {
 };
 
 export const certificates = {
+  page: (parameters: Record<string,string>) => api<CatalogPage<import('./types').Certificate>>('GET', `/certificates/page?${new URLSearchParams(parameters)}`),
+  summary: () => api<{count:number;active_count:number;suspended_count:number;revoked_count:number;expired_count:number}>('GET','/certificates/summary'),
   list: (farmId?: string) => api<import('./types').Certificate[]>('GET', `/certificates${farmId ? `?farmId=${farmId}` : ''}`),
   get: (id: string) => api<import('./types').Certificate>('GET', `/certificates/${id}`),
   issue: (data: { farmerOrganizationId: string; farmId: string; standard: string; cropScope: string[]; validFrom: string; validTo: string; issuingAuthority: string; accreditationReference: string }) =>

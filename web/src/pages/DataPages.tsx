@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { farms as farmsApi, batches as batchesApi, holdings as holdingsApi, audit as auditApi, certificates as certApi, organizations as organizationsApi } from '../api';
-import { Farm, Batch, Holding, AuditEvent, Certificate } from '../types';
-import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
+import { audit as auditApi, organizations as organizationsApi } from '../api';
+import { AuditEvent } from '../types';
+import { StatusBadge } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
-import { useToast } from '../components/shared/ToastProvider';
 import Layout from '../components/layout/Layout';
 import { SkeletonTable } from '../components/shared/Skeleton';
 import EmptyState from '../components/shared/EmptyState';
-import FarmPicker from '../components/catalog/FarmPicker';
 import { Search, X } from 'lucide-react';
 
 function useFetch<T>(fetcher: () => Promise<T[]>) {
@@ -79,129 +77,7 @@ export function AuditPage() {
   </div>}</Layout>;
 }
 
-export function CertsPage() {
-  const { user, canDo } = useAuthCtx();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const { data, loading, error, refetch } = useFetch(() => certApi.list());
-  const [selectedIssueFarm,setSelectedIssueFarm]=useState<Farm|null>(null);
-  const [search, setSearch] = useState('');
-  const certs = data as Certificate[];
-  const filtered = certs.filter((c) => !search || c.standard.toLowerCase().includes(search.toLowerCase()) || c.status.toLowerCase().includes(search.toLowerCase()) || (c.certifier_name || '').toLowerCase().includes(search.toLowerCase()));
-
-  // Issue modal
-  const [showIssue, setShowIssue] = useState(false);
-  const [ifarmId, setIfarmId] = useState('');
-  const [iStandard, setIStandard] = useState('EU_ORGANIC');
-  const [iCropScope, setICropScope] = useState('cocoa');
-  const [iValidFrom, setIValidFrom] = useState('');
-  const [iValidTo, setIValidTo] = useState('');
-  const [iAuthority, setIAuthority] = useState('');
-  const [iAccred, setIAccred] = useState('');
-  const [iLoading, setILoading] = useState(false);
-  const [iError, setIError] = useState('');
-
-  const handleIssue = async () => {
-    if (!ifarmId || !iValidFrom || !iValidTo || !iAuthority || !iAccred) { setIError('All fields required'); return; }
-    setILoading(true); setIError('');
-    try {
-      const targetFarm = selectedIssueFarm;
-      await certApi.issue({
-        farmerOrganizationId: targetFarm?.farmer_organization_id || '',
-        farmId: ifarmId, standard: iStandard,
-        cropScope: iCropScope.split(',').map((s) => s.trim()),
-        validFrom: iValidFrom, validTo: iValidTo,
-        issuingAuthority: iAuthority, accreditationReference: iAccred,
-      });
-      setShowIssue(false); setIfarmId(''); setIValidFrom(''); setIValidTo(''); setIAuthority(''); setIAccred('');
-      refetch();
-      toast('success', 'Certificate issued');
-    } catch (e: any) { setIError(e.message); } finally { setILoading(false); }
-  };
-
-  const handleAction = async (id: string, action: string) => {
-    try {
-      await certApi.updateStatus(id, action);
-      refetch();
-      toast('success', `Certificate ${action}ed`);
-    } catch (e: any) { toast('error', e.message); }
-  };
-
-  return <Layout currentPage="certs">
-    {loading ? <SkeletonTable rows={5} cols={6} /> : error ? <Err msg={error} /> : <div className="table-wrap">
-      <div className="flex flex-wrap items-center gap-3 mb-3">
-        <div className="relative flex-1 min-w-[180px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-          <input type="text" placeholder="Search certificates…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-        <div className="text-xs text-text-muted">{filtered.length} certificate{filtered.length !== 1 ? 's' : ''}</div>
-        {canDo('certificate.issue') && <button className="btn btn-sm btn-primary" onClick={() => setShowIssue(true)}>+ Issue Certificate</button>}
-      </div>
-      <table><thead><tr><th>Standard</th><th>Certifier</th><th>Farm</th><th>Valid From</th><th>Valid To</th><th>Status</th><th></th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((c) => <tr key={c.id} className="hover:bg-brand-500/5">
-        <td className="text-text-primary font-medium">{c.standard}</td><td>{c.certifier_name || '—'}</td><td className="font-mono text-[11px]">{c.farm_id.slice(0, 8)}…</td><td className="text-[11px]">{fmtDate(c.valid_from)}</td><td className="text-[11px]">{fmtDate(c.valid_to)}</td><td><StatusBadge status={c.status} /></td>
-        <td>{canDo('certificate.issue') && c.status === 'active' ? <div className="flex gap-1">
-          <button className="btn btn-sm text-[10px] text-yellow-400 border-yellow-500/30" onClick={() => handleAction(c.id, 'suspend')}>Suspend</button>
-          <button className="btn btn-sm text-[10px] text-red-400 border-red-500/30" onClick={() => handleAction(c.id, 'revoke')}>Revoke</button>
-        </div> : canDo('certificate.issue') && c.status === 'suspended' ? <button className="btn btn-sm text-[10px] text-green-400 border-green-500/30" onClick={() => handleAction(c.id, 'reinstate')}>Reinstate</button> : <button className="btn btn-sm text-[10px]" onClick={() => navigate(`/farms/${c.farm_id}`)}>View Farm</button>}</td>
-      </tr>) : certs.length === 0 ? <tr><td colSpan={99}><EmptyState icon="📋" title="No certificates" description="Certificates are issued by accredited certifiers to verified farms." action={canDo('certificate.issue') ? <button className="btn btn-sm btn-primary" onClick={() => setShowIssue(true)}>+ Issue Certificate</button> : undefined} /></td></tr> : <tr><td colSpan={99}><EmptyState icon="🔍" title="No certificates match" description="Try adjusting your search." /></td></tr>}</tbody></table>
-    </div>}
-
-    {/* Issue Certificate Modal */}
-    {showIssue && (
-      <div className="modal-overlay" onClick={() => !iLoading && setShowIssue(false)}>
-        <div className="modal" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-start justify-between mb-2">
-            <div><div className="modal-title">Issue Certificate</div></div>
-            <button className="btn btn-sm" onClick={() => setShowIssue(false)}><X size={14} /></button>
-          </div>
-          <div className="space-y-3 max-h-[70vh] overflow-y-auto">
-            <div>
-              <label className="form-label">Farm *</label>
-              <FarmPicker value={ifarmId} disabled={iLoading} onChange={farm=>{setSelectedIssueFarm(farm);setIfarmId(farm?.id||'');}} />
-            </div>
-            <div>
-              <label className="form-label">Standard</label>
-              <select className="form-select" value={iStandard} onChange={(e) => setIStandard(e.target.value)}>
-                <option value="EU_ORGANIC">EU Organic</option>
-                <option value="USDA_ORGANIC">USDA Organic</option>
-                <option value="RAINFOREST_ALLIANCE">Rainforest Alliance</option>
-                <option value="FAIRTRADE">Fairtrade</option>
-                <option value="UTZ">UTZ</option>
-              </select>
-            </div>
-            <div>
-              <label className="form-label">Crop Scope</label>
-              <input className="form-input" placeholder="cocoa, coffee…" value={iCropScope} onChange={(e) => setICropScope(e.target.value)} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="form-label">Valid From *</label>
-                <input type="date" className="form-input" value={iValidFrom} onChange={(e) => setIValidFrom(e.target.value)} />
-              </div>
-              <div>
-                <label className="form-label">Valid To *</label>
-                <input type="date" className="form-input" value={iValidTo} onChange={(e) => setIValidTo(e.target.value)} />
-              </div>
-            </div>
-            <div>
-              <label className="form-label">Issuing Authority *</label>
-              <input className="form-input" placeholder="e.g. OrganicCert GH" value={iAuthority} onChange={(e) => setIAuthority(e.target.value)} />
-            </div>
-            <div>
-              <label className="form-label">Accreditation Reference *</label>
-              <input className="form-input" placeholder="e.g. OCG-GH-2026-001" value={iAccred} onChange={(e) => setIAccred(e.target.value)} />
-            </div>
-            {iError && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{iError}</div>}
-            <div className="flex gap-2 pt-1">
-              <button className="btn flex-1 justify-center" onClick={() => setShowIssue(false)} disabled={iLoading}>Cancel</button>
-              <button className="btn btn-primary flex-1 justify-center" onClick={handleIssue} disabled={iLoading}>{iLoading ? 'Issuing…' : 'Issue Certificate'}</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )}
-  </Layout>;
-}
+export { default as CertsPage } from '../components/catalog/CertificateRecordsPage';
 
 export function OrganizationsPage() {
   const navigate = useNavigate();

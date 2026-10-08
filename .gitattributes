@@ -78,3 +78,5 @@ e2e/paymentPages.spec.ts text eol=lf
 web/src/pages/ControlTowerPage.tsx text eol=lf
 web/src/components/dashboard/overview.ts text eol=lf
 e2e/workspaceOverview.spec.ts text eol=lf
+
+e2e/certificatePages.spec.ts text eol=lf
