@@ -131,6 +131,9 @@ export interface SourcingRequest {
 }
 
 export interface Contract {
+  currency: string;
+  trade_value?: string | number;
+  currency_minor_units?: number;
   id: string;
   seller_name?: string;
   buyer_name?: string;

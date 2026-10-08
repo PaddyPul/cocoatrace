@@ -189,7 +189,10 @@ export interface CancellationState {
   requests: { id: string; requested_by_organization_id: string; status: 'requested' | 'approved' | 'rejected'; reason: string }[];
 }
 
+export interface ContractSummary { count:number; active_count:number; settled_count:number; cancelled_count:number; latest_active_id:string|null }
 export const contracts = {
+  page: (parameters:Record<string,string> = {}) => api<CatalogPage<import('./types').Contract>>('GET',`/contracts/page?${new URLSearchParams({limit:'50',...parameters})}`),
+  summary: () => api<ContractSummary>('GET','/contracts/summary'),
   cancellation: (id: string) => api<CancellationState>('GET', `/contracts/${id}/cancellation`),
   requestCancellation: (id: string, reason: string) => api('POST', `/contracts/${id}/cancellation`, {reason}),
   reviewCancellation: (id: string, requestId: string, approve: boolean) => api('POST', `/contracts/${id}/cancellation/${requestId}/${approve ? 'approve' : 'reject'}`, {}),

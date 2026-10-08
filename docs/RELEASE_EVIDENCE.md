@@ -339,3 +339,12 @@ Founder native release browser failures identified mock onboarding returning [] 
 ### Offers home action locator correction — 2026-10-08
 
 Founder rerun reported only home Review offer exact-name locator failure. Task button accessible name comprises title/copy; hover action text is not its exact name. Scoped title-prefix role locator now checks visibility, clicks the card and verifies Offers URL plus Received (1005) aggregate. Test-only correction; application behavior unchanged. Quality/browser types pass; native release acceptance pending.
+
+
+## Accepted — offers paging and dashboard totals — 2026-10-08
+
+Founder confirmed exact-candidate release checks passed and merge/pull completed at 11:31 Accra, including identity/onboarding and accessible-action browser fixture corrections. PER-001 / ARC-024 remain IN PROGRESS.
+
+## Candidate — contracts paging and active-order totals — 2026-10-08
+
+Max-100 party-scoped contract pages with literal search and direction/status filters. Focused ContractRecordsPage replaces inline DataPages implementation; explicit retries, filters, accessible deal buttons and recorded currency/precision display. Home uses aggregate active order count and latest active shortcut instead of full history; settled/cancelled deals are excluded. Legacy arrays refuse >1,000 explicitly; legacy dashboard still reports overflow rather than silently truncating and remains follow-up work. Existing deal-room details/mutations unchanged. No migration/configuration/dependency/data reset. Author 540 units/66 files, quality, workspace/browser types, strict native-source compilation, API/web builds, migration integrity/backlog checks pass. Three native cases with 1,005 deals and five browser definitions added; native Docker/PostgreSQL/browser execution unavailable here. Exact-candidate full release pending. Large frontend chunk warning remains open.

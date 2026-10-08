@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { farms as farmsApi, batches as batchesApi, contracts as contractsApi, shipments as shipmentsApi, holdings as holdingsApi, payments as paymentsApi, audit as auditApi, certificates as certApi, organizations as organizationsApi } from '../api';
-import { Farm, Batch, Contract, Shipment, Holding, Payment, AuditEvent, Certificate } from '../types';
+import { farms as farmsApi, batches as batchesApi, shipments as shipmentsApi, holdings as holdingsApi, payments as paymentsApi, audit as auditApi, certificates as certApi, organizations as organizationsApi } from '../api';
+import { Farm, Batch, Shipment, Holding, Payment, AuditEvent, Certificate } from '../types';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
@@ -30,20 +30,7 @@ export {default as HoldingsPage} from './InventoryPage';
 export {default as FarmsPage} from './SourceFarmsPage';
 export {default as BatchesPage} from './SourceBatchesPage';
 
-export function ContractsPage() {
-  const navigate = useNavigate();
-  const { data, loading, error } = useFetch(() => contractsApi.list());
-  const [search, setSearch] = useState('');
-  const contracts = data as Contract[];
-  const filtered = contracts.filter((c) => !search || c.seller_name?.toLowerCase().includes(search.toLowerCase()) || c.buyer_name?.toLowerCase().includes(search.toLowerCase()) || c.incoterm.toLowerCase().includes(search.toLowerCase()) || c.status.toLowerCase().includes(search.toLowerCase()));
-  return <Layout currentPage="contracts">{loading ? <SkeletonTable rows={5} cols={7} /> : error ? <Err msg={error} /> : <div className="table-wrap">
-    <div className="flex flex-wrap items-center gap-3 mb-3">
-      <div className="relative flex-1 min-w-[180px]"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input type="text" placeholder="Search contracts…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
-      <div className="text-xs text-text-muted">{filtered.length} contract{filtered.length !== 1 ? 's' : ''}</div>
-    </div>
-    <table><thead><tr><th>Deal</th><th>Seller</th><th>Buyer</th><th>Qty (kg)</th><th>Value</th><th>Incoterm</th><th>Status</th></tr></thead><tbody>{filtered.length > 0 ? filtered.map((c) => <tr key={c.id} className="cursor-pointer hover:bg-brand-500/5" onClick={() => navigate(`/deal-room/${c.id}`)}><td className="font-mono text-[11px]">{c.id.slice(0, 8)}…</td><td>{c.seller_name || '—'}</td><td className="text-text-primary font-medium">{c.buyer_name || '—'}</td><td>{(c.quantity_kg || 0).toLocaleString()}</td><td className="text-brand-400">€{Math.round(c.quantity_kg * c.price_per_kg).toLocaleString()}</td><td className="font-mono text-[11px]">{c.incoterm}</td><td><StatusBadge status={c.status} /></td></tr>) : contracts.length === 0 ? <tr><td colSpan={99}><EmptyState icon="📄" title="No deals yet" description="A shared deal workspace is created automatically when a seller accepts an offer." action={<button className="btn btn-sm" onClick={() => navigate('/marketplace')}>Browse Marketplace →</button>} /></td></tr> : <tr><td colSpan={99}><EmptyState icon="🔍" title="No deals match" description="Try adjusting your search." /></td></tr>}</tbody></table>
-  </div>}</Layout>;
-}
+export {default as ContractsPage} from './ContractRecordsPage';
 
 export function ShipmentsPage() {
   const navigate = useNavigate();

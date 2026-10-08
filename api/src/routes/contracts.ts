@@ -1,3 +1,4 @@
+import { listContractPage, summarizeContracts } from '../modules/catalog/contracts';
 import { listOfferPage, summarizeOffers } from '../modules/catalog/offers';
 import { Router } from 'express';
 import { z } from 'zod';
@@ -18,6 +19,8 @@ router.post('/listings/:id/offers', requireAuth, requirePermission('offer.create
 router.post('/offers/:id/accept', requireAuth, requirePermission('offer.respond'), validate(z.object({feeRateBps:z.number().int().min(0).max(1000).optional()}).default({})), contractController.acceptOffer);
 router.post('/offers/:id/reject', requireAuth, requirePermission('offer.respond'), contractController.rejectOffer);
 router.get('/contracts', requireAuth, requirePermission('contract.read'), contractController.listContracts);
+router.get('/contracts/page',requireAuth,requirePermission('contract.read'),listContractPage);
+router.get('/contracts/summary',requireAuth,requirePermission('contract.read'),summarizeContracts);
 router.get('/contracts/:id', requireAuth, requirePermission('contract.read'), contractController.getContract);
 router.patch('/contracts/:id/payment-terms', requireAuth, requirePermission('contract.read'), validate(updatePaymentTermsSchema), contractController.updatePaymentTerms);
 router.post('/contracts/:id/payment-terms/confirm', requireAuth, requirePermission('contract.read'), contractController.confirmPaymentTerms);
