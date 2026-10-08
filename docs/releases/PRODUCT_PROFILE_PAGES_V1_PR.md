@@ -23,6 +23,8 @@ Users can search and navigate large product registers without loading every pass
 - Add seven unit cases, three database definitions and five browser definitions; record accepted farm plot/batch evidence release.
 - Give the existing migration integrity fixture/process tests local 30-second bounds and checker subprocesses a 15-second cap with explicit errors. Hash and tampering assertions remain unchanged; global test timeouts are unchanged.
 
+- Clean up integration fixture hold rows before their recall notice, respecting the non-cascading production FK; close the pool even when teardown fails. All 317 native assertions passed in the founder run; full release rerun remains required after teardown correction.
+
 ## Security and data review
 
 - [x] Resource authorization and unrelated-tenant behavior considered

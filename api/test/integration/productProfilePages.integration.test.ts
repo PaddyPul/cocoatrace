@@ -66,15 +66,23 @@ beforeAll(async () => {
   ).rows[0].id;
 });
 afterAll(async () => {
-  if (recall) await query('DELETE FROM recall_notices WHERE id=$1', [recall]);
-  if (holding) await query('DELETE FROM batch_holdings WHERE id=$1', [holding]);
-  await query(
-    "DELETE FROM evidence_items WHERE linked_entity_type='batch' AND linked_entity_id=ANY($1::uuid[])",
-    [batches],
-  );
-  await query('DELETE FROM product_profiles WHERE batch_id=ANY($1::uuid[])', [batches]);
-  await query('DELETE FROM harvest_batches WHERE id=ANY($1::uuid[])', [batches]);
-  await pool.end();
+  try {
+    // These fixture holds deliberately use the production non-cascading FK.
+    // Remove only this test's child rows before its notice and holding.
+    if (recall) {
+      await query('DELETE FROM recall_safety_holds WHERE recall_id=$1', [recall]);
+      await query('DELETE FROM recall_notices WHERE id=$1', [recall]);
+    }
+    if (holding) await query('DELETE FROM batch_holdings WHERE id=$1', [holding]);
+    await query(
+      "DELETE FROM evidence_items WHERE linked_entity_type='batch' AND linked_entity_id=ANY($1::uuid[])",
+      [batches],
+    );
+    await query('DELETE FROM product_profiles WHERE batch_id=ANY($1::uuid[])', [batches]);
+    await query('DELETE FROM harvest_batches WHERE id=ANY($1::uuid[])', [batches]);
+  } finally {
+    await pool.end();
+  }
 });
 describe('product register pages and safety totals', () => {
   it('pages over 1,000 records, searches before limits and keeps full totals and tenant isolation', async () => {
