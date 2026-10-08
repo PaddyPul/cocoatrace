@@ -69,3 +69,5 @@ e2e/sourceRecordPages.spec.ts text eol=lf
 
 web/src/pages/EvidenceRecordsPage.tsx text eol=lf
 e2e/evidencePages.spec.ts text eol=lf
+
+e2e/evidenceSelection.spec.ts text eol=lf

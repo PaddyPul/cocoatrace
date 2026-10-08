@@ -28,6 +28,12 @@ async function stock(owner:Actor,n:number,warehouse:string):Promise<Stock> {
   const result={batch,holdings,listings};stocks.push(result);return result;
 }
 const get=(path:string,parameters:Record<string,string>={},owner?:Actor)=>request(app).get(path).query(parameters).set('Authorization',`Bearer ${(owner||seller).token}`);
+// Report only safe response diagnostics; never tokens, SQL or request headers.
+async function summary(path:string,owner?:Actor) {
+  const response=await get(path,{},owner);
+  expect(response.status,`${path}: HTTP ${response.status}; code=${String(response.body.code || 'none')}`).toBe(200);
+  return response.body;
+}
 beforeAll(async()=>{seller=await actor();outsider=await actor();});
 afterAll(async()=>{
   for(const s of stocks) {
@@ -65,8 +71,8 @@ describe('inventory/marketplace pages and aggregate totals',()=>{
     await query("UPDATE batch_holdings SET status='committed' WHERE id=$1",[later.id]);
     expect((await get('/holdings/page',{available:'true',search:later.id})).body.items).toEqual([]);
     expect((await get('/listings/page',{id:(await query('SELECT id FROM listings WHERE holding_id=$1',[later.id])).rows[0].id})).body.items).toEqual([]);
-    expect((await get('/holdings/summary')).body.available_count).toBe(1004);
-    expect((await get('/listings/summary')).body.own_count).toBe(1004);
+    expect((await summary('/holdings/summary')).available_count).toBe(1004);
+    expect((await summary('/listings/summary')).own_count).toBe(1004);
     await query("UPDATE batch_holdings SET status='available' WHERE id=$1",[later.id]);
 
     await withCatalogRead(async execute=>{
@@ -91,9 +97,9 @@ describe('inventory/marketplace pages and aggregate totals',()=>{
       expect((await get('/holdings/page',{available:'true',search:later.id})).body.items).toEqual([]);
       expect((await get('/holdings/page',{search:later.id})).body.items[0].activeRecall).toBe(true);
       expect((await get('/listings/page',{id:offPage.id})).body.items).toEqual([]);
-      expect((await get('/holdings/summary')).body.available_count).toBe(0);
-      expect((await get('/listings/summary')).body.own_count).toBe(0);
-      expect((await get('/holdings/summary',{},outsider)).body.count).toBe(2);
+      expect((await summary('/holdings/summary')).available_count).toBe(0);
+      expect((await summary('/listings/summary')).own_count).toBe(0);
+      expect((await summary('/holdings/summary',outsider)).count).toBe(2);
     } finally {
       await query('DELETE FROM recall_affected_batches WHERE recall_id=$1',[recall]);
       await query('DELETE FROM recall_notices WHERE id=$1',[recall]);

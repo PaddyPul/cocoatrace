@@ -15,6 +15,26 @@ const batchVisible = `($2::boolean OR b.current_holder_id=$1::uuid OR f.farmer_o
   OR EXISTS(SELECT 1 FROM batch_holdings h JOIN sales_contracts c ON c.holding_id=h.id WHERE h.batch_id=b.id AND (c.seller_organization_id=$1::uuid OR c.buyer_organization_id=$1::uuid)))`;
 const farmSelect = 'SELECT f.*,o.name AS farmer_org_name';
 const batchSelect = 'SELECT b.*,f.name AS farm_name,o.name AS holder_name';
+// Exact option lookup shares the list boundary, rather than the broader detail policy.
+export async function sourceOptionById(
+  execute: Execute,
+  actor: Actor,
+  resource: 'farm' | 'batch',
+  id: string,
+) {
+  const farm = resource === 'farm';
+  return (
+    await execute(
+      `SELECT ${farm ? 'f.id,f.name' : 'b.id,b.crop'} ${farm ? farmFrom : batchFrom}
+      WHERE ${farm ? farmVisible : batchVisible} AND ${farm ? 'f' : 'b'}.id=$3::uuid`,
+      [
+        actor.organizationId,
+        hasExplicitPermission(actor, farm ? 'farm.read.all' : 'batch.read.all'),
+        id,
+      ],
+    )
+  ).rows[0];
+}
 async function enrich(execute: Execute, rows: Record<string, unknown>[]) {
   const trust = await loadBatchTrust(
     rows.map((row) => String(row.id)),
