@@ -605,5 +605,10 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 
 ## Delivery checkpoint — certificate register candidate, 2026-10-08
 
-- Scoped max-100 certificate pages, literal search/status/farm filters, complete recorded-state counts and explicit legacy overflow. Focused register preserves issuance/status mutation rules. Native acceptance pending; no certification mandate introduced.
+- Certificate register accepted by founder 2026-10-08 17:21 UTC: release checks passed and merge/pull completed. Scoped max-100 pages, server filters, full recorded-state counts and legacy overflow verified. No certification mandate introduced.
 - PER-001/ARC-024 remain IN PROGRESS. Embedded detail collections, products/recalls, exports and hosted performance acceptance remain open.
+
+## Delivery checkpoint — embedded certificates candidate, 2026-10-08
+
+- Farm detail opts out of embedded certificate arrays and uses independently authorized farm-scoped pages/totals. Legacy farm certificates respect certificate permission/list relationships and explicit overflow. Batch attestation selector pages/searches with retained selections and visible failures. Native acceptance pending.
+- Broad PER-001/ARC-024 remain IN PROGRESS: plots, batch evidence, product/recall collections, exports and hosted load/query-plan verification remain open.

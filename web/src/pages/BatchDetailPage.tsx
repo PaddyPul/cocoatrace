@@ -1,7 +1,8 @@
+import CertificatePicker from '../components/catalog/CertificatePicker';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { batches as batchesApi, certificates as certificatesApi, productProfiles as productProfilesApi } from '../api';
-import { Batch, Evidence, Certificate, ProductProfile } from '../types';
+import { batches as batchesApi, productProfiles as productProfilesApi } from '../api';
+import { Batch, Evidence, ProductProfile } from '../types';
 import { StatusBadge, fmtDate } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
@@ -34,7 +35,6 @@ export default function BatchDetailPage() {
   const [pushErr, setPushErr] = useState('');
 
   const [showAttest, setShowAttest] = useState(false);
-  const [certs, setCerts] = useState<Certificate[]>([]);
   const [attCertId, setAttCertId] = useState('');
   const [attNotes, setAttNotes] = useState('');
   const [attesting, setAttesting] = useState(false);
@@ -58,11 +58,7 @@ export default function BatchDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  useEffect(() => {
-    if (showAttest && batch?.farm_id) {
-      certificatesApi.list(batch.farm_id).then(setCerts).catch(() => {});
-    }
-  }, [showAttest, batch]);
+  useEffect(()=>{setAttCertId('');setShowAttest(false);},[id]);
 
   const handleAttest = async () => {
     if (!batch || !attCertId) { setAttErr('Select a certificate'); return; }
@@ -295,7 +291,7 @@ export default function BatchDetailPage() {
             )}
 
             {canAttest && !showAttest && (
-              <button className="btn btn-primary w-full justify-center mb-2" onClick={() => setShowAttest(true)}>
+              <button className="btn btn-primary w-full justify-center mb-2" onClick={() => {setAttCertId('');setShowAttest(true);}}>
                 <Shield size={14} /> Attest Batch
               </button>
             )}
@@ -305,12 +301,7 @@ export default function BatchDetailPage() {
                 <h4 className="text-xs font-semibold">Attest Batch</h4>
                 <div>
                   <label className="form-label">Certificate</label>
-                  <select className="form-select" value={attCertId} onChange={(e) => setAttCertId(e.target.value)}>
-                    <option value="">Select certificate…</option>
-                    {certs.filter((c) => c.status === 'active').map((c) => (
-                      <option key={c.id} value={c.id}>{c.standard} — {fmtDate(c.valid_from)} to {fmtDate(c.valid_to)}</option>
-                    ))}
-                  </select>
+                  {batch.farm_id && canDo('certificate.read') ? <CertificatePicker key={batch.farm_id} farmId={batch.farm_id} value={attCertId} disabled={attesting} onChange={certificate=>setAttCertId(certificate?.id||'')} /> : <p role="alert">Certificate selection requires an accessible source farm and certificate records.</p>}
                 </div>
                 <div>
                   <label className="form-label">Notes (optional)</label>
@@ -318,7 +309,7 @@ export default function BatchDetailPage() {
                 </div>
                 {attErr && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{attErr}</div>}
                 <div className="flex gap-2">
-                  <button className="btn flex-1 justify-center" onClick={() => { setShowAttest(false); setAttErr(''); }} disabled={attesting}>Cancel</button>
+                  <button className="btn flex-1 justify-center" onClick={() => { setShowAttest(false); setAttCertId(''); setAttErr(''); }} disabled={attesting}>Cancel</button>
                   <button className="btn btn-primary flex-1 justify-center" onClick={handleAttest} disabled={attesting || !attCertId}>
                     {attesting ? 'Attesting…' : 'Confirm Attestation'}
                   </button>

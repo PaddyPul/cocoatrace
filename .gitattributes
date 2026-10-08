@@ -80,3 +80,5 @@ web/src/components/dashboard/overview.ts text eol=lf
 e2e/workspaceOverview.spec.ts text eol=lf
 
 e2e/certificatePages.spec.ts text eol=lf
+
+e2e/certificateDetails.spec.ts text eol=lf

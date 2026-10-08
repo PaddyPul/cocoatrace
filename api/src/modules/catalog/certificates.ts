@@ -47,15 +47,22 @@ export async function certificatePage(
   );
   return pageResult(result.rows, input);
 }
-export async function certificateSummary(execute: Execute, actor: Actor) {
+export async function certificateSummary(
+  execute: Execute,
+  actor: Actor,
+  parameters: Record<string, unknown> = {},
+) {
+  if (Object.keys(parameters).some((key) => key !== 'farmId'))
+    throw new ValidationError('Unknown certificate totals parameter');
+  const { farm } = filters(parameters);
   return (
     await execute(
       `SELECT COUNT(*)::int AS count,
  COUNT(*) FILTER(WHERE c.status='active')::int AS active_count,
  COUNT(*) FILTER(WHERE c.status='suspended')::int AS suspended_count,
  COUNT(*) FILTER(WHERE c.status='revoked')::int AS revoked_count,
- COUNT(*) FILTER(WHERE c.status='expired')::int AS expired_count ${from} WHERE ${visible}`,
-      [actor.organizationId, hasExplicitPermission(actor, 'certificate.read.all')],
+ COUNT(*) FILTER(WHERE c.status='expired')::int AS expired_count ${from} WHERE ${visible} AND ($3::uuid IS NULL OR c.farm_id=$3::uuid)`,
+      [actor.organizationId, hasExplicitPermission(actor, 'certificate.read.all'), farm || null],
     )
   ).rows[0];
 }
@@ -83,7 +90,23 @@ export async function listCertificatePage(req: Request, res: Response) {
   res.json(await withCatalogRead((execute) => certificatePage(execute, req.user!, req.query)));
 }
 export async function summarizeCertificates(req: Request, res: Response) {
-  if (Object.keys(req.query).length)
-    throw new ValidationError('Certificate totals accept no parameters');
-  res.json(await withCatalogRead((execute) => certificateSummary(execute, req.user!)));
+  res.json(await withCatalogRead((execute) => certificateSummary(execute, req.user!, req.query)));
+}
+
+// Called only after the enclosing farm relationship has been checked.
+export async function farmCertificateCollection(
+  execute: Execute,
+  actor: Actor,
+  farmId: string,
+  mode: unknown,
+) {
+  if (mode !== undefined && mode !== 'paged')
+    throw new ValidationError('Invalid certificate collection mode');
+  if (!hasExplicitPermission(actor, 'certificate.read'))
+    return { certificates: null, certificate_collection: 'unavailable' };
+  if (mode === 'paged') return { certificates: null, certificate_collection: 'paged' };
+  return {
+    certificates: await legacyCertificates(execute, actor, { farmId }),
+    certificate_collection: 'legacy',
+  };
 }

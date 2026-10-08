@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { certificatePage, certificateSummary, legacyCertificates } from './certificates';
+import {
+  certificatePage,
+  certificateSummary,
+  legacyCertificates,
+  farmCertificateCollection,
+} from './certificates';
 const actor = {
   id: 'user',
   organizationId: '11111111-1111-1111-1111-111111111111',
@@ -60,7 +65,7 @@ describe('bounded certificate register', () => {
       (await certificateSummary(execute, { ...actor, permissions: ['analytics.read.network'] }))
         .count,
     ).toBe(1005);
-    expect(execute.mock.calls[0][1]).toEqual([actor.organizationId, false]);
+    expect(execute.mock.calls[0][1]).toEqual([actor.organizationId, false, null]);
   });
   it('legacy history refuses overflow without a partial successful response', async () => {
     await expect(
@@ -70,5 +75,52 @@ describe('bounded certificate register', () => {
         {},
       ),
     ).rejects.toMatchObject({ statusCode: 422, code: 'CATALOG_READ_LIMIT' });
+  });
+  it('farm totals filter inside the same relationship predicate', async () => {
+    const execute = vi.fn().mockResolvedValue({ rows: [{ count: 1005 }] });
+    await certificateSummary(execute, actor, { farmId: id });
+    expect(execute.mock.calls[0][0]).toContain('c.farm_id=$3::uuid');
+    expect(execute.mock.calls[0][1]).toEqual([actor.organizationId, false, id]);
+    await expect(certificateSummary(execute, actor, { farmId: 'bad' })).rejects.toMatchObject({
+      statusCode: 400,
+    });
+    await expect(certificateSummary(execute, actor, { search: 'x' })).rejects.toMatchObject({
+      statusCode: 400,
+    });
+  });
+  it('paged farm detail never downloads certificates and missing read permission never leaks them', async () => {
+    const execute = vi.fn();
+    expect(await farmCertificateCollection(execute, actor, id, 'paged')).toEqual({
+      certificates: null,
+      certificate_collection: 'paged',
+    });
+    expect(
+      await farmCertificateCollection(
+        execute,
+        { ...actor, permissions: ['farm.read'] },
+        id,
+        undefined,
+      ),
+    ).toEqual({ certificates: null, certificate_collection: 'unavailable' });
+    expect(execute).not.toHaveBeenCalled();
+  });
+  it('legacy farm detail inherits register scope and overflow refusal', async () => {
+    const execute = vi.fn().mockResolvedValue({ rows: [] });
+    expect(await farmCertificateCollection(execute, actor, id, undefined)).toEqual({
+      certificates: [],
+      certificate_collection: 'legacy',
+    });
+    expect(execute.mock.calls[0][1]).toEqual([actor.organizationId, false, id]);
+    await expect(
+      farmCertificateCollection(
+        vi.fn().mockResolvedValue({ rows: Array(1001).fill({ id }) }),
+        actor,
+        id,
+        undefined,
+      ),
+    ).rejects.toMatchObject({ statusCode: 422 });
+    await expect(farmCertificateCollection(execute, actor, id, 'all')).rejects.toMatchObject({
+      statusCode: 400,
+    });
   });
 });

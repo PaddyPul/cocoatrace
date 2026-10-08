@@ -139,7 +139,7 @@ export const farms = {
   list: () => api<import('./types').Farm[]>('GET', '/farms'),
   page: (parameters: Record<string,string> = {}) => api<CatalogPage<import('./types').Farm>>('GET', `/farms/page?${new URLSearchParams({limit:'50',...parameters})}`),
   summary: () => api<FarmSummary>('GET','/farms/summary'),
-  get: (id: string) => api<{ farm: import('./types').Farm; plots: any[]; certificates: any[] }>('GET', `/farms/${id}`),
+  get: (id: string) => api<{ farm: import('./types').Farm; plots: any[]; certificates: null; certificate_collection: 'paged'|'unavailable' }>('GET', `/farms/${id}?certificateMode=paged`),
   create: (data: { name: string; country?: string; region: string; district: string; community?: string; officialTraceabilityId?: string }) =>
     api<import('./types').Farm>('POST', '/farms', data),
   createPlot: (farmId: string, data: { plotCode: string; areaHectares: number; crops?: string[]; gpsLat?: number; gpsLng?: number; geolocationSource?: string }) =>
@@ -350,7 +350,7 @@ export const offers = {
 
 export const certificates = {
   page: (parameters: Record<string,string>) => api<CatalogPage<import('./types').Certificate>>('GET', `/certificates/page?${new URLSearchParams(parameters)}`),
-  summary: () => api<{count:number;active_count:number;suspended_count:number;revoked_count:number;expired_count:number}>('GET','/certificates/summary'),
+  summary: (parameters: Record<string,string> = {}) => api<{count:number;active_count:number;suspended_count:number;revoked_count:number;expired_count:number}>('GET',`/certificates/summary?${new URLSearchParams(parameters)}`),
   list: (farmId?: string) => api<import('./types').Certificate[]>('GET', `/certificates${farmId ? `?farmId=${farmId}` : ''}`),
   get: (id: string) => api<import('./types').Certificate>('GET', `/certificates/${id}`),
   issue: (data: { farmerOrganizationId: string; farmId: string; standard: string; cropScope: string[]; validFrom: string; validTo: string; issuingAuthority: string; accreditationReference: string }) =>

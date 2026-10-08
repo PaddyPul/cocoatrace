@@ -1,3 +1,4 @@
+import { farmCertificateCollection } from '../modules/catalog/certificates';
 import { legacySourceList } from '../modules/catalog/sourceRecords';
 import { withCatalogRead } from '../modules/catalog/paging';
 import { Request, Response } from 'express';
@@ -21,8 +22,8 @@ export async function getFarm(req: Request, res: Response): Promise<void> {
     return;
   }
   const plotRes = await query('SELECT * FROM farm_plots WHERE farm_id = $1 ORDER BY plot_code', [req.params.id]);
-  const certRes = await query('SELECT * FROM organic_certificates WHERE farm_id = $1 ORDER BY valid_to DESC', [req.params.id]);
-  res.json({ farm: farmRes.rows[0], plots: plotRes.rows, certificates: certRes.rows });
+  const certificateCollection = await withCatalogRead(execute=>farmCertificateCollection(execute,req.user!,req.params.id as string,req.query.certificateMode));
+  res.json({ farm: farmRes.rows[0], plots: plotRes.rows, ...certificateCollection });
 }
 
 export async function createFarm(req: Request, res: Response): Promise<void> {
