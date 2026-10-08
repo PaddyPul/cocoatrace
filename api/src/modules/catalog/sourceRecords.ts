@@ -8,8 +8,8 @@ import { Execute, flag, literal, pageResult, parsePage, text, withCatalogRead } 
 const farmFrom = `FROM farms f JOIN organizations o ON o.id=f.farmer_organization_id`;
 const farmVisible = `($2::boolean OR f.farmer_organization_id=$1::uuid OR f.cooperative_organization_id=$1::uuid
   OR EXISTS(SELECT 1 FROM organic_certificates c WHERE c.farm_id=f.id AND c.certifier_organization_id=$1::uuid))`;
-const batchFrom = `FROM harvest_batches b LEFT JOIN farms f ON f.id=b.farm_id JOIN organizations o ON o.id=b.current_holder_id`;
-const batchVisible = `($2::boolean OR b.current_holder_id=$1::uuid OR f.farmer_organization_id=$1::uuid OR f.cooperative_organization_id=$1::uuid
+export const batchFrom = `FROM harvest_batches b LEFT JOIN farms f ON f.id=b.farm_id JOIN organizations o ON o.id=b.current_holder_id`;
+export const batchVisible = `($2::boolean OR b.current_holder_id=$1::uuid OR f.farmer_organization_id=$1::uuid OR f.cooperative_organization_id=$1::uuid
   OR EXISTS(SELECT 1 FROM batch_holdings h WHERE h.batch_id=b.id AND h.holder_organization_id=$1::uuid)
   OR EXISTS(SELECT 1 FROM batch_attestations a WHERE a.batch_id=b.id AND a.certifier_organization_id=$1::uuid)
   OR EXISTS(SELECT 1 FROM batch_holdings h JOIN sales_contracts c ON c.holding_id=h.id WHERE h.batch_id=b.id AND (c.seller_organization_id=$1::uuid OR c.buyer_organization_id=$1::uuid)))`;
