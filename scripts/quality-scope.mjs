@@ -8,6 +8,7 @@ export const formattedPaths = [
   'web/src/components/dashboard/overview.ts',
   'e2e/workspaceOverview.spec.ts',
   'e2e/certificatePages.spec.ts',
+  'e2e/certificateDetails.spec.ts',
   'web/src/pages/PaymentRecordsPage.tsx',
   'e2e/paymentPages.spec.ts',
   'web/src/pages/SourceFarmsPage.tsx',

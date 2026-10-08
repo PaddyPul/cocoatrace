@@ -1,14 +1,15 @@
+import FarmCertificates from '../components/catalog/FarmCertificates';
 import FarmBatches from '../components/catalog/FarmBatches';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { farms as farmsApi } from '../api';
 import { Farm } from '../types';
-import { StatusBadge, fmtDate } from '../components/shared/helpers';
+import { StatusBadge } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
 import Layout from '../components/layout/Layout';
 import EmptyState from '../components/shared/EmptyState';
-import { ArrowLeft, MapPin, FileText, Sprout } from 'lucide-react';
+import { ArrowLeft, MapPin, Sprout } from 'lucide-react';
 import { SkeletonDetail } from '../components/shared/Skeleton';
 import { X } from 'lucide-react';
 
@@ -27,7 +28,6 @@ export default function FarmDetailPage() {
   const { toast } = useToast();
   const [farm, setFarm] = useState<Farm | null>(null);
   const [plots, setPlots] = useState<any[]>([]);
-  const [certificates, setCertificates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -45,7 +45,7 @@ export default function FarmDetailPage() {
     if (!id) return;
     setLoading(true);
     farmsApi.get(id).then(farmData=>{
-      setFarm(farmData.farm);setPlots(farmData.plots||[]);setCertificates(farmData.certificates||[]);
+      setFarm(farmData.farm);setPlots(farmData.plots||[]);
     })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -119,22 +119,7 @@ export default function FarmDetailPage() {
             <EmptyState icon="🗺️" title="No plots registered" description="Growing areas (plots) help track provenance at the sub-farm level." action={canDo('farm.create') ? <button className="btn btn-sm btn-primary" onClick={() => setShowPlot(true)}><Sprout size={14} /> Add Plot</button> : undefined} />
           )}
 
-          {certificates.length > 0 && (
-            <div className="bg-surface border border-border rounded p-5">
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><FileText size={16} className="text-brand-400" /> Certificates ({certificates.length})</h3>
-              <div className="space-y-2">
-                {certificates.map((c: any) => (
-                  <div key={c.id} className="bg-surface-darker border border-border rounded p-3 text-xs">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium">{c.standard}</span>
-                      <span className={`badge ${c.status === 'active' ? 'badge-green' : 'badge-amber'}`}>{c.status}</span>
-                    </div>
-                    <div className="text-text-muted">{fmtDate(c.valid_from)} → {fmtDate(c.valid_to)}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <FarmCertificates key={id} farmId={id!} />
 
           {canDo('batch.read') && <FarmBatches farmId={id!} />}
 
@@ -145,7 +130,7 @@ export default function FarmDetailPage() {
             <div className="text-xs text-text-muted uppercase tracking-wider mb-3">Summary</div>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between"><span className="text-text-muted">Plots</span><span className="font-medium">{plots.length}</span></div>
-              <div className="flex items-center justify-between"><span className="text-text-muted">Certificates</span><span className="font-medium">{certificates.length}</span></div>
+              <div className="flex items-center justify-between"><span className="text-text-muted">Certificates</span><span className="font-medium">See certificate panel</span></div>
             </div>
             {canDo('farm.create') && <button className="btn w-full justify-center mt-4 text-xs" onClick={() => setShowPlot(true)}>+ Add Plot</button>}
             <button className="btn w-full justify-center mt-2 text-xs" onClick={() => navigate('/farms')}>All Farms →</button>

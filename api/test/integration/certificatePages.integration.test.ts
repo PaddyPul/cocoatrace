@@ -10,7 +10,7 @@ type Actor = { org: string; token: string };
 const orgs: string[] = [];
 let owner: Actor, other: Actor, reviewer: Actor;
 let farm: string, foreignFarm: string;
-async function actor(all = false): Promise<Actor> {
+async function actor(all = false, certificates = true): Promise<Actor> {
   const unique = crypto.randomUUID();
   const org = (
     await query(
@@ -29,7 +29,11 @@ async function actor(all = false): Promise<Actor> {
   const role = (
     await query('INSERT INTO roles(name,permissions) VALUES($1,$2) RETURNING id', [
       'cert-' + unique,
-      ['certificate.read', ...(all ? ['certificate.read.all'] : [])],
+      [
+        'farm.read',
+        ...(certificates ? ['certificate.read'] : []),
+        ...(all ? ['certificate.read.all'] : []),
+      ],
     ])
   ).rows[0].id;
   await query('INSERT INTO user_roles(user_id,role_id) VALUES($1,$2)', [user, role]);
@@ -147,5 +151,30 @@ describe('certificate pages and full recorded-state counts', () => {
     ])
       expect((await get('/certificates/page', input)).status).toBe(400);
     expect((await get('/certificates/summary', { search: 'anything' })).status).toBe(400);
+  });
+  it('farm detail pages certificates without granting access through farm relationships', async () => {
+    const detail = await get(`/farms/${farm}`, { certificateMode: 'paged' });
+    expect(detail.status, JSON.stringify(detail.body)).toBe(200);
+    expect(detail.body.certificates).toBeNull();
+    expect(detail.body.certificate_collection).toBe('paged');
+    const total = await get('/certificates/summary', { farmId: farm });
+    expect(total.status).toBe(200);
+    expect(total.body.count).toBe(1005);
+    const legacy = await get(`/farms/${farm}`);
+    expect(legacy.status).toBe(422);
+    expect(legacy.body.code).toBe('CATALOG_READ_LIMIT');
+    const farmOnly = await actor(false, false);
+    const onlyFarm = await seed(farmOnly, 1);
+    const restricted = await get(`/farms/${onlyFarm}`, {}, farmOnly);
+    expect(restricted.status).toBe(200);
+    expect(restricted.body.certificates).toBeNull();
+    expect(restricted.body.certificate_collection).toBe('unavailable');
+    expect((await get('/certificates/page', { farmId: onlyFarm }, farmOnly)).status).toBe(403);
+    await query('UPDATE farms SET cooperative_organization_id=$1 WHERE id=$2', [other.org, farm]);
+    const cooperative = await get(`/farms/${farm}`, {}, other);
+    expect(cooperative.status).toBe(200);
+    expect(cooperative.body.certificates).toEqual([]);
+    expect((await get('/certificates/summary', { farmId: farm }, other)).body.count).toBe(0);
+    expect((await get(`/farms/${farm}`, { certificateMode: 'all' })).status).toBe(400);
   });
 });
