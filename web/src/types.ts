@@ -303,6 +303,7 @@ export interface ProductProfile {
 }
 
 export interface ProductProfileSummary extends ProductProfile {
+  inventory_held?: boolean;
   crop: string;
   harvest_date: string;
   quantity_kg: number;

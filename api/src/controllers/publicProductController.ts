@@ -1,3 +1,5 @@
+import { legacyProducts } from '../modules/catalog/productProfiles';
+import { withCatalogRead } from '../modules/catalog/paging';
 import { loadBatchTrust, legacyOrganicStatus } from '../modules/trust/assessment';
 import { Request, Response } from 'express';
 import QRCode from 'qrcode';
@@ -226,52 +228,7 @@ export async function recordScan(req: Request, res: Response): Promise<void> {
 }
 
 export async function listProductProfiles(req: Request, res: Response): Promise<void> {
-  const seeAll = hasExplicitPermission(req.user!, 'product_profile.read.all');
-  const result = await query(
-    `SELECT pp.*, b.crop, b.harvest_date, b.quantity_kg, b.organic_claim_status,
-            f.name AS farm_name, f.region, f.country, holder.name AS current_holder_name,
-            COALESCE(sc.scan_count, 0)::int AS scan_count,
-            COALESCE(ev.evidence_count, 0)::int AS evidence_count,
-            active_recall.severity AS safety_status
-     FROM product_profiles pp
-     JOIN harvest_batches b ON b.id = pp.batch_id
-     LEFT JOIN farms f ON f.id = b.farm_id
-     JOIN organizations holder ON holder.id = b.current_holder_id
-     LEFT JOIN LATERAL (
-       SELECT COUNT(*) AS scan_count FROM product_profile_scans s WHERE s.product_profile_id = pp.id
-     ) sc ON TRUE
-     LEFT JOIN LATERAL (
-       SELECT COUNT(*) AS evidence_count FROM evidence_items e
-       WHERE e.linked_entity_type='batch' AND e.linked_entity_id=pp.batch_id AND e.review_status='approved'
-     ) ev ON TRUE
-     LEFT JOIN LATERAL (
-       SELECT r.severity FROM recall_notices r
-       JOIN recall_affected_batches ab ON ab.recall_id=r.id
-       WHERE ab.batch_id=pp.batch_id AND r.status='active'
-       ORDER BY CASE r.severity WHEN 'critical' THEN 3 WHEN 'warning' THEN 2 ELSE 1 END DESC
-       LIMIT 1
-     ) active_recall ON TRUE
-     WHERE ($1::boolean OR b.current_holder_id=$2 OR EXISTS (
-       SELECT 1 FROM farms source_farm WHERE source_farm.id=b.farm_id
-         AND (source_farm.farmer_organization_id=$2 OR source_farm.cooperative_organization_id=$2)
-     ) OR EXISTS (
-       SELECT 1 FROM batch_holdings bh JOIN sales_contracts sc ON sc.holding_id=bh.id
-       WHERE bh.batch_id=b.id AND (sc.seller_organization_id=$2 OR sc.buyer_organization_id=$2)
-     ) OR EXISTS (
-       SELECT 1 FROM batch_attestations ba WHERE ba.batch_id=b.id AND ba.certifier_organization_id=$2
-     ))
-     ORDER BY pp.updated_at DESC`,
-    [seeAll, req.user!.organizationId]
-  );
-  const trusts = await loadBatchTrust(result.rows.map(row => row.batch_id));
-  res.json(result.rows.map((profile: any) => ({
-    ...profile,
-    trust: trusts.get(profile.batch_id),
-    organic_claim_status: legacyOrganicStatus(trusts.get(profile.batch_id)!),
-    safety_status: profile.safety_status || 'clear',
-    profileUrl: publicProductUrl(profile.slug),
-    qrSvgUrl: `/public/products/${profile.slug}/qr.svg`,
-  })));
+  res.json(await withCatalogRead(execute=>legacyProducts(execute,req.user!,req.query)));
 }
 
 export async function getProfileForBatch(req: Request, res: Response): Promise<void> {
