@@ -357,3 +357,13 @@ Founder confirmed full release pass and GitHub merge/local pull at 12:15 Accra. 
 ## Candidate — paged shipment workspaces — 2026-10-08
 
 Max-100 party-scoped shipment pages with literal provider/booking/route/document/ID/Incoterm search, direction/state/milestone filters and independent full transport totals. Focused ShipmentRecordsPage replaces inline DataPages implementation; explicit retries, partial counts, accessible detail navigation and unavailable aggregate states. Existing arrangement/progress/Incoterm/payment/recall mutation rules unchanged. Legacy lists refuse >1,000; legacy persona/control-tower aggregate consumers remain open and keep explicit overflow errors. Nine unit cases; fourteen native definitions cover 1,005 records, summaries, scopes, permissions and wrong-party write denial per eleven Incoterms; four browser definitions. Author 549 units/67 files, quality, types, native-source compile, builds, migration integrity/backlog checks pass. Native Docker/PostgreSQL/browser runtime unavailable; full exact-candidate release/merge pending. No migrations, secrets, dependencies or reset.
+
+
+## Shipment paging acceptance — 2026-10-08
+
+Founder confirms full release checks passed and merge/pull completed for the paged shipments wave. This supersedes its pending native-release status and the earlier failed browser gate. Native execution is founder-reported; CI run links and the final passing report are not independently archived. PER-001 and ARC-024 remain IN PROGRESS for remaining resource coverage and load acceptance.
+
+
+## Payment paging candidate — 2026-10-08
+
+Author checks: 558 API unit tests/68 files, quality/policy checks, workspace/browser types, strict integration-source compilation, API/web builds, migration integrity and backlog checks. Four PostgreSQL definitions cover 1,005 workflows, bounded production-query EXPLAIN, off-page literal/currency search, summary semantics and party/permission boundaries; four browser definitions cover navigation/filter reset, retry, invalid envelope and unavailable totals. Existing five-plan trade journeys remain in the release suite. Native Docker/PostgreSQL/browser execution is unavailable in the author environment; exact-candidate founder release and merge acknowledgement pending. The existing frontend chunk warning remains open. No additional broad-item completion credit.

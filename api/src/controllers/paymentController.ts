@@ -1,3 +1,5 @@
+import {legacyPayments} from '../modules/catalog/payments';
+import {withCatalogRead} from '../modules/catalog/paging';
 import { activatePaymentInstallments } from '../modules/payments/dueDates';
 import { Request, Response } from 'express';
 import { query } from '../db';
@@ -8,8 +10,7 @@ import { submitPayment, confirmReceipt, rejectReceipt } from '../modules/payment
 import { presentDocuments, submitSecurity, confirmSecurity } from '../modules/payments/documentsAndSecurity';
 
 export async function listPaymentRequests(req:Request,res:Response):Promise<void>{
-  const {rows}=await query(`SELECT p.*,c.seller_organization_id,c.buyer_organization_id,c.payment_plan,c.payment_terms_status,c.deposit_percentage
-    FROM payment_requests p JOIN sales_contracts c ON c.id=p.contract_id WHERE c.seller_organization_id=$1 OR c.buyer_organization_id=$1 ORDER BY p.created_at DESC`,[req.user!.organizationId]);res.json(rows);
+  res.json(await withCatalogRead(execute => legacyPayments(execute,req.user!.organizationId)));
 }
 export async function getPaymentRequest(req:Request,res:Response):Promise<void>{
   const {rows}=await query(`SELECT p.*,c.seller_organization_id,c.buyer_organization_id,c.quantity_kg,c.price_per_kg,c.incoterm,c.payment_plan,c.deposit_percentage,c.credit_days,c.payment_terms_status,c.payment_evidence_required,c.payment_terms_note,c.payment_terms_confirmed_at,c.status AS contract_status,
