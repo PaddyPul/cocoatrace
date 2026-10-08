@@ -84,3 +84,6 @@ e2e/certificatePages.spec.ts text eol=lf
 e2e/certificateDetails.spec.ts text eol=lf
 
 e2e/sourceDetailCollections.spec.ts text eol=lf
+
+web/src/pages/ProductsPage.tsx text eol=lf
+e2e/productProfilePages.spec.ts text eol=lf

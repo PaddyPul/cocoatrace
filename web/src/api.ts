@@ -377,6 +377,8 @@ export const publicProducts = {
 };
 
 export const productProfiles = {
+  page: (parameters: Record<string,string>) => api<CatalogPage<import('./types').ProductProfileSummary>>('GET',`/product-profiles/page?${new URLSearchParams(parameters)}`),
+  summary: () => api<{count:number;published_count:number;held_count:number}>('GET','/product-profiles/summary'),
   list: () => api<import('./types').ProductProfileSummary[]>('GET', '/product-profiles'),
   getForBatch: (batchId: string) => api<import('./types').ProductProfile>('GET', `/product-profiles/batch/${batchId}`),
   save: (data: { batchId: string; slug: string; displayName: string; brandName?: string; description?: string; gtin?: string; lotCode: string; heroImageUrl?: string }) =>

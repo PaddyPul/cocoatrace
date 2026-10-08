@@ -1,3 +1,4 @@
+import { listProductPage, summarizeProducts } from '../modules/catalog/productProfiles';
 import { publicActionLimiter } from '../middleware/publicRateLimit';
 import { Router } from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth';
@@ -12,6 +13,8 @@ router.get('/public/products/:slug', publicActionLimiter('profile'), controller.
 router.get('/public/products/:slug/qr.svg', publicActionLimiter('qr'), controller.getProductQr);
 router.post('/public/products/:slug/scans', publicActionLimiter('scan'), controller.recordScan);
 
+router.get('/product-profiles/page', requireAuth, requirePermission('batch.read'), listProductPage);
+router.get('/product-profiles/summary', requireAuth, requirePermission('batch.read'), summarizeProducts);
 router.get('/product-profiles', requireAuth, requirePermission('batch.read'), controller.listProductProfiles);
 router.get('/product-profiles/batch/:batchId', requireAuth, requirePermission('batch.read'), controller.getProfileForBatch);
 router.post('/product-profiles', requireAuth, requirePermission('batch.create'), validate(productProfileSchema), controller.upsertProfile);

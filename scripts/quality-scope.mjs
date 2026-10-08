@@ -4,6 +4,8 @@ export const formattedPaths = [
   'api/src/modules/catalog/**/*.ts',
   'web/src/components/catalog/**/*.{ts,tsx}',
   'web/src/pages/InventoryPage.tsx',
+  'web/src/pages/ProductsPage.tsx',
+  'e2e/productProfilePages.spec.ts',
   'web/src/pages/ControlTowerPage.tsx',
   'web/src/components/dashboard/overview.ts',
   'e2e/workspaceOverview.spec.ts',

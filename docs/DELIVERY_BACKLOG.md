@@ -615,5 +615,10 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 
 ## Delivery checkpoint — source detail collections candidate, 2026-10-08
 
-- Farm plot pages/totals and batch evidence pages/totals replace embedded histories. Legacy detail arrays explicitly refuse overflow; evidence requires its own read permission and entity relationship. Native acceptance pending.
+- Farm plot pages/totals and batch evidence pages/totals replace embedded histories. Legacy detail arrays explicitly refuse overflow; evidence requires its own read permission and entity relationship. Accepted by founder 2026-10-08 18:55 UTC: full release checks passed and merge/pull completed.
 - PER-001/ARC-024 remain IN PROGRESS: other embedded source metadata, product/recall collections, exports and hosted performance acceptance remain open.
+
+## Delivery checkpoint — product register candidate, 2026-10-08
+
+- Product-profile pages and full scoped totals replace complete-history UI reads. Literal search/filtering precedes page limits; retained recall holds remain visible, and evidence metadata counts no longer imply approval. Native acceptance pending.
+- PER-001/ARC-024 remain IN PROGRESS: public product detail histories, recall collections, exports and hosted performance acceptance remain open.
