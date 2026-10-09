@@ -33,3 +33,5 @@ The affected-holding select has the explicit accessible name `Your affected hold
 ## Legacy inventory/transfer overflow correction
 
 Legacy inventory and transfer reads first fetch at most 1,001 scoped IDs with the same join eligibility as their detail reads. Overflow rejects before recall projection; small results hydrate only those IDs within the same repeatable-read transaction and repeat tenant scope. The two-second statement and five-second transaction budgets are unchanged. Existing PostgreSQL overflow tests remain strict about 422/CATALOG_READ_LIMIT; unit regressions verify no recall projection runs for overflow and recall state survives small-list hydration. Native exact-candidate acceptance remains pending.
+
+Recovery-note and resolution-reason textareas also have explicit accessible names. Editable textarea content must not affect the exact name used by assistive tools or the delayed-refresh regression. Dirty recovery-value assertions remain required before and after refresh.

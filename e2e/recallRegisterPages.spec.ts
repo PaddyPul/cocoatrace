@@ -198,7 +198,9 @@ test('same-page focus refresh retains the open recovery form and unsaved quantit
     .getByRole('combobox', { name: 'Your affected holding', exact: true })
     .selectOption('holding-one');
   await panel.getByLabel('Destroyed (kg)', { exact: true }).fill('6');
-  await panel.getByLabel('Recovery note', { exact: true }).fill('Unsaved recovery explanation');
+  await panel
+    .getByRole('textbox', { name: 'Recovery note', exact: true })
+    .fill('Unsaved recovery explanation');
   let release!: () => void;
   const pending = new Promise<void>((resolve) => {
     release = resolve;
@@ -210,13 +212,13 @@ test('same-page focus refresh retains the open recovery form and unsaved quantit
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await expect(panel).toHaveAttribute('aria-busy', 'true');
   await expect(panel.getByLabel('Destroyed (kg)', { exact: true })).toHaveValue('6');
-  await expect(panel.getByLabel('Recovery note', { exact: true })).toHaveValue(
+  await expect(panel.getByRole('textbox', { name: 'Recovery note', exact: true })).toHaveValue(
     'Unsaved recovery explanation',
   );
   release();
   await expect(panel).toHaveAttribute('aria-busy', 'false');
   await expect(panel.getByLabel('Destroyed (kg)', { exact: true })).toHaveValue('6');
-  await expect(panel.getByLabel('Recovery note', { exact: true })).toHaveValue(
+  await expect(panel.getByRole('textbox', { name: 'Recovery note', exact: true })).toHaveValue(
     'Unsaved recovery explanation',
   );
 });
