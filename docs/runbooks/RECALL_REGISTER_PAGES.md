@@ -27,3 +27,5 @@ Native Docker execution is unavailable in the author environment. Strict test-so
 ## Same-page refresh correction
 
 The shared page hook has an opt-in retainDuringRefresh option used only by RecallRegister. Existing rows stay mounted while the same user/filter/page read is pending, so focus refreshes or response mutations cannot detach the recovery form or erase its unsaved quantities, notes or selected file. aria-busy marks that pending read. Successful reads replace row data under stable notice IDs; removed notices disappear. Failed reads clear prior rows and actions, and page/filter/user changes clear context immediately. Other catalog consumers retain their default loading behavior. Mutation authorization remains server-enforced. Browser regressions cover delayed focus refresh with dirty recovery values and access-revoked refresh clearing stale actions.
+
+The affected-holding select has the explicit accessible name `Your affected holding`. The delayed-refresh regression selects that exact combobox name; option text inside the enclosing label must not change its accessible identity.

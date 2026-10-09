@@ -194,7 +194,9 @@ test('same-page focus refresh retains the open recovery form and unsaved quantit
   await page.goto('/recalls');
   const panel = page.getByRole('region', { name: 'Recall register', exact: true });
   await panel.getByRole('button', { name: 'Open response', exact: true }).click();
-  await panel.getByLabel('Your affected holding', { exact: true }).selectOption('holding-one');
+  await panel
+    .getByRole('combobox', { name: 'Your affected holding', exact: true })
+    .selectOption('holding-one');
   await panel.getByLabel('Destroyed (kg)', { exact: true }).fill('6');
   await panel.getByLabel('Recovery note', { exact: true }).fill('Unsaved recovery explanation');
   let release!: () => void;
