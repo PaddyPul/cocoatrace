@@ -498,7 +498,11 @@ export interface RecallRecovery {
   note: string;
 }
 
+export type RecallResponseCollection = 'participants' | 'holdings' | 'recoveries' | 'evidence';
+export interface RecallResponsePaging { nextCursor: string | null; hasMore: boolean; count: number }
 export interface RecallResponse {
+  paging?: Record<RecallResponseCollection, RecallResponsePaging>;
+  selectedHolding?: RecallResponse['holdings'][number] | null;
   notice: RecallNotice;
   canManage: boolean;
   myOrganizationId: string;
@@ -506,7 +510,7 @@ export interface RecallResponse {
     organization_id: string; organization_name: string; acknowledged_at: string | null;
     acknowledgement_note: string | null; contact_status: string; email_statuses: string[]; eligible_contact_count?: number;
   }>;
-  holdings: Array<{ id: string; batch_id: string; quantity_kg: number | string; holder_organization_id: string }>;
+  holdings: Array<{ id: string; batch_id: string; quantity_kg: number | string; holder_organization_id: string; recovery?: RecallRecovery | null }>;
   recoveries: RecallRecovery[];
   evidence: Array<{ id: string; file_name: string }>;
 }

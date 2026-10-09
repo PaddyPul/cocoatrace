@@ -14,7 +14,7 @@ function id(value: unknown): string {
   return parsed.data;
 }
 export async function response(req: Request, res: Response) {
-  res.json(await recallResponse(req.user!, id(req.params.id)));
+  res.json(await recallResponse(req.user!, id(req.params.id), req.query));
 }
 export async function acknowledge(req: Request, res: Response) {
   res.json(

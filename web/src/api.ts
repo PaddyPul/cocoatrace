@@ -392,7 +392,7 @@ export const recalls = {
   list: () => api<import('./types').RecallNotice[]>('GET', '/recalls'),
   create: (data: { referenceCode: string; title: string; reason: string; instructions: string; severity: 'advisory' | 'warning' | 'critical'; batchIds?: string[]; lots?: Array<{ lotId: string; quantityKg?: number }> }) =>
     api<import('./types').RecallNotice>('POST', '/recalls', data),
-  response: (id: string) => api<import('./types').RecallResponse>('GET', `/recalls/${id}/response`),
+  response: (id: string, parameters: Record<string,string> = {}) => api<import('./types').RecallResponse>('GET', `/recalls/${id}/response?${new URLSearchParams(parameters)}`),
   acknowledge: (id: string, note: string) => api('POST', `/recalls/${id}/acknowledge`, { note }),
   contact: (id: string, organizationId: string, data: { status: 'contacted' | 'unreachable' | 'escalated'; note: string }) => api('PATCH', `/recalls/${id}/participants/${organizationId}/contact`, data),
   recovery: (id: string, holdingId: string, data: { quarantinedKg: number; returnedKg: number; destroyedKg: number; correctedKg: number; releasedKg: number; note: string }) => api('PUT', `/recalls/${id}/recovery/${holdingId}`, data),

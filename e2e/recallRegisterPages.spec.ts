@@ -96,6 +96,22 @@ async function mock(
           notice,
           canManage: false,
           myOrganizationId: 'buyer-org',
+          ...(url.searchParams.get('selectedHoldingId')
+            ? {
+                selectedHolding: {
+                  id: 'holding-one',
+                  batch_id: 'batch-one',
+                  holder_organization_id: 'buyer-org',
+                  quantity_kg: 10,
+                },
+              }
+            : {}),
+          paging: Object.fromEntries(
+            ['participants', 'holdings', 'recoveries', 'evidence'].map((name) => [
+              name,
+              { count: name === 'holdings' ? 1 : 0, hasMore: false, nextCursor: null },
+            ]),
+          ),
           participants: [],
           holdings: [
             {

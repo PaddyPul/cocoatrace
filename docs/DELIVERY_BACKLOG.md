@@ -625,11 +625,20 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 
 - Product register candidate correction: founder Windows unit run hit the default five-second CRLF fixture/process test timeout (not a reported hash mismatch). Added local suite/hook allowances and bounded checker subprocess diagnostics; unchanged integrity assertions. Superseded by founder release/merge/pull acceptance at 21:04 UTC.
 
-- Product register native candidate: founder reports 317/317 integration assertions passed; teardown failed on the retained-hold fixture's non-cascading notice FK. Corrected child-before-parent fixture cleanup and guaranteed pool close. Release acceptance remains pending; no production constraint or data change.
+- Product register native candidate: founder reports 317/317 integration assertions passed; teardown failed on the retained-hold fixture's non-cascading notice FK. Corrected child-before-parent fixture cleanup and guaranteed pool close. Superseded by founder full-release/merge/pull acceptance on 2026-10-08 at 21:04 UTC; no production constraint or data change.
 
-## Delivery checkpoint — recall register candidate, 2026-10-08
+## Delivery checkpoint — recall register accepted, 2026-10-09
 
-- Authenticated recall pages and full scoped totals replace unbounded history/nested-array UI reads. Register exposes linked counts; recipient/manager response actions remain independently authorized. Native acceptance pending.
+- Authenticated recall pages and full scoped totals replace unbounded history/nested-array UI reads. Register exposes linked counts; recipient/manager response actions remain independently authorized. Founder confirms release checks passed and merge/pull completed on 2026-10-09 at 15:01 UTC.
 - PER-001/ARC-024 remain IN PROGRESS: recall response detail collections, public product histories, exports and hosted performance acceptance remain open.
 
-- Recall register candidate correction: founder browser output identified ambiguous totals headings and response form detachment during background refresh. Named totals selectors and opt-in same-page row retention preserve drafts while pending; failed reads and changed contexts clear stale actions. Two browser regressions added. Full exact-candidate release/merge/pull acceptance remains pending.
+- Recall register candidate correction: founder browser output identified ambiguous totals headings and response form detachment during background refresh. Named totals selectors and opt-in same-page row retention preserve drafts while pending; failed reads and changed contexts clear stale actions. Two browser regressions added. Explicit holding/textarea accessible names stabilize exact selectors; lightweight legacy inventory/transfer ID preflights reject overflow before recall projection without changing read deadlines. Full exact-candidate release/merge/pull accepted by founder on 2026-10-09 at 15:01 UTC.
+
+- Next focused slice: bounded recall response detail collections and recovery/evidence selectors, preserving recipient/manager scope, unsaved drafts, safety holds and fail-closed read behavior. Public product histories, exports and hosted performance acceptance follow; broad items receive no completion credit yet.
+
+## Delivery checkpoint — recall response pages candidate, 2026-10-09
+
+- PER-001 / ARC-024: independently scoped keyset pages and full scoped totals for recall recipients, affected holdings, recovery history and clean evidence metadata. Search precedes limits; page size is capped at 100. Legacy overflow rejects before expensive response projection.
+- One selected holding is re-read by exact scoped ID independently of its current page. Recovery snapshots, bounded evidence selection and unsaved drafts survive successful paging/focus refresh; failed reads or revoked membership remove actions. Mutation authorization, whole-recall resolution checks and retained safety holds remain authoritative.
+- Author validation: 609 API unit assertions passed; quality, workspace/browser type checks and API/web builds passed. Added six PostgreSQL cases and five browser cases; native Docker/PostgreSQL/browser execution requires founder release acceptance. Candidate is not yet accepted.
+- Broad PER-001 / ARC-024 remain IN PROGRESS. Remaining public product histories, exports and hosted performance acceptance are still open; no completion credit for this candidate until exact-commit release checks and merge/pull are confirmed.
