@@ -20,7 +20,7 @@ Large recalls no longer require complete recipient, stock, recovery and evidence
 - Limit candidate IDs before participant/outbox and recovery projections; reject legacy overflow before hydration.
 - Re-read one selected holding by exact scoped ID, include its saved recovery, and retain at most 100 evidence selections across pages.
 - Keep whole-recall resolution, write authorization and safety holds authoritative on the server.
-- Add large-collection/isolation PostgreSQL regressions and browser navigation/draft/failure regressions.
+- Add large-collection/isolation PostgreSQL regressions and browser navigation/draft/failure regressions. Correct the embedded recovery assertion to expect PostgreSQL JSON numeric representation (1), rather than its ordinary driver numeric string ("1.000").
 
 ## Security and data review
 
@@ -46,7 +46,7 @@ Large recalls no longer require complete recipient, stock, recovery and evidence
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: author 609 API unit assertions passed, quality and workspace/browser type checks passed, API/web builds passed. Six new PostgreSQL cases and five new browser cases require the Windows Docker-backed release run. Before merging, check the integration/E2E boxes only after the exact candidate passes `npm run verify:release`; attach its commit/report and required GitHub CI result.
+- Evidence/results: author 609 API unit assertions passed, quality and workspace/browser type checks passed, API/web builds passed. Founder initial PostgreSQL run passed 326/327 assertions; the remaining JSON numeric representation assertion is corrected. Six new PostgreSQL cases and five new browser cases require exact-candidate Windows Docker-backed release acceptance. Before merging, check the integration/E2E boxes only after the exact candidate passes `npm run verify:release`; attach its commit/report and required GitHub CI result.
 
 ## Product and operations
 

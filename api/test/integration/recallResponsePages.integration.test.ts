@@ -64,7 +64,7 @@ describe('recall response pages and current recipient boundaries', () => {
   it('filters literally before limiting and includes saved recovery with the chosen off-page holding',async()=>{
     const filtered=await get({limit:'2',holdingsSearch:'%_',evidenceSearch:'%_'});expect(filtered.status,JSON.stringify(filtered.body)).toBe(200);
     expect(filtered.body.holdings.map((row:{id:string})=>row.id)).toEqual([lateHolding]);
-    expect(filtered.body.holdings[0].recovery).toMatchObject({holding_id:lateHolding,quarantined_kg:'1.000',note:'Existing recovery snapshot'});
+    expect(filtered.body.holdings[0].recovery).toMatchObject({holding_id:lateHolding,quarantined_kg:1,note:'Existing recovery snapshot'});
     expect(filtered.body.evidence).toEqual([{id:lateEvidence,file_name:'Literal %_ late proof.pdf'}]);
     expect(JSON.stringify(filtered.body.evidence)).not.toContain('storage_key');
     expect(filtered.body.paging.holdings.count).toBe(1006);
