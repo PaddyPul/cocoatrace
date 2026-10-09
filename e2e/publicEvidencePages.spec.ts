@@ -4,6 +4,10 @@ async function mock(page: Page) {
   const searches: string[] = [];
   await page.route('**/api/public/products/**', async (route) => {
     const url = new URL(route.request().url());
+    if (url.pathname.endsWith('/journey/page')) {
+      await route.fulfill({ json: { items: [], count: 0, nextCursor: null, hasMore: false } });
+      return;
+    }
     if (url.pathname.endsWith('/scans')) {
       await route.fulfill({ json: {} });
       return;

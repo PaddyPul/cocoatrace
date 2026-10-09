@@ -24,6 +24,7 @@ export const formattedPaths = [
   'e2e/evidenceSelection.spec.ts',
   'e2e/catalogPages.spec.ts',
   'e2e/publicEvidencePages.spec.ts',
+  'e2e/publicJourneyPages.spec.ts',
   'e2e/transferPages.spec.ts',
   'api/src/services/recallTrace*.ts',
   'api/src/services/traceGraphRepository*.ts',

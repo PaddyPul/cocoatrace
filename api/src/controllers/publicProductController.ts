@@ -1,3 +1,4 @@
+import { readPublicJourney } from '../modules/catalog/publicJourney';
 import { readPublicEvidence } from '../modules/catalog/publicEvidence';
 import { legacyRecalls } from '../modules/catalog/recallRecords';
 import { legacyProducts } from '../modules/catalog/productProfiles';
@@ -7,7 +8,7 @@ import { Request, Response } from 'express';
 import QRCode from 'qrcode';
 import { getClient, query } from '../db';
 import * as audit from '../services/audit';
-import { buildJourney, deriveSafetyStatus, JourneyEvent } from '../services/publicProduct';
+import { deriveSafetyStatus } from '../services/publicProduct';
 import {activeBatchRecallSql} from '../modules/recall/safety';
 import { activateRecall } from '../modules/recall/lifecycle';
 import { config } from '../config/env';
@@ -38,7 +39,7 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
     return;
   }
 
-  const [plotRes, certRes, evidenceRes, transferRes, shipmentRes, recallRes] = await Promise.all([
+  const [plotRes, certRes, evidenceRes, journeyRes, recallRes] = await Promise.all([
     query(
       `SELECT COUNT(*)::int AS plot_count,
               COALESCE(SUM(area_hectares), 0)::float AS total_area_hectares,
@@ -58,28 +59,7 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
       [product.batch_id]
     ),
     readPublicEvidence(req.params.slug, {}, { id: product.id, batchId: product.batch_id }).then(page => ({ rows: page.items, paging: { count: page.count, hasMore: page.hasMore, nextCursor: page.nextCursor } })),
-    query(
-      `SELECT ct.responded_at, ct.quantity_kg, src.name AS from_name, dest.name AS to_name,
-              h.warehouse_location
-       FROM custody_transfers ct
-       JOIN batch_holdings h ON h.id = ct.holding_id
-       JOIN organizations src ON src.id = ct.from_organization_id
-       JOIN organizations dest ON dest.id = ct.to_organization_id
-       WHERE h.batch_id=$1 AND ct.status='accepted'
-       ORDER BY ct.responded_at`,
-      [product.batch_id]
-    ),
-    query(
-      `SELECT m.milestone, m.recorded_at, m.location, m.notes, carrier.name AS organization_name
-       FROM batch_holdings h
-       JOIN sales_contracts c ON c.holding_id = h.id
-       JOIN shipments s ON s.contract_id = c.id
-       JOIN shipment_milestones m ON m.shipment_id = s.id
-       LEFT JOIN organizations carrier ON carrier.id = s.logistics_organization_id
-       WHERE h.batch_id=$1
-       ORDER BY m.recorded_at`,
-      [product.batch_id]
-    ),
+    readPublicJourney(req.params.slug, {}, { id: product.id, batchId: product.batch_id }),
     query(
       `SELECT r.id, r.reference_code, r.title, r.reason, r.instructions, r.severity,
               r.status, r.initiated_at, r.resolved_at, o.name AS issued_by
@@ -94,53 +74,6 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
 
   const trust = (await loadBatchTrust([product.batch_id])).get(product.batch_id)!;
   const certificate = certRes.rows[0] ? { ...certRes.rows[0], trust: trust.organic } : null;
-  const recallEvents: JourneyEvent[] = recallRes.rows.map((recall: any) => ({
-    type: 'recall',
-    title: recall.status === 'active' ? `Safety notice: ${recall.title}` : `Resolved: ${recall.title}`,
-    summary: recall.reason,
-    occurredAt: recall.initiated_at,
-    organization: recall.issued_by,
-    verified: true,
-  }));
-  const journey = buildJourney([
-    [{
-      type: 'harvest',
-      title: product.source_mode === 'direct_inventory' ? 'Inventory recorded' : 'Harvested at origin',
-      summary: `${Number(product.quantity_kg).toLocaleString()} kg of ${product.crop} recorded${product.source_mode === 'direct_inventory' ? ' from supplier-declared source information' : ''}`,
-      occurredAt: product.harvest_date,
-      location: [product.community, product.district, product.region, product.country].filter(Boolean).join(', '),
-      organization: product.farmer_name,
-      verified: trust.origin.status === 'reviewed',
-    }],
-    certificate ? [{
-      type: 'verification',
-      title: `${certificate.standard.replace(/_/g, ' ')} · ${trust.organic.status}`,
-      summary: certificate.notes || `Certificate ${certificate.accreditation_reference}`,
-      occurredAt: certificate.attested_at,
-      organization: certificate.certifier_name,
-      verified: trust.organic.status === 'reviewed',
-    }] : [],
-    transferRes.rows.map((transfer: any) => ({
-      type: 'custody' as const,
-      title: 'Custody transferred',
-      summary: `${Number(transfer.quantity_kg).toLocaleString()} kg · ${transfer.from_name} → ${transfer.to_name}`,
-      occurredAt: transfer.responded_at,
-      location: transfer.warehouse_location,
-      organization: transfer.to_name,
-      verified: true,
-    })),
-    shipmentRes.rows.map((milestone: any) => ({
-      type: 'shipment' as const,
-      title: milestone.milestone.replace(/_/g, ' '),
-      summary: milestone.notes || 'Logistics milestone recorded',
-      occurredAt: milestone.recorded_at,
-      location: milestone.location,
-      organization: milestone.organization_name,
-      verified: true,
-    })),
-    recallEvents,
-  ]);
-
   const recalls = recallRes.rows;
   const inventoryHeld=Boolean((await query(`SELECT ${activeBatchRecallSql('$1::uuid')} AS held`,[product.batch_id])).rows[0].held);
   res.set('Cache-Control', 'no-store');
@@ -182,7 +115,8 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
     certificate,
     evidence: evidenceRes.rows,
     evidencePaging: evidenceRes.paging,
-    journey,
+    journey: journeyRes.items,
+    journeyPaging: { count: journeyRes.count, hasMore: journeyRes.hasMore, nextCursor: journeyRes.nextCursor },
     safety: {
       status: inventoryHeld && deriveSafetyStatus(recalls)==='clear' ? 'warning' : deriveSafetyStatus(recalls),
       inventoryHeld,

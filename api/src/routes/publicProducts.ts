@@ -1,3 +1,4 @@
+import { getPublicJourneyPage } from '../modules/catalog/publicJourney';
 import { getPublicEvidencePage } from '../modules/catalog/publicEvidence';
 import { listRecallPage, summarizeRecalls } from '../modules/catalog/recallRecords';
 import { listProductPage, summarizeProducts } from '../modules/catalog/productProfiles';
@@ -11,6 +12,7 @@ import * as controller from '../controllers/publicProductController';
 import * as recallResponse from '../controllers/recallResponseController';
 const router = Router();
 
+router.get('/public/products/:slug/journey/page', publicActionLimiter('profile'), getPublicJourneyPage);
 router.get('/public/products/:slug/evidence/page', publicActionLimiter('profile'), getPublicEvidencePage);
 router.get('/public/products/:slug', publicActionLimiter('profile'), controller.getPublicProduct);
 router.get('/public/products/:slug/qr.svg', publicActionLimiter('qr'), controller.getProductQr);
