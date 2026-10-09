@@ -1,3 +1,4 @@
+import { legacyRecalls } from '../modules/catalog/recallRecords';
 import { legacyProducts } from '../modules/catalog/productProfiles';
 import { withCatalogRead } from '../modules/catalog/paging';
 import { loadBatchTrust, legacyOrganicStatus } from '../modules/trust/assessment';
@@ -290,25 +291,7 @@ export async function publishProfile(req: Request, res: Response): Promise<void>
 }
 
 export async function listRecalls(req: Request, res: Response): Promise<void> {
-  const canManageAll = (req.user!.permissions || []).some((permission) => permission === '*' || permission === 'recall.manage.all');
-  const result = await query(
-    `SELECT r.*, o.name AS issued_by,
-            COALESCE((SELECT array_agg(ab.batch_id) FROM recall_affected_batches ab WHERE ab.recall_id=r.id), '{}') AS batch_ids,
-            COALESCE((SELECT json_agg(json_build_object(
-              'lotId', al.lot_id, 'lotCode', ml.lot_code,
-              'sourceEquivalentKg', al.source_equivalent_kg,
-              'recallQuantityKg', al.recall_quantity_kg,
-              'relationshipDepth', al.relationship_depth
-            ) ORDER BY al.relationship_depth, ml.lot_code)
-            FROM recall_affected_lots al JOIN material_lots ml ON ml.id=al.lot_id
-            WHERE al.recall_id=r.id), '[]'::json) AS affected_lots
-     FROM recall_notices r
-     JOIN organizations o ON o.id=r.initiated_by_organization_id
-     WHERE ($1::boolean OR r.initiated_by_organization_id=$2 OR EXISTS(SELECT 1 FROM recall_participants p WHERE p.recall_id=r.id AND p.organization_id=$2))
-     ORDER BY r.initiated_at DESC`,
-    [canManageAll, req.user!.organizationId]
-  );
-  res.json(result.rows);
+  res.json(await withCatalogRead(execute=>legacyRecalls(execute,req.user!,req.query)));
 }
 
 export async function createRecall(req: Request, res: Response): Promise<void> {

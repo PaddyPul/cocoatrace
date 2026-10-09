@@ -5,6 +5,7 @@ import { useAuthCtx } from '../auth/AuthProvider';
 export function useCatalogPage<T>(
   fetch: (parameters: Record<string, string>) => Promise<CatalogPage<T>>,
   parameters: Record<string, string>,
+  options: { retainDuringRefresh?: boolean } = {},
 ) {
   const { user } = useAuthCtx();
   const key = JSON.stringify([user?.id, parameters]);
@@ -26,7 +27,12 @@ export function useCatalogPage<T>(
       ...current,
       key,
       cursors,
-      items: [],
+      items:
+        options.retainDuringRefresh &&
+        current.key === key &&
+        current.cursors[current.cursors.length - 1] === cursor
+          ? current.items
+          : [],
       next: null,
       loading: true,
       error: '',
@@ -56,6 +62,8 @@ export function useCatalogPage<T>(
         if (active)
           setState((current) => ({
             ...current,
+            items: [],
+            next: null,
             loading: false,
             error: error instanceof Error ? error.message : 'Unable to load records',
           }));
@@ -63,7 +71,7 @@ export function useCatalogPage<T>(
     return () => {
       active = false;
     };
-  }, [key, cursor, refreshVersion]);
+  }, [key, cursor, refreshVersion, options.retainDuringRefresh]);
   const change = (next: string[]) =>
     setState((current) => ({
       ...current,

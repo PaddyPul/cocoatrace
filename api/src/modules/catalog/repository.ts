@@ -166,3 +166,25 @@ export async function listingSummary(execute: Execute, organizationId: string) {
     )
   ).rows[0];
 }
+
+export async function legacyHoldingList(execute: Execute, organizationId: string) {
+  const candidates = await execute(
+    `SELECT h.id ${holdingFrom} WHERE h.holder_organization_id=$1
+     ORDER BY h.created_at DESC,h.id DESC LIMIT 1001`,
+    [organizationId],
+  );
+  if (candidates.rows.length > 1000)
+    throw new AppError(
+      'Inventory list exceeds the legacy limit. Use the paged inventory view.',
+      422,
+      'CATALOG_READ_LIMIT',
+    );
+  if (!candidates.rows.length) return [];
+  return (
+    await execute(
+      `${holdingSelect} ${holdingFrom} WHERE h.holder_organization_id=$1 AND h.id=ANY($2::uuid[])
+     ORDER BY h.created_at DESC,h.id DESC`,
+      [organizationId, candidates.rows.map((row) => row.id)],
+    )
+  ).rows;
+}

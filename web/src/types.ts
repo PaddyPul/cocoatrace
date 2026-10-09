@@ -404,6 +404,8 @@ export interface PublicProduct {
   };
 }
 
+export type RecallRegisterRow = Omit<RecallNotice,'batch_ids'|'affected_lots'> & {batch_count:number;affected_lot_count:number};
+
 export interface RecallNotice {
   id: string;
   reference_code: string;

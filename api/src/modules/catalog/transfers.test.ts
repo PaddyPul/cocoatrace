@@ -42,8 +42,23 @@ describe('transfer read boundary', () => {
     await expect(legacyTransferList(execute, 'tenant')).rejects.toMatchObject({
       code: 'CATALOG_READ_LIMIT',
     });
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(execute.mock.calls[0][0]).not.toContain('recall_notices');
     expect(execute.mock.calls[0][0]).toContain(
       'ORDER BY ct.requested_at DESC,ct.id DESC LIMIT 1001',
     );
   });
+});
+
+it('hydrates only scoped preflight transfer IDs and retains recall state', async () => {
+  const execute = vi
+    .fn()
+    .mockResolvedValueOnce({ rows: [{ id: 'id' }] })
+    .mockResolvedValueOnce({ rows: [{ id: 'id', activeRecall: true }] });
+  expect(await legacyTransferList(execute, 'tenant')).toEqual([{ id: 'id', activeRecall: true }]);
+  expect(execute.mock.calls[1][0]).toContain('recall_notices');
+  expect(execute.mock.calls[1][0]).toContain(
+    '(ct.to_organization_id=$1::uuid OR ct.from_organization_id=$1::uuid)',
+  );
+  expect(execute.mock.calls[1][1]).toEqual(['tenant', ['id']]);
 });

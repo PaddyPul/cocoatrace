@@ -3,7 +3,7 @@ vi.mock('../trust/assessment', () => ({
   loadBatchTrust: vi.fn(async () => new Map()),
   legacyOrganicStatus: vi.fn(),
 }));
-import { holdingPage, listingPage, holdingSummary } from './repository';
+import { holdingPage, listingPage, holdingSummary, legacyHoldingList } from './repository';
 import { parsePage } from './paging';
 describe('catalog SQL boundaries', () => {
   it('filters stock status, recall and tenant before keyset limit', async () => {
@@ -97,5 +97,27 @@ describe('catalog SQL boundaries', () => {
     await expect(holdingSummary(execute, 'tenant')).rejects.toMatchObject({
       code: 'CATALOG_READ_LIMIT',
     });
+  });
+});
+
+describe('legacy inventory overflow preflight', () => {
+  it('rejects overflow before recall projection or trust hydration', async () => {
+    const execute = vi.fn().mockResolvedValue({ rows: Array(1001).fill({ id: 'id' }) });
+    await expect(legacyHoldingList(execute, 'tenant')).rejects.toMatchObject({
+      statusCode: 422,
+      code: 'CATALOG_READ_LIMIT',
+    });
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(execute.mock.calls[0][0]).not.toContain('recall_notices');
+    expect(execute.mock.calls[0][1]).toEqual(['tenant']);
+  });
+  it('hydrates only preflight IDs in the same tenant scope and retains recall information', async () => {
+    const execute = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [{ id: 'id' }] })
+      .mockResolvedValueOnce({ rows: [{ id: 'id', activeRecall: true }] });
+    expect(await legacyHoldingList(execute, 'tenant')).toEqual([{ id: 'id', activeRecall: true }]);
+    expect(execute.mock.calls[1][0]).toContain('recall_notices');
+    expect(execute.mock.calls[1][1]).toEqual(['tenant', ['id']]);
   });
 });

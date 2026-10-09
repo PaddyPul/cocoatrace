@@ -620,9 +620,16 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 
 ## Delivery checkpoint — product register candidate, 2026-10-08
 
-- Product-profile pages and full scoped totals replace complete-history UI reads. Literal search/filtering precedes page limits; retained recall holds remain visible, and evidence metadata counts no longer imply approval. Native acceptance pending.
+- Product-profile pages and full scoped totals replace complete-history UI reads. Literal search/filtering precedes page limits; retained recall holds remain visible, and evidence metadata counts no longer imply approval. Accepted by founder 2026-10-08 21:04 UTC: full release checks passed and merge/pull completed.
 - PER-001/ARC-024 remain IN PROGRESS: public product detail histories, recall collections, exports and hosted performance acceptance remain open.
 
-- Product register candidate correction: founder Windows unit run hit the default five-second CRLF fixture/process test timeout (not a reported hash mismatch). Added local suite/hook allowances and bounded checker subprocess diagnostics; unchanged integrity assertions. Full candidate acceptance remains pending.
+- Product register candidate correction: founder Windows unit run hit the default five-second CRLF fixture/process test timeout (not a reported hash mismatch). Added local suite/hook allowances and bounded checker subprocess diagnostics; unchanged integrity assertions. Superseded by founder release/merge/pull acceptance at 21:04 UTC.
 
 - Product register native candidate: founder reports 317/317 integration assertions passed; teardown failed on the retained-hold fixture's non-cascading notice FK. Corrected child-before-parent fixture cleanup and guaranteed pool close. Release acceptance remains pending; no production constraint or data change.
+
+## Delivery checkpoint — recall register candidate, 2026-10-08
+
+- Authenticated recall pages and full scoped totals replace unbounded history/nested-array UI reads. Register exposes linked counts; recipient/manager response actions remain independently authorized. Native acceptance pending.
+- PER-001/ARC-024 remain IN PROGRESS: recall response detail collections, public product histories, exports and hosted performance acceptance remain open.
+
+- Recall register candidate correction: founder browser output identified ambiguous totals headings and response form detachment during background refresh. Named totals selectors and opt-in same-page row retention preserve drafts while pending; failed reads and changed contexts clear stale actions. Two browser regressions added. Full exact-candidate release/merge/pull acceptance remains pending.
