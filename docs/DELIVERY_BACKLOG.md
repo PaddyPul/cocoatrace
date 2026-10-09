@@ -636,13 +636,20 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 
 - Next focused slice: bounded recall response detail collections and recovery/evidence selectors, preserving recipient/manager scope, unsaved drafts, safety holds and fail-closed read behavior. Public product histories, exports and hosted performance acceptance follow; broad items receive no completion credit yet.
 
-## Delivery checkpoint — recall response pages candidate, 2026-10-09
+## Delivery checkpoint — recall response pages accepted, 2026-10-09
 
 - PER-001 / ARC-024: independently scoped keyset pages and full scoped totals for recall recipients, affected holdings, recovery history and clean evidence metadata. Search precedes limits; page size is capped at 100. Legacy overflow rejects before expensive response projection.
 - One selected holding is re-read by exact scoped ID independently of its current page. Recovery snapshots, bounded evidence selection and unsaved drafts survive successful paging/focus refresh; failed reads or revoked membership remove actions. Mutation authorization, whole-recall resolution checks and retained safety holds remain authoritative.
-- Author validation: 609 API unit assertions passed; quality, workspace/browser type checks and API/web builds passed. Added six PostgreSQL cases and five browser cases; native Docker/PostgreSQL/browser execution requires founder release acceptance. Candidate is not yet accepted.
-- Broad PER-001 / ARC-024 remain IN PROGRESS. Remaining public product histories, exports and hosted performance acceptance are still open; no completion credit for this candidate until exact-commit release checks and merge/pull are confirmed.
+- Author validation: 609 API unit assertions passed; quality, workspace/browser type checks and API/web builds passed. Added six PostgreSQL cases and five browser cases; Founder confirms exact-candidate release checks passed and merge/pull completed on 2026-10-09 at 16:48 UTC, including JSON quantity and scoped recovery-journey selector corrections.
+- Broad PER-001 / ARC-024 remain IN PROGRESS. Remaining public product histories, exports and hosted performance acceptance are still open; this slice is accepted; broad items remain open until remaining collections and hosted performance acceptance are complete.
 
-- Recall response candidate correction: founder PostgreSQL run passed 326/327 assertions; one new assertion expected a driver-level numeric string inside `row_to_json`. PostgreSQL emits a JSON number there. Corrected the expected value to numeric 1, retaining exact quantity, holding and note checks. No application, schema, timeout or authorization change. Full release acceptance remains pending.
+- Recall response candidate correction: founder PostgreSQL run passed 326/327 assertions; one new assertion expected a driver-level numeric string inside `row_to_json`. PostgreSQL emits a JSON number there. Corrected the expected value to numeric 1, retaining exact quantity, holding and note checks. No application, schema, timeout or authorization change. Superseded by founder full-release/merge/pull acceptance on 2026-10-09 at 16:48 UTC.
 
-- Recall response browser correction: the real recovery journey matched the same quantities in affected inventory and the new recovery-history section. Named the affected-inventory region and scoped both returned/destroyed assertions to it. No `.first()` workaround, write-path or safety-policy change; browser/native release acceptance remains pending.
+- Recall response browser correction: the real recovery journey matched the same quantities in affected inventory and the new recovery-history section. Named the affected-inventory region and scoped both returned/destroyed assertions to it. No `.first()` workaround, write-path or safety-policy change. Superseded by founder full-release/merge/pull acceptance on 2026-10-09 at 16:48 UTC.
+
+## Delivery checkpoint — public reviewed evidence candidate, 2026-10-09
+
+- PER-001 / ARC-024: anonymous published-profile evidence pages with literal search, max-100 rows, profile/search-bound cursors, full eligible totals and explicit embedded first-page metadata. Public responses contain metadata only; no storage or uploader fields or download tokens.
+- Eligibility uses the latest review, independent reviewer identity, unexpired approval, validated evidence and a clean scan. Archived/draft profile reads fail on every request, even with a previously valid cursor. Public proof paging has separate failure/retry states; active recall/retained hold presentation remains independent of proof pages.
+- Author validation: 618 API unit assertions passed; quality, workspace/browser types and API/web builds passed. Added native 1,005-record/eligibility/publication/cursor regressions and browser page/search/failure/revocation checks. Docker/PostgreSQL/browser execution and founder release acceptance remain pending.
+- PER-001 / ARC-024 remain IN PROGRESS: public journey and notice histories, remaining exports and hosted performance acceptance follow. Evidence paging is not completion of all public profile history work.

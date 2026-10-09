@@ -1,3 +1,4 @@
+import { getPublicEvidencePage } from '../modules/catalog/publicEvidence';
 import { listRecallPage, summarizeRecalls } from '../modules/catalog/recallRecords';
 import { listProductPage, summarizeProducts } from '../modules/catalog/productProfiles';
 import { publicActionLimiter } from '../middleware/publicRateLimit';
@@ -10,6 +11,7 @@ import * as controller from '../controllers/publicProductController';
 import * as recallResponse from '../controllers/recallResponseController';
 const router = Router();
 
+router.get('/public/products/:slug/evidence/page', publicActionLimiter('profile'), getPublicEvidencePage);
 router.get('/public/products/:slug', publicActionLimiter('profile'), controller.getPublicProduct);
 router.get('/public/products/:slug/qr.svg', publicActionLimiter('qr'), controller.getProductQr);
 router.post('/public/products/:slug/scans', publicActionLimiter('scan'), controller.recordScan);

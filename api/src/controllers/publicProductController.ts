@@ -1,3 +1,4 @@
+import { readPublicEvidence } from '../modules/catalog/publicEvidence';
 import { legacyRecalls } from '../modules/catalog/recallRecords';
 import { legacyProducts } from '../modules/catalog/productProfiles';
 import { withCatalogRead } from '../modules/catalog/paging';
@@ -56,14 +57,7 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
        WHERE a.id=(SELECT attestation_id FROM harvest_batches WHERE id=$1)`,
       [product.batch_id]
     ),
-    query(
-      `SELECT type, file_name, sha256_hash, review_status, claim_description, created_at
-       FROM evidence_items
-       WHERE linked_entity_type='batch' AND linked_entity_id=$1 AND review_status='approved'
-         AND EXISTS (SELECT 1 FROM trust_claim_reviews tr JOIN users ru ON ru.id=tr.reviewer_user_id AND ru.organization_id=tr.reviewer_organization_id WHERE tr.entity_type='evidence' AND tr.entity_id=evidence_items.id AND tr.claim_key='evidence_review' AND tr.status='reviewed' AND tr.reviewer_organization_id<>evidence_items.uploader_organization_id AND tr.reviewed_at<=NOW() AND (tr.expires_at IS NULL OR tr.expires_at>NOW()))
-       ORDER BY created_at`,
-      [product.batch_id]
-    ),
+    readPublicEvidence(req.params.slug, {}, { id: product.id, batchId: product.batch_id }).then(page => ({ rows: page.items, paging: { count: page.count, hasMore: page.hasMore, nextCursor: page.nextCursor } })),
     query(
       `SELECT ct.responded_at, ct.quantity_kg, src.name AS from_name, dest.name AS to_name,
               h.warehouse_location
@@ -187,6 +181,7 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
     },
     certificate,
     evidence: evidenceRes.rows,
+    evidencePaging: evidenceRes.paging,
     journey,
     safety: {
       status: inventoryHeld && deriveSafetyStatus(recalls)==='clear' ? 'warning' : deriveSafetyStatus(recalls),

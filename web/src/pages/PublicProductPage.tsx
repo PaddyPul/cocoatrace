@@ -1,3 +1,4 @@
+import PublicEvidencePanel from '../components/catalog/PublicEvidencePanel';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
@@ -74,7 +75,7 @@ export default function PublicProductPage() {
     return () => { alive = false; window.clearInterval(interval); window.removeEventListener('focus', visible); document.removeEventListener('visibilitychange', visible); };
   }, [slug]);
 
-  if (error) return <main className="min-h-screen bg-[#f6f4ee] text-stone-900 grid place-items-center p-6"><div className="max-w-md text-center"><div className="text-5xl mb-4">🌱</div><h1 className="text-2xl font-bold">Profile not found</h1><p className="mt-2 text-stone-500">{error}</p></div></main>;
+  if (error) return <main className="min-h-screen bg-[#f6f4ee] text-stone-900 grid place-items-center p-6"><div className="max-w-md text-center"><div className="text-5xl mb-4">🌱</div><h1 className="text-2xl font-bold">Product profile unavailable</h1><p className="mt-2 text-stone-500">{error}</p><button className="mt-4 underline" onClick={() => window.location.reload()}>Retry product profile</button></div></main>;
   if (!data) return <main className="min-h-screen bg-[#f6f4ee] grid place-items-center"><div className="h-9 w-9 rounded-full border-2 border-stone-200 border-t-emerald-700 animate-spin" /></main>;
 
   const unsafe = data.safety.status !== 'clear' || Boolean(data.safety.inventoryHeld);
@@ -134,7 +135,7 @@ export default function PublicProductPage() {
                   <div className="rounded-xl border border-stone-200 p-4"><ShieldCheck className="text-emerald-700" /><h3 className="mt-3 font-bold">Origin: {trustLabel(data.trust?.origin)}</h3><p className="mt-1 text-sm text-stone-500">{data.origin.farmName} · {data.origin.officialTraceabilityId || 'Platform identity'}</p><p className="mt-3 text-xs text-stone-400">Geolocation {data.origin.geolocation_complete ? 'complete' : 'requires review'} · EUDR cutoff {data.origin.eudr_cutoff_checked ? 'checked' : 'not complete'}</p></div>
                   {data.certificate && <div className="rounded-xl border border-stone-200 p-4"><FileCheck2 className="text-emerald-700" /><h3 className="mt-3 font-bold">{data.certificate.standard.replace(/_/g, ' ')}</h3><p className="mt-1 text-sm text-stone-500">{data.certificate.certifier_name}</p><p className="mt-3 text-xs text-stone-400">Reference {data.certificate.accreditation_reference}</p></div>}
                 </div>
-                <div className="mt-5 space-y-2">{data.evidence.map((item) => <div key={item.sha256_hash} className="flex items-center gap-3 rounded-xl bg-stone-50 p-3"><FileCheck2 size={18} className="shrink-0 text-emerald-700" /><div className="min-w-0"><div className="truncate text-sm font-semibold">{item.claim_description || item.file_name}</div><div className="truncate font-mono text-[10px] text-stone-400">{item.sha256_hash}</div></div></div>)}</div>
+                <PublicEvidencePanel key={slug} slug={slug} />
               </>}
             </div>
           </section>
