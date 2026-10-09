@@ -91,3 +91,5 @@ e2e/productProfilePages.spec.ts text eol=lf
 e2e/recallRegisterPages.spec.ts text eol=lf
 
 e2e/recallResponsePages.spec.ts text eol=lf
+
+e2e/publicEvidencePages.spec.ts text eol=lf

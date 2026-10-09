@@ -372,6 +372,7 @@ export const provenance = {
 };
 
 export const publicProducts = {
+  evidencePage: (slug: string, parameters: Record<string,string>) => api<CatalogPage<import('./types').PublicProduct['evidence'][number]> & {count:number}>('GET', `/public/products/${encodeURIComponent(slug)}/evidence/page?${new URLSearchParams(parameters)}`),
   get: (slug: string) => api<import('./types').PublicProduct>('GET', `/public/products/${slug}`),
   recordScan: (slug: string) => api<void>('POST', `/public/products/${slug}/scans`),
 };

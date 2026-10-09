@@ -377,6 +377,7 @@ export interface PublicProduct {
     notes?: string;
   };
   evidence: Array<{
+    id?: string;
     type: string;
     file_name: string;
     sha256_hash: string;
@@ -384,6 +385,7 @@ export interface PublicProduct {
     claim_description: string;
     created_at: string;
   }>;
+  evidencePaging?: { count: number; hasMore: boolean; nextCursor: string | null };
   journey: JourneyEvent[];
   safety: {
     inventoryHeld?: boolean;
