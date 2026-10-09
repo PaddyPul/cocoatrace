@@ -386,6 +386,7 @@ export interface PublicProduct {
     created_at: string;
   }>;
   evidencePaging?: { count: number; hasMore: boolean; nextCursor: string | null };
+  journeyPaging?: { count: number; hasMore: boolean; nextCursor: string | null };
   journey: JourneyEvent[];
   safety: {
     inventoryHeld?: boolean;

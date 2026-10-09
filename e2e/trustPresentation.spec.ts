@@ -13,6 +13,7 @@ async function mock(page: Page, publicProduct?: () => object) {
       : path === '/api/onboarding' ? { status: 'completed' }
       : path === '/api/listings/page' ? {items: url.searchParams.get('organic') === 'true' && listing.trust?.organic?.status !== 'reviewed' ? [] : [listing],nextCursor:null,hasMore:false}
       : path === '/api/listings/lot' ? listing
+      : path.endsWith('/journey/page') ? {items:[],count:0,nextCursor:null,hasMore:false}
       : path.endsWith('/evidence/page') ? {items:[],count:0,nextCursor:null,hasMore:false}
       : path.startsWith('/api/public/products/') ? publicProduct?.() || {}
       : [];

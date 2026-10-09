@@ -1,49 +1,18 @@
+import PublicJourneyPanel from '../components/catalog/PublicJourneyPanel';
 import PublicEvidencePanel from '../components/catalog/PublicEvidencePanel';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  AlertTriangle, CheckCircle2, FileCheck2, Leaf, MapPin, PackageCheck,
-  ShieldCheck, Sprout, Truck, UsersRound,
+  AlertTriangle, FileCheck2, Leaf, MapPin, PackageCheck,
+  ShieldCheck, Sprout,
 } from 'lucide-react';
 import TrustClaims, { trustLabel } from '../components/shared/TrustClaims';
 import { publicProducts } from '../api';
-import { JourneyEvent, PublicProduct } from '../types';
-
-const eventIcons = {
-  harvest: Sprout,
-  verification: ShieldCheck,
-  custody: UsersRound,
-  shipment: Truck,
-  recall: AlertTriangle,
-};
+import { PublicProduct } from '../types';
 
 function formatDate(value: string) {
   const date = new Date(value);
   return Number.isFinite(date.getTime()) ? new Intl.DateTimeFormat('en', { day: 'numeric', month: 'short', year: 'numeric' }).format(date) : 'Date not recorded';
-}
-
-function EventCard({ event, last }: { event: JourneyEvent; last: boolean }) {
-  const Icon = eventIcons[event.type] || PackageCheck;
-  return (
-    <div className="relative flex gap-4 pb-7">
-      {!last && <div className="absolute left-[19px] top-10 bottom-0 w-px bg-emerald-900/20" />}
-      <div className={`relative z-10 h-10 w-10 shrink-0 rounded-full flex items-center justify-center ${event.type === 'recall' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
-        <Icon size={18} />
-      </div>
-      <div className="min-w-0 pt-0.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <h3 className="font-semibold text-stone-900 capitalize">{event.title}</h3>
-          {event.verified && <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700"><CheckCircle2 size={12} /> recorded</span>}
-        </div>
-        <p className="mt-1 text-sm text-stone-600">{event.summary}</p>
-        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-400">
-          <span>{formatDate(event.occurredAt)}</span>
-          {event.organization && <span>{event.organization}</span>}
-          {event.location && <span className="inline-flex items-center gap-1"><MapPin size={11} />{event.location}</span>}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export default function PublicProductPage() {
@@ -119,7 +88,7 @@ export default function PublicProductPage() {
             <div className="grid grid-cols-3 border-b border-stone-100">
               <div className="p-4 text-center"><div className="text-lg font-bold">{data.origin.plot_count}</div><div className="text-[10px] uppercase tracking-wider text-stone-400">Farm plots</div></div>
               <div className="border-x border-stone-100 p-4 text-center"><div className="text-lg font-bold">{Number(data.origin.total_area_hectares).toFixed(1)}</div><div className="text-[10px] uppercase tracking-wider text-stone-400">Hectares</div></div>
-              <div className="p-4 text-center"><div className="text-lg font-bold">{data.journey.length}</div><div className="text-[10px] uppercase tracking-wider text-stone-400">Trace events</div></div>
+              <div className="p-4 text-center"><div className="text-lg font-bold">{data.journeyPaging?.count ?? data.journey.length}</div><div className="text-[10px] uppercase tracking-wider text-stone-400">Trace events</div></div>
             </div>
             <nav className="flex border-b border-stone-100 px-5">
               {(['journey', 'proof'] as const).map((item) => <button key={item} onClick={() => setTab(item)} className={`mr-6 border-b-2 py-4 text-sm font-semibold capitalize ${tab === item ? 'border-emerald-700 text-emerald-800' : 'border-transparent text-stone-400'}`}>{item}</button>)}
@@ -128,7 +97,7 @@ export default function PublicProductPage() {
             <div className="p-5 sm:p-7">
               {tab === 'journey' ? <>
                 <div className="mb-6"><div className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">Farm to fork</div><h2 className="mt-1 text-2xl font-bold">This product's journey</h2><p className="mt-2 text-sm text-stone-500">Events are shown in time order. Entries describe recorded supply-chain activity. Authentication of a record does not independently verify a product claim.</p></div>
-                {data.journey.map((event, index) => <EventCard key={`${event.type}-${event.occurredAt}-${index}`} event={event} last={index === data.journey.length - 1} />)}
+                <PublicJourneyPanel key={slug} slug={slug} />
               </> : <>
                 <div className="mb-6"><div className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">Evidence</div><h2 className="mt-1 text-2xl font-bold">Claims with receipts</h2></div>
                 <TrustClaims trust={data.trust} light /><div className="mt-4 grid gap-3 sm:grid-cols-2">
