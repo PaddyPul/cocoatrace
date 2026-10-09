@@ -21,7 +21,8 @@ Large recall histories can be searched and paged without downloading every notic
 - Bound legacy notices and combined linked references to 1,000; overflow rejects before nested arrays load.
 - Extract RecallRegister with full totals, explicit retry, unknown totals on failure and closed stale response context on page/filter changes. Activation, recovery and resolution transactions remain unchanged.
 - Preserve open recovery drafts during same-page background reads; failed reads clear stale notice actions, and page/filter/user changes still reset context. Narrow totals assertions to the register heading instead of notice headings. Give the affected-holding combobox an explicit accessible name and test exact role/name selection.
-- Add ten unit cases, four database definitions and seven browser definitions; update existing response/trace mock contracts. Record accepted product register release and corrections.
+- Preflight legacy inventory and transfer IDs before recall projection, rejecting over 1,000 scoped rows without expensive per-row safety decoration. Small histories retain recall state and tenant scope in the same repeatable-read snapshot; production deadlines remain unchanged.
+- Add ten recall-register unit cases plus three legacy overflow/detail regression cases, four database definitions and seven browser definitions; update existing response/trace mock contracts. Record accepted product register release and corrections.
 
 ## Security and data review
 
@@ -48,7 +49,7 @@ Large recall histories can be searched and paged without downloading every notic
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: author 598 API units/73 files, quality, workspace/browser types, strict native-source compilation and builds pass. Native Docker/PostgreSQL/browser execution unavailable here. Attach exact tested candidate SHA and release/CI results before checking native/browser boxes. Frontend chunk warning remains open.
+- Evidence/results: author 601 API units/73 files, quality, workspace/browser types, strict native-source compilation and builds pass. Native Docker/PostgreSQL/browser execution unavailable here. Attach exact tested candidate SHA and release/CI results before checking native/browser boxes. Frontend chunk warning remains open.
 
 ## Product and operations
 

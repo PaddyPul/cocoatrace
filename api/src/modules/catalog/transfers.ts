@@ -54,17 +54,25 @@ export async function listTransferPage(req: Request, res: Response) {
   );
 }
 export async function legacyTransferList(execute: Execute, organizationId: string) {
-  const result = await execute(
-    `${transferSelect} ${transferFrom}
+  const candidates = await execute(
+    `SELECT ct.id ${transferFrom}
     WHERE ct.to_organization_id=$1::uuid OR ct.from_organization_id=$1::uuid
     ORDER BY ct.requested_at DESC,ct.id DESC LIMIT 1001`,
     [organizationId],
   );
-  if (result.rows.length > 1000)
+  if (candidates.rows.length > 1000)
     throw new AppError(
       'Transfer history exceeds the legacy limit. Use the paged transfer view.',
       422,
       'CATALOG_READ_LIMIT',
     );
-  return result.rows;
+  if (!candidates.rows.length) return [];
+  return (
+    await execute(
+      `${transferSelect} ${transferFrom}
+    WHERE (ct.to_organization_id=$1::uuid OR ct.from_organization_id=$1::uuid)
+    AND ct.id=ANY($2::uuid[]) ORDER BY ct.requested_at DESC,ct.id DESC`,
+      [organizationId, candidates.rows.map((row) => row.id)],
+    )
+  ).rows;
 }
