@@ -47,6 +47,9 @@ describe('public journey boundaries', () => {
     expect(sql).toContain('ORDER BY sort_key,id LIMIT $6::int');
     expect(sql).toContain("md5(kind||':'||source_id::text)::uuid");
     expect(sql).toContain("ct.status='accepted'");
+    expect(sql).toContain('recall_affected_lots');
+    expect(sql).toContain('recall_safety_holds');
+    expect(sql).toContain('recovery.returned_kg>0');
     expect(sql).toContain('occurred_at IS NOT NULL');
     expect(args).toEqual([profile.batch_id, null, null, '%_', '%\\%\\_%', 2]);
     expect(execute.mock.calls[3][1]).toEqual([[id]]);

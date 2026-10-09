@@ -372,3 +372,14 @@ Author checks: 558 API unit tests/68 files, quality/policy checks, workspace/bro
 ## Workspace aggregates candidate — 2026-10-08
 
 Author validation: 563 API units/69 files, quality/policy checks, workspace/browser type checks, strict native test-source compilation, API/web builds, migration integrity/backlog tests. Five units cover permission gates, reviewed-certificate aggregate semantics, resource-specific global scopes, evidence metadata and read failure. Four PostgreSQL definitions cover 1,005 records, unrelated tenants, retained holds, missing read permissions and aggregate readiness. Four browser definitions cover full counts/no legacy arrays, failure retry, invalid totals and restricted access. Native Docker/PostgreSQL/browser execution is unavailable here; exact-candidate founder release and merge acknowledgement pending. Existing frontend chunk warning remains open. Broad PER-001/ARC-024 remain IN PROGRESS.
+
+
+## Public journey paging acceptance — 2026-10-09
+
+Founder confirms full release checks passed and merge/pull completed. This supersedes pending native acceptance for the public journey slice. No independently archived CI URL supplied. PER-001 / ARC-024 remain IN PROGRESS.
+
+## Public safety and audit export boundaries candidate — 2026-10-09
+
+Two independent implementation tracks and a separate read-only security review are integrated into one candidate. Public notices include lot-only and retained/disposed-stock relationships, full aggregate safety and bounded page hydration; audit reports have record/byte preflight and durable attribution. Native PostgreSQL/browser test definitions are added, but execution is unavailable author-side. Exact-candidate founder release remains required before push/merge. No schema or secret change.
+
+Author verification for this candidate: 651 API unit assertions across 78 files passed. Quality (including 10 policy assertions), API/web/browser types, production builds, strict native integration source compilation, migration integrity and backlog validation pass. Thirteen PostgreSQL and three new browser regressions are defined; Docker/PostgreSQL/browser execution remains pending founder release. Existing frontend bundle-size warning remains open performance debt.

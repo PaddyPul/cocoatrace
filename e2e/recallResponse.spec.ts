@@ -79,7 +79,7 @@ test('manager resolution requires an explanation and selected supporting evidenc
 
 
 test('resolved recall with retained inventory hold never presents a clear public safety badge', async ({ page }) => {
-  await page.route('**/api/public/products/**', route => new URL(route.request().url()).pathname.endsWith('/journey/page') ? route.fulfill({json:{items:[],count:0,nextCursor:null,hasMore:false}}) : route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+  await page.route('**/api/public/products/**', route => new URL(route.request().url()).pathname.endsWith('/notices/page') ? route.fulfill({json:{items:[],count:1,nextCursor:null,hasMore:false,safety:{status:'warning',inventoryHeld:true,activeCount:0,resolvedCount:1,criticalCount:0,warningCount:0,advisoryCount:0,checkedAt:'2026-01-01'}}}) : new URL(route.request().url()).pathname.endsWith('/journey/page') ? route.fulfill({json:{items:[],count:0,nextCursor:null,hasMore:false}}) : route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
     profile: { displayName: 'Recalled peanut lot', slug: 'held-peanut', description: 'Recorded product', lotCode: 'HELD-1' },
     product: { organicClaimStatus: 'none', harvestDate: '2026-10-02' }, origin: { farmName: null, region: 'Northern', country: 'Ghana', plot_count: 0, total_area_hectares: 0 },
     evidence: [], journey: [], safety: { status: 'clear', inventoryHeld: true, activeRecalls: [], resolvedRecalls: [], checkedAt: '2026-10-02' },

@@ -1,3 +1,4 @@
+import { readPublicNotices } from '../modules/catalog/publicNotices';
 import { readPublicJourney } from '../modules/catalog/publicJourney';
 import { readPublicEvidence } from '../modules/catalog/publicEvidence';
 import { legacyRecalls } from '../modules/catalog/recallRecords';
@@ -8,8 +9,6 @@ import { Request, Response } from 'express';
 import QRCode from 'qrcode';
 import { getClient, query } from '../db';
 import * as audit from '../services/audit';
-import { deriveSafetyStatus } from '../services/publicProduct';
-import {activeBatchRecallSql} from '../modules/recall/safety';
 import { activateRecall } from '../modules/recall/lifecycle';
 import { config } from '../config/env';
 import { hasBatchRelationship, hasExplicitPermission } from '../services/resourcePolicy';
@@ -60,22 +59,20 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
     ),
     readPublicEvidence(req.params.slug, {}, { id: product.id, batchId: product.batch_id }).then(page => ({ rows: page.items, paging: { count: page.count, hasMore: page.hasMore, nextCursor: page.nextCursor } })),
     readPublicJourney(req.params.slug, {}, { id: product.id, batchId: product.batch_id }),
-    query(
-      `SELECT r.id, r.reference_code, r.title, r.reason, r.instructions, r.severity,
-              r.status, r.initiated_at, r.resolved_at, o.name AS issued_by
-       FROM recall_notices r
-       JOIN recall_affected_batches ab ON ab.recall_id = r.id
-       JOIN organizations o ON o.id = r.initiated_by_organization_id
-       WHERE ab.batch_id=$1 AND r.status IN ('active','resolved')
-       ORDER BY (r.status='active') DESC, r.initiated_at DESC`,
-      [product.batch_id]
-    ),
+    readPublicNotices(req.params.slug, { status: 'active' }, { id: product.id, batchId: product.batch_id }),
   ]);
 
-  const trust = (await loadBatchTrust([product.batch_id])).get(product.batch_id)!;
+  const trust = (await withCatalogRead(execute => loadBatchTrust([product.batch_id], execute, true))).get(product.batch_id)!;
   const certificate = certRes.rows[0] ? { ...certRes.rows[0], trust: trust.organic } : null;
-  const recalls = recallRes.rows;
-  const inventoryHeld=Boolean((await query(`SELECT ${activeBatchRecallSql('$1::uuid')} AS held`,[product.batch_id])).rows[0].held);
+  // Stop if publication or its linked material changed while the independent reads ran.
+  const published = await query(
+    "SELECT id FROM product_profiles WHERE id=$1 AND batch_id=$2 AND slug=$3 AND visibility='published'",
+    [product.id, product.batch_id, req.params.slug]
+  );
+  if (!published.rows[0]) {
+    res.status(404).json({ error: 'Product profile not found' });
+    return;
+  }
   res.set('Cache-Control', 'no-store');
   res.json({
     trust,
@@ -117,12 +114,11 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
     evidencePaging: evidenceRes.paging,
     journey: journeyRes.items,
     journeyPaging: { count: journeyRes.count, hasMore: journeyRes.hasMore, nextCursor: journeyRes.nextCursor },
+    noticesPaging: { count: recallRes.count, hasMore: recallRes.hasMore, nextCursor: recallRes.nextCursor },
     safety: {
-      status: inventoryHeld && deriveSafetyStatus(recalls)==='clear' ? 'warning' : deriveSafetyStatus(recalls),
-      inventoryHeld,
-      activeRecalls: recalls.filter((recall: any) => recall.status === 'active'),
-      resolvedRecalls: recalls.filter((recall: any) => recall.status === 'resolved'),
-      checkedAt: new Date().toISOString(),
+      ...recallRes.safety,
+      activeRecalls: recallRes.items,
+      resolvedRecalls: [],
     },
   });
 }

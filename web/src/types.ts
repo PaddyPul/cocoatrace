@@ -327,6 +327,12 @@ export interface JourneyEvent {
   verified?: boolean;
 }
 
+export interface PublicNotice {
+ id:string;reference_code:string;title:string;reason:string;instructions:string;severity:'advisory'|'warning'|'critical';status:'active'|'resolved';initiated_at:string;resolved_at:string|null;issued_by:string;
+}
+export interface PublicNoticeSafety {
+ status:'clear'|'advisory'|'warning'|'critical';inventoryHeld:boolean;activeCount:number;resolvedCount:number;criticalCount:number;warningCount:number;advisoryCount:number;checkedAt:string;
+}
 export interface PublicProduct {
   trust?: TrustSummary;
   profile: {
@@ -386,6 +392,7 @@ export interface PublicProduct {
     created_at: string;
   }>;
   evidencePaging?: { count: number; hasMore: boolean; nextCursor: string | null };
+  noticesPaging?: {count:number;hasMore:boolean;nextCursor:string|null};
   journeyPaging?: { count: number; hasMore: boolean; nextCursor: string | null };
   journey: JourneyEvent[];
   safety: {
