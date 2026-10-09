@@ -92,9 +92,11 @@ describe('bounded complete provenance views and downloads',()=>{
     finally{await query('DELETE FROM shipment_milestones WHERE id=ANY($1::uuid[])',[extra]);}
   });
   it('checks byte limits before returning a large linked evidence field',async()=>{
-    await query('UPDATE evidence_items SET claim_description=$1 WHERE id=$2',['x'.repeat(4*1024*1024),evidence]);
-    try{const res=await get();expect(res.status,JSON.stringify(res.body)).toBe(422);expect(res.body.code).toBe('PROVENANCE_EXPORT_LIMIT');expect(res.headers['content-disposition']).toBeUndefined();}
-    finally{await query('UPDATE evidence_items SET claim_description=NULL WHERE id=$1',[evidence]);}
+    const originalDescription=(await query('SELECT claim_description FROM evidence_items WHERE id=$1',[evidence])).rows[0].claim_description;
+    try{
+      await query('UPDATE evidence_items SET claim_description=$1 WHERE id=$2',['x'.repeat(4*1024*1024),evidence]);
+      const res=await get();expect(res.status,JSON.stringify(res.body)).toBe(422);expect(res.body.code).toBe('PROVENANCE_EXPORT_LIMIT');expect(res.headers['content-disposition']).toBeUndefined();
+    }finally{await query('UPDATE evidence_items SET claim_description=$1 WHERE id=$2',[originalDescription,evidence]);}
   });
   it('persists export attribution with scoped metadata before sending a successful file',async()=>{
     const res=await get('export',owner,{contractId:contract});expect(res.status,JSON.stringify(res.body)).toBe(200);

@@ -394,3 +394,10 @@ Founder confirms full release checks passed and merge/pull completed. Records fo
 Independent implementation tracks and a read-only security review are combined into one delivery. Author verification is recorded after implementation. Native PostgreSQL/browser release execution remains mandatory on the exact candidate before push/merge; no hosted performance acceptance claimed.
 
 Author verification: 676 API unit assertions across 80 files pass, alongside quality (10 policy assertions), API/web/browser type checks, production builds, migration integrity, backlog validation and strict compilation of new native test sources. Fourteen PostgreSQL cases and three browser regressions are defined; actual native execution remains pending. Review caught and corrected contaminated authority fixtures before delivery; dedicated trade parties now keep deny-test actors unrelated. Migration 034 adds audit chronology indexes. No hosted latency/load claim; existing web bundle-size warning remains open.
+
+
+## Provenance integration fixture cleanup correction — 2026-10-09
+
+Founder native release run passed 363/365 integration assertions. The byte-overflow case cleanup wrote NULL to evidence_items.claim_description despite its NOT NULL constraint; the retained oversized field then caused the following durable-attribution case to return 422. Restore the exact original description in finally, including mutation inside the cleanup-protected block. No application, schema, report limit or permission change. Native rerun and merge acceptance remain pending.
+
+Correction author verification: strict native-test source compilation and git diff --check pass. Native PostgreSQL rerun remains pending; no application code changed.

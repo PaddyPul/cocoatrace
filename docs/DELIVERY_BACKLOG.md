@@ -679,3 +679,8 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 - Provenance reports must preserve batch/contract authority and complete report semantics within collection/byte budgets; oversized reports fail explicitly rather than dropping proof.
 - Forward migration 034 adds organization/global audit chronology indexes. Pre-pilot ordinary index creation locks audit writes; large live installations require a separate concurrent deployment plan.
 - Release acceptance is pending. No broad completion credit; hosted query plans/load measurements and remaining architecture work stay open.
+
+
+## Provenance integration fixture cleanup correction — 2026-10-09
+
+Founder native release run passed 363/365 integration assertions. The byte-overflow case cleanup wrote NULL to evidence_items.claim_description despite its NOT NULL constraint; the retained oversized field then caused the following durable-attribution case to return 422. Restore the exact original description in finally, including mutation inside the cleanup-protected block. No application, schema, report limit or permission change. Native rerun and merge acceptance remain pending.

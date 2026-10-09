@@ -22,6 +22,7 @@ Audit history remains searchable beyond the first page without exposing unrelate
 - Share a bounded authorized provenance builder between view/export, with complete report byte limits.
 - Preserve independent batch/contract and read/export network permission checks and durable export attribution.
 - Count only validated, clean supporting documents in completeness in both view and export; unsafe evidence metadata remains visible without counting as support.
+- Correct the byte-overflow regression cleanup to restore its original required description, preventing contamination of the next case.
 - Record founder acceptance of public safety and audit export boundaries.
 
 ## Security and data review
