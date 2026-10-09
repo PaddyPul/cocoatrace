@@ -383,3 +383,14 @@ Founder confirms full release checks passed and merge/pull completed. This super
 Two independent implementation tracks and a separate read-only security review are integrated into one candidate. Public notices include lot-only and retained/disposed-stock relationships, full aggregate safety and bounded page hydration; audit reports have record/byte preflight and durable attribution. Native PostgreSQL/browser test definitions are added, but execution is unavailable author-side. Exact-candidate founder release remains required before push/merge. No schema or secret change.
 
 Author verification for this candidate: 651 API unit assertions across 78 files passed. Quality (including 10 policy assertions), API/web/browser types, production builds, strict native integration source compilation, migration integrity and backlog validation pass. Thirteen PostgreSQL and three new browser regressions are defined; Docker/PostgreSQL/browser execution remains pending founder release. Existing frontend bundle-size warning remains open performance debt.
+
+
+## Public safety and audit export acceptance — 2026-10-09 19:14 UTC
+
+Founder confirms full release checks passed and merge/pull completed. Records founder-reported native acceptance for both slices and their integrated browser/API cases. No independently archived CI link supplied. PER-001 / ARC-024 remain IN PROGRESS.
+
+## Audit register and provenance report boundaries candidate — 2026-10-09
+
+Independent implementation tracks and a read-only security review are combined into one delivery. Author verification is recorded after implementation. Native PostgreSQL/browser release execution remains mandatory on the exact candidate before push/merge; no hosted performance acceptance claimed.
+
+Author verification: 676 API unit assertions across 80 files pass, alongside quality (10 policy assertions), API/web/browser type checks, production builds, migration integrity, backlog validation and strict compilation of new native test sources. Fourteen PostgreSQL cases and three browser regressions are defined; actual native execution remains pending. Review caught and corrected contaminated authority fixtures before delivery; dedicated trade parties now keep deny-test actors unrelated. Migration 034 adds audit chronology indexes. No hosted latency/load claim; existing web bundle-size warning remains open.

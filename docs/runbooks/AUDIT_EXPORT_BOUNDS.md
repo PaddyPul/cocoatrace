@@ -35,3 +35,8 @@ No migration, new dependency, configuration or permission change is required. Th
 Local validation for this slice: 14 targeted unit tests passed, ESLint passed, and the new native integration test compiled with strict TypeScript. The native suite adds five cases covering record overflow without success audit, exact complete output and durable audit attribution, unrelated-tenant isolation and explicit network export, byte overflow, and malformed/repeated filters. Network export fixtures use real signed passkey enrollment rather than disabling assurance.
 
 Docker/PostgreSQL execution remains pending the founder's exact-candidate `npm run verify:release` run. A passing local compile is not evidence of a native database run. Push or merge only after the full release report passes for the current commit and required CI checks pass.
+
+
+## Audit register follow-up candidate
+
+The audit/provenance boundaries wave now introduces dedicated paged browsing and full counts for `/audit/events`; its register runbook supersedes the remaining-work note above after release acceptance. The export contract itself is unchanged: the workspace may pass an applied paired entity type/UUID to narrow the complete export. Search/action filters do not silently filter a download.
