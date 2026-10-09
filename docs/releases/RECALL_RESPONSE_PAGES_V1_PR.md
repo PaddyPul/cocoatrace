@@ -19,7 +19,7 @@ Large recalls no longer require complete recipient, stock, recovery and evidence
 - Add independently scoped keyset pages capped at 100 records, literal search and full collection counts.
 - Limit candidate IDs before participant/outbox and recovery projections; reject legacy overflow before hydration.
 - Re-read one selected holding by exact scoped ID, include its saved recovery, and retain at most 100 evidence selections across pages.
-- Keep whole-recall resolution, write authorization and safety holds authoritative on the server.
+- Keep whole-recall resolution, write authorization and safety holds authoritative on the server. Name the affected-inventory region and scope real recovery journey assertions there, distinguishing saved stock accounting from the recovery-history summary.
 - Add large-collection/isolation PostgreSQL regressions and browser navigation/draft/failure regressions. Correct the embedded recovery assertion to expect PostgreSQL JSON numeric representation (1), rather than its ordinary driver numeric string ("1.000").
 
 ## Security and data review

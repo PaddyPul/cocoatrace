@@ -644,3 +644,5 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 - Broad PER-001 / ARC-024 remain IN PROGRESS. Remaining public product histories, exports and hosted performance acceptance are still open; no completion credit for this candidate until exact-commit release checks and merge/pull are confirmed.
 
 - Recall response candidate correction: founder PostgreSQL run passed 326/327 assertions; one new assertion expected a driver-level numeric string inside `row_to_json`. PostgreSQL emits a JSON number there. Corrected the expected value to numeric 1, retaining exact quantity, holding and note checks. No application, schema, timeout or authorization change. Full release acceptance remains pending.
+
+- Recall response browser correction: the real recovery journey matched the same quantities in affected inventory and the new recovery-history section. Named the affected-inventory region and scoped both returned/destroyed assertions to it. No `.first()` workaround, write-path or safety-policy change; browser/native release acceptance remains pending.
