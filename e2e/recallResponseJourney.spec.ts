@@ -65,7 +65,7 @@ test('buyer and supplier acknowledge, account for recalled stock, upload proof a
     await buyerPanel.getByLabel('Returned (kg)', { exact: true }).fill('4');
     await buyerPanel.getByLabel('Recovery note').fill('All four kilograms returned under the recall instructions.');
     await buyerPanel.getByRole('button', { name: 'Save recovery accounting' }).click();
-    await expect(buyerPanel.getByText(/Returned: 4 kg/)).toBeVisible();
+    await expect(buyerPanel.getByRole('region', { name: 'Affected inventory accounting', exact: true }).getByText(/Returned: 4 kg/)).toBeVisible();
 
     const supplierPanel = await open(supplier);
     const supplierAccount = await supplierMe.json();
@@ -76,7 +76,7 @@ test('buyer and supplier acknowledge, account for recalled stock, upload proof a
     await supplierPanel.getByLabel('Destroyed (kg)', { exact: true }).fill('6');
     await supplierPanel.getByLabel('Recovery note').fill('Remaining six kilograms destroyed after investigation.');
     await supplierPanel.getByRole('button', { name: 'Save recovery accounting' }).click();
-    await expect(supplierPanel.getByText(/Destroyed: 6 kg/)).toBeVisible();
+    await expect(supplierPanel.getByRole('region', { name: 'Affected inventory accounting', exact: true }).getByText(/Destroyed: 6 kg/)).toBeVisible();
     const document = { name: 'recall-recovery.pdf', mimeType: 'application/pdf', buffer: recoveryPdf() };
     await supplierPanel.getByLabel('Response evidence file').setInputFiles(document);
     await supplierPanel.getByRole('button', { name: 'Upload response evidence' }).click();

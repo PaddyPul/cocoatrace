@@ -35,55 +35,7 @@ async function noticeFor(actor: Actor, id: string, client?: PoolClient) {
   if (!notice) throw new NotFoundError("Recall");
   return notice;
 }
-export async function recallResponse(actor: Actor, id: string) {
-  const notice = await noticeFor(actor, id),
-    canManage = manages(actor, notice);
-  const params = [id, canManage, actor.organizationId];
-  const participants = (
-    await query(
-      `SELECT p.*,org.name AS organization_name,
-    (SELECT COUNT(*)::int FROM users member WHERE member.organization_id=p.organization_id AND member.active) AS eligible_contact_count,
-    (SELECT MIN(queue.sent_at) FROM recall_email_outbox queue JOIN users member ON member.id=queue.recipient_user_id WHERE queue.recall_id=p.recall_id AND member.organization_id=p.organization_id AND queue.status='sent') AS first_submitted_at,
-    ARRAY(SELECT DISTINCT queue.status FROM recall_email_outbox queue JOIN users member ON member.id=queue.recipient_user_id
-      WHERE queue.recall_id=p.recall_id AND member.organization_id=p.organization_id) AS email_statuses
-    FROM recall_participants p JOIN organizations org ON org.id=p.organization_id WHERE p.recall_id=$1 AND ($2::boolean OR p.organization_id=$3) ORDER BY org.name`,
-      params,
-    )
-  ).rows;
-  const holdings = (
-    await query(
-      `SELECT h.id,h.batch_id,h.quantity_kg,h.holder_organization_id FROM recall_safety_holds hold JOIN batch_holdings h ON h.id=hold.entity_id
-    WHERE hold.recall_id=$1 AND hold.entity_type='holding' AND h.status<>'transferred' AND h.quantity_kg>0 AND ($2::boolean OR h.holder_organization_id=$3) ORDER BY h.id`,
-      params,
-    )
-  ).rows;
-  const recoveries = (
-    await query(
-      `SELECT recovery.* FROM recall_recovery_records recovery JOIN batch_holdings h ON h.id=recovery.holding_id
-    WHERE recovery.recall_id=$1 AND ($2::boolean OR h.holder_organization_id=$3)`,
-      params,
-    )
-  ).rows;
-  const evidence = actor.permissions.some((p) =>
-    ["*", "evidence.read", "evidence.read.all"].includes(p),
-  )
-    ? (
-        await query(
-          "SELECT id,file_name FROM evidence_items WHERE linked_entity_type='recall' AND linked_entity_id=$1 AND validation_status='validated' AND malware_scan_status='clean'",
-          [id],
-        )
-      ).rows
-    : [];
-  return {
-    notice,
-    canManage,
-    participants,
-    holdings,
-    recoveries,
-    evidence,
-    myOrganizationId: actor.organizationId,
-  };
-}
+export { recallResponseRead as recallResponse } from '../catalog/recallResponseRead';
 async function mutate<T>(
   actor: Actor,
   id: string,
