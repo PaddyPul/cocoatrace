@@ -654,9 +654,19 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 - Author validation: 618 API unit assertions passed; quality, workspace/browser types and API/web builds passed. Added native 1,005-record/eligibility/publication/cursor regressions and browser page/search/failure/revocation checks. Founder confirms full release checks passed and merge/pull completed on 2026-10-09 at 17:41 UTC. This evidence slice is accepted; broader public history and hosted performance work remain open.
 - PER-001 / ARC-024 remain IN PROGRESS: public journey and notice histories, remaining exports and hosted performance acceptance follow. Evidence paging is not completion of all public profile history work.
 
-## Delivery checkpoint — public journey pages candidate, 2026-10-09
+## Delivery checkpoint — public journey pages accepted, 2026-10-09
 
 - PER-001 / ARC-024: published-profile timeline pages capped at 100 with literal search, full event counts and time/ID keyset navigation. Lightweight source rows precede page-only display hydration across harvest, current attestation, accepted custody, shipment and recall events. Embedded profile journey is a 50-row first page with explicit metadata.
 - Profile/batch/search-bound time cursors preserve equal timestamps using stable namespaced IDs and exact numeric time keys; pre-1970 dates remain pageable. Publication and expected profile association are rechecked on each read. Existing review semantics and separate recall/hold warnings remain authoritative.
-- Author validation: 627 API unit assertions passed, quality, workspace/browser types, API/web builds and strict native-test source compilation passed. Five PostgreSQL and three browser cases added; Docker/PostgreSQL/browser execution and exact candidate acceptance remain pending.
+- Author validation: 627 API unit assertions passed, quality, workspace/browser types, API/web builds and strict native-test source compilation passed. Five PostgreSQL and three browser cases added. Founder confirms release checks passed and merge/pull completed on 2026-10-09; native acceptance is founder-reported, without an independently archived CI link.
 - Broad PER-001 / ARC-024 remain IN PROGRESS. Next: public recall notice paging/aggregate safety, then remaining exports and hosted performance/query-plan acceptance. This is not completion of all public profile read work.
+
+
+## Delivery checkpoint — public safety and audit export boundaries candidate, 2026-10-09
+
+- PER-001 / ARC-024: parallel implementation of published-profile notice paging and complete bounded audit exports; independent security review followed by integrated delivery.
+- Recall relationships cover affected batches/lots, retained holding holds and returned/destroyed recoveries without duplicate notices. Full active/resolved/severity counts and retained-stock warnings stay independent of page/search/status. Public journeys use the same relation scope. Published profile association is rechecked before returning assembled data.
+- Public notice UI supports search/status/navigation and explicit unavailable/retry states; read failure must not present a cached clear safety badge.
+- Audit export retains its complete JSON-array contract and organization/explicit network permission boundaries. ID-first preflight caps reports at 1,000 records and 4 MiB, refuses overflow without a partial attachment, and awaits durable export attribution.
+- Candidate author verification and native release acceptance are recorded in the release instructions. No schema, dependency, configuration or data reset.
+- PER-001 / ARC-024 remain IN PROGRESS: audit register paging, provenance export/remaining embedded collections, public-field consent policy and hosted plans/load acceptance remain open. No completion credit for this candidate until release/merge acceptance.

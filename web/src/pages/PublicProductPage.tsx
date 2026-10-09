@@ -1,14 +1,15 @@
+import PublicNoticesPanel from '../components/catalog/PublicNoticesPanel';
 import PublicJourneyPanel from '../components/catalog/PublicJourneyPanel';
 import PublicEvidencePanel from '../components/catalog/PublicEvidencePanel';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  AlertTriangle, FileCheck2, Leaf, MapPin, PackageCheck,
+  FileCheck2, Leaf, MapPin, PackageCheck,
   ShieldCheck, Sprout,
 } from 'lucide-react';
 import TrustClaims, { trustLabel } from '../components/shared/TrustClaims';
 import { publicProducts } from '../api';
-import { PublicProduct } from '../types';
+import { PublicProduct, PublicNoticeSafety } from '../types';
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -19,6 +20,8 @@ export default function PublicProductPage() {
   const { slug = '' } = useParams();
   const [data, setData] = useState<PublicProduct | null>(null);
   const [error, setError] = useState('');
+  const [noticeSafety,setNoticeSafety]=useState<PublicNoticeSafety|null>(null);
+  const updateSafety=useCallback((safety:PublicNoticeSafety|null)=>setNoticeSafety(safety),[]);
   const [tab, setTab] = useState<'journey' | 'proof'>('journey');
 
   useEffect(() => {
@@ -35,6 +38,7 @@ export default function PublicProductPage() {
       } finally { refreshing = false; }
     };
     setData(null);
+    setNoticeSafety(null);
     void refresh();
     publicProducts.recordScan(slug).catch(() => undefined);
     const visible = () => { if (document.visibilityState === 'visible') void refresh(); };
@@ -47,27 +51,22 @@ export default function PublicProductPage() {
   if (error) return <main className="min-h-screen bg-[#f6f4ee] text-stone-900 grid place-items-center p-6"><div className="max-w-md text-center"><div className="text-5xl mb-4">🌱</div><h1 className="text-2xl font-bold">Product profile unavailable</h1><p className="mt-2 text-stone-500">{error}</p><button className="mt-4 underline" onClick={() => window.location.reload()}>Retry product profile</button></div></main>;
   if (!data) return <main className="min-h-screen bg-[#f6f4ee] grid place-items-center"><div className="h-9 w-9 rounded-full border-2 border-stone-200 border-t-emerald-700 animate-spin" /></main>;
 
-  const unsafe = data.safety.status !== 'clear' || Boolean(data.safety.inventoryHeld);
+  const safety=noticeSafety;
+  const unsafe = !safety || safety.status !== 'clear' || safety.inventoryHeld;
   return (
     <main className="min-h-screen bg-[#f6f4ee] text-stone-900 selection:bg-emerald-100">
       <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-[#f6f4ee]/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2 font-bold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-900 text-white"><Leaf size={17} /></span>CocoaTrace</div>
           <div className={`rounded-full px-3 py-1.5 text-xs font-semibold ${unsafe ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900'}`}>
-            {data.safety.inventoryHeld ? 'INVENTORY SAFETY HOLD' : unsafe ? `${data.safety.status.toUpperCase()} NOTICE` : 'No active recalls recorded'}
+            {!safety?'Safety status unavailable':safety.inventoryHeld?'INVENTORY SAFETY HOLD':unsafe?`${safety.status.toUpperCase()} NOTICE`:'No active recalls recorded'}
           </div>
         </div>
       </header>
 
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-10">
-        {data.safety.inventoryHeld && <section role="alert" className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-950"><strong>Material remains on safety hold</strong><p className="mt-2">Recall resolution does not make returned, destroyed or partially segregated inventory available for trade. Follow the recorded recovery instructions; this material remains blocked.</p></section>}
-        {unsafe && data.safety.activeRecalls.map((recall) => (
-          <section key={recall.id} className="mb-6 overflow-hidden rounded-2xl border border-amber-300 bg-amber-50 shadow-sm">
-            <div className="flex gap-3 p-5"><AlertTriangle className="mt-0.5 shrink-0 text-amber-700" />
-              <div><div className="text-xs font-bold uppercase tracking-widest text-amber-700">Active product notice · {recall.reference_code}</div><h2 className="mt-1 text-xl font-bold">{recall.title}</h2><p className="mt-2 text-sm text-amber-950/80">{recall.reason}</p><div className="mt-4 rounded-xl bg-white/70 p-3 text-sm font-semibold text-amber-950">{recall.instructions}</div><p className="mt-3 text-xs text-amber-800">Issued by {recall.issued_by} · {formatDate(recall.initiated_at)}</p></div>
-            </div>
-          </section>
-        ))}
+        {(safety?.inventoryHeld || data.safety.inventoryHeld) && <section role="alert" className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-950"><strong>Material remains on safety hold</strong><p className="mt-2">Recall resolution does not make returned, destroyed or partially segregated inventory available for trade. Follow the recorded recovery instructions; this material remains blocked.</p></section>}
+        <PublicNoticesPanel key={slug} slug={slug} onSafety={updateSafety} />
 
         <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
           <aside className="lg:sticky lg:top-24 lg:self-start">
@@ -109,7 +108,7 @@ export default function PublicProductPage() {
             </div>
           </section>
         </div>
-        <footer className="py-8 text-center text-xs text-stone-400"><p>Live product record · Recall records checked {new Date(data.safety.checkedAt).toLocaleTimeString()}</p><p className="mt-1">CocoaTrace shows recorded evidence; it does not replace regulator or manufacturer recall instructions.</p></footer>
+        <footer className="py-8 text-center text-xs text-stone-400"><p>Live product record · Recall records checked {safety?new Date(safety.checkedAt).toLocaleTimeString():'unavailable'}</p><p className="mt-1">CocoaTrace shows recorded evidence; it does not replace regulator or manufacturer recall instructions.</p></footer>
       </div>
     </main>
   );

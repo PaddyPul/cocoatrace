@@ -8,6 +8,40 @@ async function mock(page: Page) {
       await route.fulfill({ json: { items: [], count: 0, nextCursor: null, hasMore: false } });
       return;
     }
+    if (url.pathname.endsWith('/notices/page')) {
+      await route.fulfill({
+        json: {
+          items: [
+            {
+              id: 'notice',
+              reference_code: 'R-1',
+              title: 'Safety notice',
+              reason: 'Recall investigation',
+              instructions: 'Do not use stock',
+              issued_by: 'Supplier',
+              initiated_at: '2026-01-01',
+              resolved_at: null,
+              status: 'active',
+              severity: 'warning',
+            },
+          ],
+          count: 1,
+          hasMore: false,
+          nextCursor: null,
+          safety: {
+            status: 'warning',
+            inventoryHeld: true,
+            activeCount: 1,
+            resolvedCount: 0,
+            criticalCount: 0,
+            warningCount: 1,
+            advisoryCount: 0,
+            checkedAt: '2026-01-01',
+          },
+        },
+      });
+      return;
+    }
     if (url.pathname.endsWith('/scans')) {
       await route.fulfill({ json: {} });
       return;

@@ -1,3 +1,4 @@
+import { publicNoticeScope } from './publicNotices';
 import type { Request, Response } from 'express';
 import { NotFoundError } from '../../errors';
 import type { JourneyEvent } from '../../services/publicProduct';
@@ -16,7 +17,7 @@ export const journeyIndex = `
  UNION ALL SELECT m.id,'shipment',m.recorded_at,concat_ws(' ',replace(m.milestone,'_',' '),m.location,m.notes,carrier.name)
  FROM batch_holdings h JOIN sales_contracts c ON c.holding_id=h.id JOIN shipments s ON s.contract_id=c.id JOIN shipment_milestones m ON m.shipment_id=s.id LEFT JOIN organizations carrier ON carrier.id=s.logistics_organization_id WHERE h.batch_id=$1::uuid
  UNION ALL SELECT r.id,'recall',r.initiated_at,concat_ws(' ',r.title,r.reason,o.name,r.reference_code)
- FROM recall_notices r JOIN recall_affected_batches ab ON ab.recall_id=r.id JOIN organizations o ON o.id=r.initiated_by_organization_id WHERE ab.batch_id=$1::uuid AND r.status IN ('active','resolved')`;
+ FROM recall_notices r JOIN organizations o ON o.id=r.initiated_by_organization_id WHERE ${publicNoticeScope}`;
 const orderedIndex = `SELECT md5(kind||':'||source_id::text)::uuid AS id,source_id,kind,occurred_at,
  (extract(epoch FROM occurred_at)*1000+62135596800000)::numeric AS sort_key,search_text
  FROM (${journeyIndex}) events WHERE occurred_at IS NOT NULL`;

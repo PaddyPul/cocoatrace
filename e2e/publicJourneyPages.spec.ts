@@ -4,6 +4,40 @@ async function mock(page: Page) {
   const searches: string[] = [];
   await page.route('**/api/public/products/**', async (route) => {
     const url = new URL(route.request().url());
+    if (url.pathname.endsWith('/notices/page')) {
+      await route.fulfill({
+        json: {
+          items: [
+            {
+              id: 'notice',
+              reference_code: 'R-1',
+              title: 'Safety notice',
+              reason: 'Recall investigation',
+              instructions: 'Do not use material',
+              issued_by: 'Supplier',
+              initiated_at: '2026-01-01',
+              resolved_at: null,
+              status: 'active',
+              severity: 'critical',
+            },
+          ],
+          count: 1,
+          hasMore: false,
+          nextCursor: null,
+          safety: {
+            status: 'critical',
+            inventoryHeld: true,
+            activeCount: 1,
+            resolvedCount: 0,
+            criticalCount: 1,
+            warningCount: 0,
+            advisoryCount: 0,
+            checkedAt: '2026-01-01',
+          },
+        },
+      });
+      return;
+    }
     if (url.pathname.endsWith('/scans')) {
       await route.fulfill({ json: {} });
       return;
