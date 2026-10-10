@@ -1,3 +1,5 @@
+import {legacyAuditRecords,readAuditRecords,readAuditSummary} from '../modules/catalog/auditRecords';
+import {withCatalogRead} from '../modules/catalog/paging';
 import { Request, Response } from 'express';
 import { query } from '../db';
 import crypto from 'node:crypto';
@@ -5,26 +7,11 @@ import { hashObject } from '../services/audit';
 import { completeAuditExport } from '../modules/catalog/auditExport';
 import { hasExplicitPermission } from '../services/resourcePolicy';
 
-export async function listAuditEvents(req: Request, res: Response): Promise<void> {
-  const { entityType, entityId, limit = 50, offset = 0 } = req.query;
-  const seeAll = hasExplicitPermission(req.user!, 'audit.read.all');
-  let sql = 'SELECT * FROM audit_events';
-  const params: any[] = [];
-  const conditions: string[] = [];
-  if (!seeAll) {
-    conditions.push('actor_organization_id = $1');
-    params.push(req.user!.organizationId);
-  }
-  if (entityType && entityId) {
-    conditions.push(`entity_type=$${params.length + 1} AND entity_id=$${params.length + 2}`);
-    params.push(entityType, entityId);
-  }
-  if (conditions.length) sql += ' WHERE ' + conditions.join(' AND ');
-  sql += ` ORDER BY occurred_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-  params.push(Number(limit), Number(offset));
-  const { rows } = await query(sql, params);
-  res.json(rows);
+export async function listAuditEvents(req:Request,res:Response):Promise<void>{
+ res.set('Cache-Control','no-store').json(await withCatalogRead(execute=>legacyAuditRecords(execute,req.user!,req.query)));
 }
+export async function pageAuditEvents(req:Request,res:Response):Promise<void>{res.set('Cache-Control','no-store').json(await readAuditRecords(req.user!,req.query));}
+export async function summaryAuditEvents(req:Request,res:Response):Promise<void>{res.set('Cache-Control','no-store').json(await readAuditSummary(req.user!,req.query));}
 
 export async function exportAuditLog(req: Request, res: Response): Promise<void> {
   const report = await completeAuditExport(req.user!, req.query);

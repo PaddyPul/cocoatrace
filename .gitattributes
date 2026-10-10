@@ -97,3 +97,6 @@ e2e/publicEvidencePages.spec.ts text eol=lf
 e2e/publicJourneyPages.spec.ts text eol=lf
 
 e2e/publicNoticePages.spec.ts text eol=lf
+
+e2e/auditPages.spec.ts text eol=lf
+web/src/pages/AuditRecordsPage.tsx text eol=lf

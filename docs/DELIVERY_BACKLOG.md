@@ -135,7 +135,7 @@ Keep at most three independent engineering slices active; finish failing release
 - [-] **ARC-007 · P1 · Phase 2:** Extract shipment and delivery state machines. IN PROGRESS (grooming): Delivery and trading fulfillment modules exist; transport progression and policy ownership still require extraction and shared transitions.
 - [-] **ARC-008 · P1 · Phase 2:** Extract recall activation, notification and resolution use cases. IN PROGRESS (grooming): Recall lifecycle, notifications, safety and response modules exist; complete policy/repository boundaries remain open.
 - [ ] **ARC-009 · P2 · Phase 2:** Split public product administration, public rendering and recall code into separate modules.
-- [ ] **ARC-010 · P2 · Phase 2:** Replace duplicated provenance view/export logic with one provenance builder and response mappers.
+- [-] **ARC-010 · P2 · Phase 2:** Replace duplicated provenance view/export logic with one provenance builder and response mappers. IN PROGRESS: shared bounded authorized builder candidate in audit/provenance wave; separate view/export network scopes and complete-report mappers retained. Exact release and founder acceptance pending.
 - [ ] **ARC-011 · P2 · Phase 2:** Move SQL from migrated controllers into repositories/query modules.
 - [x] **ARC-012 · P2 · Phase 2:** Introduce a transaction boundary abstraction used by application services. IMPLEMENTED: Shared trading transaction boundary commits business mutations and audit events together; rollback tests are implemented. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
 - [-] **ARC-013 · P1 · Phase 2:** Write critical business changes, audit records and outbox events atomically. IN PROGRESS (grooming): Trading/payment critical changes and audit writes share transactions; route-wide audit/outbox coverage needs an explicit matrix.
@@ -662,11 +662,25 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 - Broad PER-001 / ARC-024 remain IN PROGRESS. Next: public recall notice paging/aggregate safety, then remaining exports and hosted performance/query-plan acceptance. This is not completion of all public profile read work.
 
 
-## Delivery checkpoint — public safety and audit export boundaries candidate, 2026-10-09
+## Delivery checkpoint — public safety and audit export boundaries accepted, 2026-10-09
 
 - PER-001 / ARC-024: parallel implementation of published-profile notice paging and complete bounded audit exports; independent security review followed by integrated delivery.
 - Recall relationships cover affected batches/lots, retained holding holds and returned/destroyed recoveries without duplicate notices. Full active/resolved/severity counts and retained-stock warnings stay independent of page/search/status. Public journeys use the same relation scope. Published profile association is rechecked before returning assembled data.
 - Public notice UI supports search/status/navigation and explicit unavailable/retry states; read failure must not present a cached clear safety badge.
 - Audit export retains its complete JSON-array contract and organization/explicit network permission boundaries. ID-first preflight caps reports at 1,000 records and 4 MiB, refuses overflow without a partial attachment, and awaits durable export attribution.
 - Candidate author verification and native release acceptance are recorded in the release instructions. No schema, dependency, configuration or data reset.
-- PER-001 / ARC-024 remain IN PROGRESS: audit register paging, provenance export/remaining embedded collections, public-field consent policy and hosted plans/load acceptance remain open. No completion credit for this candidate until release/merge acceptance.
+- PER-001 / ARC-024 remain IN PROGRESS: audit register paging, provenance export/remaining embedded collections, public-field consent policy and hosted plans/load acceptance remain open. Founder confirms full release checks passed and merge/pull completed on 2026-10-09 at 19:14 UTC. These two slices are accepted; broad items remain open.
+
+
+## Delivery checkpoint — audit register and provenance report boundaries candidate, 2026-10-09
+
+- PER-001 / ARC-024 / ARC-010: parallel audit register paging/full totals and a shared bounded provenance view/export builder, with an independent security review.
+- Audit register must filter authorized records before limiting, use scoped cursors and preserve full totals independent of the displayed page. Explicit errors/retry replace misleading empty history.
+- Provenance reports must preserve batch/contract authority and complete report semantics within collection/byte budgets; oversized reports fail explicitly rather than dropping proof.
+- Forward migration 034 adds organization/global audit chronology indexes. Pre-pilot ordinary index creation locks audit writes; large live installations require a separate concurrent deployment plan.
+- Release acceptance is pending. No broad completion credit; hosted query plans/load measurements and remaining architecture work stay open.
+
+
+## Provenance integration fixture cleanup correction — 2026-10-09
+
+Founder native release run passed 363/365 integration assertions. The byte-overflow case cleanup wrote NULL to evidence_items.claim_description despite its NOT NULL constraint; the retained oversized field then caused the following durable-attribution case to return 422. Restore the exact original description in finally, including mutation inside the cleanup-protected block. No application, schema, report limit or permission change. Native rerun and merge acceptance remain pending.

@@ -140,6 +140,10 @@
     {
       "path": "api/src/migrations/033_privileged_passkeys.ts",
       "sha256": "0604f0112acf2e536532d593268689bee3c1c10cf350daa76d92385b01f67dfa"
+    },
+    {
+      "path": "api/src/migrations/034_audit_register_indexes.ts",
+      "sha256": "b486f360612c8b89c401dc97df43851f2911781bf775fef77da485d761af13b8"
     }
   ]
 }
