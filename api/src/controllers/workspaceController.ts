@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { query } from '../db';
+import { withCatalogRead } from '../modules/catalog/paging';
+import { feedbackPage, feedbackSummary, legacyFeedback } from '../modules/catalog/feedbackRecords';
 import * as audit from '../services/audit';
 import { loadTradeActions } from '../services/tradeActionRepository';
 
@@ -43,14 +45,13 @@ export async function createFeedback(req: Request, res: Response): Promise<void>
 }
 
 export async function listFeedback(req: Request, res: Response): Promise<void> {
-  const allAccess = (req.user!.permissions || []).includes('*');
-  const result = await query(
-    `SELECT f.*, u.name AS user_name, o.name AS organization_name
-     FROM pilot_feedback f JOIN users u ON u.id=f.user_id JOIN organizations o ON o.id=f.organization_id
-     WHERE ($1::boolean OR f.organization_id=$2) ORDER BY f.created_at DESC LIMIT 500`,
-    [allAccess, req.user!.organizationId]
-  );
-  res.json(result.rows);
+  res.set('Cache-Control', 'no-store').json(await withCatalogRead(execute => legacyFeedback(execute, req.user!, req.query)));
+}
+export async function listFeedbackPage(req: Request, res: Response): Promise<void> {
+  res.set('Cache-Control', 'no-store').json(await withCatalogRead(execute => feedbackPage(execute, req.user!, req.query)));
+}
+export async function summarizeFeedback(req: Request, res: Response): Promise<void> {
+  res.set('Cache-Control', 'no-store').json(await withCatalogRead(execute => feedbackSummary(execute, req.user!, req.query)));
 }
 
 export async function getTradeActions(req: Request, res: Response): Promise<void> {

@@ -105,7 +105,12 @@ export interface AccessApplication {
   firstAdminInvitationId?: string | null;
 }
 
+export interface AccessApplicationSummary {count:number;pending_email_verification_count:number;pending_review_count:number;approved_count:number;rejected_count:number;}
+export interface PilotFeedback {id:string;page:string;task:string;rating:number;comment:string;created_at:string;user_name:string|null;organization_name:string|null;}
+export interface FeedbackSummary {count:number;rating_1_count:number;rating_2_count:number;rating_3_count:number;rating_4_count:number;rating_5_count:number;}
 export const accessApplications = {
+  page: (parameters:Record<string,string>) => api<CatalogPage<AccessApplication>&{count:number}>('GET',`/access-applications/page?${new URLSearchParams(parameters)}`),
+  summary: () => api<AccessApplicationSummary>('GET','/access-applications/summary'),
   list: () => api<AccessApplication[]>('GET', '/access-applications'),
   get: (id: string) => api<AccessApplication>('GET', `/access-applications/${id}`),
   approve: (id: string, reason?: string) =>
@@ -129,6 +134,8 @@ export const invitations = {
 };
 
 export const workspace = {
+  feedbackPage: (parameters:Record<string,string>) => api<CatalogPage<PilotFeedback>&{count:number}>('GET',`/pilot-feedback/page?${new URLSearchParams(parameters)}`),
+  feedbackSummary: () => api<FeedbackSummary>('GET','/pilot-feedback/summary'),
   getOnboarding: () => api<import('./types').OnboardingState>('GET', '/onboarding'),
   updateOnboarding: (data: { status: 'not_started' | 'in_progress' | 'completed'; currentStep: number; primaryGoal?: string; pilotMode: boolean }) =>
     api<import('./types').OnboardingState>('PUT', '/onboarding', data),

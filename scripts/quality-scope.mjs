@@ -1,5 +1,8 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'web/src/pages/AccessApplicationsPage.tsx',
+  'web/src/components/pilot/FeedbackRegister.tsx',
+  'e2e/reviewQueuePages.spec.ts',
   'web/src/pages/OrganizationsPage.tsx',
   'web/src/pages/PilotTeamPage.tsx',
   'e2e/adminCollectionPages.spec.ts',

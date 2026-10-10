@@ -1,5 +1,11 @@
 import { Request, Response } from 'express';
+import { ValidationError } from '../../errors';
 import { OrganizationAccessService } from './service';
+import {
+  accessApplicationPage,
+  accessApplicationSummary,
+} from '../catalog/accessApplicationRecords';
+import { withCatalogRead } from '../catalog/paging';
 
 export class OrganizationAccessController {
   constructor(private readonly service: OrganizationAccessService) {}
@@ -19,7 +25,21 @@ export class OrganizationAccessController {
   };
 
   list = async (req: Request, res: Response): Promise<void> => {
+    res.setHeader('Cache-Control', 'no-store');
     res.json(await this.service.list(req.user!));
+  };
+
+  page = async (req: Request, res: Response): Promise<void> => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(
+      await withCatalogRead((execute) => accessApplicationPage(execute, req.user!, req.query)),
+    );
+  };
+  summary = async (req: Request, res: Response): Promise<void> => {
+    res.setHeader('Cache-Control', 'no-store');
+    // Summaries deliberately do not accept request filters.
+    if (Object.keys(req.query).length) throw new ValidationError('Unknown summary parameter');
+    res.json(await withCatalogRead((execute) => accessApplicationSummary(execute, req.user!)));
   };
 
   detail = async (req: Request, res: Response): Promise<void> => {

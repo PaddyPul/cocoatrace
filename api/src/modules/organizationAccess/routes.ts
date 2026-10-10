@@ -12,11 +12,40 @@ import {
 
 export function organizationAccessRoutes(controller: OrganizationAccessController): Router {
   const router = Router();
-  router.post('/auth/request-access', sensitiveActionLimit, validate(requestOrganizationAccessSchema), controller.requestAccess);
-  router.post('/auth/request-access/verify', sensitiveActionLimit, validate(verifyOrganizationAccessSchema), controller.verifyEmail);
+  router.post(
+    '/auth/request-access',
+    sensitiveActionLimit,
+    validate(requestOrganizationAccessSchema),
+    controller.requestAccess,
+  );
+  router.post(
+    '/auth/request-access/verify',
+    sensitiveActionLimit,
+    validate(verifyOrganizationAccessSchema),
+    controller.verifyEmail,
+  );
+  router.get('/access-applications/page', requireAuth, controller.page);
+  router.get('/access-applications/summary', requireAuth, controller.summary);
   router.get('/access-applications', requireAuth, controller.list);
-  router.get('/access-applications/:id', requireAuth, validate(organizationAccessIdSchema, 'params'), controller.detail);
-  router.post('/access-applications/:id/approve', requireAuth, validate(organizationAccessIdSchema, 'params'), validate(reviewOrganizationAccessSchema), controller.approve);
-  router.post('/access-applications/:id/reject', requireAuth, validate(organizationAccessIdSchema, 'params'), validate(reviewOrganizationAccessSchema), controller.reject);
+  router.get(
+    '/access-applications/:id',
+    requireAuth,
+    validate(organizationAccessIdSchema, 'params'),
+    controller.detail,
+  );
+  router.post(
+    '/access-applications/:id/approve',
+    requireAuth,
+    validate(organizationAccessIdSchema, 'params'),
+    validate(reviewOrganizationAccessSchema),
+    controller.approve,
+  );
+  router.post(
+    '/access-applications/:id/reject',
+    requireAuth,
+    validate(organizationAccessIdSchema, 'params'),
+    validate(reviewOrganizationAccessSchema),
+    controller.reject,
+  );
   return router;
 }

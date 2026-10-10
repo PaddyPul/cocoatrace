@@ -712,3 +712,18 @@ Founder native release run passed 363/365 integration assertions. The byte-overf
 - Parallel organization/member and invitation paging, complete totals, literal search and retry work. Tenant organization.admin no longer grants global directory access; wildcard retains platform scope. Member authority stays own organization unless wildcard. Safe projections omit organization legal/operator details and invitation token hashes.
 - Invitation legacy history previously silently stopped at 100; complete bounded legacy reads now reject overflow. Organization/member legacy arrays are bounded before hydration. No write-lifecycle change or migration.
 - PER-001 / ARC-024 acceptance pending exact release/merge; security boundary regression cases required. Broad completion remains open.
+
+
+## Accepted checkpoint — administration records and tenant scope, 2026-10-10
+
+- Founder confirms release checks passed and merge/pull completed at 16:39 UTC. Organization/member/invitation paging, full totals, explicit failures and tenant directory isolation accepted. This supersedes the pending administration checkpoint.
+- PER-001 / ARC-024 remain IN PROGRESS: access review and pilot feedback collections, remaining embedded histories, upload/download concurrency and representative hosted capacity remain open.
+
+## Candidate checkpoint — access review and pilot feedback queues, 2026-10-10
+
+- Parallel read boundaries and UI work remove silent 200-application and 500-feedback truncation. Search/filter precedes page limits; full scoped summaries stay independent of search/page. Failure is unavailable, never empty history.
+- Access applications remain platform wildcard only; feedback remains own-tenant organization.admin unless wildcard. Existing email verification/approval/invitation mutations remain authoritative.
+- No broad completion credit. Native release and founder merge/pull acceptance pending.
+
+- Architecture follow-ups from this review: define expired/unverified application retention and resubmission behavior under identity/operations policy; review dedicated tenant feedback grants without broad organization.admin elevation; extend authenticated feedback submission budgets and monitoring; measure queue indexes and consider chronological keysets under PER-001 / PER-004. Current stable ID order is not a recency claim.
+- Author verification: 704 API unit assertions passed, quality/types/builds/migration integrity/backlog checks passed. Added twelve PostgreSQL HTTP cases and six browser cases. Native execution remains founder release acceptance, not an author-side pass.
