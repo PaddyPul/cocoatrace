@@ -23,6 +23,7 @@ Audit history remains searchable beyond the first page without exposing unrelate
 - Preserve independent batch/contract and read/export network permission checks and durable export attribution.
 - Count only validated, clean supporting documents in completeness in both view and export; unsafe evidence metadata remains visible without counting as support.
 - Correct the byte-overflow regression cleanup to restore its original required description, preventing contamination of the next case.
+- Align audit browser fixtures with cached user restoration and the flat /me contract; assert arrival at the audit register before exercising its behaviors.
 - Record founder acceptance of public safety and audit export boundaries.
 
 ## Security and data review

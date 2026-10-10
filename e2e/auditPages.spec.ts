@@ -5,22 +5,34 @@ const first = '11111111-1111-1111-1111-111111111111',
 async function mock(page: Page) {
   let mode: 'normal' | 'failed' | 'malformed' | 'badHash' = 'normal';
   const queries: string[] = [];
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'ct_user',
+      JSON.stringify({
+        id: 'audit-reader',
+        email: 'reader@example.test',
+        name: 'Audit reader',
+        organizationId: 'own-org',
+        orgName: 'Own org',
+        orgType: 'exporter',
+        roles: [],
+        permissions: ['audit.read', 'audit.export'],
+      }),
+    );
+  });
   await page.route('**/api/**', async (route) => {
     const url = new URL(route.request().url());
     let body: unknown = [];
     if (url.pathname === '/api/me')
       body = {
-        user: {
-          id: 'audit-reader',
-          email: 'reader@example.test',
-          name: 'Audit reader',
-          organizationId: 'own-org',
-          organizationName: 'Own org',
-          organizationType: 'exporter',
-          roles: ['auditor'],
-          permissions: ['audit.read', 'audit.export'],
-          preferences: {},
-        },
+        id: 'audit-reader',
+        email: 'reader@example.test',
+        name: 'Audit reader',
+        organization_id: 'own-org',
+        org_name: 'Own org',
+        org_type: 'exporter',
+        roles: [],
+        permissions: ['audit.read', 'audit.export'],
       };
     else if (url.pathname === '/api/onboarding') body = { status: 'completed' };
     else if (url.pathname === '/api/audit/events/page') {
@@ -54,6 +66,8 @@ async function mock(page: Page) {
     await route.fulfill({ json: body });
   });
   await page.goto('/audit');
+  await expect(page).toHaveURL(/\/audit(\?|$)/);
+  await expect(page.getByRole('region', { name: 'Audit register', exact: true })).toBeVisible();
   return {
     panel: page.getByRole('region', { name: 'Audit register', exact: true }),
     queries,
