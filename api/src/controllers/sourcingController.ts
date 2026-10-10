@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { query } from '../db';
 import * as audit from '../services/audit';
+import { withCatalogRead } from '../modules/catalog/paging';
+import { legacySourcing, sourcingPage, sourcingSummary } from '../modules/catalog/sourcingRecords';
 import { structureSourcingBrief } from '../services/sourcingStructurer';
 
 export async function structureRequest(req: Request, res: Response): Promise<void> {
@@ -8,18 +10,13 @@ export async function structureRequest(req: Request, res: Response): Promise<voi
 }
 
 export async function listRequests(req: Request, res: Response): Promise<void> {
-  const permissions = req.user!.permissions || [];
-  const canSeeMarketplaceDemand = permissions.includes('*') || permissions.includes('listing.create') || permissions.includes('offer.respond');
-  const where = canSeeMarketplaceDemand ? "WHERE sr.buyer_organization_id=$1 OR (sr.status='open' AND sr.visibility='matched')" : 'WHERE sr.buyer_organization_id=$1';
-  const result = await query(
-    `SELECT sr.*, o.name AS buyer_name
-     FROM sourcing_requests sr
-     JOIN organizations o ON o.id=sr.buyer_organization_id
-     ${where}
-     ORDER BY sr.created_at DESC`,
-    [req.user!.organizationId]
-  );
-  res.json(result.rows);
+  res.json(await withCatalogRead(execute => legacySourcing(execute, req.user!)));
+}
+export async function listRequestPage(req: Request, res: Response): Promise<void> {
+  res.json(await withCatalogRead(execute => sourcingPage(execute, req.user!, req.query)));
+}
+export async function summarizeRequests(req: Request, res: Response): Promise<void> {
+  res.json(await withCatalogRead(execute => sourcingSummary(execute, req.user!)));
 }
 
 export async function createRequest(req: Request, res: Response): Promise<void> {

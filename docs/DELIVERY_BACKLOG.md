@@ -135,7 +135,7 @@ Keep at most three independent engineering slices active; finish failing release
 - [-] **ARC-007 · P1 · Phase 2:** Extract shipment and delivery state machines. IN PROGRESS (grooming): Delivery and trading fulfillment modules exist; transport progression and policy ownership still require extraction and shared transitions.
 - [-] **ARC-008 · P1 · Phase 2:** Extract recall activation, notification and resolution use cases. IN PROGRESS (grooming): Recall lifecycle, notifications, safety and response modules exist; complete policy/repository boundaries remain open.
 - [ ] **ARC-009 · P2 · Phase 2:** Split public product administration, public rendering and recall code into separate modules.
-- [-] **ARC-010 · P2 · Phase 2:** Replace duplicated provenance view/export logic with one provenance builder and response mappers. IN PROGRESS: shared bounded authorized builder candidate in audit/provenance wave; separate view/export network scopes and complete-report mappers retained. Exact release and founder acceptance pending.
+- [x] **ARC-010 · P2 · Phase 2:** Replace duplicated provenance view/export logic with one provenance builder and response mappers. Shared bounded authorized builder and separate view/export network scopes accepted by founder 2026-10-10 14:58 UTC after full release pass and merge/pull, including fixture cleanup and audit browser authentication corrections.
 - [ ] **ARC-011 · P2 · Phase 2:** Move SQL from migrated controllers into repositories/query modules.
 - [x] **ARC-012 · P2 · Phase 2:** Introduce a transaction boundary abstraction used by application services. IMPLEMENTED: Shared trading transaction boundary commits business mutations and audit events together; rollback tests are implemented. CLOSED 2026-10-02: founder reports the applicable automated release checks and merge/pull completed; this status supersedes earlier pending-native-validation wording. CI run links are not independently archived.
 - [-] **ARC-013 · P1 · Phase 2:** Write critical business changes, audit records and outbox events atomically. IN PROGRESS (grooming): Trading/payment critical changes and audit writes share transactions; route-wide audit/outbox coverage needs an explicit matrix.
@@ -684,3 +684,18 @@ Owners and risk-review dates must be assigned under GOV-002/008; this table is a
 ## Provenance integration fixture cleanup correction — 2026-10-09
 
 Founder native release run passed 363/365 integration assertions. The byte-overflow case cleanup wrote NULL to evidence_items.claim_description despite its NOT NULL constraint; the retained oversized field then caused the following durable-attribution case to return 422. Restore the exact original description in finally, including mutation inside the cleanup-protected block. No application, schema, report limit or permission change. Native rerun and merge acceptance remain pending.
+
+
+## Accepted checkpoint — audit register and shared provenance reports, 2026-10-10
+
+- Founder confirms full release checks passed and merge/pull completed at 14:58 UTC, including required-description fixture cleanup and signed-in audit browser fixtures. This supersedes the pending acceptance notes above.
+- Audit paging, exact filters, full totals, error/retry behavior and complete authorized provenance view/export boundaries accepted. Migration 034 and native/browser checks are covered by the reported release pass.
+- ARC-010 is complete. PER-001 / ARC-024 remain IN PROGRESS; this acceptance does not establish universal collection bounds or measured pilot capacity.
+- Next: inventory remaining list/export/detail collection boundaries before declaring PER-001 / ARC-024 complete; prepare PER-004 representative capacity scenarios and PER-003 upload/download concurrency and backpressure verification. Hosted measurements remain pending.
+
+
+## Candidate checkpoint — sourcing request pages and dashboard totals, 2026-10-10
+
+- PER-001 / ARC-024: source request reads were still unbounded, marketplace selection loaded an entire array, and dashboard read failures became empty demand. Add scoped page/search/exact ID/own filters, retained selection, complete independent summaries and explicit failure/retry.
+- Preserve own-request and foreign open-matched demand visibility; legacy overflow refuses complete-list claims. Native/browser acceptance pending; broad items remain IN PROGRESS.
+- Remaining administration collections and hosted performance/file stress acceptance are next, not assumed complete.
