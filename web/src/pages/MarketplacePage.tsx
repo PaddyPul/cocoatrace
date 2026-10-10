@@ -93,12 +93,12 @@ export default function MarketplacePage() {
       <label><span className="form-label">Search your sourcing requests</span><input className="form-input" maxLength={80} value={requestSearch} onChange={event => setRequestSearch(event.target.value)} /></label>
       {contextRequest && <p className="mt-2 text-sm">Selected brief: {contextRequest.title}</p>}
       {requestError && <div role="alert">{requestError}<button className="btn" onClick={() => setRequestRefresh(value => value + 1)}>Retry selected request</button></div>}
-      {requestPage.loading ? <p role="status">Loading sourcing requests…</p> : requestPage.error ? <div role="alert">Sourcing requests unavailable. {requestPage.error}<button className="btn" onClick={requestPage.refresh}>Retry sourcing requests</button></div> : <label><span className="form-label">Sourcing request</span><select className="form-select" value={contextRequest?.id || ''} onChange={event => {
+      {requestPage.loading ? <p role="status">Loading sourcing requests…</p> : requestPage.error ? <div role="alert">Sourcing requests unavailable. {requestPage.error}<button className="btn" onClick={requestPage.refresh}>Retry sourcing requests</button></div> : <div><label htmlFor="sourcing-request-choice" className="form-label">Sourcing request</label><select id="sourcing-request-choice" className="form-select" value={contextRequest?.id || ''} onChange={event => {
         const selected = requestPage.items.find(item => item.id === event.target.value) || selectedRequest;
         if (!selected) return;
         setSelectedRequest(selected); localStorage.setItem('ct_active_sourcing_request',selected.id);
         const next = new URLSearchParams(params); next.set('request',selected.id); next.delete('browse'); next.delete('published'); setParams(next);
-      }}><option value="">Choose a sourcing request</option>{contextRequest && !requestPage.items.some(item => item.id === contextRequest.id) && <option value={contextRequest.id}>{contextRequest.title}</option>}{requestPage.items.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>}
+      }}><option value="">Choose a sourcing request</option>{contextRequest && !requestPage.items.some(item => item.id === contextRequest.id) && <option value={contextRequest.id}>{contextRequest.title}</option>}{requestPage.items.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></div>}
       {!requestPage.loading && !requestPage.error && !requestPage.items.length && <p>No sourcing requests match this search.</p>}
       <PageNavigation page={requestPage} label="sourcing requests" />
     </section>

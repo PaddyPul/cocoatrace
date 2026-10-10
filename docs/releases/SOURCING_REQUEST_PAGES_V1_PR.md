@@ -17,6 +17,7 @@ Large sourcing histories remain searchable and selectable beyond page one. Buyer
 ## Change summary
 
 - Add bounded sourcing pages, literal server search, own-only and exact authorized ID filters with tenant/filter/permission-bound cursors.
+- Give the request selector an explicit associated label so option text cannot become part of its accessible name.
 - Preserve request selection across search/page changes; resolve off-page links through the same authority predicate.
 - Add full own-request and visible foreign matched-demand totals and bounded latest records for dashboard recommendations.
 - Bound the legacy array route and explicitly reject overflow rather than return a partial history.
