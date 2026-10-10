@@ -1,50 +1,56 @@
 import { Request, Response } from 'express';
 import { query } from '../db';
 import * as audit from '../services/audit';
+import { withCatalogRead } from '../modules/catalog/paging';
+import {
+  legacyOrganizations,
+  organizationPage,
+  organizationSummary,
+  legacyMembers,
+  memberPage,
+  memberSummary,
+} from '../modules/catalog/organizationRecords';
 
 export async function listOrganizations(req: Request, res: Response): Promise<void> {
-  const { type } = req.query;
-  const perms = req.user!.permissions || [];
-  const seeAll = perms.includes('*') || perms.includes('organization.admin');
-  if (!seeAll) {
-    const { rows } = await query('SELECT * FROM organizations WHERE id = $1 ORDER BY name', [req.user!.organizationId]);
-    res.json(rows);
-    return;
-  }
-  let sql = 'SELECT * FROM organizations ORDER BY name';
-  let params: any[] = [];
-  if (type) {
-    sql = 'SELECT * FROM organizations WHERE type = $1 ORDER BY name';
-    params = [type];
-  }
-  const { rows } = await query(sql, params);
-  res.json(rows);
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(await withCatalogRead((execute) => legacyOrganizations(execute, req.user!, req.query)));
+}
+export async function listOrganizationPage(req: Request, res: Response): Promise<void> {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(await withCatalogRead((execute) => organizationPage(execute, req.user!, req.query)));
+}
+export async function summarizeOrganizations(req: Request, res: Response): Promise<void> {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(await withCatalogRead((execute) => organizationSummary(execute, req.user!, req.query)));
 }
 
 export async function createOrganization(req: Request, res: Response): Promise<void> {
   const { name, type, jurisdiction, legalRegistrationNumber } = req.body;
   const { rows } = await query(
     'INSERT INTO organizations (name, type, jurisdiction, legal_registration_number) VALUES ($1,$2,$3,$4) RETURNING *',
-    [name, type, jurisdiction, legalRegistrationNumber || null]
+    [name, type, jurisdiction, legalRegistrationNumber || null],
   );
-  await audit.record({ actorUserId: req.user!.id, actorOrganizationId: req.user!.organizationId, action: 'organization.create', entityType: 'organization', entityId: rows[0].id });
+  await audit.record({
+    actorUserId: req.user!.id,
+    actorOrganizationId: req.user!.organizationId,
+    action: 'organization.create',
+    entityType: 'organization',
+    entityId: rows[0].id,
+  });
   res.status(201).json(rows[0]);
 }
 
 export async function listOrganizationMembers(req: Request, res: Response): Promise<void> {
-  if (req.params.id !== req.user!.organizationId && !req.user!.permissions?.includes('*')) {
-    res.status(403).json({ error: 'Access denied' });
-    return;
-  }
-  const { rows } = await query(
-    `SELECT u.id, u.email, u.name, u.active, u.mfa_enabled, u.created_at,
-            array_agg(r.name) as roles
-     FROM users u
-     LEFT JOIN user_roles ur ON ur.user_id = u.id
-     LEFT JOIN roles r ON r.id = ur.role_id
-     WHERE u.organization_id = $1
-     GROUP BY u.id`,
-    [req.params.id]
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(await withCatalogRead((execute) => legacyMembers(execute, req.user!, req.params.id)));
+}
+export async function listOrganizationMemberPage(req: Request, res: Response): Promise<void> {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(
+    await withCatalogRead((execute) => memberPage(execute, req.user!, req.params.id, req.query)),
   );
-  res.json(rows);
+}
+export async function summarizeOrganizationMembers(req: Request, res: Response): Promise<void> {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(await withCatalogRead((execute) => memberSummary(execute, req.user!, req.params.id)));
 }

@@ -1,0 +1,11 @@
+# Administration record boundaries
+
+Organizations and members require organization.admin; invitation reads require member.invite. Only wildcard permissions grant network access. organization.admin alone grants own organization listing, and members require the selected organization be own unless wildcard. No legal-registration/operator/access-review fields are included in directory pages. Member rows project names/email/account flags and null-free role names; no credentials or session material. Invitation history never returns token hashes or raw links.
+
+GET /organizations/page, /organizations/:id/members/page and /invitations/page return items, hasMore, nextCursor and count. Limit 1–100 (default 50), literal search up to 80 characters, UUID keyset order. Cursors bind tenant, permissions, selected organization and filters. Authorization/search precede page limits and full hydration. GET corresponding /summary endpoints returns full authorized totals independent of page/search. Organization/member page count includes the current search filter; their summary count covers the full authorized scope. Invitation page count includes its lifecycle filter but ignores search; invitation summary counts cover all lifecycle states in the authorized scope.
+
+Invitation status filters: all, pending, accepted, revoked, expired. Derived lifecycle prioritizes revoked, then accepted, then expired when expires_at<=snapshot NOW(), otherwise pending. Expired invitations may still be resent or revoked under existing mutation policy. Counts cover complete authorized history, not the displayed search page. Create makes the new invitation findable through its email; resend/revoke refresh the current page and totals.
+
+Legacy array routes retain complete responses up to 1,000 authorized rows and reject overflow with 422 CATALOG_READ_LIMIT before hydration. They must never imply that the first 100 records are a complete history. Shared catalog repeatable-read/deadline controls apply and responses are no-store. Timeout/failure is explicit, not an empty workspace.
+
+Run exact-candidate verify:release, including PostgreSQL scope/large-workspace and browser paging/search/retry/mutation regressions. Keep existing real identity invitation journey. No migration or app database reset is needed. Hosted capacity and pilot-feedback remain separate acceptance work.

@@ -699,3 +699,16 @@ Founder native release run passed 363/365 integration assertions. The byte-overf
 - PER-001 / ARC-024: source request reads were still unbounded, marketplace selection loaded an entire array, and dashboard read failures became empty demand. Add scoped page/search/exact ID/own filters, retained selection, complete independent summaries and explicit failure/retry.
 - Preserve own-request and foreign open-matched demand visibility; legacy overflow refuses complete-list claims. Native/browser acceptance pending; broad items remain IN PROGRESS.
 - Remaining administration collections and hosted performance/file stress acceptance are next, not assumed complete.
+
+
+## Accepted checkpoint — sourcing request pages and totals, 2026-10-10
+
+- Founder confirms full release checks passed and merge/pull completed at 15:50 UTC, including explicit selector label correction. This supersedes sourcing candidate pending acceptance above.
+- Server search/paging, retained selected request, exact scoped lookup, own/open-demand totals and explicit failure states accepted. Buyer next actions preserve older open requests despite a newer draft; general buyer demand is not called an inventory match.
+- PER-001 / ARC-024 remain IN PROGRESS: administration/history and detail collection boundaries, file concurrency and hosted capacity remain open.
+
+## Candidate checkpoint — administration records and tenant scope, 2026-10-10
+
+- Parallel organization/member and invitation paging, complete totals, literal search and retry work. Tenant organization.admin no longer grants global directory access; wildcard retains platform scope. Member authority stays own organization unless wildcard. Safe projections omit organization legal/operator details and invitation token hashes.
+- Invitation legacy history previously silently stopped at 100; complete bounded legacy reads now reject overflow. Organization/member legacy arrays are bounded before hydration. No write-lifecycle change or migration.
+- PER-001 / ARC-024 acceptance pending exact release/merge; security boundary regression cases required. Broad completion remains open.

@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+import { withCatalogRead } from '../modules/catalog/paging';
+import { invitationPage, invitationSummary, legacyInvitations } from '../modules/catalog/invitationRecords';
 import { config } from '../config/env';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
@@ -33,13 +35,13 @@ export async function createInvitation(req: Request, res: Response): Promise<voi
 }
 
 export async function listInvitations(req: Request, res: Response): Promise<void> {
-  const rows = await query(
-    `SELECT i.id,i.email,i.expires_at,i.accepted_at,i.revoked_at,i.created_at,i.email_delivery_status,i.email_attempted_at,o.name AS organization_name,r.name AS role
-     FROM user_invitations i JOIN organizations o ON o.id=i.organization_id JOIN roles r ON r.id=i.role_id
-     WHERE ($1::boolean OR i.organization_id=$2) ORDER BY i.created_at DESC LIMIT 100`,
-    [(req.user!.permissions || []).includes('*'), req.user!.organizationId]
-  );
-  res.json(rows.rows);
+  res.set('Cache-Control','no-store').json(await withCatalogRead(execute => legacyInvitations(execute,req.user!)));
+}
+export async function listInvitationPage(req:Request,res:Response):Promise<void>{
+ res.set('Cache-Control','no-store').json(await withCatalogRead(execute => invitationPage(execute,req.user!,req.query)));
+}
+export async function summarizeInvitations(req:Request,res:Response):Promise<void>{
+ res.set('Cache-Control','no-store').json(await withCatalogRead(execute => invitationSummary(execute,req.user!)));
 }
 
 export async function invitationDetails(req: Request, res: Response): Promise<void> {

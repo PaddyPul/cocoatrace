@@ -114,10 +114,17 @@ export const accessApplications = {
     api<AccessApplication>('POST', `/access-applications/${id}/reject`, reason ? { reason } : {}),
 };
 
+export interface OrganizationRecord { id: string; name: string; type: string; jurisdiction?: string | null; verification_status?: string | null; }
+export interface OrganizationMember { id: string; email: string; name?: string | null; roles: string[]; }
+export interface InvitationRecord { id: string; email: string; organization_name: string; role: string; expires_at: string; accepted_at?: string | null; revoked_at?: string | null; email_delivery_status?: string | null; }
+export interface InvitationSummary {count: number; pending_count: number; accepted_count: number; revoked_count: number; expired_count: number;}
+export interface InvitationResult { inviteUrl?: string; emailDelivery?: string; }
 export const invitations = {
+  page: (parameters: Record<string,string>) => api<CatalogPage<InvitationRecord> & {count:number}>('GET', `/invitations/page?${new URLSearchParams(parameters)}`),
+  summary: () => api<InvitationSummary>('GET', '/invitations/summary'),
   list: () => api<any[]>('GET', '/invitations'),
-  create: (data: { email: string; organizationId?: string; role?: string }) => api<any>('POST', '/invitations', data),
-  resend: (id: string) => api<any>('POST', `/invitations/${id}/resend`),
+  create: (data: { email: string; organizationId?: string; role?: string }) => api<InvitationResult>('POST', '/invitations', data),
+  resend: (id: string) => api<InvitationResult>('POST', `/invitations/${id}/resend`),
   revoke: (id: string) => api<void>('POST', `/invitations/${id}/revoke`),
 };
 
@@ -361,6 +368,10 @@ export const evidence = {
 };
 
 export const organizations = {
+  page: (parameters: Record<string,string>) => api<CatalogPage<OrganizationRecord> & {count:number}>('GET', `/organizations/page?${new URLSearchParams(parameters)}`),
+  summary: () => api<{count:number}>('GET', '/organizations/summary'),
+  membersPage: (id:string,parameters: Record<string,string>) => api<CatalogPage<OrganizationMember> & {count:number}>('GET', `/organizations/${encodeURIComponent(id)}/members/page?${new URLSearchParams(parameters)}`),
+  membersSummary: (id:string) => api<{count:number}>('GET', `/organizations/${encodeURIComponent(id)}/members/summary`),
   list: () => api<any[]>('GET', '/organizations'),
   get: (id: string) => api<any>('GET', `/organizations/${id}`),
   create: (data: { name: string; type: string; country?: string; verificationStatus?: string }) =>

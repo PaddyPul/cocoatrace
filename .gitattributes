@@ -102,3 +102,7 @@ e2e/auditPages.spec.ts text eol=lf
 web/src/pages/AuditRecordsPage.tsx text eol=lf
 
 e2e/sourcingRequestPages.spec.ts text eol=lf
+
+web/src/pages/OrganizationsPage.tsx text eol=lf
+web/src/pages/PilotTeamPage.tsx text eol=lf
+e2e/adminCollectionPages.spec.ts text eol=lf
