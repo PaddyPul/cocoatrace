@@ -732,3 +732,8 @@ Founder native release run passed 363/365 integration assertions. The byte-overf
 ## Product legacy overflow preflight correction — 2026-10-10
 
 Founder review-queue release passed 393/394 integration tests. The product legacy list performed correlated recall/scan/evidence metadata computation for 1,001 records before rejecting the complete response; it returned 503 instead of the expected 422. Use the unchanged authorization scope to select only candidate IDs first, refuse overflow before hydration, and hydrate only the bounded ID set. SQL deadlines, authorization and limits stay unchanged. Add unit assertions that overflow never executes metadata hydration and a native small-history success assertion. Review-queue release acceptance remains pending rerun; no broad backlog completion credit.
+
+
+## Access review browser interaction correction — 2026-10-10
+
+Founder release reached browser journeys after the product overflow correction. The new queue test manipulated background filter controls after opening a modal that intentionally closes on backdrop interaction, then expected the dismissed form to remain. Correct the sequence to search/filter first, reopen the off-page applicant, and enter/assert its review note within the active dialog. No application permission, decision, dismissal or data change. Native browser/release acceptance remains pending rerun.

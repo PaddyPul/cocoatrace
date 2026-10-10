@@ -118,7 +118,7 @@ async function mock(page: Page, permissions = ['*']) {
     },
   };
 }
-test('access applications search and filter before paging while full totals and review form remain independent', async ({
+test('access applications search and filter server-side with full totals before reviewing an off-page applicant', async ({
   page,
 }) => {
   const setup = await mock(page);
@@ -127,11 +127,14 @@ test('access applications search and filter before paging while full totals and 
   await expect(panel).toContainText('1,005 recorded');
   await panel.getByRole('button', { name: 'Next applications', exact: true }).click();
   await expect(panel.getByRole('heading', { name: 'Later applicant', exact: true })).toBeVisible();
+  // Filter before opening the modal: background controls are not part of an
+  // active access decision, and clicking its backdrop deliberately closes it.
+  await panel.getByLabel('Search access applications', { exact: true }).fill('later');
+  await page.getByLabel('Filter applications', { exact: true }).selectOption('all');
+  await expect(panel.getByRole('heading', { name: 'Later applicant', exact: true })).toBeVisible();
   await panel.getByRole('button', { name: 'Review', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Access decision', exact: true });
   await dialog.getByLabel('Review reason or note', { exact: true }).fill('Unsaved review');
-  await panel.getByLabel('Search access applications', { exact: true }).fill('later');
-  await page.getByLabel('Filter applications', { exact: true }).selectOption('all');
   await expect(dialog.getByLabel('Review reason or note', { exact: true })).toHaveValue(
     'Unsaved review',
   );
