@@ -59,10 +59,30 @@ describe('product register boundaries', () => {
     await expect(productSummary(execute, actor, { search: 'x' })).rejects.toMatchObject({
       statusCode: 400,
     });
+    execute.mockClear();
     execute.mockResolvedValue({ rows: Array.from({ length: 1001 }, () => ({ id })) });
     await expect(legacyProducts(execute, actor, {})).rejects.toMatchObject({
       statusCode: 422,
       code: 'CATALOG_READ_LIMIT',
     });
+    expect(execute).toHaveBeenCalledTimes(1);
+    const sql = execute.mock.calls[0][0];
+    expect(sql).toContain('SELECT pp.id');
+    expect(sql).toContain('LIMIT 1001');
+    for (const expensive of ['recall_notices', 'product_profile_scans', 'evidence_items', 'pp.*'])
+      expect(sql).not.toContain(expensive);
+  });
+  it('hydrates only a bounded authorized ID set and skips hydration for empty history', async () => {
+    const execute = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [{ id }] })
+      .mockResolvedValueOnce({ rows: [] });
+    expect(await legacyProducts(execute, actor, {})).toEqual([]);
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(execute.mock.calls[1][0]).toContain('AND pp.id=ANY($3::uuid[])');
+    expect(execute.mock.calls[1][1]).toEqual([actor.organizationId, false, [id]]);
+    const empty = vi.fn().mockResolvedValue({ rows: [] });
+    expect(await legacyProducts(empty, actor, {})).toEqual([]);
+    expect(empty).toHaveBeenCalledTimes(1);
   });
 });

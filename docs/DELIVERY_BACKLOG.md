@@ -727,3 +727,8 @@ Founder native release run passed 363/365 integration assertions. The byte-overf
 
 - Architecture follow-ups from this review: define expired/unverified application retention and resubmission behavior under identity/operations policy; review dedicated tenant feedback grants without broad organization.admin elevation; extend authenticated feedback submission budgets and monitoring; measure queue indexes and consider chronological keysets under PER-001 / PER-004. Current stable ID order is not a recency claim.
 - Author verification: 704 API unit assertions passed, quality/types/builds/migration integrity/backlog checks passed. Added twelve PostgreSQL HTTP cases and six browser cases. Native execution remains founder release acceptance, not an author-side pass.
+
+
+## Product legacy overflow preflight correction — 2026-10-10
+
+Founder review-queue release passed 393/394 integration tests. The product legacy list performed correlated recall/scan/evidence metadata computation for 1,001 records before rejecting the complete response; it returned 503 instead of the expected 422. Use the unchanged authorization scope to select only candidate IDs first, refuse overflow before hydration, and hydrate only the bounded ID set. SQL deadlines, authorization and limits stay unchanged. Add unit assertions that overflow never executes metadata hydration and a native small-history success assertion. Review-queue release acceptance remains pending rerun; no broad backlog completion credit.
