@@ -101,18 +101,26 @@ async function mock(page: Page, failedTotals = false, malformedTransfers = false
           }
         : path === '/api/onboarding'
           ? { status: 'completed', primary_goal: 'sell' }
-          : path === '/api/farms/summary'
-            ? { count: 0, owned_count: 0 }
-            : path === '/api/holdings/summary'
-              ? {
-                  count: 1005,
-                  available_count: 1005,
-                  available_kg: '1005',
-                  commodities: ['peanut'],
-                }
-              : path === '/api/listings/summary'
-                ? { count: 2000, own_count: 1005, quantity_kg: '2000' }
-                : [];
+          : path === '/api/sourcing-requests/summary'
+            ? {
+                own_count: 0,
+                open_count: 0,
+                latest_own: null,
+                latest_own_open: null,
+                latest_open: null,
+              }
+            : path === '/api/farms/summary'
+              ? { count: 0, owned_count: 0 }
+              : path === '/api/holdings/summary'
+                ? {
+                    count: 1005,
+                    available_count: 1005,
+                    available_kg: '1005',
+                    commodities: ['peanut'],
+                  }
+                : path === '/api/listings/summary'
+                  ? { count: 2000, own_count: 1005, quantity_kg: '2000' }
+                  : [];
     await route.fulfill({
       status: 200,
       contentType: 'application/json',

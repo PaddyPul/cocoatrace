@@ -2,7 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 
 // These tests exercise marketplace presentation against explicit API fixtures.
 // Transaction and authorization guarantees remain covered by PostgreSQL tests.
-const requestBrief = { id: 'cocoa-request', buyer_organization_id: 'buyer-org', status: 'open', title: 'Cocoa sourcing brief', commodity: 'cocoa', quantity_kg: 20, incoterm: 'FOB', origin_countries: [], assurance_requirements: {} };
+const requestBrief = { id: 'cocoa-request', buyer_organization_id: 'buyer-org', status: 'open', title: 'Cocoa sourcing brief', commodity: 'cocoa', quantity_kg: 20, incoterm: 'FOB', delivery_location: 'Tema', origin_countries: [], assurance_requirements: {} };
 function peanut(quantity: number) {
   return { id: 'peanut-listing', crop: 'peanut', source_name: 'Peanut inventory', seller_name: 'Supplier One', source_mode: 'direct_inventory', available_quantity_kg: quantity, price_per_kg: 10, incoterm: 'FOB', origin_location: 'Ghana', source_country: 'Ghana', organic_claim_status: 'not_claimed' };
 }
@@ -17,7 +17,7 @@ async function mockWorkspace(page: Page, quantity: () => number) {
     const body = path === '/api/me' ? { id: 'buyer', organization_id: 'buyer-org', org_name: 'Buyer Org', name: 'Buyer', roles: ['buyer_admin'], permissions: ['*'] }
       : path === '/api/onboarding' ? { status: 'completed' }
       : path === '/api/listings/page' ? {items: url.searchParams.get('commodity') === 'cocoa' || url.searchParams.get('id') === 'unavailable-listing' ? [] : [peanut(quantity())], nextCursor:null, hasMore:false}
-      : path === '/api/sourcing-requests' ? [requestBrief] : [];
+      : path === '/api/sourcing-requests/page' ? {items:[requestBrief],hasMore:false,nextCursor:null} : [];
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
   });
 }

@@ -19,8 +19,12 @@ export default function MarketplacePage() {
   const [publishedListing, setPublishedListing] = useState<Listing | null>(null);
   const [publishedLoading, setPublishedLoading] = useState(false);
   const [publishedError, setPublishedError] = useState(false);
-  const [requests, setRequests] = useState<SourcingRequest[]>([]);
-  const [requestsLoading, setRequestsLoading] = useState(true);
+  const [requestSearch, setRequestSearch] = useState('');
+  const requestPage = useCatalogPage(sourcing.page, {mine:'true', search:requestSearch});
+  const [selectedRequest, setSelectedRequest] = useState<SourcingRequest | null>(null);
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [requestError, setRequestError] = useState('');
+  const [requestRefresh, setRequestRefresh] = useState(0);
   const [search, setSearch] = useState('');
   const [organicOnly, setOrganicOnly] = useState(false);
   const [sort, setSort] = useState('match');
@@ -32,24 +36,27 @@ export default function MarketplacePage() {
     try { return new Set(JSON.parse(sessionStorage.getItem(SHORTLIST_KEY) || '[]')); }
     catch { return new Set(); }
   });
-  useEffect(() => {
-    let active = true;
-    setRequests([]); setRequestsLoading(true);
-    sourcing.list().then(rows => { if (active) setRequests(rows); }).catch(() => {}).finally(() => { if (active) setRequestsLoading(false); });
-    return () => { active = false; };
-  }, [user?.id]);
   const explicitRequestId = params.get('request');
   const requestedId = explicitRequestId || localStorage.getItem('ct_active_sourcing_request');
-  const contextRequest = requests.find((item) => item.id === requestedId && item.buyer_organization_id === user?.organizationId)
-    || requests.find((item) => item.status === 'open' && item.buyer_organization_id === user?.organizationId);
+  useEffect(() => {
+    let active = true;
+    setSelectedRequest(null); setRequestError(''); setRequestLoading(Boolean(requestedId));
+    if (requestedId) sourcing.page({mine:'true',id:requestedId,limit:'1'}).then(result => {
+      if (!result || result.hasMore || result.nextCursor !== null) throw new Error('Invalid sourcing request response.');
+      if (active) setSelectedRequest(result.items.find(row => row.id === requestedId && row.buyer_organization_id === user?.organizationId) || null);
+    }).catch(() => { if (active) setRequestError('Selected sourcing request could not be loaded. Retry before matching.'); })
+      .finally(() => { if (active) setRequestLoading(false); });
+    return () => { active = false; };
+  }, [requestedId, user?.id, requestRefresh]);
+  const contextRequest = (selectedRequest?.buyer_organization_id === user?.organizationId ? selectedRequest : null) || (!requestedId ? requestPage.items.find(item => item.status === 'open' && item.buyer_organization_id === user?.organizationId) : undefined);
   // A saved brief is context, never an implicit filter on ordinary marketplace navigation.
   const matchingRequest = Boolean(explicitRequestId && params.get('browse') !== 'all' && !params.get('published'));
-  const activeRequest = matchingRequest ? requests.find((item) => item.id === explicitRequestId && item.buyer_organization_id === user?.organizationId) : undefined;
+  const activeRequest = matchingRequest && contextRequest?.id === explicitRequestId ? contextRequest : undefined;
   const browseAll = () => { const next = new URLSearchParams(params); next.set('browse', 'all'); setParams(next); };
   const matchRequest = () => { if (!contextRequest) return; const next = new URLSearchParams(params); next.set('request', contextRequest.id); next.delete('browse'); next.delete('published'); setParams(next); };
   const publishedId = params.get('published');
   const page = useCatalogPage(listings.page, { search, commodity: activeRequest?.commodity || '', organic: String(organicOnly), origin, minimum: minimumQuantity || '0', currency, sort: sort === 'match' ? 'id' : sort });
-  const loading = page.loading || requestsLoading;
+  const loading = page.loading || (matchingRequest && requestLoading);
   const error = page.error;
   useEffect(() => {
     const onVisible = () => { if (document.visibilityState === 'visible') page.refresh(); };
@@ -82,8 +89,21 @@ export default function MarketplacePage() {
 
   return <Layout currentPage="marketplace" actions={<button className="btn btn-primary" onClick={() => navigate('/source/compare')} disabled={!shortlisted.size}>Compare shortlisted{shortlisted.size ? ` (${shortlisted.size})` : ''}</button>}>
     <section className="rounded-3xl border border-border bg-surface p-5 sm:p-6"><div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"><div><div className="text-[10px] font-bold uppercase tracking-[.18em] text-brand-400">Matched traceable supply</div><h2 className="mt-2 text-3xl font-bold tracking-[-.035em]">Evaluate supply before the first email.</h2><p className="mt-3 max-w-3xl text-sm leading-6 text-text-muted">Match scores compare commercial fit and documented readiness within the current page. Search and filters narrow the results before paging. Missing proof remains visible and no supplier is described as risk-free.</p></div>{contextRequest ? <div className="rounded-2xl border border-brand-400/20 bg-brand-400/5 p-4 lg:max-w-sm"><div className="text-[9px] font-bold uppercase tracking-[.16em] text-brand-300">{activeRequest ? 'Matching your request' : 'Your sourcing brief · browse all supply'}</div><div className="mt-2 text-sm font-semibold">{contextRequest.title}</div><div className="mt-1 text-[10px] text-text-muted">{Number(contextRequest.quantity_kg).toLocaleString()} kg · {contextRequest.incoterm} {contextRequest.delivery_location}</div></div> : <button className="btn" onClick={() => navigate('/source/new')}>Create sourcing brief</button>}</div></section>
+    <section aria-label="Sourcing request selector" className="mt-4 rounded-2xl border border-border p-4">
+      <label><span className="form-label">Search your sourcing requests</span><input className="form-input" maxLength={80} value={requestSearch} onChange={event => setRequestSearch(event.target.value)} /></label>
+      {contextRequest && <p className="mt-2 text-sm">Selected brief: {contextRequest.title}</p>}
+      {requestError && <div role="alert">{requestError}<button className="btn" onClick={() => setRequestRefresh(value => value + 1)}>Retry selected request</button></div>}
+      {requestPage.loading ? <p role="status">Loading sourcing requests…</p> : requestPage.error ? <div role="alert">Sourcing requests unavailable. {requestPage.error}<button className="btn" onClick={requestPage.refresh}>Retry sourcing requests</button></div> : <label><span className="form-label">Sourcing request</span><select className="form-select" value={contextRequest?.id || ''} onChange={event => {
+        const selected = requestPage.items.find(item => item.id === event.target.value) || selectedRequest;
+        if (!selected) return;
+        setSelectedRequest(selected); localStorage.setItem('ct_active_sourcing_request',selected.id);
+        const next = new URLSearchParams(params); next.set('request',selected.id); next.delete('browse'); next.delete('published'); setParams(next);
+      }}><option value="">Choose a sourcing request</option>{contextRequest && !requestPage.items.some(item => item.id === contextRequest.id) && <option value={contextRequest.id}>{contextRequest.title}</option>}{requestPage.items.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>}
+      {!requestPage.loading && !requestPage.error && !requestPage.items.length && <p>No sourcing requests match this search.</p>}
+      <PageNavigation page={requestPage} label="sourcing requests" />
+    </section>
     <div className="mt-4 flex flex-wrap items-center gap-3" aria-label="Supply browsing mode"><button className={`btn ${!activeRequest ? 'btn-primary' : ''}`} onClick={browseAll} aria-pressed={!activeRequest}>Browse all supply</button><button className={`btn ${activeRequest ? 'btn-primary' : ''}`} onClick={matchRequest} disabled={!contextRequest} aria-pressed={Boolean(activeRequest)}>Match my sourcing request</button><span className="text-xs text-text-muted">{activeRequest ? `Filtered to ${activeRequest.commodity}; other commodities are hidden.` : 'All published commodities are included. Your search and filters still apply.'}</span></div>
-    {matchingRequest && !activeRequest && !loading && <div className="mt-3 text-xs text-amber-300">This sourcing request is unavailable. Showing all published supply.</div>}
+    {matchingRequest && !activeRequest && !loading && !requestError && <div className="mt-3 text-xs text-amber-300">This sourcing request is unavailable. Showing all published supply.</div>}
     {publishedId && !loading && <div className="mt-4 flex items-start gap-3 rounded-2xl border border-brand-400/25 bg-brand-400/5 p-4 text-xs text-text-secondary"><CheckCircle2 size={17} className="mt-0.5 shrink-0 text-brand-400" /><div><div className="font-semibold text-white">{publishedLoading ? 'Checking published listing availability…' : publishedListing ? 'Your supply is visible in the marketplace' : publishedError ? 'Published listing availability could not be checked' : 'This listing is not currently available in the marketplace'}</div><div className="mt-1">{publishedListing ? 'It is shown first below when browsing without filters. Other results are paged. Organic verification depends on recorded evidence.' : 'It may have been committed to a trade or unpublished. Retry or review your inventory and published supply.'}</div></div></div>}
     <div className="mt-5 flex flex-wrap items-center gap-3"><div className="relative min-w-[240px] flex-1"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input className="form-input pl-9" aria-label="Search marketplace supply" maxLength={80} placeholder="Search supply, origin or supplier…" value={search} onChange={(e) => setSearch(e.target.value)} /></div><label className="btn cursor-pointer"><input type="checkbox" checked={organicOnly} onChange={(e) => setOrganicOnly(e.target.checked)} className="accent-[#7dcc61]" />Organic reviewed only</label><button className={`btn ${showFilters ? 'border-brand-400/40 text-brand-300' : ''}`} onClick={() => setShowFilters((value) => !value)} aria-expanded={showFilters}><SlidersHorizontal size={14} />Filters</button><select aria-label="Marketplace currency" className="form-select w-auto" value={currency} onChange={event => { setCurrency(event.target.value); if (!event.target.value && sort === 'price') setSort('match'); }}><option value="">All currencies</option>{['EUR','USD','GHS','GBP','JPY'].map(code => <option key={code}>{code}</option>)}</select><select aria-label="Supply order" className="form-select w-auto" value={sort} onChange={(e) => setSort(e.target.value)}><option value="match">Best match on this page</option><option value="price" disabled={!currency}>Lowest price</option><option value="quantity">Most available</option></select><span className="text-[10px] text-text-muted">Choose one currency for price order. Showing {result.length} on this page</span></div>
     <PageNavigation page={page} label="supply" />
