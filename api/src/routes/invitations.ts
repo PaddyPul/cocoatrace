@@ -9,6 +9,8 @@ import { sensitiveActionLimit } from '../middleware/security';
 const router = Router();
 router.get('/auth/invitations/:token', publicActionLimiter('invitationPreview'), controller.invitationDetails);
 router.post('/auth/invitations/:token/accept', sensitiveActionLimit, validate(acceptInvitationSchema), controller.acceptInvitation);
+router.get('/invitations/page', requireAuth, requirePermission('member.invite'), controller.listInvitationPage);
+router.get('/invitations/summary', requireAuth, requirePermission('member.invite'), controller.summarizeInvitations);
 router.get('/invitations', requireAuth, requirePermission('member.invite'), controller.listInvitations);
 router.post('/invitations', requireAuth, requirePermission('member.invite'), publicActionLimiter('invitationCreate'), validate(createInvitationSchema), controller.createInvitation);
 router.post('/invitations/:id/resend', requireAuth, requirePermission('member.invite'), sensitiveActionLimit, controller.resendInvitation);
