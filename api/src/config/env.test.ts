@@ -39,17 +39,31 @@ describe('environment configuration', () => {
   });
 
   it('rejects deployed local evidence storage and insecure object storage', () => {
-    expect(() => parseConfig({ ...deployedBase, APP_ENV: 'staging', EVIDENCE_STORAGE_DRIVER: 'local' })).toThrow(/EVIDENCE_STORAGE_DRIVER/);
-    expect(() => parseConfig({ ...deployedBase, APP_ENV: 'staging', EVIDENCE_STORAGE_ENDPOINT: 'http://objects.example.com' })).toThrow(/EVIDENCE_STORAGE_ENDPOINT/);
+    expect(() =>
+      parseConfig({ ...deployedBase, APP_ENV: 'staging', EVIDENCE_STORAGE_DRIVER: 'local' }),
+    ).toThrow(/EVIDENCE_STORAGE_DRIVER/);
+    expect(() =>
+      parseConfig({
+        ...deployedBase,
+        APP_ENV: 'staging',
+        EVIDENCE_STORAGE_ENDPOINT: 'http://objects.example.com',
+      }),
+    ).toThrow(/EVIDENCE_STORAGE_ENDPOINT/);
   });
 
   it('requires environment-isolated evidence buckets', () => {
-    expect(() => parseConfig({ ...deployedBase, APP_ENV: 'production' })).toThrow(/EVIDENCE_STORAGE_BUCKET/);
+    expect(() => parseConfig({ ...deployedBase, APP_ENV: 'production' })).toThrow(
+      /EVIDENCE_STORAGE_BUCKET/,
+    );
   });
 
   it('requires a real malware scanner in deployed environments', () => {
-    expect(() => parseConfig({ ...deployedBase, APP_ENV: 'staging', EVIDENCE_SCANNER_DRIVER: 'development' })).toThrow(/EVIDENCE_SCANNER_DRIVER/);
-    expect(() => parseConfig({ ...deployedBase, APP_ENV: 'staging', EVIDENCE_SCANNER_HOST: '' })).toThrow(/EVIDENCE_SCANNER_HOST/);
+    expect(() =>
+      parseConfig({ ...deployedBase, APP_ENV: 'staging', EVIDENCE_SCANNER_DRIVER: 'development' }),
+    ).toThrow(/EVIDENCE_SCANNER_DRIVER/);
+    expect(() =>
+      parseConfig({ ...deployedBase, APP_ENV: 'staging', EVIDENCE_SCANNER_HOST: '' }),
+    ).toThrow(/EVIDENCE_SCANNER_HOST/);
   });
 
   it.each([
@@ -58,11 +72,15 @@ describe('environment configuration', () => {
     ['insecure origin', { WEB_URL: 'http://app.example.com' }],
     ['insecure cookie', { COOKIE_SECURE: 'false' }],
   ])('rejects production with %s', (_label, override) => {
-    expect(() => parseConfig({ ...deployedBase, APP_ENV: 'production', ...override })).toThrow(/Invalid CocoaTrace configuration/);
+    expect(() => parseConfig({ ...deployedBase, APP_ENV: 'production', ...override })).toThrow(
+      /Invalid CocoaTrace configuration/,
+    );
   });
 
   it('rejects demo mode in production', () => {
-    expect(() => parseConfig({ ...deployedBase, APP_ENV: 'production', DEMO_MODE: 'true' })).toThrow(/DEMO_MODE/);
+    expect(() =>
+      parseConfig({ ...deployedBase, APP_ENV: 'production', DEMO_MODE: 'true' }),
+    ).toThrow(/DEMO_MODE/);
   });
 
   it('requires deployed values to be explicit rather than using local defaults', () => {
@@ -70,7 +88,9 @@ describe('environment configuration', () => {
   });
 
   it('requires the OpenAI key and model as a pair', () => {
-    expect(() => parseConfig({ APP_ENV: 'development', OPENAI_API_KEY: 'secret' })).toThrow(/OPENAI_API_KEY and OPENAI_MODEL/);
+    expect(() => parseConfig({ APP_ENV: 'development', OPENAI_API_KEY: 'secret' })).toThrow(
+      /OPENAI_API_KEY and OPENAI_MODEL/,
+    );
   });
 
   it('keeps identity email delivery disabled by default', () => {
@@ -80,15 +100,19 @@ describe('environment configuration', () => {
   });
 
   it('fails closed when deployed identity email is enabled without SMTP', () => {
-    expect(() => parseConfig({
-      ...deployedBase,
-      APP_ENV: 'staging',
-      IDENTITY_EMAIL_ENABLED: 'true',
-    })).toThrow(/EMAIL_DRIVER/);
+    expect(() =>
+      parseConfig({
+        ...deployedBase,
+        APP_ENV: 'staging',
+        IDENTITY_EMAIL_ENABLED: 'true',
+      }),
+    ).toThrow(/EMAIL_DRIVER/);
   });
 
   it('requires complete authenticated SMTP configuration', () => {
-    expect(() => parseConfig({ APP_ENV: 'development', EMAIL_DRIVER: 'smtp' })).toThrow(/EMAIL_FROM.*SMTP_HOST.*SMTP_USER.*SMTP_PASSWORD/);
+    expect(() => parseConfig({ APP_ENV: 'development', EMAIL_DRIVER: 'smtp' })).toThrow(
+      /EMAIL_FROM.*SMTP_HOST.*SMTP_USER.*SMTP_PASSWORD/,
+    );
   });
 
   it('accepts encrypted SMTP for deployed identity email', () => {
@@ -119,8 +143,12 @@ describe('environment configuration', () => {
       SMTP_USER: 'cocoatrace',
       SMTP_PASSWORD: 'smtp-provider-credential',
     };
-    expect(() => parseConfig({ ...smtpBase, SMTP_REQUIRE_TLS: 'false' })).toThrow(/SMTP_REQUIRE_TLS/);
-    expect(() => parseConfig({ ...smtpBase, SMTP_TLS_REJECT_UNAUTHORIZED: 'false' })).toThrow(/SMTP_TLS_REJECT_UNAUTHORIZED/);
+    expect(() => parseConfig({ ...smtpBase, SMTP_REQUIRE_TLS: 'false' })).toThrow(
+      /SMTP_REQUIRE_TLS/,
+    );
+    expect(() => parseConfig({ ...smtpBase, SMTP_TLS_REJECT_UNAUTHORIZED: 'false' })).toThrow(
+      /SMTP_TLS_REJECT_UNAUTHORIZED/,
+    );
   });
 
   it('rejects malformed booleans and fee values', () => {
@@ -128,10 +156,28 @@ describe('environment configuration', () => {
     expect(() => parseConfig({ PLATFORM_FEE_BPS: '1001' })).toThrow(/PLATFORM_FEE_BPS/);
   });
 
-  it('cannot disable privileged MFA in deployed environments',()=>{
-    expect(parseConfig({...deployedBase,APP_ENV:'staging'}).mfaEnforced).toBe(true);
-    expect(()=>parseConfig({...deployedBase,APP_ENV:'staging',MFA_ENFORCED:'false'})).toThrow(/MFA_ENFORCED/);
-    expect(()=>parseConfig({APP_ENV:'development',MFA_ENFORCED:'true',WEB_URL:'http://remote.example'})).toThrow(/WEB_URL/);
+  it('cannot disable privileged MFA in deployed environments', () => {
+    expect(parseConfig({ ...deployedBase, APP_ENV: 'staging' }).mfaEnforced).toBe(true);
+    expect(() =>
+      parseConfig({ ...deployedBase, APP_ENV: 'staging', MFA_ENFORCED: 'false' }),
+    ).toThrow(/MFA_ENFORCED/);
+    expect(() =>
+      parseConfig({
+        APP_ENV: 'development',
+        MFA_ENFORCED: 'true',
+        WEB_URL: 'http://remote.example',
+      }),
+    ).toThrow(/WEB_URL/);
+  });
+  it('requires a finite evidence storage deadline and preserves a safe default', () => {
+    expect(parseConfig({ APP_ENV: 'test' }).evidenceStorageTimeoutMs).toBe(15000);
+    expect(
+      parseConfig({ APP_ENV: 'test', EVIDENCE_STORAGE_TIMEOUT_MS: '500' }).evidenceStorageTimeoutMs,
+    ).toBe(500);
+    for (const value of ['0', '499', '120001', 'Infinity', 'NaN'])
+      expect(() => parseConfig({ APP_ENV: 'test', EVIDENCE_STORAGE_TIMEOUT_MS: value })).toThrow(
+        /EVIDENCE_STORAGE_TIMEOUT_MS/,
+      );
   });
   it('rejects unknown environment names instead of falling back', () => {
     expect(() => parseConfig({ APP_ENV: 'prodution' })).toThrow(/Invalid CocoaTrace APP_ENV/);

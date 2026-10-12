@@ -110,3 +110,13 @@ e2e/adminCollectionPages.spec.ts text eol=lf
 web/src/pages/AccessApplicationsPage.tsx text eol=lf
 web/src/components/pilot/FeedbackRegister.tsx text eol=lf
 e2e/reviewQueuePages.spec.ts text eol=lf
+
+api/src/middleware/evidenceContent.ts text eol=lf
+api/src/middleware/evidenceContent.test.ts text eol=lf
+api/src/controllers/evidenceController.ts text eol=lf
+api/src/routes/evidence.ts text eol=lf
+api/src/services/evidenceUploadService.ts text eol=lf
+api/src/services/evidenceStorage.ts text eol=lf
+api/src/services/evidenceStorage.test.ts text eol=lf
+api/src/logger.ts text eol=lf
+api/src/logger.test.ts text eol=lf

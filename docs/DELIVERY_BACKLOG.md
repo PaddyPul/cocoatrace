@@ -742,3 +742,18 @@ Founder release reached browser journeys after the product overflow correction. 
 ## Stable access review label correction — 2026-10-10
 
 The reordered browser sequence still failed after text entry. Source inspection of ReactDOM and Playwright identifies the actual cause: React updates controlled textarea defaultValue/textContent, while Playwright reads the wrapping label's descendant text. The exact label becomes input-dependent. Separate the visible label using htmlFor/id so it stays stable after editing; assert dialog visibility and one exact labelled control after fill. This supersedes the earlier speculative backdrop explanation. Decision/dismissal/authorization policies remain unchanged. Founder native release acceptance remains pending rerun.
+
+
+## Accepted checkpoint — access review and pilot feedback queues, 2026-10-12
+
+- Founder confirms full release checks passed and merge/pull completed at 11:25 UTC, including ID-only product overflow and stable review textarea label corrections. This supersedes review queue pending acceptance above.
+- Access application and feedback pages, full scoped summaries, safe metadata, failure/retry and regression checks accepted.
+- PER-001 / ARC-024 remain IN PROGRESS: universal query-plan/capacity evidence and remaining collection inventory are not assumed complete.
+
+## Candidate checkpoint — evidence transfer budgets, 2026-10-12
+
+- PER-003: cap simultaneous buffered uploads/downloads per process and tenant, reject without queuing before signed upload body parsing, hold download capacity through response completion/disconnect, and release on parser/controller failures.
+- Bound local/S3 reads by maximum file bytes and finite operation/body deadlines; reject oversized stored objects without returning partial bytes. Sanitize signed capability query URLs in request logging.
+- These are prerequisite controls, not completion of PER-003. Durable cross-instance leases, maintenance scanner claims, quota-accounted cleanup, transactional existence checks and maximum-size RSS/backpressure stress remain open. No measured memory/SLO claim; native release and merge/pull acceptance pending.
+
+- Author validation: 739 API unit assertions passed; quality, workspace/browser types, builds, migration integrity and backlog checks passed. Ten new PostgreSQL/API cases compile strictly. Docker/native execution remains pending founder release acceptance.

@@ -14,6 +14,10 @@ export const loggerRedactionPaths = [
   'currentPassword',
   '*.currentPassword',
   'req.body.currentPassword',
+  'req.query.signature',
+  'req.query.token',
+  'req.query.accessToken',
+  'req.query.verificationToken',
   'accessToken',
   '*.accessToken',
   'openAiApiKey',
@@ -25,6 +29,41 @@ export const loggerRedactionPaths = [
   'evidenceStorageSecretKey',
   'evidenceUploadSigningSecret',
 ];
+
+function safeRequestPath(url: string): string {
+  const path = url.split('?', 1)[0];
+  let decoded = path;
+  try {
+    decoded = decodeURIComponent(path);
+  } catch {
+    // A malformed escape cannot match a supported bearer-token route. Keep
+    // the query-free path instead of risking a logging failure.
+  }
+  if (/^\/auth\/invitations\/[^/]+(?:\/|$)/i.test(decoded)) {
+    return '/auth/invitations/[REDACTED]';
+  }
+  return path;
+}
+
+/**
+ * pino-http's standard serializer includes both the raw URL and Express query
+ * object. Signed upload capabilities and identity tokens must not therefore be
+ * retained in request logs. The path remains useful for operations, while all
+ * query values are deliberately omitted rather than maintained as an
+ * error-prone secret allow/deny list.
+ */
+export function requestLogSerializer(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object') return {};
+  const request = value as Record<string, unknown>;
+  const safe: Record<string, unknown> = {};
+  for (const key of ['id', 'method', 'remoteAddress', 'remotePort']) {
+    if (typeof request[key] === 'string' || typeof request[key] === 'number') {
+      safe[key] = request[key];
+    }
+  }
+  if (typeof request.url === 'string') safe.url = safeRequestPath(request.url);
+  return safe;
+}
 
 export function useDevelopmentLogTransport(environment: string, nodeEnvironment?: string): boolean {
   return environment === 'development' && nodeEnvironment !== 'production';

@@ -4,7 +4,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
-import logger from './logger';
+import logger, { requestLogSerializer } from './logger';
 import { AppError } from './errors';
 import { verifyBrowserOrigin } from './middleware/security';
 import { config } from './config/env';
@@ -40,14 +40,24 @@ const app = express();
 // Forwarded IP/host headers are untrusted until an explicit ingress policy is introduced.
 app.set('trust proxy', false);
 
-app.use(pinoHttp({
-  logger,
-  genReqId: assignRequestId,
-  customProps: (req) => requestLogContext(req),
-}));
+app.use(
+  pinoHttp({
+    logger,
+    serializers: { req: requestLogSerializer },
+    genReqId: assignRequestId,
+    customProps: (req) => requestLogContext(req),
+  }),
+);
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: config.webUrl, credentials: true }));
-app.use(express.json());
+const jsonParser = express.json();
+app.use((req, res, next) => {
+  // Signed upload bodies must pass capability validation/admission first,
+  // including clients that claim application/json rather than a file MIME.
+  if (req.method === 'PUT' && /^\/evidence\/upload-intents\/[^/]+\/content\/?$/i.test(req.path))
+    return next();
+  jsonParser(req, res, next);
+});
 app.use(verifyBrowserOrigin);
 
 import { query } from './db';
@@ -60,13 +70,27 @@ app.get('/health', async (_req, res) => {
     res.status(503).json({ status: 'error', db: 'disconnected' });
   }
 });
-app.get('/health/live', (_req, res) => res.json({ status: 'ok', version: config.appVersion, environment: config.environment }));
+app.get('/health/live', (_req, res) =>
+  res.json({ status: 'ok', version: config.appVersion, environment: config.environment }),
+);
 app.get('/health/ready', async (_req, res) => {
   try {
-    await Promise.all([query('SELECT 1'), evidenceStorage().healthcheck(), evidenceMalwareScanner().healthcheck()]);
-    res.json({ status: 'ready', database: 'connected', evidenceStorage: 'connected', evidenceScanner: 'connected', aiNarrative: Boolean(config.openAiApiKey && config.openAiModel) });
+    await Promise.all([
+      query('SELECT 1'),
+      evidenceStorage().healthcheck(),
+      evidenceMalwareScanner().healthcheck(),
+    ]);
+    res.json({
+      status: 'ready',
+      database: 'connected',
+      evidenceStorage: 'connected',
+      evidenceScanner: 'connected',
+      aiNarrative: Boolean(config.openAiApiKey && config.openAiModel),
+    });
   } catch {
-    res.status(503).json({ status: 'not_ready', dependency: 'database_storage_or_evidence_scanner' });
+    res
+      .status(503)
+      .json({ status: 'not_ready', dependency: 'database_storage_or_evidence_scanner' });
   }
 });
 app.use(mfaRoutes);
@@ -99,7 +123,10 @@ app.use((_req, res) => {
 
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   if ((err as Error & { type?: string }).type === 'entity.too.large') {
-    res.status(413).json({ error: 'Request body exceeds the configured evidence file limit', code: 'EVIDENCE_FILE_TOO_LARGE' });
+    res.status(413).json({
+      error: 'Request body exceeds the configured evidence file limit',
+      code: 'EVIDENCE_FILE_TOO_LARGE',
+    });
     return;
   }
   if (err instanceof AppError) {

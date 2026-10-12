@@ -8,9 +8,10 @@ import {
   EvidenceEntityType,
 } from '../services/resourcePolicy';
 import { completeUploadIntent, createUploadIntent } from '../services/evidenceUploadService';
-import { evidenceStorage } from '../services/evidenceStorage';
+import { evidenceStorage, readBoundedEvidenceFile } from '../services/evidenceStorage';
 import { legacyEvidenceList } from '../modules/catalog/evidenceRecords';
 import { withCatalogRead } from '../modules/catalog/paging';
+import { evidenceConcurrency } from '../modules/security/evidenceConcurrency';
 
 function isEvidenceEntityType(value: unknown): value is EvidenceEntityType {
   return typeof value === 'string' && (EVIDENCE_ENTITY_TYPES as readonly string[]).includes(value);
@@ -28,9 +29,16 @@ export async function uploadEvidenceContent(req: Request, res: Response): Promis
   const expires = Number(req.query.expires);
   const signature = typeof req.query.signature === 'string' ? req.query.signature : '';
   if (!Number.isSafeInteger(expires) || !signature || !Buffer.isBuffer(req.body)) {
-    res.status(400).json({ error: 'A valid signed upload URL and file body are required' }); return;
+    res.status(400).json({ error: 'A valid signed upload URL and file body are required' });
+    return;
   }
-  const evidence = await completeUploadIntent(req.params.id, expires, signature, req.body, req.headers['content-type']);
+  const evidence = await completeUploadIntent(
+    req.params.id,
+    expires,
+    signature,
+    req.body,
+    req.headers['content-type'],
+  );
   res.status(201).json(evidence);
 }
 
@@ -49,7 +57,7 @@ export async function downloadEvidence(req: Request, res: Response): Promise<voi
           WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1
        ) p ON TRUE
       WHERE e.id=$1`,
-    [req.params.id]
+    [req.params.id],
   );
   const item = rows[0];
   if (!item) {
@@ -58,40 +66,93 @@ export async function downloadEvidence(req: Request, res: Response): Promise<voi
   }
 
   const organizationId = req.user!.organizationId;
-  const entityAllowed = isEvidenceEntityType(item.linked_entity_type)
-    && await canAccessEvidenceEntity(req.user!, item.linked_entity_type, item.linked_entity_id);
+  const entityAllowed =
+    isEvidenceEntityType(item.linked_entity_type) &&
+    (await canAccessEvidenceEntity(req.user!, item.linked_entity_type, item.linked_entity_id));
   const allowed = item.uploader_organization_id === organizationId || entityAllowed;
   if (!allowed) {
     res.status(403).json({ error: 'You do not have access to this document' });
     return;
   }
 
-  if (item.validation_status !== 'validated' || item.review_status === 'rejected' || item.malware_scan_status !== 'clean') {
-    res.status(423).json({ error: 'This document is unavailable until malware scanning completes', code: 'EVIDENCE_NOT_SCAN_CLEAN' });
+  if (
+    item.validation_status !== 'validated' ||
+    item.review_status === 'rejected' ||
+    item.malware_scan_status !== 'clean'
+  ) {
+    res.status(423).json({
+      error: 'This document is unavailable until malware scanning completes',
+      code: 'EVIDENCE_NOT_SCAN_CLEAN',
+    });
     return;
   }
 
-  const controlledDocuments = new Set(['transport_document', 'bill_of_lading', 'warehouse_release']);
-  if (item.buyer_organization_id === organizationId
-      && item.uploader_organization_id !== organizationId
-      && controlledDocuments.has(item.type)
-      && item.release_status !== 'authorized') {
-    res.status(423).json({ error: 'This transport document is protected until the agreed payment release condition is satisfied' });
+  const controlledDocuments = new Set([
+    'transport_document',
+    'bill_of_lading',
+    'warehouse_release',
+  ]);
+  if (
+    item.buyer_organization_id === organizationId &&
+    item.uploader_organization_id !== organizationId &&
+    controlledDocuments.has(item.type) &&
+    item.release_status !== 'authorized'
+  ) {
+    res.status(423).json({
+      error:
+        'This transport document is protected until the agreed payment release condition is satisfied',
+    });
     return;
   }
 
-  let content: Buffer | null = null;
-  if (item.storage_key) content = await evidenceStorage().get(item.storage_key);
-  else if (item.storage_provider === 'legacy_local' && item.storage_path) {
-    const uploadsRoot = path.resolve(__dirname, '../../uploads');
-    const filePath = path.resolve(item.storage_path);
-    if (filePath.startsWith(uploadsRoot + path.sep) && fs.existsSync(filePath)) content = await fs.promises.readFile(filePath);
+  let release: () => void;
+  try {
+    release = evidenceConcurrency.acquire(organizationId);
+  } catch (error) {
+    res.setHeader('Retry-After', '1');
+    throw error;
   }
-  if (!content) {
-    res.status(404).json({ error: 'Stored file not found' });
-    return;
+  // Keep the slot while response bytes wait on a slow client. Errors before
+  // response completion release explicitly; finish/close are idempotent.
+  let storageWorkPending = true;
+  let responseEnded = false;
+  const maybeRelease = () => {
+    if (!storageWorkPending && responseEnded) release();
+  };
+  const endResponse = () => {
+    responseEnded = true;
+    maybeRelease();
+  };
+  res.once('finish', endResponse);
+  res.once('close', endResponse);
+  try {
+    let content: Buffer | null = null;
+    if (item.storage_key) content = await evidenceStorage().get(item.storage_key);
+    else if (item.storage_provider === 'legacy_local' && item.storage_path) {
+      const uploadsRoot = path.resolve(__dirname, '../../uploads');
+      const filePath = path.resolve(item.storage_path);
+      if (filePath.startsWith(uploadsRoot + path.sep) && fs.existsSync(filePath))
+        content = await readBoundedEvidenceFile(filePath);
+    }
+    if (!content) {
+      res.status(404).json({ error: 'Stored file not found' });
+      return;
+    }
+    res.setHeader(
+      'Content-Type',
+      item.detected_mime_type || item.mime_type || 'application/octet-stream',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename*=UTF-8''${encodeURIComponent(item.file_name)}`,
+    );
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(content);
+  } catch (error) {
+    release();
+    throw error;
+  } finally {
+    storageWorkPending = false;
+    maybeRelease();
   }
-  res.setHeader('Content-Type', item.detected_mime_type || item.mime_type || 'application/octet-stream');
-  res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(item.file_name)}`);
-  res.send(content);
 }
