@@ -2,6 +2,7 @@ import {
   createEvidenceStressFixtures,
   requireEvidenceStressDatabase,
 } from './evidence-stress-fixtures';
+import { StressDownloadBarrier } from './evidence-stress-barrier';
 let stage = 'CONFIG';
 let closeDatabase: (() => Promise<void>) | undefined;
 
@@ -19,6 +20,14 @@ async function start() {
   await evidenceStorage().healthcheck();
   stage = 'SCANNER';
   await evidenceMalwareScanner().healthcheck();
+  const downloadBarrier = new StressDownloadBarrier();
+  const storage = evidenceStorage();
+  const realGet = storage.get.bind(storage);
+  storage.get = async (key) => {
+    const content = await realGet(key);
+    if (content) await downloadBarrier.wait();
+    return content;
+  };
   stage = 'APP';
   const { default: app } = await import('../src/app');
   const server = app.listen(0, '127.0.0.1');
@@ -46,13 +55,17 @@ async function start() {
         peakRssBytes: peak,
         rssBytes: rss,
         ...evidenceConcurrency.snapshot(),
+        heldDownloadBuffers: downloadBarrier.count(),
       });
     }
+    if (command.type === 'hold-downloads') downloadBarrier.arm();
+    if (command.type === 'release-downloads') downloadBarrier.release();
     if (command.type === 'baseline') {
       baseline = process.memoryUsage().rss;
       peak = baseline;
     }
     if (command.type === 'stop') {
+      downloadBarrier.release();
       clearInterval(sampling);
       server.close(() => {
         void pool.end().finally(() => process.exit(0));

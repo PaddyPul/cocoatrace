@@ -101,10 +101,12 @@ export function parseSnapshot(message) {
       'rssBytes',
       'activeTransfers',
       'activeTenants',
+      'heldDownloadBuffers',
     ].every((key) => Number.isSafeInteger(message[key]) && message[key] >= 0) ||
     message.peakRssBytes < message.baselineRssBytes ||
     message.activeTransfers > 4 ||
-    message.activeTenants > 4
+    message.activeTenants > 4 ||
+    message.heldDownloadBuffers > 4
   )
     throw Error('EVIDENCE_STRESS_IPC_INVALID');
   return {
@@ -114,6 +116,7 @@ export function parseSnapshot(message) {
     rssBytes: message.rssBytes,
     activeTransfers: message.activeTransfers,
     activeTenants: message.activeTenants,
+    heldDownloadBuffers: message.heldDownloadBuffers,
   };
 }
 function ensure(condition, code) {
@@ -320,11 +323,15 @@ function apiChild(environment) {
     });
   return { child, ready, snapshot };
 }
-async function waitTransfers(api, count) {
+async function waitTransfers(api, count, requireBuffers = false) {
   const deadline = Date.now() + 5000;
   while (Date.now() < deadline) {
     const snapshot = await api.snapshot();
-    if (snapshot.activeTransfers === count) return snapshot;
+    if (
+      snapshot.activeTransfers === count &&
+      (!requireBuffers || snapshot.heldDownloadBuffers === count)
+    )
+      return snapshot;
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
   throw Error('EVIDENCE_STRESS_ADMISSION_NOT_OBSERVED');
@@ -408,16 +415,15 @@ async function exercise(api, ready, report) {
       busyResponses: 1,
     });
     const downloadStarted = Date.now();
+    api.child.send({ type: 'hold-downloads' });
+    await api.snapshot();
     for (let index = 0; index < 4; index += 1)
       downloads.push(
         holdDownload(ready.port, completed[index].body.id, actors[sequence[index]].token),
       );
-    const statuses = await Promise.all(downloads.map((request) => request.ready));
-    ensure(
-      statuses.every((status) => status === 200),
-      'EVIDENCE_STRESS_DOWNLOAD_HEADERS_FAILED',
-    );
-    await waitTransfers(api, 4);
+    // Real S3 bytes are held inside the guarded test child before HTTP writes.
+    // A paused client alone is insufficient: Windows can buffer the whole file.
+    await waitTransfers(api, 4, true);
     const denied = await send(
       ready.port,
       'GET',
@@ -433,6 +439,12 @@ async function exercise(api, ready, report) {
     );
     busyResponses += 1;
     report.busyResponses = busyResponses;
+    api.child.send({ type: 'release-downloads' });
+    const statuses = await Promise.all(downloads.map((request) => request.ready));
+    ensure(
+      statuses.every((status) => status === 200),
+      'EVIDENCE_STRESS_DOWNLOAD_HEADERS_FAILED',
+    );
     downloads.forEach((request) => request.resume());
     const received = await Promise.all(downloads.map((request) => request.completion));
     ensure(
@@ -445,6 +457,7 @@ async function exercise(api, ready, report) {
     await waitTransfers(api, 0);
     phases.push({
       phase: 'four_slow_authorized_downloads',
+      admissionObservation: 'IPC barrier after real provider reads, before HTTP writes',
       durationMs: Date.now() - downloadStarted,
       completed: 4,
       busyResponses: 1,

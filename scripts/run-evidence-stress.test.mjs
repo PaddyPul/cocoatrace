@@ -54,10 +54,12 @@ test('IPC memory protocol rejects incomplete, unbounded and inconsistent samples
     rssBytes: 150,
     activeTransfers: 4,
     activeTenants: 2,
+    heldDownloadBuffers: 4,
   };
   assert.equal(parseSnapshot({ ...sample, token: 'secret', url: 'private' }).peakRssBytes, 200);
   assert.equal('token' in parseSnapshot({ ...sample, token: 'secret' }), false);
   assert.throws(() => parseSnapshot({ ...sample, activeTransfers: 5 }));
+  assert.throws(() => parseSnapshot({ ...sample, heldDownloadBuffers: 5 }));
   assert.throws(() => parseSnapshot({ ...sample, peakRssBytes: 99 }));
   assert.throws(() => parseSnapshot({ ...sample, rssBytes: -1 }));
   assert.throws(() => parseSnapshot({ type: 'ready', actors: [] }));
@@ -152,4 +154,41 @@ test('stress bootstrap gives Knex the registered TypeScript migration directory'
     0,
     'Knex must enumerate the full real migration source before bootstrap',
   );
+});
+
+test('post-read download barrier retains all four buffers until explicit release', () => {
+  const script = `
+    const assert = require('node:assert/strict');
+    const { StressDownloadBarrier } = require('./api/scripts/evidence-stress-barrier.ts');
+    (async () => {
+      const barrier = new StressDownloadBarrier();
+      await barrier.wait();
+      assert.equal(barrier.count(), 0);
+      barrier.arm();
+      let completed = 0;
+      const bytes = Buffer.alloc(1024, 7);
+      const reads = Array.from({length: 4}, async () => {
+        await barrier.wait();
+        completed++;
+        return bytes;
+      });
+      await Promise.resolve();
+      assert.equal(barrier.count(), 4);
+      assert.equal(completed, 0);
+      assert.throws(() => barrier.arm(), /ALREADY_ACTIVE/);
+      barrier.release();
+      const results = await Promise.all(reads);
+      assert.equal(barrier.count(), 0);
+      assert.equal(completed, 4);
+      assert.ok(results.every(result => result === bytes));
+      barrier.release();
+      barrier.arm();
+      barrier.release();
+    })().catch(() => { process.exitCode = 1; });
+  `;
+  const result = spawnSync(process.execPath, ['--import', 'tsx', '-e', script], {
+    encoding: 'utf8',
+    timeout: 5000,
+  });
+  assert.equal(result.status, 0, 'All real read buffers must remain observable until release');
 });

@@ -816,3 +816,8 @@ Founder stress API exited before transfers because the synthetic S3 bucket lacke
 ## Correction checkpoint — stress fixture migrations
 
 Founder configuration validation passed, then disposable fixture creation failed. Fixture Knex connection lacked a migration-directory configuration; configure the canonical TypeScript source and test real Knex file enumeration. Stage diagnostics distinguish database/migrations/actor failures without exposing SQL or fixture credentials. Docker stress and wave acceptance remain pending.
+
+
+## Correction checkpoint — deterministic download observation
+
+Founder stress run completed four maximum uploads and one busy rejection; sampled API peak 327,065,600 bytes was below the 512 MiB budget. Downloads failed the four-active observation before the second phase completed; this is not an accepted memory-stress pass. Replace OS receive-window timing assumptions with guarded child IPC barrier after real provider bytes are read, prove four held buffers/admissions before fifth rejection, then release for slow HTTP downloads and checksum verification. Production admission and budget remain unchanged.

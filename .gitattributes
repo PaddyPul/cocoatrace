@@ -134,3 +134,4 @@ api/scripts/evidence-stress-server.ts text eol=lf
 scripts/run-evidence-stress.mjs text eol=lf
 scripts/run-evidence-stress.test.mjs text eol=lf
 docker-compose.evidence-stress.yml text eol=lf
+api/scripts/evidence-stress-barrier.ts text eol=lf
