@@ -1,5 +1,7 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/scripts/integration-test-selection.mjs',
+  'scripts/integration-test-selection.test.mjs',
   'api/src/modules/recall/response.ts',
   'api/scripts/evidence-stress-barrier.ts',
   'api/src/services/evidenceAvailability.ts',

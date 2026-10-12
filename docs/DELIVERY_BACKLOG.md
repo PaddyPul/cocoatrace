@@ -853,3 +853,10 @@ Correction author checks: 780 API assertions, quality, workspace/browser type ch
 Latest native failure read an error envelope as `body.items` and reported undefined. Filter holdings by tenant/cursor/basic availability/literal search before graph assessment, assess once per distinct matching batch and preserve recall filtering before the page limit. Native assertions now validate status/code before item shape and plan evidence checks bounded root output plus one assessed batch rather than a specific root node type. Production deadlines remain unchanged; no timeout/retry bypass. Candidate acceptance pending.
 
 Author correction verification: 780 API assertions, quality, workspace/browser types, API build and backlog tests pass; updated native catalog case compiles strictly. Actual PostgreSQL timing and full release execution remain pending.
+
+
+## Diagnostic checkpoint — multi-tenant upload fixture 503
+
+Latest founder run passed the other 417 cases; multi-tenant setup returned 503 and skipped its 30 cases. The original assertion omitted the upload error code. Add safe intent/content stage and uppercase code diagnostics, and optional exact-existing-filename selection to the disposable native runner. Full release still runs every suite; no service bypass, automatic retry, deadline increase or accepted wave claim.
+
+Diagnostic author validation: quality and 18 runner checks pass; modified native multi-tenant fixture compiles strictly. No production error cause or repair is inferred. One-suite founder execution must provide stage/code evidence; full release remains required before merge.

@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import { integrationSuiteArguments } from './integration-test-selection.mjs';
 import { fileURLToPath } from 'node:url';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -12,6 +13,8 @@ const composeProject = process.env.COCOATRACE_TEST_COMPOSE_PROJECT || 'cocoatrac
 const testDatabaseUrl = `postgresql://cocoa_test:cocoa_test@127.0.0.1:${port}/cocoatrace_test`;
 const docker = process.platform === 'win32' ? 'docker.exe' : 'docker';
 const npmCli = process.env.npm_execpath;
+// Optional one-suite diagnosis; the default release command still runs every suite.
+const suiteArgs = integrationSuiteArguments(process.argv.slice(2), repositoryRoot);
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, { cwd: repositoryRoot, stdio: 'inherit', ...options });
@@ -32,7 +35,7 @@ try {
   else {
     composeStarted = true;
     if (!npmCli) throw new Error('npm_execpath is unavailable. Run this command through npm.');
-    process.exitCode = run(process.execPath, [npmCli, 'run', 'test:integration', '--workspace=api'], {
+    process.exitCode = run(process.execPath, [npmCli, 'run', 'test:integration', '--workspace=api', ...suiteArgs], {
       env: {
         ...process.env, TEST_DATABASE_URL: testDatabaseUrl,
         EVIDENCE_STORAGE_DRIVER: 's3', EVIDENCE_STORAGE_ENDPOINT: `http://127.0.0.1:${storagePort}`,

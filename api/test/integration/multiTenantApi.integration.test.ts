@@ -131,6 +131,11 @@ async function createSupplyFixture(tenant: Tenant, suffix: string): Promise<void
   tenant.profileId = profile.rows[0].id;
 }
 
+const uploadStages = new WeakMap<object, string>();
+function evidenceDiagnostic(stage: string, response: {status:number;body:{code?:unknown}}) {
+  const code = typeof response.body.code === 'string' && /^[A-Z0-9_]{1,80}$/.test(response.body.code) ? response.body.code : 'none';
+  return `${stage}/${uploadStages.get(response) || 'request'}: HTTP ${response.status}; code=${code}`;
+}
 async function uploadEvidence(
   tenant: Tenant,
   linkedEntityType: 'batch' | 'certificate' | 'contract' | 'farm' | 'product_profile' | 'shipment',
@@ -143,8 +148,10 @@ async function uploadEvidence(
     .set('Authorization', `Bearer ${tenant.token}`)
     .send({ type, fileName: `${type}.pdf`, mimeType: 'application/pdf', fileSizeBytes: content.length,
       linkedEntityType, linkedEntityId, claimDescription: 'Integration authorization proof' });
-  if (intent.status !== 201) return intent;
-  return request(app).put(intent.body.uploadUrl).set('Content-Type', 'application/pdf').send(content);
+  if (intent.status !== 201) { uploadStages.set(intent, 'upload-intent'); return intent; }
+  const uploaded = await request(app).put(intent.body.uploadUrl).set('Content-Type', 'application/pdf').send(content);
+  uploadStages.set(uploaded, 'upload-content');
+  return uploaded;
 }
 
 async function createFarm(tenant: Tenant, name: string): Promise<string> {
@@ -195,13 +202,13 @@ beforeAll(async () => {
   await createSupplyFixture(tenantB, 'B');
 
   const evidenceA = await uploadEvidence(tenantA, 'batch', tenantA.batchId);
+  expect(evidenceA.status, evidenceDiagnostic('tenant-A-batch', evidenceA)).toBe(201);
   const evidenceB = await uploadEvidence(tenantB, 'batch', tenantB.batchId);
+  expect(evidenceB.status, evidenceDiagnostic('tenant-B-batch', evidenceB)).toBe(201);
   const contractEvidenceA = await uploadEvidence(tenantA, 'contract', tenantA.contractId, 'commercial_invoice');
+  expect(contractEvidenceA.status, evidenceDiagnostic('tenant-A-contract', contractEvidenceA)).toBe(201);
   const contractEvidenceB = await uploadEvidence(tenantB, 'contract', tenantB.contractId, 'commercial_invoice');
-  expect(evidenceA.status).toBe(201);
-  expect(evidenceB.status).toBe(201);
-  expect(contractEvidenceA.status).toBe(201);
-  expect(contractEvidenceB.status).toBe(201);
+  expect(contractEvidenceB.status, evidenceDiagnostic('tenant-B-contract', contractEvidenceB)).toBe(201);
   expect(evidenceA.body).not.toHaveProperty('storage_path');
   expect(evidenceB.body).not.toHaveProperty('storage_path');
   tenantA.evidenceId = evidenceA.body.id;
