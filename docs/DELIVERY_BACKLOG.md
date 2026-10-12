@@ -806,3 +806,8 @@ Move provider HEAD/stat outside trade write transactions, then lock and revalida
 Next security work: recall resolution must reject rejected/deleting/unavailable proof; public evidence availability wording and eligibility need review. Remaining performance work: streaming transfers, multi-instance admission, slow/abort/crash canaries and hosted measurements.
 
 Author validation: 777 API assertions pass; workspace/browser types, API/web builds, migration integrity and backlog tests pass. Nine native PostgreSQL race/authority tests and guarded stress source compile strictly. Native Docker, browser and measured RSS execution remain pending.
+
+
+## Correction checkpoint — stress startup isolation, 2026-10-12
+
+Founder stress API exited before transfers because the synthetic S3 bucket lacked the required `test` environment marker. Correct the fixture bucket, exercise the actual configuration parser in runner regression tests, and expose only allowlisted startup stage codes via IPC. No production isolation bypass or RSS-budget change. Candidate release acceptance remains pending.

@@ -97,3 +97,31 @@ test('runner never overwrites source or resets customer schemas and keeps output
     /stdio: \['ignore', 'ignore', 'ignore', 'ipc'\]|stdio:\['ignore','ignore','ignore','ipc'\]/,
   );
 });
+
+test('stress environment passes the real API configuration isolation rules', () => {
+  const environment = stressEnvironment(requireStressPorts());
+  const check = spawnSync(
+    process.execPath,
+    ['--import', 'tsx', '-e', "require('./api/src/config/env.ts').parseConfig(process.env)"],
+    { env: { ...process.env, ...environment }, encoding: 'utf8' },
+  );
+  assert.equal(
+    check.status,
+    0,
+    'Synthetic stress settings must satisfy the actual API config parser',
+  );
+  const rejected = spawnSync(
+    process.execPath,
+    ['--import', 'tsx', '-e', "require('./api/src/config/env.ts').parseConfig(process.env)"],
+    {
+      env: {
+        ...process.env,
+        ...environment,
+        EVIDENCE_STORAGE_BUCKET: 'bettertrade-evidence-stress',
+      },
+      encoding: 'utf8',
+    },
+  );
+  assert.notEqual(rejected.status, 0);
+  assert.match(rejected.stderr, /EVIDENCE_STORAGE_BUCKET must include the environment name/);
+});

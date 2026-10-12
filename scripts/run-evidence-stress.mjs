@@ -40,7 +40,7 @@ export function stressEnvironment(ports) {
     EVIDENCE_STORAGE_DRIVER: 's3',
     EVIDENCE_STORAGE_ENDPOINT: `http://127.0.0.1:${ports.BETTERTRADE_STRESS_STORAGE_PORT}`,
     EVIDENCE_STORAGE_REGION: 'us-east-1',
-    EVIDENCE_STORAGE_BUCKET: 'bettertrade-evidence-stress',
+    EVIDENCE_STORAGE_BUCKET: 'bettertrade-evidence-stress-test',
     EVIDENCE_STORAGE_ACCESS_KEY: 'synthetic-stress-access',
     EVIDENCE_STORAGE_SECRET_KEY: 'synthetic-stress-secret',
     EVIDENCE_STORAGE_AUTO_CREATE_BUCKET: 'true',
@@ -271,7 +271,13 @@ function apiChild(environment) {
       }
       if (message?.type === 'failed') {
         clearTimeout(deadline);
-        reject(Error('EVIDENCE_STRESS_API_START_FAILED'));
+        reject(
+          Error(
+            /^EVIDENCE_STRESS_START_(CONFIG|FIXTURES|STORAGE|SCANNER|APP)$/.test(message.code ?? '')
+              ? message.code
+              : 'EVIDENCE_STRESS_API_START_FAILED',
+          ),
+        );
       }
       if (message?.type === 'snapshot') {
         const waiter = pending.get(message.id);

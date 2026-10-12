@@ -2,17 +2,24 @@ import {
   createEvidenceStressFixtures,
   requireEvidenceStressDatabase,
 } from './evidence-stress-fixtures';
-import { evidenceConcurrency } from '../src/modules/security/evidenceConcurrency';
-import { evidenceMalwareScanner } from '../src/services/evidenceMalwareScanner';
-import { evidenceStorage } from '../src/services/evidenceStorage';
-import { pool } from '../src/db';
+let stage = 'CONFIG';
+let closeDatabase: (() => Promise<void>) | undefined;
 
 async function start() {
   requireEvidenceStressDatabase(process.env);
   if (!process.send) throw Error('EVIDENCE_STRESS_IPC_REQUIRED');
+  const { pool } = await import('../src/db');
+  closeDatabase = () => pool.end();
+  const { evidenceConcurrency } = await import('../src/modules/security/evidenceConcurrency');
+  const { evidenceStorage } = await import('../src/services/evidenceStorage');
+  const { evidenceMalwareScanner } = await import('../src/services/evidenceMalwareScanner');
+  stage = 'FIXTURES';
   const actors = await createEvidenceStressFixtures();
+  stage = 'STORAGE';
   await evidenceStorage().healthcheck();
+  stage = 'SCANNER';
   await evidenceMalwareScanner().healthcheck();
+  stage = 'APP';
   const { default: app } = await import('../src/app');
   const server = app.listen(0, '127.0.0.1');
   await new Promise<void>((resolve, reject) => {
@@ -56,7 +63,7 @@ async function start() {
   process.send({ type: 'ready', port: address.port, actors });
 }
 void start().catch(() => {
-  process.send?.({ type: 'failed', code: 'EVIDENCE_STRESS_API_START_FAILED' });
+  process.send?.({ type: 'failed', code: `EVIDENCE_STRESS_START_${stage}` });
   process.exitCode = 1;
-  void pool.end();
+  void closeDatabase?.();
 });
