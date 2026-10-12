@@ -56,7 +56,7 @@ export async function submitPayment(
           [input.evidenceId, contract.id, actor.organizationId],
         )
       ).rows[0];
-      if (!evidence || !(await evidenceStorage().get(evidence.storage_key))?.length)
+      if (!evidence || !(await evidenceStorage().exists(evidence.storage_key)))
         throw new AppError(
           'Payment proof must be your scan-clean, validated upload for this contract',
           400,
@@ -108,7 +108,7 @@ export async function confirmReceipt(actor: TradeActor, id: string) {
         AND malware_scan_status='clean' AND review_status<>'rejected' AND storage_key IS NOT NULL FOR SHARE`,
         [item.payment_evidence_id],
       );
-      if (!proof.rows[0] || !(await evidenceStorage().get(proof.rows[0].storage_key))?.length)
+      if (!proof.rows[0] || !(await evidenceStorage().exists(proof.rows[0].storage_key)))
         throw new ConflictError(
           'The attached payment proof is unavailable; reject the reference and ask for valid proof',
         );

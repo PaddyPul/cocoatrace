@@ -1,5 +1,8 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/scripts/scan-pending-evidence.ts',
+  'api/src/services/evidenceMalwareScanner.ts',
+  'api/src/services/evidenceMalwareScanner.test.ts',
   'api/src/middleware/evidenceContent.ts',
   'api/src/middleware/evidenceContent.test.ts',
   'api/src/controllers/evidenceController.ts',

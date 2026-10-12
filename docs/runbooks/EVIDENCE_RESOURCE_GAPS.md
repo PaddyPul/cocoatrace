@@ -42,15 +42,19 @@ Replace full reads with a bounded `HEAD`/existence operation. Provider I/O shoul
 
 ### Scanner maintenance job
 
-The pending-evidence scanner selects the complete eligible history, has no durable claim lease and buffers each object. Two invocations can scan the same evidence, a very large legacy object is not constrained by the current upload limit, and an interrupted job has no explicit stale-lease recovery.
+The pending-evidence scanner now selects at most 50 records by default (configurable up to 100),
+processes one bounded file at a time, and holds a PostgreSQL session advisory lock so only one job
+runs against a database. Failed records are timestamped and ordered behind records that have never
+been scanned. This is a bounded single-worker prerequisite, not a durable per-record lease or a
+complete cleanup system.
 
 Required closure:
 
-- select a fixed batch size;
-- claim each record with an expiring lease before provider I/O;
-- use bounded worker concurrency and retry backoff;
+- persist cleanup work when deletion of an infected object fails;
+- add retry/backoff and an operator-visible terminal state for that cleanup work;
 - reject or escalate legacy objects beyond the reviewed scan-size policy;
-- prove that two workers do not scan one record concurrently and that an expired lease is recoverable.
+- if parallel scan workers become necessary, replace the global job lock with durable expiring
+  per-record claims and prove crash recovery without duplicate scans.
 
 ### Cleanup, quota and orphan objects
 

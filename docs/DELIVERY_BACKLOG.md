@@ -757,3 +757,21 @@ The reordered browser sequence still failed after text entry. Source inspection 
 - These are prerequisite controls, not completion of PER-003. Durable cross-instance leases, maintenance scanner claims, quota-accounted cleanup, transactional existence checks and maximum-size RSS/backpressure stress remain open. No measured memory/SLO claim; native release and merge/pull acceptance pending.
 
 - Author validation: 739 API unit assertions passed; quality, workspace/browser types, builds, migration integrity and backlog checks passed. Ten new PostgreSQL/API cases compile strictly. Docker/native execution remains pending founder release acceptance.
+
+
+## Accepted checkpoint — evidence transfer budgets, 2026-10-12
+
+- Founder confirms full release checks passed and merge/pull completed at 12:09 UTC. Process/tenant admission, signed pre-body capability validation, JSON-parser bypass prevention, download disconnect lifetime, bounded local/S3 reads, storage deadlines and capability-log sanitation are accepted. This supersedes candidate native acceptance above.
+- PER-003 remains IN PROGRESS: durable scanner claims, quota-accounted object cleanup, transactional existence checks, maximum-size RSS/backpressure stress and distributed leases remain outstanding. SAF-002 remains open for deployment secret inventory, rotation and revocation evidence.
+- Next implementation batch: bounded maintenance-scanner jobs and storage existence checks that avoid downloading complete files inside trade transactions; follow with durable cleanup and memory stress evidence.
+
+
+## Candidate checkpoint — bounded scanner maintenance and metadata-only file checks, 2026-10-12
+
+- PER-003: replace unbounded maintenance scan selection with a capped sequential batch and an exclusive PostgreSQL session job lock. A concurrent job refuses duplicate work; session crash/disconnect releases the lock. This is not a durable per-record queue/lease implementation.
+- Record infected status before attempting deletion so cleanup failure cannot turn known infected material back into an ambiguous retry state. Bounded private reads and sanitized result summaries remain authoritative.
+- Replace full-file existence reads in payment/delivery checks with local stat/S3 HEAD metadata; preserve party authority, scan/review and payment release rules. Provider I/O inside trade locks remains a follow-up.
+- Remove whole-file ClamAV framing copies; honor socket backpressure and cap scanner response bytes under an absolute deadline.
+- Native release/merge acceptance pending. PER-003 remains IN PROGRESS for durable cleanup/quota accounting, transaction I/O, multi-instance transfer admission and measured maximum-size memory stress.
+
+- Author verification: 759 API unit assertions passed, including real TCP frame/backpressure/deadline checks; quality/types/builds/migration integrity/backlog checks passed. Eight native PostgreSQL/storage cases compile strictly. Native execution remains pending founder release acceptance.
