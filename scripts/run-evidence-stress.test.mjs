@@ -125,3 +125,31 @@ test('stress environment passes the real API configuration isolation rules', () 
   assert.notEqual(rejected.status, 0);
   assert.match(rejected.stderr, /EVIDENCE_STORAGE_BUCKET must include the environment name/);
 });
+
+test('stress bootstrap gives Knex the registered TypeScript migration directory', () => {
+  const environment = stressEnvironment(requireStressPorts());
+  const script = `
+    const assert = require('node:assert/strict');
+    const path = require('node:path');
+    const fs = require('node:fs');
+    const { evidenceStressDatabaseConfig } = require('./api/scripts/evidence-stress-fixtures.ts');
+    const { FsMigrations } = require('knex/lib/migrations/migrate/sources/fs-migrations');
+    const config = evidenceStressDatabaseConfig(process.env);
+    assert.equal(config.migrations.extension, 'ts');
+    assert.equal(config.migrations.directory, path.resolve('api/src/migrations'));
+    const expected = fs.readdirSync(config.migrations.directory).filter(name => name.endsWith('.ts')).sort();
+    new FsMigrations(config.migrations.directory, false, ['.ts']).getMigrations().then(files => {
+      assert.deepEqual(files.map(file => file.file).sort(), expected);
+      assert.ok(expected.includes('035_evidence_object_cleanup.ts'));
+    }).catch(() => { process.exitCode = 1; });
+  `;
+  const result = spawnSync(process.execPath, ['--import', 'tsx', '-e', script], {
+    env: { ...process.env, ...environment },
+    encoding: 'utf8',
+  });
+  assert.equal(
+    result.status,
+    0,
+    'Knex must enumerate the full real migration source before bootstrap',
+  );
+});

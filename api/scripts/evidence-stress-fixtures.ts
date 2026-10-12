@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import bcrypt from 'bcryptjs';
-import knex from 'knex';
+import knex, { type Knex } from 'knex';
 import { requireDisposableTestDatabase } from '../src/testing/databaseSafety';
 import { runSafeMigrations } from '../src/database/migrationBootstrap';
 
@@ -20,14 +20,23 @@ export function requireEvidenceStressDatabase(environment: NodeJS.ProcessEnv): s
     throw Error('EVIDENCE_STRESS_DATABASE_REFUSED');
   return connection;
 }
+export function evidenceStressDatabaseConfig(environment: NodeJS.ProcessEnv): Knex.Config {
+  return {
+    client: 'pg',
+    connection: requireEvidenceStressDatabase(environment),
+    pool: { min: 0, max: 2 },
+    migrations: { directory: path.resolve(__dirname, '../src/migrations'), extension: 'ts' },
+  };
+}
 export async function createEvidenceStressFixtures() {
-  const connection = requireEvidenceStressDatabase(process.env);
-  const database = knex({ client: 'pg', connection, pool: { min: 0, max: 2 } });
+  const database = knex(evidenceStressDatabaseConfig(process.env));
+  let phase = 'DATABASE';
   try {
     const existing = await database.raw(
       "SELECT COUNT(*)::int AS count FROM pg_tables WHERE schemaname='public'",
     );
     if (existing.rows[0].count !== 0) throw Error('EVIDENCE_STRESS_DATABASE_NOT_EMPTY');
+    phase = 'MIGRATIONS';
     const directory = path.resolve(__dirname, '../src/migrations');
     await runSafeMigrations(database, {
       schemaSql: fs.readFileSync(path.resolve(__dirname, '../../db/schema.sql'), 'utf8'),
@@ -37,6 +46,7 @@ export async function createEvidenceStressFixtures() {
         .sort(),
       loadMigration: async (name) => require(path.join(directory, name)),
     });
+    phase = 'ACTORS';
     const actors = [];
     for (let index = 0; index < 2; index += 1) {
       const [organization] = await database('organizations')
@@ -76,6 +86,8 @@ export async function createEvidenceStressFixtures() {
       actors.push({ email, password, farmId: farm.id });
     }
     return actors;
+  } catch {
+    throw new Error(`EVIDENCE_STRESS_FIXTURE_${phase}`);
   } finally {
     await database.destroy();
   }

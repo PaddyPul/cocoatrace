@@ -21,6 +21,7 @@ Slow evidence storage no longer holds payment, document-presentation or discrepa
 - Exercise four 10 MiB uploads and slow downloads through real HTTP, Moto S3 and ClamAV; verify busy responses and downloaded hashes, sample API RSS against 512 MiB.
 - Add release/CI gate and correct hardened runtime maintenance instructions.
 - Correct synthetic bucket environment isolation, test the real config parser and report allowlisted startup failure stages.
+- Configure the disposable Knex migration source explicitly and verify real migration file enumeration.
 
 ## Security and data review
 
@@ -46,7 +47,7 @@ Slow evidence storage no longer holds payment, document-presentation or discrepa
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: author 777 API assertions, types/builds/quality, 14 runner checks and migration integrity pass; nine new native race/authority cases compile strictly. Docker/native/browser/RSS execution awaits exact-commit founder release and CI. Append tested commit and safe stress report after those pass.
+- Evidence/results: author 777 API assertions, types/builds/quality, 15 runner checks and migration integrity pass; nine new native race/authority cases compile strictly. Docker/native/browser/RSS execution awaits exact-commit founder release and CI. Append tested commit and safe stress report after those pass.
 
 ## Product and operations
 

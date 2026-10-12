@@ -811,3 +811,8 @@ Author validation: 777 API assertions pass; workspace/browser types, API/web bui
 ## Correction checkpoint — stress startup isolation, 2026-10-12
 
 Founder stress API exited before transfers because the synthetic S3 bucket lacked the required `test` environment marker. Correct the fixture bucket, exercise the actual configuration parser in runner regression tests, and expose only allowlisted startup stage codes via IPC. No production isolation bypass or RSS-budget change. Candidate release acceptance remains pending.
+
+
+## Correction checkpoint — stress fixture migrations
+
+Founder configuration validation passed, then disposable fixture creation failed. Fixture Knex connection lacked a migration-directory configuration; configure the canonical TypeScript source and test real Knex file enumeration. Stage diagnostics distinguish database/migrations/actor failures without exposing SQL or fixture credentials. Docker stress and wave acceptance remain pending.

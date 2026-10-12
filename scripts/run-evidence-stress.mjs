@@ -273,7 +273,9 @@ function apiChild(environment) {
         clearTimeout(deadline);
         reject(
           Error(
-            /^EVIDENCE_STRESS_START_(CONFIG|FIXTURES|STORAGE|SCANNER|APP)$/.test(message.code ?? '')
+            /^EVIDENCE_STRESS_(START_(CONFIG|FIXTURES|STORAGE|SCANNER|APP)|FIXTURE_(DATABASE|MIGRATIONS|ACTORS))$/.test(
+              message.code ?? '',
+            )
               ? message.code
               : 'EVIDENCE_STRESS_API_START_FAILED',
           ),

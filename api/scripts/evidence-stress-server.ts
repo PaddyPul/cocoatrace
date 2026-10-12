@@ -62,8 +62,13 @@ async function start() {
   });
   process.send({ type: 'ready', port: address.port, actors });
 }
-void start().catch(() => {
-  process.send?.({ type: 'failed', code: `EVIDENCE_STRESS_START_${stage}` });
+void start().catch((error: unknown) => {
+  const fixtureCode =
+    error instanceof Error &&
+    /^EVIDENCE_STRESS_FIXTURE_(DATABASE|MIGRATIONS|ACTORS)$/.test(error.message)
+      ? error.message
+      : undefined;
+  process.send?.({ type: 'failed', code: fixtureCode ?? `EVIDENCE_STRESS_START_${stage}` });
   process.exitCode = 1;
   void closeDatabase?.();
 });
