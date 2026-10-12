@@ -40,3 +40,13 @@ test('language regressions gate the release before Docker journeys',()=>{
  assert.ok(languageIndex>=0 && languageIndex<browserIndex);
  assert.deepEqual(releaseChecks[languageIndex][1],['run','test:locale']);
 });
+
+
+test('real evidence memory stress is required before browser journeys', () => {
+ const stress = releaseChecks.findIndex(check => check[0] === 'Evidence transfer memory stress');
+ const integration = releaseChecks.findIndex(check => check[0] === 'Database/storage/scanner integration');
+ const browser = releaseChecks.findIndex(check => check[0] === 'Browser journeys');
+ assert.ok(stress > integration && stress < browser);
+ assert.deepEqual(releaseChecks[stress][1], ['run', 'test:evidence:stress:docker']);
+ assert.ok(releaseChecks.find(check => check[0] === 'Runner checks')[1].includes('scripts/run-evidence-stress.test.mjs'));
+});

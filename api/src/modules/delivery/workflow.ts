@@ -3,7 +3,12 @@ import { ConflictError, NotFoundError, ValidationError } from '../../errors';
 import { inTradeTransaction, recordTradeAudit, TradeActor } from '../trading/transaction';
 import { completeTradeIfReady } from '../../services/tradeSettlement';
 import { lockRecallBoundary, assertBatchNotRecalled } from '../recall/safety';
-import { evidenceStorage } from '../../services/evidenceStorage';
+import {
+  evidenceAvailabilityProjection,
+  evidenceAvailabilityUsableSql,
+  preflightEvidence,
+  assertWorkflowEvidenceLimit,
+} from '../../services/evidenceAvailability';
 
 interface DeliveryContractRow {
   id: string;
@@ -202,6 +207,21 @@ export async function reportDiscrepancy(
   id: string,
   input: { kind: string; receivedQuantityKg: number; reason: string; evidenceIds: string[] },
 ) {
+  const requestedIds = [...new Set(input.evidenceIds)].sort();
+  const availability = await preflightEvidence(
+    async (execute) =>
+      (
+        await execute(
+          `SELECT ${evidenceAvailabilityProjection('e')}
+    FROM evidence_items e JOIN sales_contracts c ON c.id=e.linked_entity_id AND e.linked_entity_type='contract'
+    WHERE c.id=$2 AND c.buyer_organization_id=$3 AND e.id=ANY($1::uuid[]) AND e.uploader_organization_id=$3
+    AND NOT EXISTS(SELECT 1 FROM delivery_discrepancies d WHERE d.contract_id=c.id AND d.status<>'resolved')
+    AND e.validation_status='validated' AND e.malware_scan_status='clean' AND e.review_status<>'rejected'
+    AND e.type IN('delivery_proof','delivery_receipt','inspection_certificate','other') AND e.storage_key IS NOT NULL AND ${evidenceAvailabilityUsableSql('e')} ORDER BY e.id DESC LIMIT 65`,
+          [requestedIds, id, actor.organizationId],
+        )
+      ).rows,
+  );
   return inTradeTransaction(async (client) => {
     const contract = await lockContract(client, actor, id, 'buyer');
     requireDelivered(contract);
@@ -228,18 +248,19 @@ export async function reportDiscrepancy(
       throw new ConflictError('Resolve the existing discrepancy first');
     }
     const proofs = (
-      await client.query<{ id: string; storage_key: string }>(
-        `SELECT id,storage_key FROM evidence_items WHERE id=ANY($1::uuid[])
+      await client.query<Record<string, unknown>>(
+        `SELECT ${evidenceAvailabilityProjection()} FROM evidence_items WHERE id=ANY($1::uuid[])
       AND linked_entity_type='contract' AND linked_entity_id=$2 AND uploader_organization_id=$3
       AND validation_status='validated' AND malware_scan_status='clean' AND review_status<>'rejected'
-      AND type IN('delivery_proof','delivery_receipt','inspection_certificate','other') AND storage_key IS NOT NULL FOR SHARE`,
+      AND type IN('delivery_proof','delivery_receipt','inspection_certificate','other') AND storage_key IS NOT NULL AND ${evidenceAvailabilityUsableSql()} ORDER BY id DESC LIMIT 65 FOR SHARE`,
         [ids, id, actor.organizationId],
       )
     ).rows;
+    assertWorkflowEvidenceLimit(proofs);
     if (proofs.length !== ids.length)
       throw new ValidationError('Attach your validated, scan-clean evidence for this contract');
     for (const proof of proofs)
-      if (!(await evidenceStorage().exists(proof.storage_key)))
+      if (!availability.available(proof))
         throw new ValidationError('Supporting evidence bytes are unavailable');
     const issue = (
       await client.query<DeliveryDiscrepancyRow>(

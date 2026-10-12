@@ -7,20 +7,20 @@
 
 Evidence uploads are limited by declared file size and organization storage quota. Upload intents are signed, expire, reserve quota and authorize a specific linked record. Files enter private quarantine, are malware-scanned and must match the declared PDF, JPEG or PNG type before promotion. Downloads require authorization and a persisted clean scan result.
 
-The current candidate also introduces finite storage deadlines, bounded JSON/file reads and a non-waiting transfer cap of four active transfers globally and two per organization **inside one API process**. Those are useful prerequisites, but they do not coordinate replicas and have not passed the required maximum-file RSS stress test. They do not close PER-003. The overall controls therefore do not yet establish a safe concurrency or memory envelope for a deployed API.
+The current candidate also introduces finite storage deadlines, bounded JSON/file reads and a non-waiting transfer cap of four active transfers globally and two per organization **inside one API process**. Those are useful prerequisites, but they do not coordinate replicas and have not yet supplied hosted capacity evidence; the candidate adds a disposable 10 MiB parallel-transfer RSS gate. They do not close PER-003. The overall controls therefore do not yet establish a safe concurrency or memory envelope for a deployed API.
 
 ## Remaining exploitable resource gaps
 
 ### Buffered upload and scanner amplification
 
-The upload route materializes the complete request as an Express `Buffer` before the intent is claimed. Concurrent replays of one valid signed URL can therefore consume the configured maximum body memory before all but one request are rejected. Scanner framing, object-store writes and object promotion can create additional full-file buffers. Request-rate budgets limit counts over time but do not prevent a damaging simultaneous burst.
+The upload route materializes the complete request as an Express `Buffer` after signed pre-body validation and process/tenant admission, but before the intent is claimed. Admitted concurrent replays can still consume bounded body memory before all but one request are rejected. Object-store writes and object promotion can create additional buffers. Request-rate budgets limit counts over time but do not prevent a damaging simultaneous burst.
 
 Required closure:
 
 - validate and atomically claim the signed intent before accepting its body;
 - require the declared content length and reject unsupported content encodings before body parsing;
 - enforce non-waiting per-process and shared per-organization/deployment admission limits;
-- write scanner frames with socket backpressure instead of concatenating another whole-file buffer;
+- retain the accepted scanner backpressure/deadline controls during future streaming changes;
 - avoid object-store copies that download and re-upload the complete quarantine object.
 
 ### Buffered downloads and storage deadlines
@@ -34,39 +34,17 @@ Required closure:
 - verify provider object length against persisted evidence metadata before and during transfer;
 - test stalled, truncated, oversized and client-aborted provider streams.
 
-### Provider I/O inside trade transactions
+### Provider preflight and authoritative revalidation
 
-Payment submission and confirmation, document presentation, and delivery-discrepancy creation currently call `storage.get()` merely to prove that evidence bytes exist. These calls download the complete object while database transactions and row locks are open. A slow or maliciously repeated provider read can therefore consume both API memory and the PostgreSQL connection pool.
+The candidate moves metadata-only local stat/S3 HEAD checks outside payment, document and discrepancy write transactions. A short scoped read commits before provider I/O; the mutation locks and revalidates current party authority, proof metadata, clean/review state and retained cleanup ownership. Request-local probes have a finite deadline and at most four concurrent HEADs; this is not a deployment-wide metadata admission limit. Changed proof fails conservatively; idempotent payment replay does not depend on later provider availability.
 
-Replace full reads with a bounded `HEAD`/existence operation. Provider I/O should occur outside locked database transactions, followed by a transactional revalidation of the evidence metadata and trade state. Alternatively, use a persisted object-availability state maintained by a separate reconciliation process. The design must specify its failure and time-of-check/time-of-use behavior.
+Boolean HEAD cannot prevent an out-of-band provider mutation after preflight. Provider version binding and inventory reconciliation remain open. Recall resolution proof eligibility must receive the same rejected-proof, cleanup and availability protection in the next wave.
 
-### Scanner maintenance job
+### Scanner maintenance and durable cleanup
 
-The pending-evidence scanner now selects at most 50 records by default (configurable up to 100),
-processes one bounded file at a time, and holds a PostgreSQL session advisory lock so only one job
-runs against a database. Failed records are timestamped and ordered behind records that have never
-been scanned. This is a bounded single-worker prerequisite, not a durable per-record lease or a
-complete cleanup system.
+Accepted bounded scanner maintenance selects at most 50 records by default (maximum 100), processes sequentially under an exclusive database session job lock, and uses scanner socket backpressure with absolute deadlines. Accepted migration 035 tracks owned quarantine/final keys before writes, retains quota charges for unfinished deletion, and supports one-at-a-time leased cleanup with backoff and terminal dead states. Infected metadata and cleanup work commit together.
 
-Required closure:
-
-- persist cleanup work when deletion of an infected object fails;
-- add retry/backoff and an operator-visible terminal state for that cleanup work;
-- reject or escalate legacy objects beyond the reviewed scan-size policy;
-- if parallel scan workers become necessary, replace the global job lock with durable expiring
-  per-record claims and prove crash recovery without duplicate scans.
-
-### Cleanup, quota and orphan objects
-
-Stale-intent cleanup currently runs from the upload-intent request path and may issue a large `Promise.all` deletion fan-out. Deletion failures are ignored. Once an intent becomes rejected, infected or scan-failed, its declared bytes no longer reserve organization quota even if quarantine deletion failed. A failed final-object deletion after database failure can also leave an object key without durable retry state.
-
-Required closure:
-
-- persist cleanup work with object key, organization, byte count, reason, attempts and next-attempt time;
-- count cleanup-pending bytes against the organization quota until deletion is confirmed;
-- process cleanup through bounded leases, retry/backoff and an operator-visible terminal state;
-- remove storage deletion fan-out from the upload-intent request path;
-- reconcile database cleanup records against bucket inventory without bulk deletion.
+Remaining: automatic scheduling and alerts, operator dead-letter recovery, historical object inventory, and crash/recovery measurement. Parallel scanning would require per-record leases. Never infer a historical object provider or bulk-delete unmatched storage keys.
 
 ### Process-only limits and horizontal scaling
 

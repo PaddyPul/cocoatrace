@@ -1,12 +1,32 @@
 import { documentsCanBePresentedAt } from './documentPolicy';
 import { activatePaymentInstallments } from './dueDates';
-import { evidenceStorage } from '../../services/evidenceStorage';
+import {
+  evidenceAvailabilityProjection,
+  evidenceAvailabilityUsableSql,
+  preflightEvidence,
+  assertWorkflowEvidenceLimit,
+} from '../../services/evidenceAvailability';
 import { ConflictError, ValidationError } from '../../errors';
 import { inTradeTransaction, recordTradeAudit, TradeActor } from '../trading/transaction';
 import { lockPayment, requireAgreed } from './locking';
 import { assertNoActivePaymentIssue } from './issueGuard';
 
 export async function presentDocuments(actor: TradeActor, id: string) {
+  const availability = await preflightEvidence(
+    async (execute) =>
+      (
+        await execute(
+          `SELECT ${evidenceAvailabilityProjection('e')}
+    FROM payment_requests p JOIN sales_contracts c ON c.id=p.contract_id JOIN evidence_items e ON e.linked_entity_id=c.id
+    WHERE p.id=$1 AND c.seller_organization_id=$2 AND p.documents_presented_at IS NULL
+    AND e.linked_entity_type='contract' AND e.uploader_organization_id=$2
+    AND (e.type IN('commercial_invoice','packing_list','transport_document') OR (e.type='insurance_certificate' AND UPPER(c.incoterm) IN('CIF','CIP')))
+    AND e.validation_status='validated' AND e.malware_scan_status='clean' AND e.review_status<>'rejected'
+    AND e.storage_key IS NOT NULL AND ${evidenceAvailabilityUsableSql('e')} ORDER BY e.id DESC LIMIT 65`,
+          [id, actor.organizationId],
+        )
+      ).rows,
+  );
   return inTradeTransaction(async (client) => {
     const { contract, payment } = await lockPayment(client, actor, id, 'seller');
     requireAgreed(contract);
@@ -39,14 +59,15 @@ export async function presentDocuments(actor: TradeActor, id: string) {
     if (['CIF', 'CIP'].includes(String(contract.incoterm).toUpperCase()))
       required.push('insurance_certificate');
     const documents = await client.query(
-      `SELECT type,storage_key FROM evidence_items WHERE linked_entity_type='contract' AND linked_entity_id=$1
+      `SELECT ${evidenceAvailabilityProjection()} FROM evidence_items WHERE linked_entity_type='contract' AND linked_entity_id=$1
       AND uploader_organization_id=$2 AND type=ANY($3::text[]) AND validation_status='validated'
-      AND malware_scan_status='clean' AND review_status<>'rejected' AND storage_key IS NOT NULL FOR SHARE`,
+      AND malware_scan_status='clean' AND review_status<>'rejected' AND storage_key IS NOT NULL AND ${evidenceAvailabilityUsableSql()} ORDER BY id DESC LIMIT 65 FOR SHARE`,
       [contract.id, actor.organizationId, required],
     );
+    assertWorkflowEvidenceLimit(documents.rows);
     const present = new Set<string>();
     for (const item of documents.rows) {
-      if (await evidenceStorage().exists(item.storage_key)) present.add(item.type);
+      if (availability.available(item)) present.add(item.type);
     }
     const missing = required.filter((type) => !present.has(type));
     if (missing.length)

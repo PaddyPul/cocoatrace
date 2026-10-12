@@ -17,6 +17,7 @@ export const releaseChecks = [
       'scripts/check-container-security.test.mjs',
       'scripts/compose-compatibility.test.mjs',
       'scripts/demo-preview.test.mjs',
+      'scripts/run-evidence-stress.test.mjs',
     ],
     true,
   ],
@@ -34,6 +35,7 @@ export const releaseChecks = [
   ['Container runtime and vulnerability checks', ['run', 'check:containers']],
   ['Fresh and upgrade migrations', ['run', 'test:migrations:docker']],
   ['Database/storage/scanner integration', ['run', 'test:integration:docker']],
+  ['Evidence transfer memory stress', ['run', 'test:evidence:stress:docker']],
   ['Browser journeys', ['run', 'test:browser:docker']],
   ['Backup and restore rehearsal', ['run', 'test:recovery:docker']],
 ];

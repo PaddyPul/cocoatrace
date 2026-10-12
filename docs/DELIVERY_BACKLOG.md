@@ -788,3 +788,36 @@ Founder confirms full release checks passed and merge/pull completed at 12:55 UT
 - Historical objects without known provider ownership require operator inventory; legacy noncompleted reservations remain conservatively charged. Automatic cleanup scheduling, operator dead-letter recovery, remote transaction I/O and peak RSS stress remain open. Native release/merge acceptance pending.
 
 - Author verification: 771 API unit assertions passed; quality, workspace/browser types, builds, migration integrity and backlog checks passed. Fifteen native PostgreSQL cases compile strictly. Native Docker/migration/storage/browser execution remains pending founder release acceptance.
+
+
+## Container maintenance command correction — 2026-10-12
+
+Founder startup verification found npm absent from the hardened runtime image, as designed. Correct deployment instructions to run `node --import tsx api/scripts/migrate.ts` and `node --import tsx api/scripts/cleanup-evidence.ts` directly. The failure occurred before migration execution; no database repair/reset or runtime-image dependency restoration is needed. Cleanup release merge/startup acceptance remains unconfirmed until founder reports completion.
+
+
+## Accepted checkpoint — durable evidence cleanup, 2026-10-12
+
+Founder confirms release checks passed and merge/pull completed at 16:57 UTC. Durable ownership, quota-accounted retry/dead states and hardened runtime maintenance commands are accepted. This supersedes pending cleanup acceptance above. PER-003 and OPS-010 remain IN PROGRESS.
+
+## Candidate checkpoint — trade proof preflight and memory stress
+
+Move provider HEAD/stat outside trade write transactions, then lock and revalidate authority and full evidence metadata including cleanup eligibility. Add a disposable 10 MiB upload/download stress gate with sampled API RSS and a 512 MiB budget. Native execution and founder acceptance pending; this is one-process canary evidence, not hosted capacity or distributed admission completion.
+
+Next security work: recall resolution must reject rejected/deleting/unavailable proof; public evidence availability wording and eligibility need review. Remaining performance work: streaming transfers, multi-instance admission, slow/abort/crash canaries and hosted measurements.
+
+Author validation: 777 API assertions pass; workspace/browser types, API/web builds, migration integrity and backlog tests pass. Nine native PostgreSQL race/authority tests and guarded stress source compile strictly. Native Docker, browser and measured RSS execution remain pending.
+
+
+## Correction checkpoint — stress startup isolation, 2026-10-12
+
+Founder stress API exited before transfers because the synthetic S3 bucket lacked the required `test` environment marker. Correct the fixture bucket, exercise the actual configuration parser in runner regression tests, and expose only allowlisted startup stage codes via IPC. No production isolation bypass or RSS-budget change. Candidate release acceptance remains pending.
+
+
+## Correction checkpoint — stress fixture migrations
+
+Founder configuration validation passed, then disposable fixture creation failed. Fixture Knex connection lacked a migration-directory configuration; configure the canonical TypeScript source and test real Knex file enumeration. Stage diagnostics distinguish database/migrations/actor failures without exposing SQL or fixture credentials. Docker stress and wave acceptance remain pending.
+
+
+## Correction checkpoint — deterministic download observation
+
+Founder stress run completed four maximum uploads and one busy rejection; sampled API peak 327,065,600 bytes was below the 512 MiB budget. Downloads failed the four-active observation before the second phase completed; this is not an accepted memory-stress pass. Replace OS receive-window timing assumptions with guarded child IPC barrier after real provider bytes are read, prove four held buffers/admissions before fifth rejection, then release for slow HTTP downloads and checksum verification. Production admission and budget remain unchanged.
