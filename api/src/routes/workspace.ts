@@ -12,6 +12,8 @@ router.get('/onboarding', requireAuth, controller.getOnboarding);
 router.get('/trade-actions', requireAuth, controller.getTradeActions);
 router.put('/onboarding', requireAuth, validate(onboardingSchema), controller.updateOnboarding);
 router.post('/pilot-feedback', requireAuth, validate(pilotFeedbackSchema), controller.createFeedback);
+router.get('/pilot-feedback/page', requireAuth, requirePermission('organization.admin'), controller.listFeedbackPage);
+router.get('/pilot-feedback/summary', requireAuth, requirePermission('organization.admin'), controller.summarizeFeedback);
 router.get('/pilot-feedback', requireAuth, requirePermission('organization.admin'), controller.listFeedback);
 
 export = router;

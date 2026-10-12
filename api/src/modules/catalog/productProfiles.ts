@@ -89,21 +89,31 @@ export async function legacyProducts(
 ) {
   if (Object.keys(parameters).length)
     throw new ValidationError('Use the paged product register for filters');
-  const rows = (
-    await execute(
-      `SELECT ${fields},${activeBatchRecallSql('b.id')} AS inventory_held,${severity('b.id')} AS active_severity,
- (SELECT COUNT(*)::int FROM product_profile_scans scan WHERE scan.product_profile_id=pp.id) AS scan_count,
- (SELECT COUNT(*)::int FROM evidence_items evidence WHERE evidence.linked_entity_type='batch' AND evidence.linked_entity_id=pp.batch_id) AS evidence_count
- ${from} WHERE ${productScope} ORDER BY pp.id LIMIT 1001`,
-      [actor.organizationId, hasExplicitPermission(actor, 'product_profile.read.all')],
-    )
+  const authority = [
+    actor.organizationId,
+    hasExplicitPermission(actor, 'product_profile.read.all'),
+  ];
+  // Reject oversized complete reads using authorized IDs only. Recall, scan,
+  // evidence and trust hydration must not run for a request we will refuse.
+  const ids = (
+    await execute(`SELECT pp.id ${from} WHERE ${productScope} ORDER BY pp.id LIMIT 1001`, authority)
   ).rows;
-  if (rows.length > 1000)
+  if (ids.length > 1000)
     throw new AppError(
       'Product history exceeds the legacy limit. Use the paged product register.',
       422,
       'CATALOG_READ_LIMIT',
     );
+  if (!ids.length) return [];
+  const rows = (
+    await execute(
+      `SELECT ${fields},${activeBatchRecallSql('b.id')} AS inventory_held,${severity('b.id')} AS active_severity,
+ (SELECT COUNT(*)::int FROM product_profile_scans scan WHERE scan.product_profile_id=pp.id) AS scan_count,
+ (SELECT COUNT(*)::int FROM evidence_items evidence WHERE evidence.linked_entity_type='batch' AND evidence.linked_entity_id=pp.batch_id) AS evidence_count
+ ${from} WHERE ${productScope} AND pp.id=ANY($3::uuid[]) ORDER BY pp.id`,
+      [...authority, ids.map((row) => row.id)],
+    )
+  ).rows;
   return decorate(execute, rows);
 }
 export async function listProductPage(req: Request, res: Response) {

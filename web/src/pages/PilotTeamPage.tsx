@@ -1,6 +1,7 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Clock3, Copy, MailPlus, Users } from 'lucide-react';
 import Layout from '../components/layout/Layout';
+import FeedbackRegister from '../components/pilot/FeedbackRegister';
 import {
   invitations,
   type InvitationRecord,
@@ -342,6 +343,7 @@ export default function PilotTeamPage() {
           <PageNavigation page={page} label="invitations" />
         </section>
       </section>
+      <FeedbackRegister />
       <div className="mt-5 rounded-2xl border border-border bg-surface p-4 text-[10px] leading-5 text-text-muted">
         Invitation emails use the configured identity-email provider. In development/demo mode the
         link remains available for controlled testing; never post it in a public channel.

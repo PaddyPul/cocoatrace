@@ -119,7 +119,12 @@ describe('product register pages and safety totals', () => {
     expect(
       (await get('/product-profiles/page', { cursor: first.body.nextCursor }, other)).status,
     ).toBe(400);
-    expect((await get('/product-profiles')).status).toBe(422);
+    const legacy = await get('/product-profiles');
+    expect(legacy.status, JSON.stringify(legacy.body)).toBe(422);
+    expect(legacy.body.code).toBe('CATALOG_READ_LIMIT');
+    const smallLegacy = await get('/product-profiles', {}, other);
+    expect(smallLegacy.status, JSON.stringify(smallLegacy.body)).toBe(200);
+    expect(smallLegacy.body).toHaveLength(1);
   });
   it('filters visibility and does not erase a retained hold on a resolved notice', async () => {
     const batch = (await query('SELECT batch_id FROM product_profiles WHERE id=$1', [late])).rows[0]
