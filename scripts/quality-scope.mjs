@@ -1,5 +1,14 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/middleware/evidenceContent.ts',
+  'api/src/middleware/evidenceContent.test.ts',
+  'api/src/controllers/evidenceController.ts',
+  'api/src/routes/evidence.ts',
+  'api/src/services/evidenceUploadService.ts',
+  'api/src/services/evidenceStorage.ts',
+  'api/src/services/evidenceStorage.test.ts',
+  'api/src/logger.ts',
+  'api/src/logger.test.ts',
   'web/src/pages/AccessApplicationsPage.tsx',
   'web/src/components/pilot/FeedbackRegister.tsx',
   'e2e/reviewQueuePages.spec.ts',

@@ -17,24 +17,26 @@ const booleanValue = z.preprocess((value) => {
 }, z.boolean());
 
 const optionalText = z.preprocess(
-  (value) => typeof value === 'string' && value.trim() === '' ? undefined : value,
+  (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
   z.string().trim().min(1).optional(),
 );
 
 const optionalEmail = z.preprocess(
-  (value) => typeof value === 'string' && value.trim() === '' ? undefined : value,
+  (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
   z.string().trim().email().optional(),
 );
 
 const optionalSecret = z.preprocess(
-  (value) => typeof value === 'string' && value.length === 0 ? undefined : value,
+  (value) => (typeof value === 'string' && value.length === 0 ? undefined : value),
   z.string().min(1).optional(),
 );
 
 function inferredEnvironment(source: NodeJS.ProcessEnv): AppEnvironment {
   const candidate = source.APP_ENV || source.NODE_ENV || 'development';
   if (!(APP_ENVIRONMENTS as readonly string[]).includes(candidate)) {
-    throw new Error(`Invalid CocoaTrace APP_ENV: ${candidate}. Expected one of ${APP_ENVIRONMENTS.join(', ')}.`);
+    throw new Error(
+      `Invalid CocoaTrace APP_ENV: ${candidate}. Expected one of ${APP_ENVIRONMENTS.join(', ')}.`,
+    );
   }
   return candidate as AppEnvironment;
 }
@@ -70,6 +72,7 @@ export type AppConfig = Readonly<{
   evidenceStorageSecretKey?: string;
   evidenceStorageSse?: 'AES256';
   evidenceStorageAutoCreateBucket: boolean;
+  evidenceStorageTimeoutMs: number;
   evidenceUploadSigningSecret: string;
   evidenceMaxFileBytes: number;
   evidenceOrganizationQuotaBytes: number;
@@ -94,148 +97,292 @@ export type AppConfig = Readonly<{
 
 export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
   const environment = inferredEnvironment(source);
-  const localDatabase = environment === 'test'
-    ? 'postgresql://cocoa:cocoa_dev@localhost:15433/cocoatrace_test'
-    : 'postgresql://cocoa:cocoa_dev@localhost:15433/cocoatrace';
+  const localDatabase =
+    environment === 'test'
+      ? 'postgresql://cocoa:cocoa_dev@localhost:15433/cocoatrace_test'
+      : 'postgresql://cocoa:cocoa_dev@localhost:15433/cocoatrace';
 
-  const schema = z.object({
-    PORT: z.coerce.number().int().min(1).max(65_535).default(3001),
-    WEB_URL: z.string().url().default('http://localhost:3000'),
-    PUBLIC_WEB_URL: z.string().url().optional(),
-    JWT_SECRET: z.string().min(1).default('cocoatrace_dev_secret_change_in_production'),
-    COOKIE_SECURE: booleanValue.default(false),
-    MFA_ENFORCED: booleanValue.default(environment === 'staging' || environment === 'production'),
-    DATABASE_URL: z.string().url().default(localDatabase),
-    DATABASE_SSL: booleanValue.default(false),
-    DATABASE_SSL_REJECT_UNAUTHORIZED: booleanValue.default(true),
-    DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
-    LOG_QUERIES: booleanValue.default(false),
-    LOG_LEVEL: optionalText,
-    PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(1000).default(100),
-    OPENAI_API_KEY: optionalText,
-    OPENAI_MODEL: optionalText,
-    APP_VERSION: z.string().trim().min(1).default('development'),
-    DEMO_MODE: booleanValue.default(environment === 'demo'),
-    COCOATRACE_ALLOW_REMOTE_DEMO_RESET: z.literal('I_UNDERSTAND').optional(),
-    EVIDENCE_STORAGE_DRIVER: z.enum(['local', 's3']).default(
-      environment === 'staging' || environment === 'production' ? 's3' : 'local',
-    ),
-    EVIDENCE_STORAGE_LOCAL_ROOT: z.string().trim().min(1).default('api/private-evidence'),
-    EVIDENCE_STORAGE_ENDPOINT: optionalText,
-    EVIDENCE_STORAGE_REGION: z.string().trim().min(1).default('us-east-1'),
-    EVIDENCE_STORAGE_BUCKET: optionalText,
-    EVIDENCE_STORAGE_ACCESS_KEY: optionalText,
-    EVIDENCE_STORAGE_SECRET_KEY: optionalText,
-    EVIDENCE_STORAGE_SSE: z.literal('AES256').optional(),
-    EVIDENCE_STORAGE_AUTO_CREATE_BUCKET: booleanValue.default(!(environment === 'staging' || environment === 'production')),
-    EVIDENCE_UPLOAD_SIGNING_SECRET: z.string().min(1).default(
-      environment === 'staging' || environment === 'production' ? '' : 'cocoatrace_local_evidence_signing_secret',
-    ),
-    EVIDENCE_MAX_FILE_BYTES: z.coerce.number().int().min(1).max(100 * 1024 * 1024).default(10 * 1024 * 1024),
-    EVIDENCE_ORGANIZATION_QUOTA_BYTES: z.coerce.number().int().min(1).default(1024 * 1024 * 1024),
-    EVIDENCE_SCANNER_DRIVER: z.enum(['development', 'clamav']).default(
-      environment === 'staging' || environment === 'production' ? 'clamav' : 'development',
-    ),
-    EVIDENCE_SCANNER_HOST: optionalText,
-    EVIDENCE_SCANNER_PORT: z.coerce.number().int().min(1).max(65_535).default(3310),
-    EVIDENCE_SCANNER_TIMEOUT_MS: z.coerce.number().int().min(500).max(120_000).default(15_000),
-    EVIDENCE_SCANNER_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
-    IDENTITY_EMAIL_ENABLED: booleanValue.default(false),
-    EMAIL_DRIVER: z.enum(['development', 'smtp']).default('development'),
-    EMAIL_FROM: optionalEmail,
-    SMTP_HOST: optionalText,
-    SMTP_PORT: z.coerce.number().int().min(1).max(65_535).default(587),
-    SMTP_SECURE: booleanValue.default(false),
-    SMTP_REQUIRE_TLS: booleanValue.default(true),
-    SMTP_TLS_REJECT_UNAUTHORIZED: booleanValue.default(true),
-    SMTP_USER: optionalText,
-    SMTP_PASSWORD: optionalSecret,
-    SMTP_AUTH_METHOD: z.enum(['plain', 'login']).default('plain'),
-    SMTP_CONNECTION_TIMEOUT_MS: z.coerce.number().int().min(500).max(120_000).default(10_000),
-  }).superRefine((values, context) => {
-    if (values.MFA_ENFORCED && !values.WEB_URL.startsWith('https://') && !['localhost','127.0.0.1'].includes(new URL(values.WEB_URL).hostname)) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['WEB_URL'], message: 'MFA requires HTTPS or localhost' });
-    }
-    const deployed = environment === 'staging' || environment === 'production';
-    if (deployed && !values.MFA_ENFORCED) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['MFA_ENFORCED'], message: 'cannot disable privileged MFA in staging or production' });
-    }
-    if (deployed) {
-      for (const name of ['DATABASE_URL', 'JWT_SECRET', 'WEB_URL', 'PUBLIC_WEB_URL', 'APP_VERSION'] as const) {
-        if (!source[name]) {
-          context.addIssue({ code: z.ZodIssueCode.custom, path: [name], message: 'must be explicitly configured in staging and production' });
+  const schema = z
+    .object({
+      PORT: z.coerce.number().int().min(1).max(65_535).default(3001),
+      WEB_URL: z.string().url().default('http://localhost:3000'),
+      PUBLIC_WEB_URL: z.string().url().optional(),
+      JWT_SECRET: z.string().min(1).default('cocoatrace_dev_secret_change_in_production'),
+      COOKIE_SECURE: booleanValue.default(false),
+      MFA_ENFORCED: booleanValue.default(environment === 'staging' || environment === 'production'),
+      DATABASE_URL: z.string().url().default(localDatabase),
+      DATABASE_SSL: booleanValue.default(false),
+      DATABASE_SSL_REJECT_UNAUTHORIZED: booleanValue.default(true),
+      DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
+      LOG_QUERIES: booleanValue.default(false),
+      LOG_LEVEL: optionalText,
+      PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(1000).default(100),
+      OPENAI_API_KEY: optionalText,
+      OPENAI_MODEL: optionalText,
+      APP_VERSION: z.string().trim().min(1).default('development'),
+      DEMO_MODE: booleanValue.default(environment === 'demo'),
+      COCOATRACE_ALLOW_REMOTE_DEMO_RESET: z.literal('I_UNDERSTAND').optional(),
+      EVIDENCE_STORAGE_DRIVER: z
+        .enum(['local', 's3'])
+        .default(environment === 'staging' || environment === 'production' ? 's3' : 'local'),
+      EVIDENCE_STORAGE_LOCAL_ROOT: z.string().trim().min(1).default('api/private-evidence'),
+      EVIDENCE_STORAGE_ENDPOINT: optionalText,
+      EVIDENCE_STORAGE_REGION: z.string().trim().min(1).default('us-east-1'),
+      EVIDENCE_STORAGE_BUCKET: optionalText,
+      EVIDENCE_STORAGE_ACCESS_KEY: optionalText,
+      EVIDENCE_STORAGE_SECRET_KEY: optionalText,
+      EVIDENCE_STORAGE_SSE: z.literal('AES256').optional(),
+      EVIDENCE_STORAGE_AUTO_CREATE_BUCKET: booleanValue.default(
+        !(environment === 'staging' || environment === 'production'),
+      ),
+      EVIDENCE_STORAGE_TIMEOUT_MS: z.coerce.number().int().min(500).max(120_000).default(15_000),
+      EVIDENCE_UPLOAD_SIGNING_SECRET: z
+        .string()
+        .min(1)
+        .default(
+          environment === 'staging' || environment === 'production'
+            ? ''
+            : 'cocoatrace_local_evidence_signing_secret',
+        ),
+      EVIDENCE_MAX_FILE_BYTES: z.coerce
+        .number()
+        .int()
+        .min(1)
+        .max(100 * 1024 * 1024)
+        .default(10 * 1024 * 1024),
+      EVIDENCE_ORGANIZATION_QUOTA_BYTES: z.coerce
+        .number()
+        .int()
+        .min(1)
+        .default(1024 * 1024 * 1024),
+      EVIDENCE_SCANNER_DRIVER: z
+        .enum(['development', 'clamav'])
+        .default(
+          environment === 'staging' || environment === 'production' ? 'clamav' : 'development',
+        ),
+      EVIDENCE_SCANNER_HOST: optionalText,
+      EVIDENCE_SCANNER_PORT: z.coerce.number().int().min(1).max(65_535).default(3310),
+      EVIDENCE_SCANNER_TIMEOUT_MS: z.coerce.number().int().min(500).max(120_000).default(15_000),
+      EVIDENCE_SCANNER_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
+      IDENTITY_EMAIL_ENABLED: booleanValue.default(false),
+      EMAIL_DRIVER: z.enum(['development', 'smtp']).default('development'),
+      EMAIL_FROM: optionalEmail,
+      SMTP_HOST: optionalText,
+      SMTP_PORT: z.coerce.number().int().min(1).max(65_535).default(587),
+      SMTP_SECURE: booleanValue.default(false),
+      SMTP_REQUIRE_TLS: booleanValue.default(true),
+      SMTP_TLS_REJECT_UNAUTHORIZED: booleanValue.default(true),
+      SMTP_USER: optionalText,
+      SMTP_PASSWORD: optionalSecret,
+      SMTP_AUTH_METHOD: z.enum(['plain', 'login']).default('plain'),
+      SMTP_CONNECTION_TIMEOUT_MS: z.coerce.number().int().min(500).max(120_000).default(10_000),
+    })
+    .superRefine((values, context) => {
+      if (
+        values.MFA_ENFORCED &&
+        !values.WEB_URL.startsWith('https://') &&
+        !['localhost', '127.0.0.1'].includes(new URL(values.WEB_URL).hostname)
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['WEB_URL'],
+          message: 'MFA requires HTTPS or localhost',
+        });
+      }
+      const deployed = environment === 'staging' || environment === 'production';
+      if (deployed && !values.MFA_ENFORCED) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['MFA_ENFORCED'],
+          message: 'cannot disable privileged MFA in staging or production',
+        });
+      }
+      if (deployed) {
+        for (const name of [
+          'DATABASE_URL',
+          'JWT_SECRET',
+          'WEB_URL',
+          'PUBLIC_WEB_URL',
+          'APP_VERSION',
+        ] as const) {
+          if (!source[name]) {
+            context.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: [name],
+              message: 'must be explicitly configured in staging and production',
+            });
+          }
         }
       }
-    }
-    if (deployed && values.JWT_SECRET.length < 32) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['JWT_SECRET'], message: 'must contain at least 32 characters in staging and production' });
-    }
-    if (deployed && /dev_secret|change[_-]?me|password/i.test(values.JWT_SECRET)) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['JWT_SECRET'], message: 'must not use a development or placeholder value' });
-    }
-    if (deployed && !values.WEB_URL.startsWith('https://')) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['WEB_URL'], message: 'must use HTTPS in staging and production' });
-    }
-    if (deployed && values.PUBLIC_WEB_URL && !values.PUBLIC_WEB_URL.startsWith('https://')) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['PUBLIC_WEB_URL'], message: 'must use HTTPS in staging and production' });
-    }
-    if (deployed && !values.COOKIE_SECURE) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['COOKIE_SECURE'], message: 'must be true in staging and production' });
-    }
-    if (environment === 'production' && values.DEMO_MODE) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['DEMO_MODE'], message: 'must be false in production' });
-    }
-    if (Boolean(values.OPENAI_API_KEY) !== Boolean(values.OPENAI_MODEL)) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['OPENAI_API_KEY'], message: 'OPENAI_API_KEY and OPENAI_MODEL must be configured together' });
-    }
-    if (deployed && values.EVIDENCE_STORAGE_DRIVER !== 's3') {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_STORAGE_DRIVER'], message: 'must be s3 in staging and production' });
-    }
-    if (values.EVIDENCE_STORAGE_DRIVER === 's3') {
-      for (const name of ['EVIDENCE_STORAGE_ENDPOINT', 'EVIDENCE_STORAGE_BUCKET', 'EVIDENCE_STORAGE_ACCESS_KEY', 'EVIDENCE_STORAGE_SECRET_KEY'] as const) {
-        if (!values[name]) context.addIssue({ code: z.ZodIssueCode.custom, path: [name], message: 'is required for s3 evidence storage' });
+      if (deployed && values.JWT_SECRET.length < 32) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['JWT_SECRET'],
+          message: 'must contain at least 32 characters in staging and production',
+        });
       }
-      if (deployed && values.EVIDENCE_STORAGE_ENDPOINT && !values.EVIDENCE_STORAGE_ENDPOINT.startsWith('https://')) {
-        context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_STORAGE_ENDPOINT'], message: 'must use HTTPS in staging and production' });
+      if (deployed && /dev_secret|change[_-]?me|password/i.test(values.JWT_SECRET)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['JWT_SECRET'],
+          message: 'must not use a development or placeholder value',
+        });
       }
-      if (values.EVIDENCE_STORAGE_BUCKET && !values.EVIDENCE_STORAGE_BUCKET.includes(environment)) {
-        context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_STORAGE_BUCKET'], message: `must include the environment name "${environment}"` });
+      if (deployed && !values.WEB_URL.startsWith('https://')) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['WEB_URL'],
+          message: 'must use HTTPS in staging and production',
+        });
       }
-      if (deployed && values.EVIDENCE_STORAGE_SSE !== 'AES256') {
-        context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_STORAGE_SSE'], message: 'must be AES256 in staging and production' });
+      if (deployed && values.PUBLIC_WEB_URL && !values.PUBLIC_WEB_URL.startsWith('https://')) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['PUBLIC_WEB_URL'],
+          message: 'must use HTTPS in staging and production',
+        });
       }
-    }
-    if (deployed && values.EVIDENCE_UPLOAD_SIGNING_SECRET.length < 32) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_UPLOAD_SIGNING_SECRET'], message: 'must contain at least 32 characters in staging and production' });
-    }
-    if (values.EVIDENCE_ORGANIZATION_QUOTA_BYTES < values.EVIDENCE_MAX_FILE_BYTES) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_ORGANIZATION_QUOTA_BYTES'], message: 'must be at least EVIDENCE_MAX_FILE_BYTES' });
-    }
-    if (deployed && values.EVIDENCE_SCANNER_DRIVER !== 'clamav') {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_SCANNER_DRIVER'], message: 'must be clamav in staging and production' });
-    }
-    if (values.EVIDENCE_SCANNER_DRIVER === 'clamav' && !values.EVIDENCE_SCANNER_HOST) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['EVIDENCE_SCANNER_HOST'], message: 'is required when EVIDENCE_SCANNER_DRIVER is clamav' });
-    }
-    if (values.EMAIL_DRIVER === 'smtp') {
-      for (const name of ['EMAIL_FROM', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASSWORD'] as const) {
-        if (!values[name]) context.addIssue({ code: z.ZodIssueCode.custom, path: [name], message: 'is required when EMAIL_DRIVER is smtp' });
+      if (deployed && !values.COOKIE_SECURE) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['COOKIE_SECURE'],
+          message: 'must be true in staging and production',
+        });
       }
-    }
-    if (deployed && values.IDENTITY_EMAIL_ENABLED && values.EMAIL_DRIVER !== 'smtp') {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['EMAIL_DRIVER'], message: 'must be smtp when identity email flows are enabled in staging or production' });
-    }
-    if (deployed && values.IDENTITY_EMAIL_ENABLED && !(values.SMTP_SECURE || values.SMTP_REQUIRE_TLS)) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['SMTP_REQUIRE_TLS'], message: 'TLS is required for identity email delivery in staging and production' });
-    }
-    if (deployed && values.IDENTITY_EMAIL_ENABLED && !values.SMTP_TLS_REJECT_UNAUTHORIZED) {
-      context.addIssue({ code: z.ZodIssueCode.custom, path: ['SMTP_TLS_REJECT_UNAUTHORIZED'], message: 'must be true for identity email delivery in staging and production' });
-    }
-  });
+      if (environment === 'production' && values.DEMO_MODE) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['DEMO_MODE'],
+          message: 'must be false in production',
+        });
+      }
+      if (Boolean(values.OPENAI_API_KEY) !== Boolean(values.OPENAI_MODEL)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['OPENAI_API_KEY'],
+          message: 'OPENAI_API_KEY and OPENAI_MODEL must be configured together',
+        });
+      }
+      if (deployed && values.EVIDENCE_STORAGE_DRIVER !== 's3') {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['EVIDENCE_STORAGE_DRIVER'],
+          message: 'must be s3 in staging and production',
+        });
+      }
+      if (values.EVIDENCE_STORAGE_DRIVER === 's3') {
+        for (const name of [
+          'EVIDENCE_STORAGE_ENDPOINT',
+          'EVIDENCE_STORAGE_BUCKET',
+          'EVIDENCE_STORAGE_ACCESS_KEY',
+          'EVIDENCE_STORAGE_SECRET_KEY',
+        ] as const) {
+          if (!values[name])
+            context.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: [name],
+              message: 'is required for s3 evidence storage',
+            });
+        }
+        if (
+          deployed &&
+          values.EVIDENCE_STORAGE_ENDPOINT &&
+          !values.EVIDENCE_STORAGE_ENDPOINT.startsWith('https://')
+        ) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['EVIDENCE_STORAGE_ENDPOINT'],
+            message: 'must use HTTPS in staging and production',
+          });
+        }
+        if (
+          values.EVIDENCE_STORAGE_BUCKET &&
+          !values.EVIDENCE_STORAGE_BUCKET.includes(environment)
+        ) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['EVIDENCE_STORAGE_BUCKET'],
+            message: `must include the environment name "${environment}"`,
+          });
+        }
+        if (deployed && values.EVIDENCE_STORAGE_SSE !== 'AES256') {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['EVIDENCE_STORAGE_SSE'],
+            message: 'must be AES256 in staging and production',
+          });
+        }
+      }
+      if (deployed && values.EVIDENCE_UPLOAD_SIGNING_SECRET.length < 32) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['EVIDENCE_UPLOAD_SIGNING_SECRET'],
+          message: 'must contain at least 32 characters in staging and production',
+        });
+      }
+      if (values.EVIDENCE_ORGANIZATION_QUOTA_BYTES < values.EVIDENCE_MAX_FILE_BYTES) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['EVIDENCE_ORGANIZATION_QUOTA_BYTES'],
+          message: 'must be at least EVIDENCE_MAX_FILE_BYTES',
+        });
+      }
+      if (deployed && values.EVIDENCE_SCANNER_DRIVER !== 'clamav') {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['EVIDENCE_SCANNER_DRIVER'],
+          message: 'must be clamav in staging and production',
+        });
+      }
+      if (values.EVIDENCE_SCANNER_DRIVER === 'clamav' && !values.EVIDENCE_SCANNER_HOST) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['EVIDENCE_SCANNER_HOST'],
+          message: 'is required when EVIDENCE_SCANNER_DRIVER is clamav',
+        });
+      }
+      if (values.EMAIL_DRIVER === 'smtp') {
+        for (const name of ['EMAIL_FROM', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASSWORD'] as const) {
+          if (!values[name])
+            context.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: [name],
+              message: 'is required when EMAIL_DRIVER is smtp',
+            });
+        }
+      }
+      if (deployed && values.IDENTITY_EMAIL_ENABLED && values.EMAIL_DRIVER !== 'smtp') {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['EMAIL_DRIVER'],
+          message: 'must be smtp when identity email flows are enabled in staging or production',
+        });
+      }
+      if (
+        deployed &&
+        values.IDENTITY_EMAIL_ENABLED &&
+        !(values.SMTP_SECURE || values.SMTP_REQUIRE_TLS)
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['SMTP_REQUIRE_TLS'],
+          message: 'TLS is required for identity email delivery in staging and production',
+        });
+      }
+      if (deployed && values.IDENTITY_EMAIL_ENABLED && !values.SMTP_TLS_REJECT_UNAUTHORIZED) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['SMTP_TLS_REJECT_UNAUTHORIZED'],
+          message: 'must be true for identity email delivery in staging and production',
+        });
+      }
+    });
 
   const result = schema.safeParse(source);
   if (!result.success) {
-    const details = result.error.issues.map((issue) => `${issue.path.join('.') || 'configuration'} ${issue.message}`).join('; ');
+    const details = result.error.issues
+      .map((issue) => `${issue.path.join('.') || 'configuration'} ${issue.message}`)
+      .join('; ');
     throw new Error(`Invalid CocoaTrace configuration for ${environment}: ${details}`);
   }
 
@@ -271,6 +418,7 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     evidenceStorageSecretKey: values.EVIDENCE_STORAGE_SECRET_KEY,
     evidenceStorageSse: values.EVIDENCE_STORAGE_SSE,
     evidenceStorageAutoCreateBucket: values.EVIDENCE_STORAGE_AUTO_CREATE_BUCKET,
+    evidenceStorageTimeoutMs: values.EVIDENCE_STORAGE_TIMEOUT_MS,
     evidenceUploadSigningSecret: values.EVIDENCE_UPLOAD_SIGNING_SECRET,
     evidenceMaxFileBytes: values.EVIDENCE_MAX_FILE_BYTES,
     evidenceOrganizationQuotaBytes: values.EVIDENCE_ORGANIZATION_QUOTA_BYTES,
