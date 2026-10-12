@@ -1,4 +1,8 @@
-import { evidenceStorage } from '../../services/evidenceStorage';
+import {
+  evidenceAvailabilityProjection,
+  evidenceAvailabilityUsableSql,
+  preflightEvidence,
+} from '../../services/evidenceAvailability';
 import { AppError, ConflictError, NotFoundError } from '../../errors';
 import { inTradeTransaction, recordTradeAudit, TradeActor } from '../trading/transaction';
 import { completeTradeIfReady } from '../../services/tradeSettlement';
@@ -13,6 +17,25 @@ export async function submitPayment(
   input: PaymentSubmission,
   legacyRequest = false,
 ) {
+  const availability = await preflightEvidence(async (execute) => {
+    if (!input.evidenceId) return [];
+    return (
+      await execute(
+        `SELECT ${evidenceAvailabilityProjection('e')} FROM evidence_items e
+      JOIN sales_contracts c ON c.id=e.linked_entity_id AND e.linked_entity_type='contract'
+      JOIN payment_requests p ON p.contract_id=c.id
+      JOIN LATERAL (SELECT i.* FROM payment_installments i WHERE ${legacyRequest ? "i.payment_request_id=p.id AND (i.payment_reference_external=$4 OR i.status IN('due','payment_submitted'))" : 'i.payment_request_id=p.id AND i.id=$1'}
+      ORDER BY ${legacyRequest ? '(i.payment_reference_external=$4) DESC NULLS LAST,' : ''}i.sequence_number LIMIT 1) i ON TRUE
+      WHERE ${legacyRequest ? 'p.id=$1' : 'i.id=$1'} AND c.buyer_organization_id=$2 AND e.id=$3
+      AND i.status='due' AND e.uploader_organization_id=$2 AND e.type='payment_proof'
+      AND e.validation_status='validated' AND e.malware_scan_status='clean' AND e.review_status<>'rejected'
+      AND e.storage_key IS NOT NULL AND ${evidenceAvailabilityUsableSql('e')} LIMIT 1`,
+        legacyRequest
+          ? [id, actor.organizationId, input.evidenceId, input.transactionReference]
+          : [id, actor.organizationId, input.evidenceId],
+      )
+    ).rows;
+  });
   return inTradeTransaction(async (client) => {
     const { contract, payment } = await lockPayment(client, actor, id, 'buyer', !legacyRequest);
     requireAgreed(contract);
@@ -49,14 +72,14 @@ export async function submitPayment(
     if (input.evidenceId) {
       const evidence = (
         await client.query(
-          `SELECT id,storage_key FROM evidence_items WHERE id=$1 AND linked_entity_type='contract'
+          `SELECT ${evidenceAvailabilityProjection()} FROM evidence_items WHERE id=$1 AND linked_entity_type='contract'
         AND linked_entity_id=$2 AND uploader_organization_id=$3 AND type='payment_proof'
         AND validation_status='validated' AND malware_scan_status='clean' AND review_status<>'rejected'
-        AND storage_key IS NOT NULL FOR SHARE`,
+        AND storage_key IS NOT NULL AND ${evidenceAvailabilityUsableSql()} FOR SHARE`,
           [input.evidenceId, contract.id, actor.organizationId],
         )
       ).rows[0];
-      if (!evidence || !(await evidenceStorage().exists(evidence.storage_key)))
+      if (!evidence || !availability.available(evidence))
         throw new AppError(
           'Payment proof must be your scan-clean, validated upload for this contract',
           400,
@@ -90,6 +113,21 @@ export async function submitPayment(
 }
 
 export async function confirmReceipt(actor: TradeActor, id: string) {
+  const availability = await preflightEvidence(
+    async (execute) =>
+      (
+        await execute(
+          `SELECT ${evidenceAvailabilityProjection('e')}
+    FROM payment_installments i JOIN payment_requests p ON p.id=i.payment_request_id
+    JOIN sales_contracts c ON c.id=p.contract_id JOIN evidence_items e ON e.id=i.payment_evidence_id
+    WHERE i.id=$1 AND c.seller_organization_id=$2 AND i.status='payment_submitted'
+    AND e.linked_entity_type='contract' AND e.linked_entity_id=c.id AND e.uploader_organization_id=c.buyer_organization_id
+    AND e.type='payment_proof' AND e.validation_status='validated' AND e.malware_scan_status='clean'
+    AND e.review_status<>'rejected' AND e.storage_key IS NOT NULL AND ${evidenceAvailabilityUsableSql('e')} LIMIT 1`,
+          [id, actor.organizationId],
+        )
+      ).rows,
+  );
   return inTradeTransaction(async (client) => {
     const { contract, payment } = await lockPayment(client, actor, id, 'seller', true);
     requireAgreed(contract);
@@ -104,11 +142,12 @@ export async function confirmReceipt(actor: TradeActor, id: string) {
     // Proof may have been rejected or quarantined after submission.
     if (contract.payment_evidence_required || item.payment_evidence_id) {
       const proof = await client.query(
-        `SELECT id,storage_key FROM evidence_items WHERE id=$1 AND validation_status='validated'
-        AND malware_scan_status='clean' AND review_status<>'rejected' AND storage_key IS NOT NULL FOR SHARE`,
-        [item.payment_evidence_id],
+        `SELECT ${evidenceAvailabilityProjection()} FROM evidence_items WHERE id=$1 AND linked_entity_type='contract'
+        AND linked_entity_id=$2 AND uploader_organization_id=$3 AND type='payment_proof' AND validation_status='validated'
+        AND malware_scan_status='clean' AND review_status<>'rejected' AND storage_key IS NOT NULL AND ${evidenceAvailabilityUsableSql()} FOR SHARE`,
+        [item.payment_evidence_id, contract.id, contract.buyer_organization_id],
       );
-      if (!proof.rows[0] || !(await evidenceStorage().exists(proof.rows[0].storage_key)))
+      if (!proof.rows[0] || !availability.available(proof.rows[0]))
         throw new ConflictError(
           'The attached payment proof is unavailable; reject the reference and ask for valid proof',
         );

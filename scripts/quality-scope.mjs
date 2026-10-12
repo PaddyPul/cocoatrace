@@ -1,5 +1,13 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/services/evidenceAvailability.ts',
+  'api/src/services/evidenceAvailability.test.ts',
+  'api/scripts/evidence-stress-fixtures.ts',
+  'api/scripts/evidence-stress-server.ts',
+  'scripts/run-evidence-stress.mjs',
+  'scripts/run-evidence-stress.test.mjs',
+  'docker-compose.evidence-stress.yml',
+
   'api/scripts/cleanup-evidence.ts',
   'api/scripts/scan-pending-evidence.ts',
   'api/src/services/evidenceMalwareScanner.ts',

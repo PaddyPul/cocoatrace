@@ -48,7 +48,8 @@
     "check:containers": "node scripts/check-container-security.mjs",
     "test:locale": "node --import tsx --test scripts/locale.test.mjs",
     "backlog:progress": "node scripts/backlog-progress.mjs",
-    "test:backlog": "node --test scripts/backlog-progress.test.mjs"
+    "test:backlog": "node --test scripts/backlog-progress.test.mjs",
+    "test:evidence:stress:docker": "node scripts/run-evidence-stress.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

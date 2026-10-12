@@ -5,7 +5,7 @@ never make an object disappear from quota accounting or operational visibility.
 
 ## Run a bounded cleanup batch
 
-From the repository root:
+For local development, from the repository root:
 
 ```bash
 npm run evidence:cleanup --workspace=api
@@ -44,3 +44,13 @@ keys, provider error messages, file paths, signed capabilities, malware signatur
 Historical objects that existed before the cleanup ledger require a separately reviewed inventory.
 Do not fabricate ownership or provider information to backfill them. Until reconciled, legacy active
 intent reservations remain part of quota accounting.
+
+## Hardened API container
+
+The runtime image intentionally excludes npm. Invoke the reviewed CLI directly:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.email-test.yml -f docker-compose.mfa-test.yml exec api node --import tsx api/scripts/cleanup-evidence.ts
+```
+
+Migration verification uses `node --import tsx api/scripts/migrate.ts` in that container. Normal API startup already runs migrations before starting the server.

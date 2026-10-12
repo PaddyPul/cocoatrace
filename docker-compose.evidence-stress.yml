@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: bettertrade_evidence_stress_test
+      POSTGRES_USER: stress_test
+      POSTGRES_PASSWORD: stress_test
+    ports:
+      - '127.0.0.1:${BETTERTRADE_STRESS_DB_PORT:-15446}:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U stress_test -d bettertrade_evidence_stress_test']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  storage:
+    image: motoserver/moto:5.2.3
+    ports:
+      - '127.0.0.1:${BETTERTRADE_STRESS_STORAGE_PORT:-19012}:5000'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'python -c "import socket; s=socket.create_connection((''localhost'',5000),2); s.close()"',
+        ]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  scanner:
+    image: clamav/clamav:1.5.4-debian13-slim
+    ports:
+      - '127.0.0.1:${BETTERTRADE_STRESS_SCANNER_PORT:-13322}:3310'
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ['CMD-SHELL', 'clamdscan --ping 1']
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s

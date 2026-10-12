@@ -102,14 +102,14 @@ Start-Process "http://localhost:3000"
 After the containers start, apply/verify the forward migration without resetting your database:
 
 ```powershell
-docker compose -f docker-compose.yml -f docker-compose.email-test.yml -f docker-compose.mfa-test.yml exec api npm run db:migrate --workspace=api
+docker compose -f docker-compose.yml -f docker-compose.email-test.yml -f docker-compose.mfa-test.yml exec api node --import tsx api/scripts/migrate.ts
 if ($LASTEXITCODE -ne 0) { throw "Migration failed. Stop and send the output; do not reset the database." }
 ```
 
 The cleanup worker is a bounded operator command. It is not yet an always-running scheduler:
 
 ```powershell
-docker compose -f docker-compose.yml -f docker-compose.email-test.yml -f docker-compose.mfa-test.yml exec api npm run evidence:cleanup --workspace=api
+docker compose -f docker-compose.yml -f docker-compose.email-test.yml -f docker-compose.mfa-test.yml exec api node --import tsx api/scripts/cleanup-evidence.ts
 ```
 
 A non-zero cleanup exit means retry/dead work needs investigation; keep its quota charge and follow `docs/runbooks/EVIDENCE_CLEANUP.md`. Do not drop the ledger to free quota. Migration rollback deliberately refuses while it owns unfinished/live objects. Historical objects without a provider record need a separate inventory.
