@@ -21,6 +21,7 @@ A recall manager cannot close a safety notice using rejected, infected, missing 
 - Keep recipient acknowledgement, recovery accounting and retained inventory holds authoritative.
 - Add real PostgreSQL/API denial, provider-race and lock-contention regressions; record the previous wave as accepted.
 - Build batch-scoped deduplicated public notice associations and check retained/disposed stock independently of page filters, preserving safety warnings.
+- Filter holdings candidates before recall assessment, assess each distinct batch once, and report safe HTTP errors before checking native page items.
 - Assess legacy marketplace recall visibility per distinct batch and reject over-limit IDs before full-row/trust enrichment, preserving production deadlines.
 
 ## Security and data review

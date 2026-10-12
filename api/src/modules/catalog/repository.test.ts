@@ -24,6 +24,9 @@ describe('catalog SQL boundaries', () => {
     expect(sql).toContain('h.holder_organization_id=$1');
     expect(sql).toContain("h.status='available'");
     expect(sql).toContain('ORDER BY h.id LIMIT $6');
+    expect(sql).toContain('SELECT DISTINCT batch_id FROM candidates');
+    expect(sql).toContain('WHERE NOT $3::boolean OR NOT assessment.held');
+    expect(sql.match(/SELECT 1 FROM recall_notices/g)).toHaveLength(1);
     expect(parameters).toEqual(['tenant', null, true, '%_', '%\\%\\_%', 8]);
   });
   it('filters commodity, evidence, own supplier, origin and exact ID before ordered limit', async () => {

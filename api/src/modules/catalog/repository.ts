@@ -11,7 +11,10 @@ import {
 } from './paging';
 
 export const holdingFrom = `FROM batch_holdings h JOIN harvest_batches b ON b.id=h.batch_id LEFT JOIN farms f ON f.id=b.farm_id`;
-export const holdingSelect = `SELECT h.*,${activeBatchRecallSql('h.batch_id')} AS "activeRecall",b.crop,b.harvest_date,b.organic_claim_status,b.grade,b.source_mode,b.source_name,b.source_country,b.source_region,f.name AS farm_name`;
+const holdingProjection = (held: string) =>
+  `SELECT h.*,${held} AS "activeRecall",b.crop,b.harvest_date,b.organic_claim_status,b.grade,b.source_mode,b.source_name,b.source_country,b.source_region,f.name AS farm_name`;
+export const holdingSelect = holdingProjection(activeBatchRecallSql('h.batch_id'));
+export const holdingPageSqlTag = '/* catalog:holdings-page */';
 export const listingFrom = `FROM listings l JOIN organizations o ON o.id=l.seller_organization_id JOIN batch_holdings h ON h.id=l.holding_id JOIN harvest_batches b ON b.id=h.batch_id LEFT JOIN farms f ON f.id=b.farm_id`;
 export const listingVisible = `l.active=TRUE AND l.available_quantity_kg>0 AND NOT ${activeBatchRecallSql('b.id')} AND h.status='available' AND h.holder_organization_id=l.seller_organization_id`;
 const listingProjection = (held: string) =>
@@ -50,11 +53,18 @@ export async function holdingPage(
   available: boolean,
 ) {
   const result = await execute(
-    `${holdingSelect} ${holdingFrom}
-    WHERE h.holder_organization_id=$1 AND ($2::uuid IS NULL OR h.id>$2)
-    AND (NOT $3::boolean OR (h.status='available' AND h.quantity_kg>0 AND NOT ${activeBatchRecallSql('b.id')}))
-    AND ($4='' OR concat_ws(' ',h.id,b.crop,f.name,b.source_name,h.warehouse_location,h.status) ILIKE $5 ESCAPE '\\')
-    ORDER BY h.id LIMIT $6`,
+    `${holdingPageSqlTag} WITH candidates AS MATERIALIZED (
+      SELECT h.id,h.batch_id ${holdingFrom}
+      WHERE h.holder_organization_id=$1 AND ($2::uuid IS NULL OR h.id>$2)
+      AND (NOT $3::boolean OR (h.status='available' AND h.quantity_kg>0))
+      AND ($4='' OR concat_ws(' ',h.id,b.crop,f.name,b.source_name,h.warehouse_location,h.status) ILIKE $5 ESCAPE '\\')
+    ), assessed AS MATERIALIZED (
+      SELECT candidate_batches.batch_id,${activeBatchRecallSql('candidate_batches.batch_id')} AS held
+      FROM (SELECT DISTINCT batch_id FROM candidates) candidate_batches
+    ) ${holdingProjection('assessment.held')} ${holdingFrom}
+      JOIN candidates candidate ON candidate.id=h.id JOIN assessed assessment ON assessment.batch_id=h.batch_id
+      WHERE NOT $3::boolean OR NOT assessment.held
+      ORDER BY h.id LIMIT $6`,
     [
       organizationId,
       input.cursor?.id || null,

@@ -846,3 +846,10 @@ Correction author validation: 779 API assertions, quality, workspace/browser typ
 Latest founder native run passed 446 cases, with a 503 on resolved retained public stock. Enumerate batch/lot/retained-hold/disposal notice IDs as a deduplicated batch-scoped union for public notice pages and journey reads, rather than correlating association probes per notice. Keep unfiltered active totals and independent retained/disposal existence authoritative; never turn resolved retained stock clear. Add safe response-body diagnostics to the native assertion. Production deadlines and MFA remain unchanged. Candidate acceptance pending.
 
 Correction author checks: 780 API assertions, quality, workspace/browser type checks, API build and backlog tests pass. Updated native notice case compiles strictly; actual PostgreSQL timing/browser execution awaits founder verification.
+
+
+## Correction checkpoint — holdings candidate-first recall assessment
+
+Latest native failure read an error envelope as `body.items` and reported undefined. Filter holdings by tenant/cursor/basic availability/literal search before graph assessment, assess once per distinct matching batch and preserve recall filtering before the page limit. Native assertions now validate status/code before item shape and plan evidence checks bounded root output plus one assessed batch rather than a specific root node type. Production deadlines remain unchanged; no timeout/retry bypass. Candidate acceptance pending.
+
+Author correction verification: 780 API assertions, quality, workspace/browser types, API build and backlog tests pass; updated native catalog case compiles strictly. Actual PostgreSQL timing and full release execution remain pending.
