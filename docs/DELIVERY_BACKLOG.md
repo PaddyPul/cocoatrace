@@ -839,3 +839,10 @@ Author verification: 777 API assertions, quality, workspace/browser types, both 
 Founder release passed 446 native cases; legacy listings timed out before its 1,001-ID sentinel rejection. Replace per-listing repeated recall graph evaluation with one materialized assessment per distinct batch, select only eligible IDs before the legacy cap and hydrate/enrich only under-limit results. Production 2-second statement and 5-second request guards remain unchanged. Native regression also verifies recalled batches are excluded before the sentinel. Recall-security wave acceptance remains pending.
 
 Correction author validation: 779 API assertions, quality, workspace/browser types, API build and backlog tests pass. Updated native pagination case compiles strictly; native timing/SQL/browser execution remains pending the founder release rerun.
+
+
+## Correction checkpoint — public recall association reads
+
+Latest founder native run passed 446 cases, with a 503 on resolved retained public stock. Enumerate batch/lot/retained-hold/disposal notice IDs as a deduplicated batch-scoped union for public notice pages and journey reads, rather than correlating association probes per notice. Keep unfiltered active totals and independent retained/disposal existence authoritative; never turn resolved retained stock clear. Add safe response-body diagnostics to the native assertion. Production deadlines and MFA remain unchanged. Candidate acceptance pending.
+
+Correction author checks: 780 API assertions, quality, workspace/browser type checks, API build and backlog tests pass. Updated native notice case compiles strictly; actual PostgreSQL timing/browser execution awaits founder verification.

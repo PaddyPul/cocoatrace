@@ -20,6 +20,7 @@ A recall manager cannot close a safety notice using rejected, infected, missing 
 - Recheck validation, scan, review, private key/provider and cleanup eligibility under evidence row locks; reject changed proof fingerprints.
 - Keep recipient acknowledgement, recovery accounting and retained inventory holds authoritative.
 - Add real PostgreSQL/API denial, provider-race and lock-contention regressions; record the previous wave as accepted.
+- Build batch-scoped deduplicated public notice associations and check retained/disposed stock independently of page filters, preserving safety warnings.
 - Assess legacy marketplace recall visibility per distinct batch and reject over-limit IDs before full-row/trust enrichment, preserving production deadlines.
 
 ## Security and data review
@@ -46,7 +47,7 @@ A recall manager cannot close a safety notice using rejected, infected, missing 
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: append exact tested commit and release report after all checks pass. Author: 779 API assertions, quality, workspace/browser types, API/web builds, migration integrity and backlog tests pass. Eleven new native recall cases compile strictly. Native Docker/browser execution remains pending founder and CI.
+- Evidence/results: append exact tested commit and release report after all checks pass. Author: 780 API assertions, quality, workspace/browser types, API/web builds, migration integrity and backlog tests pass. Eleven new native recall cases compile strictly. Native Docker/browser execution remains pending founder and CI.
 
 ## Product and operations
 

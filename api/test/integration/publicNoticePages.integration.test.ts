@@ -188,7 +188,7 @@ describe('published recall notice pages and full safety aggregates', () => {
     await query('DELETE FROM recall_affected_batches WHERE recall_id=$1', [resolved]);
     try {
       const response = await read({ status: 'active' });
-      expect(response.status).toBe(200);
+      expect(response.status, JSON.stringify(response.body)).toBe(200);
       expect(response.body.items).toEqual([]);
       expect(response.body).toMatchObject({
         count: 1005,
