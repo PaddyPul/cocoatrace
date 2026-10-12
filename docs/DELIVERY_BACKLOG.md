@@ -775,3 +775,16 @@ The reordered browser sequence still failed after text entry. Source inspection 
 - Native release/merge acceptance pending. PER-003 remains IN PROGRESS for durable cleanup/quota accounting, transaction I/O, multi-instance transfer admission and measured maximum-size memory stress.
 
 - Author verification: 759 API unit assertions passed, including real TCP frame/backpressure/deadline checks; quality/types/builds/migration integrity/backlog checks passed. Eight native PostgreSQL/storage cases compile strictly. Native execution remains pending founder release acceptance.
+
+
+## Accepted checkpoint — scanner maintenance and metadata-only checks, 2026-10-12
+
+Founder confirms full release checks passed and merge/pull completed at 12:55 UTC. Bounded serialized maintenance scans, metadata-only proof checks and ClamAV backpressure/deadlines are accepted. This supersedes pending acceptance above. Broad PER-003 / OPS-010 remain open.
+
+## Candidate checkpoint — durable quota-accounted object cleanup, 2026-10-12
+
+- Forward migration 035 records object ownership before provider writes. Quarantine and final-copy reservations, terminal cleanup, leased retry and dead-letter states remain charged until acknowledged deletion. Live clean evidence is never deletion work.
+- Upload completion atomically retains the final object and clears the removed quarantine reservation. Early malformed replays cannot cancel an already claimed upload. Infection state and cleanup obligations commit together.
+- Historical objects without known provider ownership require operator inventory; legacy noncompleted reservations remain conservatively charged. Automatic cleanup scheduling, operator dead-letter recovery, remote transaction I/O and peak RSS stress remain open. Native release/merge acceptance pending.
+
+- Author verification: 771 API unit assertions passed; quality, workspace/browser types, builds, migration integrity and backlog checks passed. Fifteen native PostgreSQL cases compile strictly. Native Docker/migration/storage/browser execution remains pending founder release acceptance.

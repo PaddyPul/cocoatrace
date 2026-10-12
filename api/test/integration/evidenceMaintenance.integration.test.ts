@@ -67,10 +67,15 @@ beforeAll(async () => {
 afterEach(async () => {
   const current = fixtures.splice(0);
   try {
-    if (current.length)
+    if (current.length) {
+      await query(
+        'DELETE FROM evidence_object_cleanup WHERE evidence_id=ANY($1::uuid[]) OR object_key=ANY($2::text[])',
+        [current.map((row) => row.id), current.map((row) => row.key)],
+      );
       await query('DELETE FROM evidence_items WHERE id=ANY($1::uuid[])', [
         current.map((row) => row.id),
       ]);
+    }
   } finally {
     for (const item of current) await evidenceStorage().delete(item.key);
   }

@@ -1,4 +1,12 @@
 import crypto from 'crypto';
+import logger from '../logger';
+import type { PoolClient } from 'pg';
+import {
+  registerObject,
+  queueIntentObjects,
+  retainUploadObjects,
+} from '../modules/evidenceCleanup/repository';
+import { cleanupObjectNow } from '../modules/evidenceCleanup/worker';
 import { QueryResultRow } from 'pg';
 import { config } from '../config/env';
 import { getClient, query } from '../db';
@@ -117,31 +125,41 @@ export async function authorizeUploadContent(
   return { organizationId: intent.uploader_organization_id };
 }
 
-async function cleanupAbandonedUploads(): Promise<void> {
-  const stale = await query(
-    `WITH stale AS (
-       SELECT id FROM evidence_upload_intents
-       WHERE (status='pending' AND expires_at<=NOW()) OR (status IN ('uploading','scanning') AND updated_at<NOW()-INTERVAL '30 minutes')
-       ORDER BY updated_at LIMIT 100 FOR UPDATE SKIP LOCKED
-     )
-     UPDATE evidence_upload_intents i
-       SET status=CASE WHEN status='pending' THEN 'expired' ELSE 'scan_failed' END,
-           malware_scan_status=CASE WHEN status='pending' THEN malware_scan_status ELSE 'scan_failed' END,
-           rejection_reason=CASE WHEN status IN ('uploading','scanning') THEN 'Upload processing did not complete' ELSE rejection_reason END,
-           updated_at=NOW()
-     FROM stale WHERE i.id=stale.id RETURNING i.quarantine_object_key`,
+async function reservedObjectBytes(client: PoolClient, organizationId: string): Promise<number> {
+  const usage = await client.query(
+    `SELECT
+    COALESCE((SELECT SUM(e.file_size_bytes) FROM evidence_items e WHERE e.uploader_organization_id=$1
+      AND NOT EXISTS(SELECT 1 FROM evidence_object_cleanup j WHERE j.object_key=e.storage_key AND j.state<>'retained')),0)::bigint AS stored_bytes,
+    COALESCE((SELECT SUM(j.bytes) FROM evidence_object_cleanup j WHERE j.organization_id=$1 AND j.state IN ('held','pending','processing','dead')),0)::bigint AS cleanup_bytes,
+    COALESCE((SELECT SUM(i.declared_size_bytes) FROM evidence_upload_intents i WHERE i.uploader_organization_id=$1
+      AND i.status<>'completed' AND NOT EXISTS(SELECT 1 FROM evidence_object_cleanup j WHERE j.object_key=i.quarantine_object_key)),0)::bigint AS legacy_reserved_bytes`,
+    [organizationId],
   );
-  await Promise.all(
-    stale.rows.map((row) =>
-      evidenceStorage()
-        .delete(row.quarantine_object_key)
-        .catch(() => undefined),
-    ),
-  );
+  const row = usage.rows[0];
+  return Number(row.stored_bytes) + Number(row.cleanup_bytes) + Number(row.legacy_reserved_bytes);
+}
+async function lockEvidenceQuota(client: PoolClient, organizationId: string): Promise<void> {
+  await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [
+    `evidence-quota:${organizationId}`,
+  ]);
+}
+async function requireObjectCapacity(
+  client: PoolClient,
+  organizationId: string,
+  bytes: number,
+): Promise<void> {
+  if (
+    (await reservedObjectBytes(client, organizationId)) + bytes >
+    config.evidenceOrganizationQuotaBytes
+  )
+    throw new AppError(
+      'Organization evidence storage quota would be exceeded',
+      413,
+      'EVIDENCE_QUOTA_EXCEEDED',
+    );
 }
 
 export async function createUploadIntent(actor: JwtPayload, rawInput: CreateEvidenceUploadIntent) {
-  await cleanupAbandonedUploads();
   const metadata = validateEvidenceMetadata(rawInput.fileName, rawInput.mimeType);
   const input = { ...rawInput, ...metadata };
   if (input.fileSizeBytes > config.evidenceMaxFileBytes)
@@ -160,25 +178,8 @@ export async function createUploadIntent(actor: JwtPayload, rawInput: CreateEvid
   const client = await getClient();
   try {
     await client.query('BEGIN');
-    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [
-      `evidence-quota:${actor.organizationId}`,
-    ]);
-    const usage = await client.query(
-      `SELECT COALESCE((SELECT SUM(file_size_bytes) FROM evidence_items WHERE uploader_organization_id=$1),0)::bigint AS stored_bytes,
-        COALESCE((SELECT SUM(declared_size_bytes) FROM evidence_upload_intents
-          WHERE uploader_organization_id=$1 AND status IN ('pending','uploading','scanning') AND expires_at>NOW()),0)::bigint AS reserved_bytes`,
-      [actor.organizationId],
-    );
-    const projected =
-      Number(usage.rows[0].stored_bytes) +
-      Number(usage.rows[0].reserved_bytes) +
-      input.fileSizeBytes;
-    if (projected > config.evidenceOrganizationQuotaBytes)
-      throw new AppError(
-        'Organization evidence storage quota would be exceeded',
-        413,
-        'EVIDENCE_QUOTA_EXCEEDED',
-      );
+    await lockEvidenceQuota(client, actor.organizationId);
+    await requireObjectCapacity(client, actor.organizationId, input.fileSizeBytes);
     await client.query(
       `INSERT INTO evidence_upload_intents
         (id,uploader_user_id,uploader_organization_id,evidence_type,original_file_name,claimed_mime_type,
@@ -199,6 +200,14 @@ export async function createUploadIntent(actor: JwtPayload, rawInput: CreateEvid
         expiresAt,
       ],
     );
+    await registerObject(client, {
+      objectKey: quarantineObjectKey,
+      organizationId: actor.organizationId,
+      bytes: input.fileSizeBytes,
+      storageProvider: evidenceStorage().provider,
+      uploadIntentId: id,
+      reason: 'upload_quarantine',
+    });
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined);
@@ -224,10 +233,39 @@ export async function createUploadIntent(actor: JwtPayload, rawInput: CreateEvid
 }
 
 async function rejectIntent(id: string, reason: string): Promise<void> {
-  await query(
-    `UPDATE evidence_upload_intents SET status='rejected',rejection_reason=$2,updated_at=NOW() WHERE id=$1 AND status IN ('pending','uploading','scanning')`,
-    [id, reason],
-  );
+  const client = await getClient();
+  let rejectedKey: string | undefined;
+  try {
+    await client.query('BEGIN');
+    const lookup = await client.query(
+      'SELECT uploader_organization_id,quarantine_object_key FROM evidence_upload_intents WHERE id=$1',
+      [id],
+    );
+    if (!lookup.rows[0]) {
+      await client.query('ROLLBACK');
+      return;
+    }
+    await lockEvidenceQuota(client, lookup.rows[0].uploader_organization_id);
+    // A rejected replay must not cancel an upload already claimed by another request.
+    const changed = await client.query(
+      `UPDATE evidence_upload_intents SET status='rejected',rejection_reason=$2,updated_at=NOW() WHERE id=$1 AND status='pending' RETURNING id`,
+      [id, reason],
+    );
+    if (changed.rowCount === 1) {
+      await queueIntentObjects(client, id, 'upload_rejected');
+      rejectedKey = lookup.rows[0].quarantine_object_key;
+    }
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined);
+    throw error;
+  } finally {
+    client.release();
+  }
+  if (rejectedKey)
+    await cleanupObjectNow(rejectedKey).catch(() => {
+      logger.warn({ intentId: id }, 'Rejected upload cleanup requires durable retry');
+    });
 }
 
 export async function completeUploadIntent(
@@ -290,6 +328,7 @@ export async function completeUploadIntent(
 
   const storage = evidenceStorage();
   let finalObjectKey: string | undefined;
+  let completed = false;
   try {
     await storage.put(intent.quarantine_object_key, content, intent.claimed_mime_type);
     await query(
@@ -348,6 +387,30 @@ export async function completeUploadIntent(
       intent.claimed_mime_type as AllowedEvidenceMime,
     );
     finalObjectKey = `evidence/${config.environment}/${crypto.randomUUID()}`;
+    const reservationClient = await getClient();
+    try {
+      await reservationClient.query('BEGIN');
+      await lockEvidenceQuota(reservationClient, intent.uploader_organization_id);
+      await requireObjectCapacity(
+        reservationClient,
+        intent.uploader_organization_id,
+        content.length,
+      );
+      await registerObject(reservationClient, {
+        objectKey: finalObjectKey,
+        organizationId: intent.uploader_organization_id,
+        bytes: content.length,
+        storageProvider: storage.provider,
+        uploadIntentId: intentId,
+        reason: 'upload_final',
+      });
+      await reservationClient.query('COMMIT');
+    } catch (error) {
+      await reservationClient.query('ROLLBACK');
+      throw error;
+    } finally {
+      reservationClient.release();
+    }
     await storage.move(intent.quarantine_object_key, finalObjectKey, detected);
     const hash = `sha256:${crypto.createHash('sha256').update(content).digest('hex')}`;
     const client = await getClient();
@@ -382,7 +445,9 @@ export async function completeUploadIntent(
         `UPDATE evidence_upload_intents SET status='completed',evidence_item_id=$2,updated_at=NOW() WHERE id=$1 AND status='scanning' AND malware_scan_status='clean'`,
         [intentId, evidence.id],
       );
+      await retainUploadObjects(client, intentId, finalObjectKey, evidence.id);
       await client.query('COMMIT');
+      completed = true;
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
@@ -399,12 +464,39 @@ export async function completeUploadIntent(
     });
     return evidence;
   } catch (error) {
-    await storage.delete(intent.quarantine_object_key).catch(() => undefined);
-    if (finalObjectKey) await storage.delete(finalObjectKey).catch(() => undefined);
-    await rejectIntent(
-      intentId,
-      error instanceof Error ? error.message : 'Evidence validation failed',
-    );
+    if (!completed) {
+      const failureClient = await getClient();
+      try {
+        await failureClient.query('BEGIN');
+        await lockEvidenceQuota(failureClient, intent.uploader_organization_id);
+        await failureClient.query(
+          `UPDATE evidence_upload_intents SET status=CASE WHEN status IN ('pending','uploading','scanning') THEN 'rejected' ELSE status END,rejection_reason=COALESCE(rejection_reason,'Evidence processing failed'),updated_at=NOW() WHERE id=$1 AND status<>'completed'`,
+          [intentId],
+        );
+        await queueIntentObjects(failureClient, intentId, 'upload_rejected');
+        await failureClient.query('COMMIT');
+      } catch (persistError) {
+        await failureClient.query('ROLLBACK').catch(() => undefined);
+        logger.error(
+          { intentId },
+          'Evidence cleanup obligation could not be queued; held objects require recovery',
+        );
+        throw persistError;
+      } finally {
+        failureClient.release();
+      }
+      // Acceleration only: the ledger remains charged and retryable if a
+      // provider or worker fails. Never fan out untracked deletes.
+      for (const objectKey of [intent.quarantine_object_key, finalObjectKey]) {
+        if (objectKey)
+          await cleanupObjectNow(objectKey).catch(() => {
+            logger.warn(
+              { intentId },
+              'Evidence cleanup acceleration failed; durable retry required',
+            );
+          });
+      }
+    }
     throw error;
   }
 }

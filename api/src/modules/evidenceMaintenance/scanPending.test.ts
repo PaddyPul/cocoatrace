@@ -1,8 +1,17 @@
 import type { PoolClient } from 'pg';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EvidenceMalwareScanner } from '../../services/evidenceMalwareScanner';
 import { maximumScanPendingBatchSize, scanPendingEvidence } from './scanPending';
 
+const cleanup = vi.hoisted(() => ({ register: vi.fn(), now: vi.fn() }));
+vi.mock('../evidenceCleanup/repository', () => ({ queueInfectedEvidenceObject: cleanup.register }));
+vi.mock('../evidenceCleanup/worker', () => ({ cleanupObjectNow: cleanup.now }));
+beforeEach(() => {
+  vi.clearAllMocks();
+  cleanup.register.mockResolvedValue(undefined);
+  cleanup.now.mockResolvedValue(true);
+});
+const organizationId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const id = '11111111-1111-4111-8111-111111111111';
 const logger = () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() });
 function client(
@@ -72,8 +81,13 @@ describe('bounded pending evidence maintenance', () => {
       statements.push(sql);
       if (sql.includes('pg_try_advisory_lock')) return { rows: [{ acquired: true }] };
       if (sql.includes('FROM evidence_items'))
-        return { rows: [{ id, storage_key: 'evidence/test/object' }] };
+        return {
+          rows: [
+            { id, uploader_organization_id: organizationId, storage_key: 'evidence/test/object' },
+          ],
+        };
       if (sql.includes('UPDATE evidence_items')) return { rows: [{ id }] };
+      if (['BEGIN', 'COMMIT', 'ROLLBACK'].includes(sql)) return { rows: [] };
       if (sql.includes('pg_advisory_unlock')) return { rows: [{ released: true }] };
       throw new Error('Unexpected SQL');
     });
@@ -98,9 +112,14 @@ describe('bounded pending evidence maintenance', () => {
     const database = client(async (sql) => {
       if (sql.includes('pg_try_advisory_lock')) return { rows: [{ acquired: true }] };
       if (sql.includes('FROM evidence_items')) {
-        return { rows: [{ id, storage_key: 'evidence/test/empty' }] };
+        return {
+          rows: [
+            { id, uploader_organization_id: organizationId, storage_key: 'evidence/test/empty' },
+          ],
+        };
       }
       if (sql.includes('UPDATE evidence_items')) return { rows: [{ id }] };
+      if (['BEGIN', 'COMMIT', 'ROLLBACK'].includes(sql)) return { rows: [] };
       if (sql.includes('pg_advisory_unlock')) return { rows: [{ released: true }] };
       throw new Error('Unexpected SQL');
     });
@@ -127,7 +146,7 @@ describe('bounded pending evidence maintenance', () => {
       if (sql.includes('FROM evidence_items')) {
         return {
           rows: [
-            { id, storage_key: 'evidence/test/first' },
+            { id, uploader_organization_id: organizationId, storage_key: 'evidence/test/first' },
             {
               id: '22222222-2222-4222-8222-222222222222',
               storage_key: 'evidence/test/second',
@@ -167,11 +186,17 @@ describe('bounded pending evidence maintenance', () => {
       statements.push(sql);
       if (sql.includes('pg_try_advisory_lock')) return { rows: [{ acquired: true }] };
       if (sql.includes('FROM evidence_items'))
-        return { rows: [{ id, storage_key: 'evidence/test/object' }] };
+        return {
+          rows: [
+            { id, uploader_organization_id: organizationId, storage_key: 'evidence/test/object' },
+          ],
+        };
       if (sql.includes('UPDATE evidence_items')) return { rows: [{ id }] };
+      if (['BEGIN', 'COMMIT', 'ROLLBACK'].includes(sql)) return { rows: [] };
       if (sql.includes('pg_advisory_unlock')) return { rows: [{ released: true }] };
       throw new Error('Unexpected SQL');
     });
+    cleanup.now.mockResolvedValue(false);
     const result = await scanPendingEvidence({
       scanner: scanner({
         status: 'infected',
@@ -208,5 +233,115 @@ describe('bounded pending evidence maintenance', () => {
       getClient: async () => database,
     });
     expect(database.release).toHaveBeenCalledWith(true);
+  });
+});
+
+describe('durable maintenance infection cleanup', () => {
+  function infectedClient(statements: string[], legacy = false) {
+    return client(async (sql) => {
+      statements.push(sql);
+      if (sql.includes('pg_try_advisory_lock')) return { rows: [{ acquired: true }] };
+      if (sql.includes('FROM evidence_items'))
+        return {
+          rows: [
+            {
+              id,
+              uploader_organization_id: organizationId,
+              ...(legacy
+                ? { storage_path: '/tmp/legacy-evidence/infected.pdf' }
+                : { storage_key: 'evidence/test/infected' }),
+            },
+          ],
+        };
+      if (sql.includes('UPDATE evidence_items')) return { rows: [{ id }] };
+      if (['BEGIN', 'COMMIT', 'ROLLBACK'].includes(sql)) return { rows: [] };
+      if (sql.includes('pg_advisory_unlock')) return { rows: [{ released: true }] };
+      throw Error('Unexpected SQL');
+    });
+  }
+  const infection = () =>
+    scanner({ status: 'infected', engine: 'test-scanner', signature: 'private-signature' });
+  it('queues infection with database owner and actual bytes before committing, then attempts provider cleanup', async () => {
+    const statements: string[] = [];
+    const database = infectedClient(statements);
+    const content = Buffer.from('infected bytes');
+    cleanup.register.mockImplementation(async () => {
+      expect(statements.at(-1)).toContain("malware_scan_status='infected'");
+      expect(statements).toContain('BEGIN');
+      expect(statements).not.toContain('COMMIT');
+    });
+    cleanup.now.mockImplementation(async () => {
+      expect(statements).toContain('COMMIT');
+      return true;
+    });
+    const storage = {
+      provider: 's3' as const,
+      get: vi.fn().mockImplementation(async () => {
+        expect(statements).not.toContain('BEGIN');
+        return content;
+      }),
+      delete: vi.fn(),
+    };
+    const result = await scanPendingEvidence({
+      scanner: infection(),
+      storage,
+      logger: logger(),
+      getClient: async () => database,
+    });
+    expect(result).toMatchObject({ infected: 1, failed: 0 });
+    expect(cleanup.register).toHaveBeenCalledWith(database, {
+      objectKey: 'evidence/test/infected',
+      organizationId,
+      bytes: content.length,
+      storageProvider: 's3',
+      evidenceId: id,
+    });
+    expect(cleanup.now).toHaveBeenCalledWith(
+      'evidence/test/infected',
+      expect.objectContaining({ storage: expect.objectContaining({ provider: 's3' }) }),
+    );
+    expect(storage.delete).not.toHaveBeenCalled();
+  });
+  it('rolls back an uncommitted infection when the cleanup reservation fails and does not delete bytes', async () => {
+    const statements: string[] = [];
+    const database = infectedClient(statements);
+    cleanup.register.mockRejectedValue(Error('private cleanup reservation failure'));
+    const result = await scanPendingEvidence({
+      scanner: infection(),
+      storage: {
+        provider: 'local',
+        get: vi.fn().mockResolvedValue(Buffer.from('infected')),
+        delete: vi.fn(),
+      },
+      logger: logger(),
+      getClient: async () => database,
+    });
+    expect(result).toMatchObject({ infected: 0, failed: 1 });
+    expect(statements).toContain('ROLLBACK');
+    expect(statements).not.toContain('COMMIT');
+    expect(cleanup.now).not.toHaveBeenCalled();
+    expect(statements.at(-2)).toContain("malware_scan_status='scan_failed'");
+  });
+  it('keeps legacy path evidence infected and reports operator cleanup instead of inventing a provider key', async () => {
+    const statements: string[] = [];
+    const database = infectedClient(statements, true);
+    const log = logger();
+    const result = await scanPendingEvidence({
+      scanner: infection(),
+      storage: { provider: 'local', get: vi.fn(), delete: vi.fn() },
+      legacyUploadsRoot: '/tmp/legacy-evidence',
+      readLegacyFile: vi.fn().mockResolvedValue(Buffer.from('legacy infected')),
+      logger: log,
+      getClient: async () => database,
+    });
+    expect(result).toMatchObject({ infected: 1, failed: 1 });
+    expect(statements).toContain('COMMIT');
+    expect(cleanup.register).not.toHaveBeenCalled();
+    expect(cleanup.now).not.toHaveBeenCalled();
+    expect(log.warn).toHaveBeenCalledWith(
+      { evidenceId: id },
+      'Infected legacy evidence requires manual file cleanup',
+    );
+    expect(statements.join('\n')).not.toContain("malware_scan_status='scan_failed'");
   });
 });

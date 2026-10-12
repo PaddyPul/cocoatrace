@@ -4,7 +4,9 @@ import path from 'path';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import app from '../../src/app';
-import { pool, query } from '../../src/db';
+import { getClient, pool, query } from '../../src/db';
+import { queueIntentObjects } from '../../src/modules/evidenceCleanup/repository';
+import { cleanupObjectNow } from '../../src/modules/evidenceCleanup/worker';
 import { evidenceStorage } from '../../src/services/evidenceStorage';
 
 type Tenant = {
@@ -521,6 +523,16 @@ describe('real PostgreSQL multi-tenant API boundary', () => {
     expect(exceeded.status).toBe(413);
     expect(exceeded.body.code).toBe('EVIDENCE_QUOTA_EXCEEDED');
     await query(`UPDATE evidence_upload_intents SET status='expired' WHERE id=$1`, [reserved.body.intentId]);
+    // Expiry cannot free bytes still owned by the durable cleanup ledger.
+    const stillReserved = await create(100);
+    expect(stillReserved.status).toBe(413);
+    const client = await getClient();
+    let key: string;
+    try {
+      await queueIntentObjects(client, reserved.body.intentId, 'upload_expired');
+      key = (await client.query('SELECT object_key FROM evidence_object_cleanup WHERE upload_intent_id=$1', [reserved.body.intentId])).rows[0].object_key;
+    } finally { client.release(); }
+    expect(await cleanupObjectNow(key!)).toBe(true);
   });
 
   it('rejects an EICAR test file, audits the infection and deletes quarantine bytes', async () => {

@@ -3,6 +3,8 @@ import type { PoolClient } from 'pg';
 import { getClient } from '../../db';
 import { AppError } from '../../errors';
 import logger from '../../logger';
+import { queueInfectedEvidenceObject } from '../evidenceCleanup/repository';
+import { cleanupObjectNow } from '../evidenceCleanup/worker';
 import {
   evidenceMalwareScanner,
   type EvidenceMalwareScanner,
@@ -19,6 +21,7 @@ export const maximumScanPendingBatchSize = 100;
 
 type Candidate = {
   id: string;
+  uploader_organization_id: string;
   storage_key?: string | null;
   storage_path?: string | null;
 };
@@ -33,7 +36,8 @@ export type ScanPendingSummary = {
 };
 
 type MaintenanceLogger = Pick<typeof logger, 'info' | 'warn' | 'error'>;
-type MaintenanceStorage = Pick<EvidenceStorage, 'get' | 'delete'>;
+type MaintenanceStorage = Pick<EvidenceStorage, 'get' | 'delete'> &
+  Partial<Pick<EvidenceStorage, 'provider'>>;
 
 export type ScanPendingOptions = {
   batchSize?: number;
@@ -136,7 +140,7 @@ export async function scanPendingEvidence(
     locked = true;
     await scanner.healthcheck();
     const candidates = await client.query<Candidate>(
-      `SELECT id,storage_key,storage_path FROM evidence_items
+      `SELECT id,uploader_organization_id,storage_key,storage_path FROM evidence_items
        WHERE malware_scan_status IN ('legacy_unscanned','scan_failed')
        ORDER BY malware_scanned_at NULLS FIRST,created_at,id LIMIT $1`,
       [limit],
@@ -156,26 +160,72 @@ export async function scanPendingEvidence(
         }
         const result = await scanner.scan(content);
         if (result.status === 'infected') {
-          // Persist the security decision before deletion. A provider cleanup
-          // incident must never rewrite an infected result as scan_failed.
-          await client.query(
-            `UPDATE evidence_items SET malware_scan_status='infected',malware_scanner_engine=$2,
-              malware_scanned_at=NOW() WHERE id=$1
-              AND malware_scan_status IN ('legacy_unscanned','scan_failed')`,
-            [item.id, result.engine],
-          );
+          // The infected decision and cleanup reservation commit together;
+          // provider I/O is deliberately outside this short transaction.
+          const provider = storage.provider ?? evidenceStorage().provider;
+          if (provider !== 'local' && provider !== 's3') {
+            throw new AppError(
+              'Evidence storage provider is unsupported.',
+              503,
+              'EVIDENCE_STORAGE_PROVIDER_INVALID',
+            );
+          }
+          await client.query('BEGIN');
+          try {
+            const updated = await client.query(
+              `UPDATE evidence_items SET malware_scan_status='infected',malware_scanner_engine=$2,
+                malware_scanned_at=NOW() WHERE id=$1
+                AND malware_scan_status IN ('legacy_unscanned','scan_failed') RETURNING id`,
+              [item.id, result.engine],
+            );
+            if (updated.rows.length === 0) {
+              await client.query('ROLLBACK');
+              continue;
+            }
+            if (item.storage_key) {
+              await queueInfectedEvidenceObject(client, {
+                objectKey: item.storage_key,
+                organizationId: item.uploader_organization_id,
+                bytes: content.length,
+                storageProvider: provider,
+                evidenceId: item.id,
+              });
+            }
+            await client.query('COMMIT');
+          } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+          }
           summary.infected += 1;
           log.warn({ evidenceId: item.id }, 'Evidence maintenance scan detected malware');
           if (item.storage_key) {
             try {
-              await storage.delete(item.storage_key);
+              const deleted = await cleanupObjectNow(item.storage_key, {
+                storage: { provider, delete: storage.delete.bind(storage) },
+                logger: log,
+              });
+              if (!deleted) {
+                summary.failed += 1;
+                log.warn(
+                  { evidenceId: item.id },
+                  'Infected evidence cleanup remains durably queued',
+                );
+              }
             } catch (deleteError) {
               summary.failed += 1;
               log.error(
                 { evidenceId: item.id, errorCode: safeErrorCode(deleteError) },
-                'Infected evidence cleanup failed',
+                'Infected evidence cleanup attempt failed; durable retry remains queued',
               );
             }
+          } else {
+            // Legacy filesystem paths cannot safely become provider object keys.
+            // Keep infection blocking access and require operator cleanup.
+            summary.failed += 1;
+            log.warn(
+              { evidenceId: item.id },
+              'Infected legacy evidence requires manual file cleanup',
+            );
           }
         } else {
           await client.query(

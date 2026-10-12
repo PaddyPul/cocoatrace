@@ -144,6 +144,10 @@
     {
       "path": "api/src/migrations/034_audit_register_indexes.ts",
       "sha256": "b486f360612c8b89c401dc97df43851f2911781bf775fef77da485d761af13b8"
+    },
+    {
+      "path": "api/src/migrations/035_evidence_object_cleanup.ts",
+      "sha256": "1d0524b7d4d00fb7bcc554813c3ec1ad4892c99c9baae6c744b87eab45929029"
     }
   ]
 }
