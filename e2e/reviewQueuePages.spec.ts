@@ -135,6 +135,8 @@ test('access applications search and filter server-side with full totals before 
   await panel.getByRole('button', { name: 'Review', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Access decision', exact: true });
   await dialog.getByLabel('Review reason or note', { exact: true }).fill('Unsaved review');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel('Review reason or note', { exact: true })).toHaveCount(1);
   await expect(dialog.getByLabel('Review reason or note', { exact: true })).toHaveValue(
     'Unsaved review',
   );

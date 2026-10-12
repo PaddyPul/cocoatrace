@@ -351,15 +351,18 @@ function AccessReview() {
                 <X size={14} />
               </button>
             </div>
-            <label className="mt-5 block">
-              <span className="form-label">Review reason or note</span>
+            <div className="mt-5">
+              <label htmlFor="access-review-reason" className="form-label">
+                Review reason or note
+              </label>
               <textarea
+                id="access-review-reason"
                 className="form-input min-h-28"
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
                 placeholder="Required for rejection; recommended for approval"
               />
-            </label>
+            </div>
             <div className="mt-5 grid gap-2 sm:grid-cols-2">
               <button
                 disabled={busy}

@@ -737,3 +737,8 @@ Founder review-queue release passed 393/394 integration tests. The product legac
 ## Access review browser interaction correction — 2026-10-10
 
 Founder release reached browser journeys after the product overflow correction. The new queue test manipulated background filter controls after opening a modal that intentionally closes on backdrop interaction, then expected the dismissed form to remain. Correct the sequence to search/filter first, reopen the off-page applicant, and enter/assert its review note within the active dialog. No application permission, decision, dismissal or data change. Native browser/release acceptance remains pending rerun.
+
+
+## Stable access review label correction — 2026-10-10
+
+The reordered browser sequence still failed after text entry. Source inspection of ReactDOM and Playwright identifies the actual cause: React updates controlled textarea defaultValue/textContent, while Playwright reads the wrapping label's descendant text. The exact label becomes input-dependent. Separate the visible label using htmlFor/id so it stays stable after editing; assert dialog visibility and one exact labelled control after fill. This supersedes the earlier speculative backdrop explanation. Decision/dismissal/authorization policies remain unchanged. Founder native release acceptance remains pending rerun.
