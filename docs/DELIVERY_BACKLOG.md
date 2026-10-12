@@ -821,3 +821,14 @@ Founder configuration validation passed, then disposable fixture creation failed
 ## Correction checkpoint — deterministic download observation
 
 Founder stress run completed four maximum uploads and one busy rejection; sampled API peak 327,065,600 bytes was below the 512 MiB budget. Downloads failed the four-active observation before the second phase completed; this is not an accepted memory-stress pass. Replace OS receive-window timing assumptions with guarded child IPC barrier after real provider bytes are read, prove four held buffers/admissions before fifth rejection, then release for slow HTTP downloads and checksum verification. Production admission and budget remain unchanged.
+
+
+## Accepted checkpoint — trade evidence preflight and local RSS gate, 2026-10-12
+
+Founder confirms release checks passed and merge/pull completed at 18:54 UTC. Scoped metadata preflight outside trade write locks, transactional proof revalidation and the deterministic four-upload/four-download RSS/admission gate are accepted. This supersedes pending acceptance of the implementation and correction checkpoints above. PER-003 and OPS-010 remain IN PROGRESS for streaming, cross-instance admission, hosted capacity and automated operations.
+
+## Candidate checkpoint — recall resolution proof boundary
+
+Require current validated, clean, nonrejected, storage-backed and cleanup-eligible proof on the exact recall before manager resolution. Run bounded provider existence checks outside write locks, then revalidate proof fingerprint and manager authority inside the safety mutation. Add native denial/race/lock tests. No inventory hold release is implied by closing a notice. Release acceptance pending.
+
+Author verification: 777 API assertions, quality, workspace/browser types, both builds, migration integrity, backlog checks and 16 runner checks pass. Eleven new native recall resolution cases compile strictly and review found no blockers. PostgreSQL/browser/release execution remains pending founder acceptance; no native pass is inferred from compilation.
