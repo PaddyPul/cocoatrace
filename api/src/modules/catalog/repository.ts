@@ -188,3 +188,28 @@ export async function legacyHoldingList(execute: Execute, organizationId: string
     )
   ).rows;
 }
+
+export async function legacyListingList(execute: Execute) {
+  // Assess each distinct physical batch once before the legacy sentinel limit.
+  // Thousands of listings from one batch must not repeat the recall graph query.
+  const candidates = await execute(`WITH candidates AS MATERIALIZED (
+    SELECT l.id,l.created_at,h.batch_id FROM listings l JOIN batch_holdings h ON h.id=l.holding_id
+    WHERE l.active=TRUE AND h.status='available' AND h.holder_organization_id=l.seller_organization_id
+  ), assessed AS MATERIALIZED (
+    SELECT candidate_batches.batch_id,${activeBatchRecallSql('candidate_batches.batch_id')} AS held
+    FROM (SELECT DISTINCT batch_id FROM candidates) candidate_batches
+  ) SELECT candidate.id FROM candidates candidate JOIN assessed assessment ON assessment.batch_id=candidate.batch_id
+    WHERE NOT assessment.held ORDER BY candidate.created_at DESC,candidate.id DESC LIMIT 1001`);
+  if (candidates.rows.length > 1000)
+    throw new AppError(
+      'Marketplace list exceeds the legacy limit. Use paged supply search.',
+      422,
+      'CATALOG_READ_LIMIT',
+    );
+  if (!candidates.rows.length) return [];
+  const selected = await execute(
+    `${listingProjection('FALSE')} ${listingFrom} WHERE l.id=ANY($1::uuid[]) ORDER BY l.created_at DESC,l.id DESC`,
+    [candidates.rows.map((row) => row.id)],
+  );
+  return decorate(execute, selected.rows);
+}

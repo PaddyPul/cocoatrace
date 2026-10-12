@@ -3,7 +3,13 @@ vi.mock('../trust/assessment', () => ({
   loadBatchTrust: vi.fn(async () => new Map()),
   legacyOrganicStatus: vi.fn(),
 }));
-import { holdingPage, listingPage, holdingSummary, legacyHoldingList } from './repository';
+import {
+  holdingPage,
+  listingPage,
+  holdingSummary,
+  legacyHoldingList,
+  legacyListingList,
+} from './repository';
 import { parsePage } from './paging';
 describe('catalog SQL boundaries', () => {
   it('filters stock status, recall and tenant before keyset limit', async () => {
@@ -119,5 +125,29 @@ describe('legacy inventory overflow preflight', () => {
     expect(await legacyHoldingList(execute, 'tenant')).toEqual([{ id: 'id', activeRecall: true }]);
     expect(execute.mock.calls[1][0]).toContain('recall_notices');
     expect(execute.mock.calls[1][1]).toEqual(['tenant', ['id']]);
+  });
+});
+
+describe('legacy marketplace rejection before payload enrichment', () => {
+  it('rejects the 1001st visible ID before loading documents or trust', async () => {
+    const execute = vi.fn().mockResolvedValue({
+      rows: Array.from({ length: 1001 }, (_, index) => ({ id: String(index) })),
+    });
+    await expect(legacyListingList(execute)).rejects.toMatchObject({
+      statusCode: 422,
+      code: 'CATALOG_READ_LIMIT',
+    });
+    expect(execute).toHaveBeenCalledTimes(1);
+    const sql = execute.mock.calls[0][0];
+    expect(sql).toContain('SELECT DISTINCT batch_id FROM candidates');
+    expect(sql.match(/SELECT 1 FROM recall_notices/g)).toHaveLength(1);
+    expect(sql).toContain('WHERE NOT assessment.held');
+    expect(sql).toContain('LIMIT 1001');
+    expect(sql).not.toContain('l.*');
+  });
+  it('does not hydrate a workspace with no eligible visible IDs', async () => {
+    const execute = vi.fn().mockResolvedValue({ rows: [] });
+    expect(await legacyListingList(execute)).toEqual([]);
+    expect(execute).toHaveBeenCalledTimes(1);
   });
 });

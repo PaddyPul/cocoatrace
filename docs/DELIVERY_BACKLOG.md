@@ -832,3 +832,10 @@ Founder confirms release checks passed and merge/pull completed at 18:54 UTC. Sc
 Require current validated, clean, nonrejected, storage-backed and cleanup-eligible proof on the exact recall before manager resolution. Run bounded provider existence checks outside write locks, then revalidate proof fingerprint and manager authority inside the safety mutation. Add native denial/race/lock tests. No inventory hold release is implied by closing a notice. Release acceptance pending.
 
 Author verification: 777 API assertions, quality, workspace/browser types, both builds, migration integrity, backlog checks and 16 runner checks pass. Eleven new native recall resolution cases compile strictly and review found no blockers. PostgreSQL/browser/release execution remains pending founder acceptance; no native pass is inferred from compilation.
+
+
+## Correction checkpoint — legacy marketplace limit query
+
+Founder release passed 446 native cases; legacy listings timed out before its 1,001-ID sentinel rejection. Replace per-listing repeated recall graph evaluation with one materialized assessment per distinct batch, select only eligible IDs before the legacy cap and hydrate/enrich only under-limit results. Production 2-second statement and 5-second request guards remain unchanged. Native regression also verifies recalled batches are excluded before the sentinel. Recall-security wave acceptance remains pending.
+
+Correction author validation: 779 API assertions, quality, workspace/browser types, API build and backlog tests pass. Updated native pagination case compiles strictly; native timing/SQL/browser execution remains pending the founder release rerun.

@@ -68,6 +68,15 @@ describe('inventory/marketplace pages and aggregate totals',()=>{
     // Legacy callers get an explicit error, never a misleading first-page array.
     expect((await get('/holdings')).body.code).toBe('CATALOG_READ_LIMIT');
     expect((await get('/listings')).body.code).toBe('CATALOG_READ_LIMIT');
+    // Recalled batches are excluded before the legacy sentinel, not after it.
+    const hidden=(await query("INSERT INTO recall_notices(reference_code,title,reason,instructions,severity,initiated_by_user_id,initiated_by_organization_id) VALUES($1,'Legacy visibility','Unsafe batch','Hold stock','critical',$2,$3) RETURNING id",[`LEGACY-${crypto.randomUUID()}`,seller.user,seller.org])).rows[0].id;
+    try {
+      await query('INSERT INTO recall_affected_batches(recall_id,batch_id) VALUES($1,$2)',[hidden,own.batch]);
+      const visible=await get('/listings');
+      expect(visible.status,JSON.stringify(visible.body)).toBe(200);
+      expect(visible.body.some((row:{batch_id:string})=>row.batch_id===own.batch)).toBe(false);
+      expect(foreign.listings.every(listing=>visible.body.some((row:{id:string})=>row.id===listing.id))).toBe(true);
+    } finally {await query('DELETE FROM recall_affected_batches WHERE recall_id=$1',[hidden]);await query('DELETE FROM recall_notices WHERE id=$1',[hidden]);}
     await query("UPDATE batch_holdings SET status='committed' WHERE id=$1",[later.id]);
     expect((await get('/holdings/page',{available:'true',search:later.id})).body.items).toEqual([]);
     expect((await get('/listings/page',{id:(await query('SELECT id FROM listings WHERE holding_id=$1',[later.id])).rows[0].id})).body.items).toEqual([]);
