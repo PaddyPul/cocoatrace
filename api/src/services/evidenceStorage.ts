@@ -8,6 +8,7 @@ export interface EvidenceStorage {
   readonly provider: 'local' | 's3';
   put(objectKey: string, content: Buffer, contentType: string): Promise<void>;
   get(objectKey: string): Promise<Buffer | null>;
+  exists(objectKey: string): Promise<boolean>;
   delete(objectKey: string): Promise<void>;
   move(sourceKey: string, destinationKey: string, contentType: string): Promise<void>;
   healthcheck(): Promise<void>;
@@ -158,6 +159,21 @@ class LocalEvidenceStorage implements EvidenceStorage {
       throw error;
     }
   }
+  async exists(objectKey: string): Promise<boolean> {
+    const filename = this.resolve(objectKey);
+    try {
+      return await deadline(async (signal) => {
+        const stat = await fs.promises.stat(filename);
+        if (signal.aborted) throw timeoutError();
+        if (!stat.isFile()) return false;
+        assertReadSize(stat.size);
+        return stat.size > 0;
+      });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false;
+      throw error;
+    }
+  }
   async delete(objectKey: string): Promise<void> {
     await fs.promises.unlink(this.resolve(objectKey)).catch((error: NodeJS.ErrnoException) => {
       if (error.code !== 'ENOENT') throw error;
@@ -212,7 +228,7 @@ class S3EvidenceStorage implements EvidenceStorage {
     objectKey?: string,
     content: Buffer = Buffer.alloc(0),
     contentType?: string,
-  ): Promise<{ ok: boolean; status: number; content?: Buffer }> {
+  ): Promise<{ ok: boolean; status: number; content?: Buffer; size?: number }> {
     if (objectKey) assertObjectKey(objectKey);
     const date = new Date();
     const amzDate = date.toISOString().replace(/[:-]|\.\d{3}/g, '');
@@ -260,6 +276,23 @@ class S3EvidenceStorage implements EvidenceStorage {
           body: method === 'PUT' ? requestBody(content) : undefined,
         });
         const result = { ok: response.ok, status: response.status };
+        if (method === 'HEAD' && objectKey && response.ok) {
+          const declared = response.headers.get('content-length');
+          cancelResponse(response);
+          if (
+            declared === null ||
+            !/^\d+$/.test(declared) ||
+            !Number.isSafeInteger(Number(declared))
+          )
+            throw new AppError(
+              'Private evidence storage returned an invalid object length.',
+              503,
+              'EVIDENCE_STORAGE_INVALID_RESPONSE',
+            );
+          const size = Number(declared);
+          assertReadSize(size);
+          return { ...result, size };
+        }
         if (method === 'GET' && response.ok)
           return { ...result, content: await boundedResponse(response, signal) };
         // Provider bodies can contain credentials, URLs or arbitrary large XML.
@@ -318,6 +351,18 @@ class S3EvidenceStorage implements EvidenceStorage {
         'EVIDENCE_STORAGE_UNAVAILABLE',
       );
     return response.content!;
+  }
+  async exists(key: string): Promise<boolean> {
+    await this.ensureBucket();
+    const response = await this.request('HEAD', key);
+    if (response.status === 404) return false;
+    if (!response.ok)
+      throw new AppError(
+        `Unable to check private evidence object (${response.status}).`,
+        503,
+        'EVIDENCE_STORAGE_UNAVAILABLE',
+      );
+    return response.size! > 0;
   }
   async delete(key: string): Promise<void> {
     await this.ensureBucket();

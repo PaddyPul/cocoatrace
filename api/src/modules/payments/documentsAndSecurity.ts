@@ -46,7 +46,7 @@ export async function presentDocuments(actor: TradeActor, id: string) {
     );
     const present = new Set<string>();
     for (const item of documents.rows) {
-      if ((await evidenceStorage().get(item.storage_key))?.length) present.add(item.type);
+      if (await evidenceStorage().exists(item.storage_key)) present.add(item.type);
     }
     const missing = required.filter((type) => !present.has(type));
     if (missing.length)

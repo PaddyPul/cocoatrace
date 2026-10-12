@@ -120,3 +120,7 @@ api/src/services/evidenceStorage.ts text eol=lf
 api/src/services/evidenceStorage.test.ts text eol=lf
 api/src/logger.ts text eol=lf
 api/src/logger.test.ts text eol=lf
+
+api/scripts/scan-pending-evidence.ts text eol=lf
+api/src/services/evidenceMalwareScanner.ts text eol=lf
+api/src/services/evidenceMalwareScanner.test.ts text eol=lf

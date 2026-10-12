@@ -239,7 +239,7 @@ export async function reportDiscrepancy(
     if (proofs.length !== ids.length)
       throw new ValidationError('Attach your validated, scan-clean evidence for this contract');
     for (const proof of proofs)
-      if (!(await evidenceStorage().get(proof.storage_key))?.length)
+      if (!(await evidenceStorage().exists(proof.storage_key)))
         throw new ValidationError('Supporting evidence bytes are unavailable');
     const issue = (
       await client.query<DeliveryDiscrepancyRow>(

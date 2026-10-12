@@ -107,6 +107,82 @@ describe('local private evidence storage', () => {
     });
   });
 });
+describe('metadata-only evidence existence', () => {
+  it('local checks regular nonempty files and reports empty or absent objects without a body read', async () => {
+    const { evidenceStorage } = await import('./evidenceStorage');
+    const storage = evidenceStorage();
+    await storage.put(source, Buffer.from('1234'), 'application/pdf');
+    const read = vi.spyOn(fs, 'createReadStream');
+    expect(await storage.exists(source)).toBe(true);
+    expect(await storage.exists(destination)).toBe(false);
+    await storage.delete(source);
+    await storage.put(source, Buffer.alloc(0), 'application/pdf');
+    expect(await storage.exists(source)).toBe(false);
+    expect(read).not.toHaveBeenCalled();
+  });
+  it('local metadata rejects oversized files without reading them', async () => {
+    const { evidenceStorage } = await import('./evidenceStorage');
+    const storage = evidenceStorage();
+    await storage.put(source, Buffer.alloc(9), 'application/pdf');
+    const read = vi.spyOn(fs, 'createReadStream');
+    await expect(storage.exists(source)).rejects.toMatchObject({
+      code: 'EVIDENCE_STORAGE_READ_LIMIT',
+    });
+    expect(read).not.toHaveBeenCalled();
+  });
+  it('local metadata checks remain bounded when stat stalls', async () => {
+    const { evidenceStorage } = await import('./evidenceStorage');
+    vi.spyOn(fs.promises, 'stat').mockImplementation(() => new Promise(() => {}));
+    vi.useFakeTimers();
+    const rejected = expect(evidenceStorage().exists(source)).rejects.toMatchObject({
+      code: 'EVIDENCE_STORAGE_TIMEOUT',
+    });
+    await vi.advanceTimersByTimeAsync(500);
+    await rejected;
+  });
+  it('S3 uses HEAD and valid length metadata without reading the object body', async () => {
+    const { storage, fetcher } = await s3();
+    const response = new Response(chunks(['object body must not be read']), {
+      headers: { 'Content-Length': '4' },
+    });
+    const reader = vi.spyOn(response.body!, 'getReader');
+    fetcher.mockResolvedValue(response);
+    expect(await storage.exists(source)).toBe(true);
+    expect(fetcher.mock.calls[1][1].method).toBe('HEAD');
+    expect(reader).not.toHaveBeenCalled();
+    fetcher.mockResolvedValue(new Response(null, { headers: { 'Content-Length': '0' } }));
+    expect(await storage.exists(source)).toBe(false);
+    fetcher.mockResolvedValue(new Response(null, { status: 404 }));
+    expect(await storage.exists(destination)).toBe(false);
+  });
+  it('S3 metadata fails closed for absent, malformed or oversized length', async () => {
+    const { storage, fetcher } = await s3();
+    for (const length of [null, 'bad', '9007199254740992', '9']) {
+      fetcher.mockResolvedValue(
+        new Response(null, { headers: length === null ? {} : { 'Content-Length': length } }),
+      );
+      await expect(storage.exists(source)).rejects.toMatchObject({
+        code: length === '9' ? 'EVIDENCE_STORAGE_READ_LIMIT' : 'EVIDENCE_STORAGE_INVALID_RESPONSE',
+      });
+    }
+  });
+  it('S3 metadata failures retain safe errors and finite deadlines', async () => {
+    const { storage, fetcher } = await s3();
+    fetcher.mockResolvedValue(new Response(chunks(['provider secret']), { status: 500 }));
+    await expect(storage.exists(source)).rejects.toThrow(
+      'Unable to check private evidence object (500).',
+    );
+    fetcher.mockImplementation(() => new Promise(() => {}));
+    vi.useFakeTimers();
+    const rejected = expect(storage.exists(source)).rejects.toMatchObject({
+      code: 'EVIDENCE_STORAGE_TIMEOUT',
+    });
+    await vi.advanceTimersByTimeAsync(500);
+    await rejected;
+    expect(fetcher.mock.calls[2][1].signal.aborted).toBe(true);
+  });
+});
+
 describe('bounded S3 evidence storage', () => {
   it('streams a valid known length without calling arrayBuffer', async () => {
     const { storage, fetcher } = await s3();
