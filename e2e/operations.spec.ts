@@ -102,10 +102,25 @@ test('operator reviews a safe retry, preserves explanation during refresh and se
   await dialog
     .getByLabel('Recovery explanation', { exact: true })
     .fill('Provider outage investigated and corrected');
+  await expect(dialog).toBeVisible();
+  await expect(
+    dialog.getByRole('textbox', { name: 'Recovery explanation', exact: true }),
+  ).toHaveAccessibleName('Recovery explanation');
   await monitor.getByRole('button', { name: 'Refresh operations', exact: true }).click();
   await expect(dialog.getByLabel('Recovery explanation', { exact: true })).toHaveValue(
     'Provider outage investigated and corrected',
   );
+  state.fail();
+  await monitor.getByRole('button', { name: 'Refresh operations', exact: true }).click();
+  await expect(monitor.getByRole('alert')).toContainText(
+    'healthy operation has not been confirmed',
+  );
+  await expect(dialog.getByLabel('Recovery explanation', { exact: true })).toHaveValue(
+    'Provider outage investigated and corrected',
+  );
+  state.recover();
+  await monitor.getByRole('button', { name: 'Refresh operations', exact: true }).click();
+  await expect(monitor.getByText('Scheduled jobs need attention', { exact: true })).toBeVisible();
   await dialog.getByRole('button', { name: 'Queue reviewed retry', exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(

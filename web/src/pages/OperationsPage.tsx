@@ -251,16 +251,17 @@ export default function OperationsPage() {
                   Investigate the incident before requeueing. The worker rechecks references and
                   storage safety; this action cannot delete evidence directly.
                 </p>
-                <label className="block">
+                <label className="block" htmlFor="operations-recovery-explanation">
                   Recovery explanation
-                  <textarea
-                    className="form-input"
-                    value={reason}
-                    maxLength={500}
-                    onChange={(e) => setReason(e.target.value)}
-                    disabled={saving}
-                  />
                 </label>
+                <textarea
+                  id="operations-recovery-explanation"
+                  className="form-input"
+                  value={reason}
+                  maxLength={500}
+                  onChange={(e) => setReason(e.target.value)}
+                  disabled={saving}
+                />
                 {decisionError && <p role="alert">{decisionError}</p>}
                 <button
                   className="btn-primary"

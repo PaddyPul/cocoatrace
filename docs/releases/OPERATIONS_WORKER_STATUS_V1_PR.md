@@ -15,6 +15,7 @@ Evidence scanning and private-object cleanup run automatically alongside existin
 ## Change summary
 
 - Four independent, bounded job loops with PostgreSQL session locks, durable run/failure records and unchanged domain leases; delivery retains its 15-second interval.
+- Stable explicitly associated recovery textarea label, with explanation retention across successful and failed monitor refreshes.
 - Private Operations monitor and runtime status CLI; missing/stale/malformed/suppressed results cannot claim healthy delivery.
 - Fresh-assurance platform-admin cleanup retry, locked current authority, atomic audit and preserved quota; unsafe reference/key/provider failures refuse retry.
 - Graceful worker drain under the existing shutdown deadline, additive migration 036 and terminal-work indexes.
