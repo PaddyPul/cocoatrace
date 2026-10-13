@@ -20,6 +20,7 @@ A platform operator can distinguish delayed cleanup/notification work, terminal 
 - Probe indexed work states with a 1,001-row sentinel, cap displayed counts at 1,000 and label lower bounds. Retry/expired-lease observations cover the first 1,000 records.
 - Show terminal, expired/missing lease, due-for-15-minutes and observation-limit incidents alongside job health. Reject inconsistent client envelopes.
 - Add four partial indexes and native/browser/contract regression coverage. Carry forward founder acceptance of terminal-email recovery without closing broader operations gates.
+- Isolate backlog integration fixtures from the earlier intentional administrator-session revocation, while retaining a 401 assertion for that revoked token.
 - Correct Windows native-output capture while preserving exit-code and exact-commit release guards.
 
 ## Security and data review

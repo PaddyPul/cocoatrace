@@ -234,10 +234,17 @@ describe('scheduled operation ownership and audited recovery', () => {
 });
 
 describe('bounded private queue backlog observations', () => {
-  const read = (who = admin) =>
+  // The preceding security suite intentionally revokes admin's session. Use a
+  // separate enrolled identity; never revive that session to make reads pass.
+  let backlogAdmin: Actor;
+  beforeAll(async () => {
+    backlogAdmin = await actor(true);
+  });
+  const read = (who = backlogAdmin) =>
     request(app).get('/operations/backlog').set('Authorization', `Bearer ${who.token}`);
   it('denies ordinary and unauthenticated readers and rejects unknown parameters', async () => {
     expect((await request(app).get('/operations/backlog')).status).toBe(401);
+    expect((await read(admin)).status).toBe(401);
     expect((await read(ordinary)).status).toBe(403);
     expect((await read().query({ organization: ordinary.organizationId })).status).toBe(400);
   });

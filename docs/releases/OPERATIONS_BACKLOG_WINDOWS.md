@@ -102,3 +102,8 @@ Report “release checks passed and merge/pull completed” after completion. Br
 ## Author validation
 
 Passed here: 807 API unit tests in 94 files; 13 signal cases checked again against the final probe SQL; the client backlog contract test; API/web/browser type checks; strict compilation of both affected native integration suites; API/web production builds; code quality; migration integrity; 3 backlog tests; whitespace validation. The web build retains its existing bundle-size warning. The client contract case does not launch a browser and is not a full browser journey pass. No Docker/PostgreSQL runtime or full browser journey execution is available in the author environment. Native integration additions require founder-side release verification.
+
+
+## Native fixture correction
+
+The first founder release attempt reported three backlog cases rejected with HTTP 401: an earlier security case deliberately revoked the shared administrator session. A separate genuinely enrolled administrator now scopes the backlog cases, and the old revoked session remains denied. See OPERATIONS_BACKLOG_FIXTURE_FIX_WINDOWS.md for correction-only apply/focused/full-release instructions. This does not change production authority checks or migration 037. No founder native pass is inferred from static compilation.
