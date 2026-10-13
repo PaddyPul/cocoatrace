@@ -88,3 +88,7 @@ Hosting remains USD 0/month. Provider signup/verification and legal/customer dec
 `npm run test:backlog` now validates three things: strict named-row/no-partial counting; unique valid pilot gates and references; reconciled completion/partial statuses, existing code/test files and retained follow-up IDs. CI already runs this command. It does not rerun source evidence tests or replace founder/hosted acceptance.
 
 Use `npm run backlog:progress` for current totals. Keep accepted implementation and deployment/operator acceptance distinct, record each founder acknowledgement in the active row and gate, and retain source/test links. Reopening a reconciled completed item must update its evidence entry and reason. A later partial item can become complete without rewriting historical acceptance. Changes in the denominator require a stated reason.
+
+## Subsequent implementation candidate
+
+The terminal-email recovery slice is now implemented on the feature branch; see [the handoff](releases/TERMINAL_EMAIL_RECOVERY_WINDOWS.md) for actual tests and remaining release gates. The snapshot above remains the historical grooming baseline. Broad operations items and CORE-workers remain partial; no completion counts or hosted/founder acceptance are inferred from the new candidate.

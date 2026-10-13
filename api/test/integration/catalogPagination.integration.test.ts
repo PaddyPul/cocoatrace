@@ -70,7 +70,7 @@ describe('inventory/marketplace pages and aggregate totals',()=>{
     expect((await get('/listings/page',{mine:'true',limit:'100',cursor:listings.body.nextCursor},outsider)).status).toBe(400);
     const offPage=own.listings.find(l=>!listings.body.items.some((item:{id:string})=>item.id===l.id))!;
     const direct=await get('/listings/page',{id:offPage.id});expect(direct.status).toBe(200);expect(direct.body.items.map((l:{id:string})=>l.id)).toEqual([offPage.id]);
-    const supplyTotals=await get('/listings/summary');expect(supplyTotals.status).toBe(200);expect(supplyTotals.body.own_count).toBe(1005);
+    const supplyTotals=await summary('/listings/summary');expect(supplyTotals.own_count).toBe(1005);
     // Legacy callers get an explicit error, never a misleading first-page array.
     expect((await get('/holdings')).body.code).toBe('CATALOG_READ_LIMIT');
     expect((await get('/listings')).body.code).toBe('CATALOG_READ_LIMIT');
@@ -78,6 +78,9 @@ describe('inventory/marketplace pages and aggregate totals',()=>{
     const hidden=(await query("INSERT INTO recall_notices(reference_code,title,reason,instructions,severity,initiated_by_user_id,initiated_by_organization_id) VALUES($1,'Legacy visibility','Unsafe batch','Hold stock','critical',$2,$3) RETURNING id",[`LEGACY-${crypto.randomUUID()}`,seller.user,seller.org])).rows[0].id;
     try {
       await query('INSERT INTO recall_affected_batches(recall_id,batch_id) VALUES($1,$2)',[hidden,own.batch]);
+      const heldTotals=await summary('/listings/summary');
+      expect(heldTotals.own_count).toBe(0);
+      expect(heldTotals.count).toBe(supplyTotals.count-1005);
       const visible=await get('/listings');
       expect(visible.status,JSON.stringify(visible.body)).toBe(200);
       expect(visible.body.some((row:{batch_id:string})=>row.batch_id===own.batch)).toBe(false);

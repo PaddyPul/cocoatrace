@@ -4,6 +4,7 @@
 eslint.config.mjs text eol=lf
 .prettierrc.json text eol=lf
 scripts/quality-scope.mjs text eol=lf
+api/test/integration/operationsEmailRecovery.integration.test.ts text eol=lf
 scripts/run-format-check.mjs text eol=lf
 scripts/check-script-contracts.mjs text eol=lf
 scripts/check-script-contracts.test.mjs text eol=lf

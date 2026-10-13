@@ -1,4 +1,4 @@
-# Scheduled operations and reviewed cleanup recovery
+# Scheduled operations and reviewed recovery
 
 The API schedules four independent jobs after startup migrations. Pending evidence scans process at most five items per run; cleanup at most twenty; payment reminder generation and each email delivery batch at most twenty. Evidence jobs wait 60 seconds after completion; delivery jobs retain their 15-second interval. A slow job cannot overlap itself or block another job's loop.
 
@@ -20,4 +20,16 @@ A nonzero status means attention is needed, including suppressed email or first 
 
 Rollback: redeploy the previous API/web image; business queues, cleanup ownership and audits remain intact. Migration 036 is additive. Do not drop/recreate business data or manually remove private bytes to make monitoring green.
 
-Remaining operations work: external alert collector/delivery and named incident owner; complete queue-backlog/DB/abuse metrics and thresholds; reviewed recovery of terminal email rows; hosted scheduling/load and failure drills. These remain open under OPS-006/OPS-010; this slice does not close either broad item. There is no newly configured external alert service or real outgoing email provider.
+Remaining operations work: external alert collector/delivery and named incident owner; complete queue-backlog/DB/abuse metrics and thresholds; hosted scheduling/load and failure drills. These remain open under OPS-006/OPS-010; this slice does not close either broad item. There is no newly configured external alert service or real outgoing email provider.
+
+## Reviewed terminal-email recovery
+
+The Operations monitor includes separate **Payment reminder terminal email** and **Recall terminal email** sections. Each `GET /operations/email/:queue/dead` reads at most 51 rows using the existing partial terminal index, returns at most 50 ordered by ID, and explicitly reports additional records. Queue names are restricted to `payment_reminder` and `recall`. Reads require platform administrator authority and send `Cache-Control: no-store`; recipient addresses, user/business IDs, message content and raw provider errors are not returned. Unknown error text is mapped to `UNKNOWN_EMAIL_FAILURE`.
+
+Correct the delivery incident first. Select **Review email retry**, review the duplicate-submission warning and enter a 10–500-character recovery explanation. `POST /operations/email/:queue/:id/retry` rechecks live administrator authority, active verified account/organization, current unrevoked session and fresh passkey assurance under the existing policy while holding transactional locks. A stale passkey triggers the existing verification flow. Failed verification, conflicts and monitor refresh preserve the explanation.
+
+Only `failed_terminal` rows without a recorded submission or outstanding lease can be requeued. Sent, suppressed, queued, retrying and sending work cannot be recovered through this action. Inconsistent terminal records require investigation, not ledger edits. A row lock serializes competing decisions: one retry succeeds and a duplicate gets a conflict. Retry state and `operations.email.retry` audit (actor, queue, explanation, previous attempts and safe error code) commit together; audit failure rolls back recovery. Attempts reset to zero, next attempt becomes due, error/lease state clears and recall exhaustion clears. The original recipient, recall/reminder identity, creation time and deduplication keys remain intact.
+
+Recovery queues work; it does not send mail itself. Existing worker eligibility checks still apply, including payment state/recipient checks and inactive recall-recipient suppression. Recovery cannot acknowledge a recall, release retained stock or alter trade/payment state. SMTP remains at least once: a prior submission may have succeeded before a crash, even when no submission timestamp was recorded. Reviewed retry can therefore duplicate email. Worker success and SMTP acceptance do not prove inbox receipt.
+
+No new migration is needed; migration 036 already supplies the read indexes. Roll back API/web images without deleting or rewriting outbox/audit records. The candidate's actual automated validation is in [the release handoff](../releases/TERMINAL_EMAIL_RECOVERY_WINDOWS.md). Full backlog metrics, external alerts, named ownership, real inbox and hosted drills remain separate acceptance work.
