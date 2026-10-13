@@ -138,3 +138,5 @@ api/scripts/evidence-stress-barrier.ts text eol=lf
 api/src/modules/recall/response.ts text eol=lf
 api/scripts/integration-test-selection.mjs text eol=lf
 scripts/integration-test-selection.test.mjs text eol=lf
+api/scripts/check-integration-storage.ts text eol=lf
+scripts/integration-storage-readiness.test.mjs text eol=lf

@@ -19,6 +19,7 @@ export const releaseChecks = [
       'scripts/demo-preview.test.mjs',
       'scripts/run-evidence-stress.test.mjs',
       'scripts/integration-test-selection.test.mjs',
+      'scripts/integration-storage-readiness.test.mjs',
     ],
     true,
   ],

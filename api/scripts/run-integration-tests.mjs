@@ -35,18 +35,20 @@ try {
   else {
     composeStarted = true;
     if (!npmCli) throw new Error('npm_execpath is unavailable. Run this command through npm.');
-    process.exitCode = run(process.execPath, [npmCli, 'run', 'test:integration', '--workspace=api', ...suiteArgs], {
-      env: {
+    const integrationEnvironment = {
         ...process.env, TEST_DATABASE_URL: testDatabaseUrl,
         EVIDENCE_STORAGE_DRIVER: 's3', EVIDENCE_STORAGE_ENDPOINT: `http://127.0.0.1:${storagePort}`,
         EVIDENCE_STORAGE_REGION: 'us-east-1', EVIDENCE_STORAGE_BUCKET: 'cocoatrace-test-evidence',
         EVIDENCE_STORAGE_ACCESS_KEY: 'cocoa_test_access', EVIDENCE_STORAGE_SECRET_KEY: 'cocoa_test_secret_key',
         EVIDENCE_STORAGE_AUTO_CREATE_BUCKET: 'true', EVIDENCE_UPLOAD_SIGNING_SECRET: 'integration-evidence-signing-secret-32-chars',
+        APP_ENV: 'test', NODE_ENV: 'test', EVIDENCE_STORAGE_TIMEOUT_MS: '15000',
         EVIDENCE_MAX_FILE_BYTES: '512', EVIDENCE_ORGANIZATION_QUOTA_BYTES: '700',
         EVIDENCE_SCANNER_DRIVER: 'clamav', EVIDENCE_SCANNER_HOST: '127.0.0.1',
         EVIDENCE_SCANNER_PORT: scannerPort, EVIDENCE_SCANNER_TIMEOUT_MS: '30000', EVIDENCE_SCANNER_RETRIES: '1',
-      },
-    });
+      };
+    const storageReady = run(process.execPath, ['--import', 'tsx', 'api/scripts/check-integration-storage.ts'], {env:integrationEnvironment});
+    process.exitCode = storageReady === 0 ? run(process.execPath, [npmCli, 'run', 'test:integration', '--workspace=api', ...suiteArgs], {env:integrationEnvironment}) : storageReady;
+
   }
 } finally {
   if (composeStarted) run(docker, [...composeArgs, 'down', '--volumes']);

@@ -23,6 +23,8 @@ export default defineConfig({
       EMAIL_DRIVER: 'development',
       WEB_URL: 'http://localhost:3000',
       COOKIE_SECURE: 'false',
+      // Disposable tests must not inherit a short deadline from a local .env.
+      EVIDENCE_STORAGE_TIMEOUT_MS: '15000',
       EVIDENCE_STORAGE_DRIVER: process.env.EVIDENCE_STORAGE_DRIVER || 'local',
       EVIDENCE_STORAGE_ENDPOINT: process.env.EVIDENCE_STORAGE_ENDPOINT || '',
       EVIDENCE_STORAGE_REGION: process.env.EVIDENCE_STORAGE_REGION || 'us-east-1',

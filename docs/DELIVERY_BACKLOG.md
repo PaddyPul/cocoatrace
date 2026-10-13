@@ -860,3 +860,10 @@ Author correction verification: 780 API assertions, quality, workspace/browser t
 Latest founder run passed the other 417 cases; multi-tenant setup returned 503 and skipped its 30 cases. The original assertion omitted the upload error code. Add safe intent/content stage and uppercase code diagnostics, and optional exact-existing-filename selection to the disposable native runner. Full release still runs every suite; no service bypass, automatic retry, deadline increase or accepted wave claim.
 
 Diagnostic author validation: quality and 18 runner checks pass; modified native multi-tenant fixture compiles strictly. No production error cause or repair is inferred. One-suite founder execution must provide stage/code evidence; full release remains required before merge.
+
+
+## Diagnostic checkpoint — isolated storage deadline and real adapter readiness
+
+Founder error identifies EVIDENCE_STORAGE_TIMEOUT during upload content. Disposable integration settings previously inherited storage timeout from the shell/local .env while fixing scanner timing. Pin the existing 15-second default in the harness and Vitest integration config; production is unchanged. Before Vitest, verify guarded loopback S3 bucket readiness, write/read/head, real promotion, source removal and deletion through the actual adapter. Fail with safe phase/code/deadline fields before seeding 52 suites. This closes an isolation/readiness gap; it does not establish the unknown timeout's complete cause or claim a release pass.
+
+Author readiness validation: quality and 20 runner checks pass; real adapter promotion/deletion succeeds against a local HTTP test server and foreign endpoint use is refused. Probe source compiles strictly. Actual Docker/Moto timing and full native release remain pending; no provider outage or slow-host result is converted into a pass.

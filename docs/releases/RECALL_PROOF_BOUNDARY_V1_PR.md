@@ -21,6 +21,7 @@ A recall manager cannot close a safety notice using rejected, infected, missing 
 - Keep recipient acknowledgement, recovery accounting and retained inventory holds authoritative.
 - Add real PostgreSQL/API denial, provider-race and lock-contention regressions; record the previous wave as accepted.
 - Build batch-scoped deduplicated public notice associations and check retained/disposed stock independently of page filters, preserving safety warnings.
+- Pin disposable storage timing to the existing default and verify real S3 CRUD/promotion readiness before Vitest, reporting safe failure stages.
 - Add safe upload fixture stage/code diagnostics and an optional validated single-suite diagnostic runner; the default release still executes all integration cases.
 - Filter holdings candidates before recall assessment, assess each distinct batch once, and report safe HTTP errors before checking native page items.
 - Assess legacy marketplace recall visibility per distinct batch and reject over-limit IDs before full-row/trust enrichment, preserving production deadlines.
