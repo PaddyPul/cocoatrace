@@ -39,6 +39,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
 import AccessControlsPage from './pages/AccessControlsPage';
 import AccessApplicationsPage from './pages/AccessApplicationsPage';
+import OperationsPage from './pages/OperationsPage';
 import { webConfig } from './config';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -121,6 +122,7 @@ export default function App() {
           <Route path="/organizations" element={<ProtectedRoute><OrganizationsPage /></ProtectedRoute>} />
           <Route path="/access-controls" element={<ProtectedRoute><AccessControlsPage /></ProtectedRoute>} />
           <Route path="/access-applications" element={<ProtectedRoute><AccessApplicationsPage /></ProtectedRoute>} />
+          <Route path="/operations" element={<ProtectedRoute><OperationsPage /></ProtectedRoute>} />
           <Route path="/account/passkeys" element={<ProtectedRoute><PasskeysPage /></ProtectedRoute>} />
           <Route path="/account/security" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/home" replace />} />

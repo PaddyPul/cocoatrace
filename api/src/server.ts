@@ -1,5 +1,4 @@
-import { startPaymentReminderWorker } from './modules/payments/reminders';
-import {startRecallEmailWorker} from './modules/recall/notifications';
+import { startOperationsWorkers } from './modules/operations/worker';
 import logger from './logger';
 import { config } from './config/env';
 import { pool } from './db';
@@ -10,12 +9,13 @@ async function start(): Promise<void> {
   // module load time, so the environment must be loaded first.
   const { default: app } = await import('./app');
   const server = app.listen(config.port, () => {
-    logger.info({ port: config.port, environment: config.environment, demoMode: config.demoMode }, `CocoaTrace API running on port ${config.port}`);
+    logger.info(
+      { port: config.port, environment: config.environment, demoMode: config.demoMode },
+      `CocoaTrace API running on port ${config.port}`,
+    );
   });
-  const stopRecallEmails=startRecallEmailWorker();
-  const stopPaymentReminders = startPaymentReminderWorker();
-  server.on('close', () => { stopRecallEmails(); stopPaymentReminders(); });
-  registerGracefulShutdown(server, pool, logger);
+  const stopWorkers = startOperationsWorkers();
+  registerGracefulShutdown(server, pool, logger, { stopBackgroundWork: stopWorkers });
 }
 
 start().catch((error) => {

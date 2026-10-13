@@ -37,6 +37,7 @@ const TOOL_NAV: NavGroup[] = [
   ] },
   { label: 'group.4', items: [
     { icon: FileClock, label: 'nav.audit', page: 'audit', orPermissions: ['audit.read'] },
+    { icon: ShieldAlert, label: 'nav.operations', page: 'operations', orPermissions: ['*'] },
     { icon: Building2, label: 'nav.organizations', page: 'organizations', orPermissions: ['organization.admin'] },
     { icon: ShieldAlert, label: 'nav.access-controls', page: 'access-controls', path: '/access-controls', orPermissions: ['*'] },
     { icon: UserCheck, label: 'nav.access-applications', page: 'access-applications', path: '/access-applications', orPermissions: ['*'] },

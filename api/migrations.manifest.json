@@ -148,6 +148,10 @@
     {
       "path": "api/src/migrations/035_evidence_object_cleanup.ts",
       "sha256": "1d0524b7d4d00fb7bcc554813c3ec1ad4892c99c9baae6c744b87eab45929029"
+    },
+    {
+      "path": "api/src/migrations/036_operations_job_status.ts",
+      "sha256": "b415dc205bf3e48b1fbb118966a78c58d82853d26a604fe08ec048c1ae1e0aea"
     }
   ]
 }

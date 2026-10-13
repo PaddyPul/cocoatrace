@@ -1,5 +1,13 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'web/src/pages/OperationsPage.tsx',
+  'e2e/operations.spec.ts',
+  'api/src/modules/operations/**/*.ts',
+  'api/src/routes/operations.ts',
+  'api/src/server.ts',
+  'api/src/migrations/036_operations_job_status.ts',
+  'api/scripts/operations-status.ts',
+  'api/test/integration/operationsWorkers.integration.test.ts',
   'scripts/integration-storage-readiness.test.mjs',
   'api/scripts/check-integration-storage.ts',
   'api/scripts/integration-test-selection.mjs',

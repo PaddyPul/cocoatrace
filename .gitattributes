@@ -140,3 +140,12 @@ api/scripts/integration-test-selection.mjs text eol=lf
 scripts/integration-test-selection.test.mjs text eol=lf
 api/scripts/check-integration-storage.ts text eol=lf
 scripts/integration-storage-readiness.test.mjs text eol=lf
+
+api/src/modules/operations/** text eol=lf
+api/src/routes/operations.ts text eol=lf
+api/src/server.ts text eol=lf
+api/src/migrations/036_operations_job_status.ts text eol=lf
+api/scripts/operations-status.ts text eol=lf
+api/test/integration/operationsWorkers.integration.test.ts text eol=lf
+web/src/pages/OperationsPage.tsx text eol=lf
+e2e/operations.spec.ts text eol=lf

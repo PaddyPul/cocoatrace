@@ -14,6 +14,7 @@ type ShutdownLogger = {
 type ShutdownOptions = {
   timeoutMs?: number;
   exit?: (code: number) => void;
+  stopBackgroundWork?: () => Promise<void>;
 };
 
 function closeServer(server: Server): Promise<void> {
@@ -45,7 +46,10 @@ export function createGracefulShutdown(
     deadline.unref();
 
     try {
-      await closeServer(server);
+      // Stop scheduling immediately, then drain both active requests and jobs
+      // before closing the domain pool. The existing finite shutdown deadline
+      // still forces a crash-safe exit if a provider does not settle in time.
+      await Promise.all([closeServer(server), options.stopBackgroundWork?.()]);
       await databasePool.end();
       clearTimeout(deadline);
       logger.info({ signal }, 'Graceful shutdown complete');

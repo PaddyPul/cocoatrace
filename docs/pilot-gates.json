@@ -1,5 +1,5 @@
 {
-  "reviewedAt": "2026-10-07",
+  "reviewedAt": "2026-10-13",
   "method": "Equal gate count, no partial credit. Provider launch also requires every core gate. This is closure evidence, not a safety probability or valuation measure.",
   "gates": [
     {
@@ -8,7 +8,7 @@
       "status": "partial",
       "title": "Current release passes every gate on the candidate commit",
       "backlog": ["QLT-001", "SEC-014", "LNG-001"],
-      "evidence": "Founder confirms bounded trace-safety candidate full release checks passed and merge/pull completed 2026-10-07 01:15 UTC. Local native acceptance is founder-reported; independent CI URL and hosted staging evidence remain unarchived. Each subsequent candidate requires its own release report."
+      "evidence": "Founder confirms bounded trace-safety candidate full release checks passed and merge/pull completed 2026-10-07 01:15 UTC. Local native acceptance is founder-reported; independent CI URL and hosted staging evidence remain unarchived. Each subsequent candidate requires its own release report. Latest recall-proof/correction workflow reported done by founder 2026-10-13; independent report/CI archival and hosted acceptance remain unverified."
     },
     {
       "id": "CORE-isolation",
@@ -144,7 +144,7 @@
       "status": "partial",
       "title": "Scoped recall/trace is bounded and safety fails closed",
       "backlog": ["PER-002", "ARC-008"],
-      "evidence": "PER-002 closed: founder confirms bounded trace-safety release checks passed and merge/pull completed 2026-10-07 01:15 UTC. Scoped reads, bounds, explicit incomplete/no-clearance results, atomic rollback and browser failure presentation accepted. Broader ARC-008 policy/repository separation remains partial; hosted capacity/operations are separate gates."
+      "evidence": "PER-002 closed: founder confirms bounded trace-safety release checks passed and merge/pull completed 2026-10-07 01:15 UTC. Scoped reads, bounds, explicit incomplete/no-clearance results, atomic rollback and browser failure presentation accepted. Broader ARC-008 policy/repository separation remains partial; hosted capacity/operations are separate gates. Recall resolution now revalidates current proof and manager authority; founder reports latest correction workflow done 2026-10-13. Retained-stock safety persists independently of notice closure."
     },
     {
       "id": "CORE-workers",
@@ -152,7 +152,7 @@
       "status": "partial",
       "title": "Scheduled notifications/reminders retry with monitored dead-letter recovery",
       "backlog": ["OPS-010", "ARC-014"],
-      "evidence": "Durable domain queues exist; deployed scheduler/operations incomplete."
+      "evidence": "Durable domain queues exist; deployed scheduler/operations incomplete. Scheduled bounded jobs, deployment locks, durable failure/status monitor and audited cleanup recovery are implemented in the 2026-10-13 candidate. Founder release acceptance, terminal-email recovery and hosted operations remain pending."
     },
     {
       "id": "CORE-email",
@@ -168,7 +168,7 @@
       "status": "partial",
       "title": "Release-tagged logs/alerts reach a named incident owner",
       "backlog": ["OPS-003", "OPS-004", "OPS-006", "OPS-007"],
-      "evidence": "Structured logs exist; collector, alerts and assigned response missing."
+      "evidence": "Structured logs exist; collector, alerts and assigned response missing. Current candidate adds private job status/staleness and redacted incident logging; external alert routing and named incident ownership remain open."
     },
     {
       "id": "CORE-restore",
@@ -181,10 +181,10 @@
     {
       "id": "CORE-performance",
       "scope": "core",
-      "status": "open",
+      "status": "partial",
       "title": "Representative load meets approved capacity/SLO budgets",
       "backlog": ["PER-001", "PER-003", "PER-004"],
-      "evidence": "Trace-selector paging and exact-label correction accepted: founder confirms full release checks passed and merge/pull completed 2026-10-07 02:09 UTC, including the 2,501-record native query-plan and tenant-isolation rehearsal. Inventory/marketplace paging and aggregate totals accepted by founder 2026-10-07 11:32 UTC after full release pass and merge/pull, including native 1,005-record, organic-predicate parity and browser coverage. Transfer-history paging and response validation accepted by founder 2026-10-07 17:18 UTC after full release pass and merge/pull, including native large-history and browser cases. No hosted representative capacity/SLO baseline. Universal list/export bounds and load acceptance remain open. Source-record native release/merge acceptance reported 2026-10-07 19:17 UTC. Evidence-library native release/merge acceptance reported 2026-10-07 20:03 UTC. Paged evidence-selector candidate remains native-release pending; remaining consumers/exports and hosted load acceptance stay open."
+      "evidence": "Trace-selector paging and exact-label correction accepted: founder confirms full release checks passed and merge/pull completed 2026-10-07 02:09 UTC, including the 2,501-record native query-plan and tenant-isolation rehearsal. Inventory/marketplace paging and aggregate totals accepted by founder 2026-10-07 11:32 UTC after full release pass and merge/pull, including native 1,005-record, organic-predicate parity and browser coverage. Transfer-history paging and response validation accepted by founder 2026-10-07 17:18 UTC after full release pass and merge/pull, including native large-history and browser cases. No hosted representative capacity/SLO baseline. Universal list/export bounds and load acceptance remain open. Source-record native release/merge acceptance reported 2026-10-07 19:17 UTC. Evidence-library native release/merge acceptance reported 2026-10-07 20:03 UTC. Paged evidence-selector candidate remains native-release pending; remaining consumers/exports and hosted load acceptance stay open. Subsequent paged collection/export bounds, scoped set-based safety reads and local evidence RSS/admission stress have founder-reported acceptance through 2026-10-13. Hosted representative SLO/capacity and cross-instance evidence admission remain open."
     },
     {
       "id": "CORE-legal",
