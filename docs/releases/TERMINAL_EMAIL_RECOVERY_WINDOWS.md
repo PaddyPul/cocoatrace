@@ -59,23 +59,26 @@ The bundle contains history for portability, but apply only its tip as above. It
 Docker Desktop must be running. Use the project's Node 24 toolchain. Avoid concurrent test runs or image builds during this gate.
 
 ```powershell
-node --version
-docker version
-if ($LASTEXITCODE -ne 0) { throw "Docker is not ready." }
-npm ci *> terminal-email-install-output.txt
-if ($LASTEXITCODE -ne 0) { Get-Content terminal-email-install-output.txt -Tail 40; throw "Installation failed." }
-$candidate = (git rev-parse HEAD).Trim()
-npm run verify:release *> terminal-email-release-output.txt
-$releaseExit = $LASTEXITCODE
-if ($releaseExit -ne 0) {
-    Get-Content terminal-email-release-output.txt -Tail 80
-    throw "Release failed. Send only the first specific failure; do not push or merge."
+& {
+    $ErrorActionPreference = "Stop"
+    node --version
+    docker version
+    if ($LASTEXITCODE -ne 0) { throw "Docker is not ready." }
+    npm ci *> terminal-email-install-output.txt
+    if ($LASTEXITCODE -ne 0) { Get-Content terminal-email-install-output.txt -Tail 40; throw "Installation failed." }
+    $candidate = (git rev-parse HEAD).Trim()
+    npm run verify:release *> terminal-email-release-output.txt
+    $releaseExit = $LASTEXITCODE
+    if ($releaseExit -ne 0) {
+        Get-Content terminal-email-release-output.txt -Tail 80
+        throw "Release failed. Send only the first specific failure; do not push or merge."
+    }
+    $release = Get-Content ".\release-test-results\summary.json" -Raw | ConvertFrom-Json
+    if ($release.status -ne "passed" -or $release.commit -ne $candidate) { throw "Release report is not a pass for the current commit." }
+    if ((git rev-parse HEAD).Trim() -ne $candidate) { throw "Commit changed during verification." }
+    if (git status --porcelain --untracked-files=no) { throw "Tracked changes appeared during verification." }
+    "Release passed for $candidate"
 }
-$release = Get-Content ".\release-test-results\summary.json" -Raw | ConvertFrom-Json
-if ($release.status -ne "passed" -or $release.commit -ne $candidate) { throw "Release report is not a pass for the current commit." }
-if ((git rev-parse HEAD).Trim() -ne $candidate) { throw "Commit changed during verification." }
-if (git status --porcelain --untracked-files=no) { throw "Tracked changes appeared during verification." }
-"Release passed for $candidate"
 ```
 
 Do not run `npm audit fix --force` as part of this handoff. The dependency gate reports the project's accepted and blocking advisories. Full logs remain in the two text files; do not stage them.

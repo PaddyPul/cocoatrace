@@ -19,6 +19,7 @@ Platform operators can review failed payment-reminder and recall emails and requ
 - Add bounded, redacted terminal-email registers and queue-specific retry actions to the Operations monitor.
 - Lock and recheck authority, session and outbox state; commit the retry and audit together. Concurrent retries produce one successful decision.
 - Cover denied authority, suspension races, stale assurance, invalid input, inconsistent state, audit rollback and preserved browser drafts.
+- Assess listing-summary recall safety once per batch before aggregating complete marketplace totals; retain read deadlines and strengthen real recall-count coverage.
 - Record the implementation as a candidate without closing broader operations gates.
 
 ## Security and data review
@@ -45,7 +46,7 @@ Platform operators can review failed payment-reminder and recall emails and requ
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: author checks passed: 793 API unit tests in 93 files, quality, workspace types, strict native integration compilation, API/web builds and 3 backlog tests; details are recorded in TERMINAL_EMAIL_RECOVERY_WINDOWS.md. The supplied IDE handoff reports 26 focused integration and 6 mocked-browser cases passed. Full exact-commit release verification and required GitHub CI must pass before merge; add the passing SHA/date here. No hosted verification is claimed.
+- Evidence/results: author checks passed: 793 API unit tests in 93 files, quality, workspace types, strict native integration compilation, API/web builds and 3 backlog tests; details are recorded in TERMINAL_EMAIL_RECOVERY_WINDOWS.md. The supplied IDE handoff reports 26 focused integration and 6 mocked-browser cases passed. The subsequent listing-summary correction has separate focused validation in LISTING_SUMMARY_READ_FIX_WINDOWS.md; the 793-test full unit result predates that correction. Full exact-commit release verification and required GitHub CI must pass before merge; add the passing SHA/date here. No hosted verification is claimed.
 
 ## Product and operations
 

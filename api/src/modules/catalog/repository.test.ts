@@ -7,6 +7,7 @@ import {
   holdingPage,
   listingPage,
   holdingSummary,
+  listingSummary,
   legacyHoldingList,
   legacyListingList,
 } from './repository';
@@ -106,6 +107,20 @@ describe('catalog SQL boundaries', () => {
     await expect(holdingSummary(execute, 'tenant')).rejects.toMatchObject({
       code: 'CATALOG_READ_LIMIT',
     });
+  });
+  it('assesses marketplace recall once per batch before summing full listing totals', async () => {
+    const totals = { count: 1007, own_count: 1005, quantity_kg: '1007.000' };
+    const execute = vi.fn().mockResolvedValue({ rows: [totals] });
+    expect(await listingSummary(execute, 'tenant')).toEqual(totals);
+    expect(execute).toHaveBeenCalledTimes(1);
+    const [sql, parameters] = execute.mock.calls[0];
+    expect(sql).toContain('GROUP BY h.batch_id');
+    expect(sql).toContain('stock AS MATERIALIZED');
+    expect(sql).toContain('assessed AS MATERIALIZED');
+    expect(sql).toContain('FROM assessed WHERE NOT held');
+    expect(sql.match(/SELECT 1 FROM recall_notices/g)).toHaveLength(1);
+    expect(sql).not.toContain('LIMIT');
+    expect(parameters).toEqual(['tenant']);
   });
 });
 

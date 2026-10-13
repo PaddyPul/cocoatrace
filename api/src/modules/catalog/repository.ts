@@ -170,8 +170,21 @@ export async function holdingSummary(execute: Execute, organizationId: string) {
 export async function listingSummary(execute: Execute, organizationId: string) {
   return (
     await execute(
-      `SELECT COUNT(*)::int AS count,COALESCE(SUM(l.available_quantity_kg),0)::text AS quantity_kg,
-    COUNT(*) FILTER (WHERE l.seller_organization_id=$1)::int AS own_count ${listingFrom} WHERE ${listingVisible}`,
+      `WITH stock AS MATERIALIZED (
+        SELECT h.batch_id,COUNT(*)::int AS count,
+          SUM(l.available_quantity_kg) AS quantity_kg,
+          COUNT(*) FILTER (WHERE l.seller_organization_id=$1)::int AS own_count
+        ${listingFrom}
+        WHERE l.active=TRUE AND l.available_quantity_kg>0 AND h.status='available'
+          AND h.holder_organization_id=l.seller_organization_id
+        GROUP BY h.batch_id
+      ), assessed AS MATERIALIZED (
+        SELECT stock.*,${activeBatchRecallSql('stock.batch_id')} AS held FROM stock
+      )
+      SELECT COALESCE(SUM(count),0)::int AS count,
+        COALESCE(SUM(quantity_kg),0)::text AS quantity_kg,
+        COALESCE(SUM(own_count),0)::int AS own_count
+      FROM assessed WHERE NOT held`,
       [organizationId],
     )
   ).rows[0];
