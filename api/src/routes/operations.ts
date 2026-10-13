@@ -10,7 +10,9 @@ import {
   retryEmail,
   safeEmailError,
 } from '../modules/operations/recovery';
-import { ValidationError } from '../errors';
+import { AppError, ValidationError } from '../errors';
+
+import { readQueueBacklog } from '../modules/operations/backlog';
 
 const router = Router();
 router.use('/operations', requireAuth, requirePermission('*'));
@@ -21,6 +23,25 @@ router.get('/operations/status', async (_req, res, next) => {
     );
     res.setHeader('Cache-Control', 'no-store');
     res.json({ healthy: statusHealthy(jobs.rows), jobs: jobs.rows });
+  } catch (error) {
+    next(error);
+  }
+});
+router.get('/operations/backlog', async (req, res, next) => {
+  try {
+    if (Object.keys(req.query).length) throw new ValidationError('Unknown backlog parameter');
+    let backlog;
+    try {
+      backlog = await readQueueBacklog();
+    } catch {
+      throw new AppError(
+        'Queue backlog unavailable. Refresh to retry; clear operation has not been confirmed.',
+        503,
+        'OPERATIONS_BACKLOG_UNAVAILABLE',
+      );
+    }
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(backlog);
   } catch (error) {
     next(error);
   }
