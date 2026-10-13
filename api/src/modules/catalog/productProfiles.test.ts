@@ -14,7 +14,10 @@ describe('product register boundaries', () => {
     expect(sql).toContain('ORDER BY pp.id LIMIT $7::int');
     expect(sql).toContain('f.cooperative_organization_id=$1::uuid');
     expect(sql).toContain('c.buyer_organization_id=$1::uuid');
-    expect(sql).toContain('retained.released_at IS NULL');
+    expect(sql).toContain('held.released_at IS NULL');
+    expect(sql).toContain('batch_keys AS MATERIALIZED');
+    expect(sql).toContain('SELECT pp.id,pp.batch_id');
+    expect(sql).toContain('JOIN selected selection');
     expect(sql).not.toContain("review_status='approved'");
     expect(values).toEqual([actor.organizationId, false, 'attention', null, '%_', '%\\%\\_%', 3]);
   });
@@ -86,3 +89,16 @@ describe('product register boundaries', () => {
     expect(empty).toHaveBeenCalledTimes(1);
   });
 });
+
+it('ordinary product pages bound candidate IDs before safety and metadata enrichment', async () => {
+  const execute = vi.fn().mockResolvedValue({ rows: [] });
+  await productPage(execute, actor, { limit: '100' });
+  const sql = execute.mock.calls[0][0];
+  assertOrder(sql, 'ORDER BY pp.id LIMIT $7::int', 'batch_keys AS MATERIALIZED');
+  assertOrder(sql, 'selected AS MATERIALIZED', 'product_profile_scans');
+  expect(sql).not.toContain('EXISTS (\n  SELECT 1 FROM recall_notices');
+});
+function assertOrder(sql: string, before: string, after: string) {
+  expect(sql.indexOf(before)).toBeGreaterThanOrEqual(0);
+  expect(sql.indexOf(before)).toBeLessThan(sql.indexOf(after));
+}

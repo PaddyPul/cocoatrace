@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import request from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import app from '../../src/app';
 import { getClient, pool, query } from '../../src/db';
 import { evidenceStorage } from '../../src/services/evidenceStorage';
@@ -14,6 +14,7 @@ type Actor = { id: string; organizationId: string; token: string };
 type Case = { batchId: string; holdingId: string; buyerHoldingId?: string; recallId: string; noContactOrganizationId?: string };
 let seller: Actor, buyer: Actor, outsider: Actor;
 const evidenceIds: string[] = [];
+const evidenceKeys = new Set<string>();
 
 async function actor(type: 'exporter' | 'importer', manage: boolean, readEvidence = true): Promise<Actor> {
   const suffix = crypto.randomUUID();
@@ -28,13 +29,13 @@ async function actor(type: 'exporter' | 'importer', manage: boolean, readEvidenc
   return { id: user.id, organizationId: organization.id, token: login.body.accessToken };
 }
 
-async function scenario(withBuyer = false, transferQuantity = 4, recipientWithoutContact = false): Promise<Case> {
-  const inventory = await request(app).post('/inventory/direct').set('Authorization', `Bearer ${seller.token}`).send({ commodity: 'shea nuts', quantityKg: 10, inventoryDate: new Date().toISOString().slice(0, 10), sourceCountry: 'GH', sourceName: 'Supplier warehouse' });
+async function scenario(withBuyer = false, transferQuantity = 4, recipientWithoutContact = false, manager = seller): Promise<Case> {
+  const inventory = await request(app).post('/inventory/direct').set('Authorization', `Bearer ${manager.token}`).send({ commodity: 'shea nuts', quantityKg: 10, inventoryDate: new Date().toISOString().slice(0, 10), sourceCountry: 'GH', sourceName: 'Supplier warehouse' });
   expect(inventory.status).toBe(201);
   let buyerHoldingId: string | undefined;
   let noContactOrganizationId: string | undefined;
   if (withBuyer) {
-    const transfer = await request(app).post(`/holdings/${inventory.body.holding_id}/transfer`).set('Authorization', `Bearer ${seller.token}`).send({ toOrganizationId: buyer.organizationId, quantityKg: transferQuantity });
+    const transfer = await request(app).post(`/holdings/${inventory.body.holding_id}/transfer`).set('Authorization', `Bearer ${manager.token}`).send({ toOrganizationId: buyer.organizationId, quantityKg: transferQuantity });
     expect(transfer.status).toBe(201);
     const accepted = await request(app).post(`/transfers/${transfer.body.id}/accept`).set('Authorization', `Bearer ${buyer.token}`);
     expect(accepted.status).toBe(200);
@@ -45,16 +46,16 @@ async function scenario(withBuyer = false, transferQuantity = 4, recipientWithou
     const lot = (await query('SELECT id FROM material_lots WHERE batch_id=$1', [inventory.body.id])).rows[0];
     await query('INSERT INTO lot_distributions(lot_id,recipient_organization_id,quantity_kg,distribution_reference,dispatched_at) VALUES($1,$2,1,$3,NOW())', [lot.id, noContactOrganizationId, `EXTERNAL-${crypto.randomUUID()}`]);
   }
-  const activated = await request(app).post('/recalls').set('Authorization', `Bearer ${seller.token}`).send({ referenceCode: `RESPONSE-${crypto.randomUUID()}`, title: 'Investigate contamination', reason: 'Potential contamination reported', instructions: 'Isolate goods and record outcome', severity: 'critical', batchIds: [inventory.body.id] });
+  const activated = await request(app).post('/recalls').set('Authorization', `Bearer ${manager.token}`).send({ referenceCode: `RESPONSE-${crypto.randomUUID()}`, title: 'Investigate contamination', reason: 'Potential contamination reported', instructions: 'Isolate goods and record outcome', severity: 'critical', batchIds: [inventory.body.id] });
   expect(activated.status).toBe(201);
   return { batchId: inventory.body.id, holdingId: inventory.body.holding_id, buyerHoldingId, recallId: activated.body.id, noContactOrganizationId };
 }
 function details(c: Case, actor = seller) { return request(app).get(`/recalls/${c.recallId}/response`).set('Authorization', `Bearer ${actor.token}`); }
 function ack(c: Case, actor = buyer) { return request(app).post(`/recalls/${c.recallId}/acknowledge`).set('Authorization', `Bearer ${actor.token}`).send({ note: 'Safety notice read and affected goods isolated' }); }
-function recovery(c: Case, holdingId: string, actor: Actor, values: Record<string, number | string>) {
+function recovery(c: Case, holdingId: string, actor: Actor, values: Record<string, number | string | undefined>) {
   return request(app).put(`/recalls/${c.recallId}/recovery/${holdingId}`).set('Authorization', `Bearer ${actor.token}`).send({ quarantinedKg: 0, returnedKg: 0, destroyedKg: 0, correctedKg: 0, releasedKg: 0, note: 'Investigated inventory and recorded physical outcome', ...values });
 }
-function resolve(c: Case, ids: string[] = []) { return request(app).post(`/recalls/${c.recallId}/resolve`).set('Authorization', `Bearer ${seller.token}`).send({ reason: 'Investigation completed and all affected inventory accounted for', evidenceIds: ids }); }
+function resolve(c: Case, ids: string[] = [], manager = seller) { return request(app).post(`/recalls/${c.recallId}/resolve`).set('Authorization', `Bearer ${manager.token}`).send({ reason: 'Investigation completed and all affected inventory accounted for', evidenceIds: ids }); }
 async function proof(c: Case, actor = seller, entityType = 'recall', entityId = c.recallId): Promise<string> {
   const content = Buffer.from('%PDF-1.7\nRecall investigation report.');
   const intent = await request(app).post('/evidence/upload-intents').set('Authorization', `Bearer ${actor.token}`).send({ type: 'other', fileName: 'investigation.pdf', mimeType: 'application/pdf', fileSizeBytes: content.length, linkedEntityType: entityType, linkedEntityId: entityId, claimDescription: 'External investigation report' });
@@ -62,6 +63,8 @@ async function proof(c: Case, actor = seller, entityType = 'recall', entityId = 
   const uploaded = await request(app).put(intent.body.uploadUrl).set('Content-Type', 'application/pdf').send(content);
   expect(uploaded.status).toBe(201);
   evidenceIds.push(uploaded.body.id);
+  const key = (await query('SELECT storage_key FROM evidence_items WHERE id=$1',[uploaded.body.id])).rows[0].storage_key;
+  evidenceKeys.add(key);
   return uploaded.body.id;
 }
 async function inventory(c: Case) { return (await query('SELECT id,holder_organization_id,quantity_kg,status FROM batch_holdings WHERE batch_id=$1 ORDER BY id', [c.batchId])).rows; }
@@ -69,11 +72,14 @@ function publish(c: Case) { return request(app).post('/listings').set('Authoriza
 
 beforeAll(async () => { seller = await actor('exporter', true); buyer = await actor('importer', false, false); outsider = await actor('exporter', true); });
 afterAll(async () => {
-  if (evidenceIds.length) {
-    const stored = (await query('SELECT storage_key FROM evidence_items WHERE id=ANY($1::uuid[])', [evidenceIds])).rows;
-    await Promise.all(stored.filter(row => row.storage_key).map(row => evidenceStorage().delete(row.storage_key)));
-  }
-  await pool.end();
+  try {
+    if (evidenceIds.length) {
+      const stored = (await query('SELECT storage_key FROM evidence_items WHERE id=ANY($1::uuid[])', [evidenceIds])).rows;
+      for(const row of stored) if(row.storage_key)evidenceKeys.add(row.storage_key);
+      await query(`DELETE FROM evidence_object_cleanup WHERE evidence_id=ANY($1::uuid[]) OR upload_intent_id IN(SELECT id FROM evidence_upload_intents WHERE evidence_item_id=ANY($1::uuid[]))`,[evidenceIds]);
+    }
+    for(const key of evidenceKeys)await evidenceStorage().delete(key);
+  } finally { await pool.end(); }
 });
 
 describe('real PostgreSQL buyer and supplier recall response', () => {
@@ -295,4 +301,72 @@ describe('real PostgreSQL buyer and supplier recall response', () => {
       }
     } finally { await client.query('ROLLBACK'); client.release(); }
   });
+
+  it.each(['rejected','missing','deleting','no-key'] as const)('cannot resolve using %s supporting proof or release any safety hold', async (kind) => {
+    const manager=await actor('exporter',true), c=await scenario(false,4,false,manager);
+    const id=await proof(c,manager);
+    expect((await recovery(c,c.holdingId,manager,{releasedKg:10})).status).toBe(200);
+    const key=(await query('SELECT storage_key FROM evidence_items WHERE id=$1',[id])).rows[0].storage_key;
+    if(kind==='rejected')await query("UPDATE evidence_items SET review_status='rejected' WHERE id=$1",[id]);
+    else if(kind==='missing')await evidenceStorage().delete(key);
+    else if(kind==='no-key')await query('UPDATE evidence_items SET storage_key=NULL WHERE id=$1',[id]);
+    else await query("UPDATE evidence_object_cleanup SET state='pending',reason='upload_rejected',next_attempt_at=NOW() WHERE object_key=$1",[key]);
+    const response=await resolve(c,[id],manager);
+    expect(response.status,JSON.stringify(response.body)).toBe(400);
+    expect((await query('SELECT status FROM recall_notices WHERE id=$1',[c.recallId])).rows[0].status).toBe('active');
+    expect((await query('SELECT released_at FROM recall_safety_holds WHERE recall_id=$1',[c.recallId])).rows.every(row=>row.released_at===null)).toBe(true);
+  });
+
+  it.each(['scan','review','key','cleanup','manager'] as const)('rechecks %s after a lock-free provider preflight before resolving the recall', async (change) => {
+    const manager=await actor('exporter',true),c=await scenario(false,4,false,manager),id=await proof(c,manager);
+    expect((await recovery(c,c.holdingId,manager,{releasedKg:10})).status).toBe(200);
+    const key=(await query('SELECT storage_key FROM evidence_items WHERE id=$1',[id])).rows[0].storage_key;
+    let entered!:()=>void,finish!:(value:boolean)=>void;
+    const started=new Promise<void>(resolve=>{entered=resolve;}),stalled=new Promise<boolean>(resolve=>{finish=resolve;});
+    const spy=vi.spyOn(evidenceStorage(),'exists').mockImplementation(async()=>{entered();return stalled;});
+    const operation=resolve(c,[id],manager).then(response=>response);
+    try {
+      await Promise.race([started,operation.then(response=>{throw new Error(`Expected provider preflight, got ${response.status}: ${JSON.stringify(response.body)}`);})]);
+      const client=await getClient();
+      try{
+        await client.query('BEGIN');
+        expect((await client.query('SELECT pg_try_advisory_xact_lock(20261002,22) AS acquired')).rows[0].acquired).toBe(true);
+        await client.query('SELECT id FROM recall_notices WHERE id=$1 FOR UPDATE NOWAIT',[c.recallId]);
+        await client.query('SELECT id FROM evidence_items WHERE id=$1 FOR UPDATE NOWAIT',[id]);
+      }finally{await client.query('ROLLBACK');client.release();}
+      if(change==='scan')await query("UPDATE evidence_items SET malware_scan_status='infected' WHERE id=$1",[id]);
+      else if(change==='review')await query("UPDATE evidence_items SET review_status='rejected' WHERE id=$1",[id]);
+      else if(change==='cleanup')await query("UPDATE evidence_object_cleanup SET state='pending',reason='upload_rejected' WHERE object_key=$1",[key]);
+      else if(change==='manager')await query('UPDATE recall_notices SET initiated_by_organization_id=$2 WHERE id=$1',[c.recallId,outsider.organizationId]);
+      else {const replacement=`evidence/test/${crypto.randomUUID()}`;evidenceKeys.add(replacement);await query('UPDATE evidence_items SET storage_key=$2 WHERE id=$1',[id,replacement]);}
+      finish(true);
+      const response=await operation;
+      expect(response.status,JSON.stringify(response.body)).toBe(change==='manager'?403:400);
+      expect((await query('SELECT status FROM recall_notices WHERE id=$1',[c.recallId])).rows[0].status).toBe('active');
+      expect((await query("SELECT COUNT(*)::int AS count FROM audit_events WHERE action='recall.resolve' AND entity_id=$1",[c.recallId])).rows[0].count).toBe(0);
+    }finally{finish(true);await operation;spy.mockRestore();}
+  });
+
+  it('never checks private provider objects for an unrelated manager or an affected read-only buyer', async () => {
+    const manager=await actor('exporter',true),c=await scenario(true,4,false,manager),id=await proof(c,manager);
+    const spy=vi.spyOn(evidenceStorage(),'exists').mockRejectedValue(new Error('Unauthorized provider read'));
+    try{
+      expect((await resolve(c,[id],outsider)).status).toBe(404);
+      expect((await resolve(c,[id],buyer)).status).toBe(403);
+      expect(spy).not.toHaveBeenCalled();
+    }finally{spy.mockRestore();}
+  });
+
+
+  it('rejects an oversized resolution selection before any provider probe', async () => {
+    const manager=await actor('exporter',true),c=await scenario(false,4,false,manager);
+    const spy=vi.spyOn(evidenceStorage(),'exists').mockRejectedValue(new Error('Oversized selection must not probe objects'));
+    try{
+      const response=await resolve(c,Array.from({length:65},()=>crypto.randomUUID()),manager);
+      expect(response.status,JSON.stringify(response.body)).toBe(400);
+      expect(spy).not.toHaveBeenCalled();
+      expect((await query('SELECT status FROM recall_notices WHERE id=$1',[c.recallId])).rows[0].status).toBe('active');
+    }finally{spy.mockRestore();}
+  });
+
 });

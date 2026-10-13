@@ -38,7 +38,7 @@ Required closure:
 
 The candidate moves metadata-only local stat/S3 HEAD checks outside payment, document and discrepancy write transactions. A short scoped read commits before provider I/O; the mutation locks and revalidates current party authority, proof metadata, clean/review state and retained cleanup ownership. Request-local probes have a finite deadline and at most four concurrent HEADs; this is not a deployment-wide metadata admission limit. Changed proof fails conservatively; idempotent payment replay does not depend on later provider availability.
 
-Boolean HEAD cannot prevent an out-of-band provider mutation after preflight. Provider version binding and inventory reconciliation remain open. Recall resolution proof eligibility must receive the same rejected-proof, cleanup and availability protection in the next wave.
+Boolean HEAD cannot prevent an out-of-band provider mutation after preflight. Provider version binding and inventory reconciliation remain open. The recall-security candidate applies the same scoped preflight and locked fingerprint revalidation to notice resolution. Rejected, infected, unavailable and cleanup-ineligible proof cannot authorize closure. Public evidence read-path availability consistency remains a follow-up.
 
 ### Scanner maintenance and durable cleanup
 

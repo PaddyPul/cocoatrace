@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import app from '../../src/app';
 import { pool, query } from '../../src/db';
 import { withCatalogRead, parsePage } from '../../src/modules/catalog/paging';
-import { holdingPage, holdingSelect,listingPage } from '../../src/modules/catalog/repository';
+import { holdingPage, holdingPageSqlTag,listingPage } from '../../src/modules/catalog/repository';
 
 type Actor = {org:string; token:string; user:string};
 type Stock = {batch:string; holdings:{id:string}[]; listings:{id:string}[]};
@@ -28,6 +28,12 @@ async function stock(owner:Actor,n:number,warehouse:string):Promise<Stock> {
   const result={batch,holdings,listings};stocks.push(result);return result;
 }
 const get=(path:string,parameters:Record<string,string>={},owner?:Actor)=>request(app).get(path).query(parameters).set('Authorization',`Bearer ${(owner||seller).token}`);
+async function pageItems(path:string,parameters:Record<string,string>={}) {
+  const response=await get(path,parameters);
+  expect(response.status,`${path}: HTTP ${response.status}; code=${String(response.body.code||'none')}`).toBe(200);
+  expect(Array.isArray(response.body.items)).toBe(true);
+  return response.body.items;
+}
 // Report only safe response diagnostics; never tokens, SQL or request headers.
 async function summary(path:string,owner?:Actor) {
   const response=await get(path,{},owner);
@@ -68,8 +74,17 @@ describe('inventory/marketplace pages and aggregate totals',()=>{
     // Legacy callers get an explicit error, never a misleading first-page array.
     expect((await get('/holdings')).body.code).toBe('CATALOG_READ_LIMIT');
     expect((await get('/listings')).body.code).toBe('CATALOG_READ_LIMIT');
+    // Recalled batches are excluded before the legacy sentinel, not after it.
+    const hidden=(await query("INSERT INTO recall_notices(reference_code,title,reason,instructions,severity,initiated_by_user_id,initiated_by_organization_id) VALUES($1,'Legacy visibility','Unsafe batch','Hold stock','critical',$2,$3) RETURNING id",[`LEGACY-${crypto.randomUUID()}`,seller.user,seller.org])).rows[0].id;
+    try {
+      await query('INSERT INTO recall_affected_batches(recall_id,batch_id) VALUES($1,$2)',[hidden,own.batch]);
+      const visible=await get('/listings');
+      expect(visible.status,JSON.stringify(visible.body)).toBe(200);
+      expect(visible.body.some((row:{batch_id:string})=>row.batch_id===own.batch)).toBe(false);
+      expect(foreign.listings.every(listing=>visible.body.some((row:{id:string})=>row.id===listing.id))).toBe(true);
+    } finally {await query('DELETE FROM recall_affected_batches WHERE recall_id=$1',[hidden]);await query('DELETE FROM recall_notices WHERE id=$1',[hidden]);}
     await query("UPDATE batch_holdings SET status='committed' WHERE id=$1",[later.id]);
-    expect((await get('/holdings/page',{available:'true',search:later.id})).body.items).toEqual([]);
+    expect(await pageItems('/holdings/page',{available:'true',search:later.id})).toEqual([]);
     expect((await get('/listings/page',{id:(await query('SELECT id FROM listings WHERE holding_id=$1',[later.id])).rows[0].id})).body.items).toEqual([]);
     expect((await summary('/holdings/summary')).available_count).toBe(1004);
     expect((await summary('/listings/summary')).own_count).toBe(1004);
@@ -78,10 +93,13 @@ describe('inventory/marketplace pages and aggregate totals',()=>{
     await withCatalogRead(async execute=>{
       let pagePlansChecked=0;
       const page=await holdingPage(async(sql,parameters)=>{
-        if(sql.startsWith(holdingSelect)) {
+        if(sql.startsWith(holdingPageSqlTag)) {
           const explained=await execute(`EXPLAIN (ANALYZE,BUFFERS,FORMAT JSON) ${sql}`,parameters);
           const root=(explained.rows[0]['QUERY PLAN'] as {Plan:Record<string,unknown>}[])[0].Plan;
-          expect(root['Node Type']).toBe('Limit');expect(Number(root['Actual Rows'])).toBeLessThanOrEqual(101);
+          expect(Number(root['Actual Rows'])).toBeLessThanOrEqual(101);
+          const nodes=(plan:Record<string,unknown>):Record<string,unknown>[]=>[plan,...((plan.Plans||[]) as Record<string,unknown>[]).flatMap(nodes)];
+          const assessed=nodes(root).find(node=>node['Subplan Name']==='CTE assessed');
+          expect(assessed).toBeDefined();expect(Number(assessed!['Actual Rows'])).toBe(1);
           pagePlansChecked++;
         }
         return execute(sql,parameters);
@@ -94,8 +112,8 @@ describe('inventory/marketplace pages and aggregate totals',()=>{
       VALUES($1,'Paging safety fixture','Read hold regression','Do not dispatch','warning',$2,$3) RETURNING id`,[crypto.randomUUID(),seller.user,seller.org])).rows[0].id;
     try {
       await query('INSERT INTO recall_affected_batches(recall_id,batch_id) VALUES($1,$2)',[recall,own.batch]);
-      expect((await get('/holdings/page',{available:'true',search:later.id})).body.items).toEqual([]);
-      expect((await get('/holdings/page',{search:later.id})).body.items[0].activeRecall).toBe(true);
+      expect(await pageItems('/holdings/page',{available:'true',search:later.id})).toEqual([]);
+      expect((await pageItems('/holdings/page',{search:later.id}))[0].activeRecall).toBe(true);
       expect((await get('/listings/page',{id:offPage.id})).body.items).toEqual([]);
       expect((await summary('/holdings/summary')).available_count).toBe(0);
       expect((await summary('/listings/summary')).own_count).toBe(0);

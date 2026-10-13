@@ -7,7 +7,7 @@ import { contractSummary } from './contracts';
 import { offerSummary } from './offers';
 import { shipmentSummary } from './shipments';
 import { paymentSummary } from './payments';
-import { activeBatchRecallSql } from '../recall/safety';
+import { batchSafetyCtes } from './batchSafety';
 import { type Execute, withCatalogRead } from './paging';
 // Product-profile scope deliberately matches its existing metadata list, not public visibility.
 export const productScope = `($2::boolean OR b.current_holder_id=$1::uuid
@@ -25,9 +25,12 @@ export async function batchTotals(execute: Execute, actor: Actor) {
 export async function productTotals(execute: Execute, actor: Actor) {
   return (
     await execute(
-      `SELECT COUNT(*)::int AS count,COUNT(*) FILTER(WHERE pp.visibility='published')::int AS published_count,
- COUNT(*) FILTER(WHERE ${activeBatchRecallSql('b.id')})::int AS held_count
- FROM product_profiles pp JOIN harvest_batches b ON b.id=pp.batch_id LEFT JOIN farms f ON f.id=b.farm_id WHERE ${productScope}`,
+      `WITH candidates AS MATERIALIZED (
+ SELECT pp.id,pp.batch_id,pp.visibility FROM product_profiles pp JOIN harvest_batches b ON b.id=pp.batch_id LEFT JOIN farms f ON f.id=b.farm_id WHERE ${productScope}
+ ), batch_keys AS MATERIALIZED (SELECT DISTINCT batch_id FROM candidates), ${batchSafetyCtes}
+ SELECT COUNT(*)::int AS count,COUNT(*) FILTER(WHERE pp.visibility='published')::int AS published_count,
+ COUNT(*) FILTER(WHERE safety.inventory_held)::int AS held_count
+ FROM candidates pp JOIN batch_safety safety ON safety.batch_id=pp.batch_id`,
       [actor.organizationId, hasExplicitPermission(actor, 'product_profile.read.all')],
     )
   ).rows[0];

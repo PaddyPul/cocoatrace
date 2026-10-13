@@ -1,14 +1,16 @@
 import type { Request, Response } from 'express';
 import { NotFoundError, ValidationError } from '../../errors';
-import { activeBatchRecallSql } from '../recall/safety';
 import { type Execute, literal, pageResult, parsePage, text, withCatalogRead } from './paging';
 
-// EXISTS avoids duplicating notices linked through both a lot and its source batch.
-export const publicNoticeRelationSql = (batchExpression: string, alias = 'r') => `(
- EXISTS(SELECT 1 FROM recall_affected_batches ab WHERE ab.recall_id=${alias}.id AND ab.batch_id=${batchExpression})
- OR EXISTS(SELECT 1 FROM recall_affected_lots al JOIN material_lots lot ON lot.id=al.lot_id WHERE al.recall_id=${alias}.id AND lot.batch_id=${batchExpression})
- OR EXISTS(SELECT 1 FROM recall_safety_holds held JOIN batch_holdings h ON held.entity_type='holding' AND h.id=held.entity_id WHERE held.recall_id=${alias}.id AND held.released_at IS NULL AND h.batch_id=${batchExpression})
- OR EXISTS(SELECT 1 FROM recall_recovery_records recovery JOIN batch_holdings h ON h.id=recovery.holding_id WHERE recovery.recall_id=${alias}.id AND (recovery.returned_kg>0 OR recovery.destroyed_kg>0) AND h.batch_id=${batchExpression}))`;
+// Enumerate a batch's associations once, rather than correlating four graph
+// lookups against every notice. UNION prevents duplicate batch/lot/hold edges.
+export const publicNoticeIdsSql = (batchExpression: string) => `
+ SELECT ab.recall_id FROM recall_affected_batches ab WHERE ab.batch_id=${batchExpression}
+ UNION SELECT al.recall_id FROM recall_affected_lots al JOIN material_lots lot ON lot.id=al.lot_id WHERE lot.batch_id=${batchExpression}
+ UNION SELECT held.recall_id FROM recall_safety_holds held JOIN batch_holdings h ON held.entity_type='holding' AND h.id=held.entity_id WHERE held.released_at IS NULL AND h.batch_id=${batchExpression}
+ UNION SELECT recovery.recall_id FROM recall_recovery_records recovery JOIN batch_holdings h ON h.id=recovery.holding_id WHERE (recovery.returned_kg>0 OR recovery.destroyed_kg>0) AND h.batch_id=${batchExpression}`;
+export const publicNoticeRelationSql = (batchExpression: string, alias = 'r') =>
+  `${alias}.id IN (${publicNoticeIdsSql(batchExpression)})`;
 export const publicNoticeScope = `r.status IN ('active','resolved') AND ${publicNoticeRelationSql('$1::uuid')}`;
 export async function publicNoticesPage(
   execute: Execute,
@@ -66,10 +68,20 @@ export async function publicNoticesPage(
       [profile.batch_id],
     )
   ).rows[0];
-  const inventoryHeld = Boolean(
-    (await execute(`SELECT ${activeBatchRecallSql('$1::uuid')} AS held`, [profile.batch_id]))
-      .rows[0].held,
+  // Active association totals are already unfiltered. Retained/disposed stock
+  // stays held even for a draft/resolved notice with missing affected edges.
+  const retained = Boolean(
+    (
+      await execute(
+        `SELECT (
+    EXISTS(SELECT 1 FROM recall_safety_holds held JOIN batch_holdings h ON held.entity_type='holding' AND h.id=held.entity_id WHERE held.released_at IS NULL AND h.batch_id=$1::uuid)
+    OR EXISTS(SELECT 1 FROM recall_recovery_records recovery JOIN batch_holdings h ON h.id=recovery.holding_id WHERE (recovery.returned_kg>0 OR recovery.destroyed_kg>0) AND h.batch_id=$1::uuid)
+  ) AS held`,
+        [profile.batch_id],
+      )
+    ).rows[0].held,
   );
+  const inventoryHeld = Number(aggregate.active_count) > 0 || retained;
   const safetyStatus =
     Number(aggregate.critical_count) > 0
       ? 'critical'

@@ -5,6 +5,7 @@ import { type Actor, hasExplicitPermission } from '../../services/resourcePolicy
 import { activeBatchRecallSql } from '../recall/safety';
 import { legacyOrganicStatus, loadBatchTrust } from '../trust/assessment';
 import { productScope, productTotals } from './workspace';
+import { batchSafetyCtes } from './batchSafety';
 import { type Execute, literal, pageResult, parsePage, text, withCatalogRead } from './paging';
 const from =
   'FROM product_profiles pp JOIN harvest_batches b ON b.id=pp.batch_id LEFT JOIN farms f ON f.id=b.farm_id';
@@ -47,19 +48,23 @@ export async function productPage(
     ['products', actor.organizationId, all, filter],
     ['visibility'],
   );
-  // Limit the candidate set before per-profile metadata counts and trust decoration.
+  // Ordinary pages bound IDs before safety/metadata. Attention must assess all
+  // matching batches before limiting, so held records beyond page one are found.
+  const candidateLimit = filter === 'attention' ? '' : 'ORDER BY pp.id LIMIT $7::int';
   const result = await execute(
     `WITH candidates AS MATERIALIZED (
- SELECT ${fields},${activeBatchRecallSql('b.id')} AS inventory_held ${from} WHERE ${productScope}
+ SELECT pp.id,pp.batch_id ${from} WHERE ${productScope}
  AND ($3::text IN ('all','attention') OR pp.visibility=$3::text)
- AND ($3::text<>'attention' OR ${activeBatchRecallSql('b.id')})
  AND ($4::uuid IS NULL OR pp.id>$4::uuid)
  AND ($5::text='' OR concat_ws(' ',pp.id,pp.display_name,pp.brand_name,pp.lot_code,b.crop,f.name,COALESCE(f.region,b.source_region),COALESCE(f.country,b.source_country)) ILIKE $6::text ESCAPE '\\')
- ORDER BY pp.id LIMIT $7::int)
- SELECT candidates.*,${severity('candidates.batch_id')} AS active_severity,
- (SELECT COUNT(*)::int FROM product_profile_scans scan WHERE scan.product_profile_id=candidates.id) AS scan_count,
- (SELECT COUNT(*)::int FROM evidence_items evidence WHERE evidence.linked_entity_type='batch' AND evidence.linked_entity_id=candidates.batch_id) AS evidence_count
- FROM candidates ORDER BY id`,
+ ${candidateLimit}), batch_keys AS MATERIALIZED (SELECT DISTINCT batch_id FROM candidates),
+ ${batchSafetyCtes}, selected AS MATERIALIZED (
+ SELECT pp.id FROM candidates candidate JOIN product_profiles pp ON pp.id=candidate.id JOIN batch_safety safety ON safety.batch_id=candidate.batch_id
+ WHERE $3::text<>'attention' OR safety.inventory_held ORDER BY pp.id LIMIT $7::int)
+ SELECT ${fields},safety.inventory_held,safety.active_severity,
+ (SELECT COUNT(*)::int FROM product_profile_scans scan WHERE scan.product_profile_id=pp.id) AS scan_count,
+ (SELECT COUNT(*)::int FROM evidence_items evidence WHERE evidence.linked_entity_type='batch' AND evidence.linked_entity_id=pp.batch_id) AS evidence_count
+ ${from} JOIN selected selection ON selection.id=pp.id JOIN batch_safety safety ON safety.batch_id=pp.batch_id ORDER BY pp.id`,
     [
       actor.organizationId,
       all,

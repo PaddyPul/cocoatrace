@@ -50,6 +50,10 @@ describe('public notice pages and independent safety', () => {
     expect(sql).toContain('recall_affected_lots');
     expect(sql).toContain('recall_safety_holds');
     expect(sql).toContain('recall_recovery_records');
+    expect(sql).toContain('r.id IN');
+    expect(sql.match(/UNION SELECT/g)).toHaveLength(3);
+    expect(sql).not.toContain('ab.recall_id=r.id');
+    expect(sql).not.toContain('held.recall_id=r.id');
     expect(sql).toContain('ORDER BY r.id LIMIT $6::int');
     expect(args).toEqual([profile.batch_id, 'resolved', null, '%_', '%\\%\\_%', 2]);
     expect(execute.mock.calls[2][1]).toEqual([profile.batch_id]);
@@ -113,4 +117,29 @@ describe('public notice pages and independent safety', () => {
     });
     expect(execute).toHaveBeenCalledTimes(1);
   });
+});
+
+it('active totals keep inventory held independently of page filtering and retained query', async () => {
+  const execute = executor([]);
+  execute
+    .mockReset()
+    .mockResolvedValueOnce({ rows: [profile] })
+    .mockResolvedValueOnce({ rows: [] })
+    .mockResolvedValueOnce({
+      rows: [
+        {
+          count: 1,
+          active_count: 1,
+          resolved_count: 0,
+          critical_count: 0,
+          warning_count: 0,
+          advisory_count: 1,
+        },
+      ],
+    })
+    .mockResolvedValueOnce({ rows: [{ held: false }] });
+  const result = await publicNoticesPage(execute, 'public', { status: 'resolved' });
+  expect(result.items).toEqual([]);
+  expect(result.safety).toMatchObject({ inventoryHeld: true, status: 'advisory' });
+  expect(execute.mock.calls[3][0]).not.toContain('recall_notices');
 });

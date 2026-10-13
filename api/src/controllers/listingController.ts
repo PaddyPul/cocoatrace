@@ -1,4 +1,4 @@
-import { AppError } from '../errors';
+import { legacyListingList } from '../modules/catalog/repository';
 import { withCatalogRead } from '../modules/catalog/paging';
 import { lockRecallBoundary, assertBatchNotRecalled, activeBatchRecallSql } from '../modules/recall/safety';
 import { loadBatchTrust, legacyOrganicStatus } from '../modules/trust/assessment';
@@ -8,24 +8,7 @@ import { lockHoldingListings, pendingTransferQuantity, reconcileHoldingListings 
 import { recordTradeAudit } from '../modules/trading/transaction';
 
 export async function listListings(req: Request, res: Response): Promise<void> {
-  const result = await withCatalogRead(async execute => {
-  const { rows } = await execute(
-    `SELECT l.*, o.name as seller_name, h.batch_id, b.crop, b.organic_claim_status, b.grade, b.harvest_date,
-            b.source_mode, b.source_name, b.source_country, b.source_region,
-            ${activeBatchRecallSql('b.id')} AS "activeRecall",
-            f.name as farm_name, f.region as farm_region, f.country as farm_country
-     FROM listings l
-     JOIN organizations o ON o.id = l.seller_organization_id
-     JOIN batch_holdings h ON h.id = l.holding_id
-     JOIN harvest_batches b ON b.id = h.batch_id
-     LEFT JOIN farms f ON f.id = b.farm_id
-     WHERE l.active = TRUE AND NOT ${activeBatchRecallSql('b.id')} AND h.status='available' AND h.holder_organization_id=l.seller_organization_id
-     ORDER BY l.created_at DESC LIMIT 1001`
-  );
-  if (rows.length > 1000) throw new AppError('Marketplace list exceeds the legacy limit. Use paged supply search.',422,'CATALOG_READ_LIMIT');
-  const trust = await loadBatchTrust(rows.map(row => String(row.batch_id)),execute,true);
-  return rows.map(row => ({ ...row, trust: trust.get(String(row.batch_id)), organic_claim_status: legacyOrganicStatus(trust.get(String(row.batch_id))!) }));
-  });
+  const result = await withCatalogRead(legacyListingList);
   res.json(result);
 }
 

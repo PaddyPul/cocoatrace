@@ -821,3 +821,63 @@ Founder configuration validation passed, then disposable fixture creation failed
 ## Correction checkpoint — deterministic download observation
 
 Founder stress run completed four maximum uploads and one busy rejection; sampled API peak 327,065,600 bytes was below the 512 MiB budget. Downloads failed the four-active observation before the second phase completed; this is not an accepted memory-stress pass. Replace OS receive-window timing assumptions with guarded child IPC barrier after real provider bytes are read, prove four held buffers/admissions before fifth rejection, then release for slow HTTP downloads and checksum verification. Production admission and budget remain unchanged.
+
+
+## Accepted checkpoint — trade evidence preflight and local RSS gate, 2026-10-12
+
+Founder confirms release checks passed and merge/pull completed at 18:54 UTC. Scoped metadata preflight outside trade write locks, transactional proof revalidation and the deterministic four-upload/four-download RSS/admission gate are accepted. This supersedes pending acceptance of the implementation and correction checkpoints above. PER-003 and OPS-010 remain IN PROGRESS for streaming, cross-instance admission, hosted capacity and automated operations.
+
+## Candidate checkpoint — recall resolution proof boundary
+
+Require current validated, clean, nonrejected, storage-backed and cleanup-eligible proof on the exact recall before manager resolution. Run bounded provider existence checks outside write locks, then revalidate proof fingerprint and manager authority inside the safety mutation. Add native denial/race/lock tests. No inventory hold release is implied by closing a notice. Release acceptance pending.
+
+Author verification: 777 API assertions, quality, workspace/browser types, both builds, migration integrity, backlog checks and 16 runner checks pass. Eleven new native recall resolution cases compile strictly and review found no blockers. PostgreSQL/browser/release execution remains pending founder acceptance; no native pass is inferred from compilation.
+
+
+## Correction checkpoint — legacy marketplace limit query
+
+Founder release passed 446 native cases; legacy listings timed out before its 1,001-ID sentinel rejection. Replace per-listing repeated recall graph evaluation with one materialized assessment per distinct batch, select only eligible IDs before the legacy cap and hydrate/enrich only under-limit results. Production 2-second statement and 5-second request guards remain unchanged. Native regression also verifies recalled batches are excluded before the sentinel. Recall-security wave acceptance remains pending.
+
+Correction author validation: 779 API assertions, quality, workspace/browser types, API build and backlog tests pass. Updated native pagination case compiles strictly; native timing/SQL/browser execution remains pending the founder release rerun.
+
+
+## Correction checkpoint — public recall association reads
+
+Latest founder native run passed 446 cases, with a 503 on resolved retained public stock. Enumerate batch/lot/retained-hold/disposal notice IDs as a deduplicated batch-scoped union for public notice pages and journey reads, rather than correlating association probes per notice. Keep unfiltered active totals and independent retained/disposal existence authoritative; never turn resolved retained stock clear. Add safe response-body diagnostics to the native assertion. Production deadlines and MFA remain unchanged. Candidate acceptance pending.
+
+Correction author checks: 780 API assertions, quality, workspace/browser type checks, API build and backlog tests pass. Updated native notice case compiles strictly; actual PostgreSQL timing/browser execution awaits founder verification.
+
+
+## Correction checkpoint — holdings candidate-first recall assessment
+
+Latest native failure read an error envelope as `body.items` and reported undefined. Filter holdings by tenant/cursor/basic availability/literal search before graph assessment, assess once per distinct matching batch and preserve recall filtering before the page limit. Native assertions now validate status/code before item shape and plan evidence checks bounded root output plus one assessed batch rather than a specific root node type. Production deadlines remain unchanged; no timeout/retry bypass. Candidate acceptance pending.
+
+Author correction verification: 780 API assertions, quality, workspace/browser types, API build and backlog tests pass; updated native catalog case compiles strictly. Actual PostgreSQL timing and full release execution remain pending.
+
+
+## Diagnostic checkpoint — multi-tenant upload fixture 503
+
+Latest founder run passed the other 417 cases; multi-tenant setup returned 503 and skipped its 30 cases. The original assertion omitted the upload error code. Add safe intent/content stage and uppercase code diagnostics, and optional exact-existing-filename selection to the disposable native runner. Full release still runs every suite; no service bypass, automatic retry, deadline increase or accepted wave claim.
+
+Diagnostic author validation: quality and 18 runner checks pass; modified native multi-tenant fixture compiles strictly. No production error cause or repair is inferred. One-suite founder execution must provide stage/code evidence; full release remains required before merge.
+
+
+## Diagnostic checkpoint — isolated storage deadline and real adapter readiness
+
+Founder error identifies EVIDENCE_STORAGE_TIMEOUT during upload content. Disposable integration settings previously inherited storage timeout from the shell/local .env while fixing scanner timing. Pin the existing 15-second default in the harness and Vitest integration config; production is unchanged. Before Vitest, verify guarded loopback S3 bucket readiness, write/read/head, real promotion, source removal and deletion through the actual adapter. Fail with safe phase/code/deadline fields before seeding 52 suites. This closes an isolation/readiness gap; it does not establish the unknown timeout's complete cause or claim a release pass.
+
+Author readiness validation: quality and 20 runner checks pass; real adapter promotion/deletion succeeds against a local HTTP test server and foreign endpoint use is refused. Probe source compiles strictly. Actual Docker/Moto timing and full native release remain pending; no provider outage or slow-host result is converted into a pass.
+
+
+## Correction checkpoint — set-based product safety and full totals
+
+Founder storage/multi-tenant cases passed, with a product-page CATALOG_READ_TIMEOUT remaining. Bound ordinary candidate IDs before safety/count hydration; attention filtering assesses matching keys before limiting. Shared scoped batch safety computes active batch/lot severity and retained/disposal sets through joins, used by both product pages and full totals. Preserve exact party scope, cursor/filter contracts and warnings without affected edges. Native bulk fixtures remain cold; no ANALYZE warm-up, test timeout increase or retry is used to hide the failure. Release acceptance pending.
+
+Author product correction checks: 781 API assertions, quality, workspace/browser types, API build and backlog tests pass. Updated native product case compiles strictly. PostgreSQL cold-query timing and full release execution remain pending founder verification.
+
+
+## Diagnostic checkpoint — S3 backend HTTP health
+
+Founder confirms targeted product suite passes, but full release fails in bucket readiness at the fixed 15-second storage deadline before Vitest. Moto health previously checked only socket acceptance. Integration and stress Compose health now require bounded HTTP 200 S3 list-bucket XML, preventing a generic/startup page or listening socket from passing backend readiness. Signed adapter probe and 15-second default remain required. Native Docker startup behavior is pending; this closes a known readiness gap without claiming it explains every host timeout.
+
+Author HTTP-health verification: both actual health command strings reject generic HTTP 200 and accept S3 XML on a local HTTP server; quality and 20 runner checks pass. Actual Docker/Moto/Windows routing remains pending founder verification.
