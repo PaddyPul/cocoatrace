@@ -154,6 +154,7 @@ describe('product register pages and safety totals', () => {
     expect(active.status).toBe(200);
     expect(active.body.items[0].safety_status).toBe('critical');
     await query("UPDATE recall_notices SET status='resolved' WHERE id=$1", [recall]);
+    await query('DELETE FROM recall_affected_batches WHERE recall_id=$1',[recall]);
     await query("UPDATE product_profiles SET visibility='draft' WHERE id=$1", [late]);
     const attention = await get('/product-profiles/page', { visibility: 'attention' });
     expect(attention.status, JSON.stringify(attention.body)).toBe(200);

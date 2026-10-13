@@ -1,12 +1,12 @@
 # PR title
 
-Require current usable proof before resolving a recall
+Secure recall resolution and bound catalog safety reads
 
 # Replacement PR description
 
 ## Outcome
 
-A recall manager cannot close a safety notice using rejected, infected, missing or cleanup-ineligible evidence. Proof checks run outside database write locks; resolution revalidates current evidence and manager authority before updating the notice.
+A recall manager cannot close a safety notice using rejected, infected, missing or cleanup-ineligible evidence. Proof checks run outside database write locks; resolution revalidates current evidence and manager authority before updating the notice. Catalog safety reads now avoid repeated per-record graph probes, preserve full totals and keep retained-stock warnings independent of filters. Disposable storage readiness fails early with safe diagnostics.
 
 ## Tracking
 
@@ -21,6 +21,7 @@ A recall manager cannot close a safety notice using rejected, infected, missing 
 - Keep recipient acknowledgement, recovery accounting and retained inventory holds authoritative.
 - Add real PostgreSQL/API denial, provider-race and lock-contention regressions; record the previous wave as accepted.
 - Build batch-scoped deduplicated public notice associations and check retained/disposed stock independently of page filters, preserving safety warnings.
+- Share set-based scoped batch safety between product pages and full totals; limit ordinary candidate IDs before enrichment while preserving off-page attention filtering.
 - Pin disposable storage timing to the existing default and verify real S3 CRUD/promotion readiness before Vitest, reporting safe failure stages.
 - Add safe upload fixture stage/code diagnostics and an optional validated single-suite diagnostic runner; the default release still executes all integration cases.
 - Filter holdings candidates before recall assessment, assess each distinct batch once, and report safe HTTP errors before checking native page items.
@@ -50,7 +51,7 @@ A recall manager cannot close a safety notice using rejected, infected, missing 
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: append exact tested commit and release report after all checks pass. Author: 780 API assertions, quality, workspace/browser types, API/web builds, migration integrity and backlog tests pass. Eleven new native recall cases compile strictly. Native Docker/browser execution remains pending founder and CI.
+- Evidence/results: append exact tested commit and release report after all checks pass. Author: 781 API assertions, quality, workspace/browser types, API/web builds, migration integrity and backlog tests pass. Eleven new native recall cases compile strictly. Native Docker/browser execution remains pending founder and CI.
 
 ## Product and operations
 

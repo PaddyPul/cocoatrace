@@ -41,7 +41,8 @@ describe('bounded workspace summaries', () => {
       permissions: ['analytics.read.network', 'batch.read.all'],
     });
     expect(execute.mock.calls[0][1]).toEqual([organizationId, false]);
-    expect(execute.mock.calls[0][0]).toContain('retained.released_at IS NULL');
+    expect(execute.mock.calls[0][0]).toContain('held.released_at IS NULL');
+    expect(execute.mock.calls[0][0]).toContain('batch_keys AS MATERIALIZED');
     await lotTotals(execute, { organizationId, permissions: ['traceability.read.network'] });
     expect(execute.mock.calls[1][1]).toEqual([organizationId, true]);
     expect(execute.mock.calls[1][0]).toContain('lot_distributions');

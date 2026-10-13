@@ -867,3 +867,10 @@ Diagnostic author validation: quality and 18 runner checks pass; modified native
 Founder error identifies EVIDENCE_STORAGE_TIMEOUT during upload content. Disposable integration settings previously inherited storage timeout from the shell/local .env while fixing scanner timing. Pin the existing 15-second default in the harness and Vitest integration config; production is unchanged. Before Vitest, verify guarded loopback S3 bucket readiness, write/read/head, real promotion, source removal and deletion through the actual adapter. Fail with safe phase/code/deadline fields before seeding 52 suites. This closes an isolation/readiness gap; it does not establish the unknown timeout's complete cause or claim a release pass.
 
 Author readiness validation: quality and 20 runner checks pass; real adapter promotion/deletion succeeds against a local HTTP test server and foreign endpoint use is refused. Probe source compiles strictly. Actual Docker/Moto timing and full native release remain pending; no provider outage or slow-host result is converted into a pass.
+
+
+## Correction checkpoint — set-based product safety and full totals
+
+Founder storage/multi-tenant cases passed, with a product-page CATALOG_READ_TIMEOUT remaining. Bound ordinary candidate IDs before safety/count hydration; attention filtering assesses matching keys before limiting. Shared scoped batch safety computes active batch/lot severity and retained/disposal sets through joins, used by both product pages and full totals. Preserve exact party scope, cursor/filter contracts and warnings without affected edges. Native bulk fixtures remain cold; no ANALYZE warm-up, test timeout increase or retry is used to hide the failure. Release acceptance pending.
+
+Author product correction checks: 781 API assertions, quality, workspace/browser types, API build and backlog tests pass. Updated native product case compiles strictly. PostgreSQL cold-query timing and full release execution remain pending founder verification.
