@@ -1,6 +1,6 @@
 # BetterTrade: pilot and investability plan
 
-Reviewed 2026-10-06. Backlog: [DELIVERY_BACKLOG.md](DELIVERY_BACKLOG.md). Evidence audit: [BACKLOG_GROOMING_2026-10-06.md](BACKLOG_GROOMING_2026-10-06.md). Machine-readable launch checklist: [pilot-gates.json](pilot-gates.json). Progress: `npm run backlog:progress`.
+Reviewed 2026-10-13. Backlog: [DELIVERY_BACKLOG.md](DELIVERY_BACKLOG.md). Evidence audit: [BACKLOG_GROOMING_2026-10-13.md](BACKLOG_GROOMING_2026-10-13.md). Machine-readable launch checklist: [pilot-gates.json](pilot-gates.json). Progress: `npm run backlog:progress`.
 
 ## Decision and scope
 
@@ -14,8 +14,9 @@ Do not attempt general hazardous materials, mineral sourcing compliance, every c
 
 The code contains invite-only organization onboarding, revocable sessions, tenant policies, private scanned uploads, live trust labels, sourcing/matching, quantity-aware acceptance, recorded protected payment plans, guided trade actions, delivery acceptance, cancellation guards, fee ledger, currency precision and recall responses. There are real PostgreSQL and browser regression suites and dependency/container/recovery gates. This is substantial functional groundwork.
 
-The system is not yet evidenced as ready for real customer data. Remaining launch blockers include privileged account protection and suspension, shared abuse controls, cookie/origin/proxy boundary tests, unprovisioned isolated hosting/private storage, real email delivery, monitored workers, full object-byte recovery, bounded workloads and measured performance. Product gaps include inconsistent conventional entry points and duplicated next-action logic. The most recent language correction lacks founder native release acknowledgement. Shell translations do not mean fully translated forms, contracts or emails.
+The system is not yet evidenced as ready for real customer data. Shared abuse limits, cookie/origin protection, mandatory staging/production passkey enforcement, audited suspension, conventional/source entry paths and one next-action policy are now implemented and founder release accepted; do not list these as missing engineering. Bounded scoped trace safety is a closed core gate. Scheduled jobs, durable status and audited cleanup recovery are accepted, with terminal-email recovery and external alert delivery still open.
 
+Remaining launch blockers are independently reviewable release/CI evidence, isolated hosted services/private storage, real inbox delivery, full database plus private-byte recovery, representative combined load/SLOs, actual privileged operator/recovery review, named incident ownership, supported-route/commercial/legal approval and enrolled design partners. Product follow-ups include saved-brief editing, request/route-specific evidence guidance, complete organic publication browser coverage and remaining legacy/error-boundary inventory. English/French shell preferences are accepted foundation work; complete translated forms, contracts, emails and human translation review remain LNG items. BetterTrade runtime branding and the provider marketplace remain unimplemented.
 No positive completion percentage overrides an open critical gate. A successful local build or synthetic demo is insufficient launch authorization.
 
 ## Launch gates and operating sequence
@@ -31,9 +32,9 @@ Governance owner: founder until explicitly delegated; engineering implementation
 
 ## Security priority
 
-1. Close the cookie/origin/proxy test matrix (SAF-001/SEC-007): malformed Authorization with a valid cookie, absent/null/foreign Origin, forged forwarded headers, wrong host and cross-site writes. Current implementation raises review questions; the audit has not demonstrated an exploit.
-2. Replace memory-only login limits with shared per-account and per-IP controls (IDN-013/SEC-011), bounded key retention, enumeration resistance and reset/invite/upload/public-scan controls. Prove behavior across multiple workers and restarts; do not disable controls to make tests pass.
-3. Implement administrator MFA/recovery or an explicitly reviewed isolated administration mechanism; audited user/organization suspension must revoke access immediately. Admin recovery cannot introduce a weaker bypass.
+1. Preserve accepted cookie/origin/proxy regression controls (SAF-001); finish route-family coverage and deployment-specific ingress review under SEC-007. New proxies cannot inherit trust without fresh evidence.
+2. Preserve accepted shared account/IP/deployment public abuse budgets (IDN-013/SEC-011); validate actual multi-process crash behavior, hosted client attribution, capacity and alert ownership under PER-006/OPS-018/OPS-006.
+3. Preserve accepted mandatory privileged passkeys, restricted sessions, fresh mutations and immediate audited suspension/revocation (IDN-003/011/012). Complete physical/hosted factor review, reviewer independence, notifications, privileged access review and emergency recovery acceptance under SAF-004/IDN-018/019.
 4. Complete the route/resource authorization matrix, including evidence links, exports, list filters, public views, role changes and indirect IDs. Future provider grants need their own threat model before any portal work. Consider PostgreSQL RLS as defense in depth after application scope types stabilize; do not treat RLS as a substitute for domain authorization.
 5. Validate secrets, exact origins, CSP, cookie attributes and private storage in the deployed environment. Rotate keys, enforce least-privilege service accounts, scan dependencies and third-party images, retain provenance/SBOM and time-limited reviewed exceptions. No wildcard CORS or public upload buckets.
 6. Keep goods/payment mutations, audit and notification outbox writes atomic. Test retries, deadlocks, expired tokens, process crashes, duplicate submissions and rejected transitions. A buyer reference remains a submitted payment until the authorized recipient verifies receipt; no escrow/payment-provider claim.
@@ -53,7 +54,7 @@ These are proposed budgets to approve and measure under PER-004/OPS-012, not cur
 
 | Workload | Proposed budget / behavior |
 | --- | --- |
-| List/detail reads | p95 ≤500 ms excluding third-party services; default 25/max 100 rows, bounded filters |
+| List/detail reads | p95 ≤500 ms excluding third-party services; default 50/max 100 rows, bounded filters |
 | Trade state mutations | p95 ≤1 s for local transactional work; exact conservation and no duplicate settlement |
 | Trace/recall | p95 ≤3 s within declared graph budget; start with 1,000 nodes/5,000 edges and tested limits; oversized/incomplete analysis fails safely |
 | File operations | Per-file/per-tenant quotas, bounded concurrency, scanner timeout and memory budget tested together; do not infer safe throughput from 10 MB size checks |
@@ -88,3 +89,7 @@ If hosting or enrollment remains blocked, do not fill the gap with more speculat
 The technical goal is a product developers can inherit and customers can trust. A valuation is not a backlog percentage. The investment case needs verified demand, repeated completed trades, time saved and conversion improvements, willingness to pay, clean goods/service/platform fee economics, defensible verified relationship/fulfillment data, reliable operation, documented IP/team ownership and a credible go-to-market plan. Maintain an evidence room with actual cohort results, security/restore reports, limitations, operating costs and reconciled fees. Do not imply regulated escrow, legal certification or universal supply verification.
 
 Before inviting investors, the demonstration must tell one coherent buyer–supplier story and explain what the future provider layer adds. Before inviting customers, every core gate must be closed. Before enabling providers, every provider gate must also be closed.
+
+## Reconciled progress, 2026-10-13
+
+Core invited pilot: 11/28 closed (39.3%), 11 partial, four blocked and two open. Full roadmap: 88/343 complete (25.7%), 71 partial and 184 open. Provider-enabled launch including core: 11/40 (27.5%); none of the twelve additional provider gates is complete. These are equal-weight closure counts, not effort-weighted engineering readiness or valuation. See the grooming report for ten missed completions and the separately tracked streaming follow-up.
