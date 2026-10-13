@@ -874,3 +874,10 @@ Author readiness validation: quality and 20 runner checks pass; real adapter pro
 Founder storage/multi-tenant cases passed, with a product-page CATALOG_READ_TIMEOUT remaining. Bound ordinary candidate IDs before safety/count hydration; attention filtering assesses matching keys before limiting. Shared scoped batch safety computes active batch/lot severity and retained/disposal sets through joins, used by both product pages and full totals. Preserve exact party scope, cursor/filter contracts and warnings without affected edges. Native bulk fixtures remain cold; no ANALYZE warm-up, test timeout increase or retry is used to hide the failure. Release acceptance pending.
 
 Author product correction checks: 781 API assertions, quality, workspace/browser types, API build and backlog tests pass. Updated native product case compiles strictly. PostgreSQL cold-query timing and full release execution remain pending founder verification.
+
+
+## Diagnostic checkpoint — S3 backend HTTP health
+
+Founder confirms targeted product suite passes, but full release fails in bucket readiness at the fixed 15-second storage deadline before Vitest. Moto health previously checked only socket acceptance. Integration and stress Compose health now require bounded HTTP 200 S3 list-bucket XML, preventing a generic/startup page or listening socket from passing backend readiness. Signed adapter probe and 15-second default remain required. Native Docker startup behavior is pending; this closes a known readiness gap without claiming it explains every host timeout.
+
+Author HTTP-health verification: both actual health command strings reject generic HTTP 200 and accept S3 XML on a local HTTP server; quality and 20 runner checks pass. Actual Docker/Moto/Windows routing remains pending founder verification.
