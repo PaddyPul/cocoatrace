@@ -3,11 +3,9 @@ import { ConflictError, NotFoundError, ForbiddenError } from '../../errors';
 import { recordAudit, type AuditActor } from '../../services/auditWriter';
 import { assertMutationAssurance } from '../mfa/assurance';
 
-export async function retryCleanup(
+async function assertOperator(
   client: PoolClient,
   actor: AuditActor & { sessionId: string },
-  id: string,
-  reason: string,
 ): Promise<void> {
   await assertMutationAssurance(client, actor);
   const authority = await client.query(
@@ -25,6 +23,15 @@ export async function retryCleanup(
   );
   if (!authority.rows.length || !session.rows.length)
     throw new ForbiddenError('Current platform administrator required');
+}
+
+export async function retryCleanup(
+  client: PoolClient,
+  actor: AuditActor & { sessionId: string },
+  id: string,
+  reason: string,
+): Promise<void> {
+  await assertOperator(client, actor);
   const selected = await client.query(
     `SELECT id,state,last_error_code FROM evidence_object_cleanup WHERE id=$1 FOR UPDATE`,
     [id],
@@ -48,4 +55,51 @@ export async function retryCleanup(
     reason,
     previousErrorCode: row.last_error_code,
   });
+}
+
+// Only these identifiers may be interpolated into outbox queries.
+export const emailOutboxes = {
+  payment_reminder: 'payment_reminder_email_outbox',
+  recall: 'recall_email_outbox',
+} as const;
+export type EmailQueue = keyof typeof emailOutboxes;
+
+export async function retryEmail(
+  client: PoolClient,
+  actor: AuditActor & { sessionId: string },
+  queue: EmailQueue,
+  id: string,
+  reason: string,
+): Promise<void> {
+  await assertOperator(client, actor);
+  const table = emailOutboxes[queue];
+  const row = (
+    await client.query(
+      `SELECT status,attempts,last_error,sent_at,lease_token,lease_expires_at FROM ${table} WHERE id=$1 FOR UPDATE`,
+      [id],
+    )
+  ).rows[0];
+  if (!row) throw new NotFoundError('Email record not found');
+  if (row.status !== 'failed_terminal' || row.sent_at || row.lease_token || row.lease_expires_at)
+    throw new ConflictError(
+      'Only terminal, unleased email work without recorded submission can be retried',
+    );
+  await client.query(
+    `UPDATE ${table} SET status='queued',attempts=0,next_attempt_at=NOW(),last_error=NULL,
+      lease_token=NULL,lease_expires_at=NULL${queue === 'recall' ? ',exhausted_at=NULL' : ''} WHERE id=$1`,
+    [id],
+  );
+  await recordAudit(client, actor, 'operations.email.retry', table, id, {
+    reason,
+    queue,
+    previousAttempts: row.attempts,
+    previousErrorCode: safeEmailError(row.last_error),
+  });
+}
+
+export function safeEmailError(value: unknown): string | null {
+  if (value === null) return null;
+  return value === 'SMTP_SUBMISSION_FAILED' || value === 'FINAL_LEASE_EXPIRED'
+    ? value
+    : 'UNKNOWN_EMAIL_FAILURE';
 }

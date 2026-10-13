@@ -6,6 +6,10 @@ async function mock(page: Page, admin = true) {
     failed = false,
     requeued = false;
   const retryBodies: unknown[] = [];
+  const emailRetries: { queue: string; body: unknown }[] = [];
+  const recoveredEmails = new Set<string>();
+  let emailFailure = '',
+    malformedEmail = false;
   const permissions = admin ? ['*'] : ['batch.read'];
   await page.addInitScript(
     ({ permissions }) =>
@@ -66,7 +70,47 @@ async function mock(page: Page, admin = true) {
               },
             ],
       };
-    else if (path === `/api/operations/cleanup/${ticket}/retry`) {
+    else if (/\/operations\/email\/[^/]+\/dead$/.test(path)) {
+      const queue = path.split('/')[4];
+      body = malformedEmail
+        ? { items: null, more: false }
+        : {
+            more: !recoveredEmails.has(queue),
+            items: recoveredEmails.has(queue)
+              ? []
+              : [
+                  {
+                    id: ticket,
+                    status: 'failed_terminal',
+                    attempts: 8,
+                    last_error_code: 'SMTP_SUBMISSION_FAILED',
+                    retryable: true,
+                  },
+                  {
+                    id: '33333333-3333-4333-8333-333333333333',
+                    status: 'failed_terminal',
+                    attempts: 8,
+                    last_error_code: 'FINAL_LEASE_EXPIRED',
+                    retryable: false,
+                  },
+                ],
+          };
+    } else if (/\/operations\/email\/[^/]+\/[^/]+\/retry$/.test(path)) {
+      const queue = path.split('/')[4];
+      emailRetries.push({ queue, body: route.request().postDataJSON() });
+      if (emailFailure)
+        return route.fulfill({
+          status: emailFailure === 'MFA_STEP_UP_REQUIRED' ? 403 : 409,
+          json: { code: emailFailure, error: 'Recovery was not confirmed' },
+        });
+      recoveredEmails.add(queue);
+      body = { queued: true };
+    } else if (path === '/api/auth/mfa/authentication/options') {
+      return route.fulfill({
+        status: 403,
+        json: { error: 'Fresh passkey verification unavailable' },
+      });
+    } else if (path === `/api/operations/cleanup/${ticket}/retry`) {
       retryBodies.push(route.request().postDataJSON());
       requeued = true;
       body = { queued: true };
@@ -75,6 +119,13 @@ async function mock(page: Page, admin = true) {
   });
   return {
     retryBodies,
+    emailRetries,
+    emailFailure: (value: string) => {
+      emailFailure = value;
+    },
+    malformEmail: () => {
+      malformedEmail = true;
+    },
     fail: () => {
       failed = true;
     },
@@ -158,4 +209,66 @@ test('ordinary workspace cannot see or operate administrator recovery controls',
   await expect(
     monitor.getByRole('button', { name: 'Review cleanup retry', exact: true }),
   ).toHaveCount(0);
+  await expect(
+    monitor.getByRole('button', { name: 'Review email retry', exact: true }),
+  ).toHaveCount(0);
+});
+
+for (const [queue, name] of [
+  ['payment_reminder', 'Payment reminder'],
+  ['recall', 'Recall'],
+]) {
+  test(`${name} recovery preserves review through conflicts, assurance failure and refresh`, async ({
+    page,
+  }) => {
+    const state = await mock(page);
+    await page.goto('/operations');
+    const section = page.getByRole('region', { name: `${name} terminal email`, exact: true });
+    await expect(
+      section.getByText('Showing the first 50 terminal email records.', { exact: false }),
+    ).toBeVisible();
+    await expect(
+      section.getByRole('button', { name: 'Review email retry', exact: true }),
+    ).toHaveCount(1);
+    await section.getByRole('button', { name: 'Review email retry', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Email recovery', exact: true });
+    await expect(dialog.getByText('retrying can duplicate email', { exact: false })).toBeVisible();
+    const submit = dialog.getByRole('button', { name: 'Queue reviewed retry', exact: true });
+    await expect(submit).toBeDisabled();
+    const reason = 'Provider outage investigated and corrected';
+    await dialog.getByLabel('Recovery explanation', { exact: true }).fill(reason);
+    for (const failure of ['CONFLICT', 'MFA_STEP_UP_REQUIRED']) {
+      state.emailFailure(failure);
+      await submit.click();
+      await expect(dialog.getByRole('alert')).toContainText(
+        failure === 'CONFLICT'
+          ? 'Recovery was not confirmed'
+          : 'Fresh passkey verification unavailable',
+      );
+      await expect(dialog.getByLabel('Recovery explanation', { exact: true })).toHaveValue(reason);
+    }
+    await page.getByRole('button', { name: 'Refresh operations', exact: true }).click();
+    await expect(dialog.getByLabel('Recovery explanation', { exact: true })).toHaveValue(reason);
+    state.emailFailure('');
+    await submit.click();
+    await expect(dialog).toHaveCount(0);
+    await expect(
+      section.getByText('No terminal email records observed.', { exact: true }),
+    ).toBeVisible();
+    expect(state.emailRetries).toEqual(
+      Array.from({ length: 3 }, () => ({ queue, body: { reason } })),
+    );
+  });
+}
+
+test('malformed terminal email response never reports an empty or healthy queue', async ({
+  page,
+}) => {
+  const state = await mock(page);
+  state.malformEmail();
+  await page.goto('/operations');
+  await expect(page.getByRole('alert')).toContainText('healthy operation has not been confirmed');
+  await expect(page.getByText('No terminal email records observed.', { exact: true })).toHaveCount(
+    0,
+  );
 });

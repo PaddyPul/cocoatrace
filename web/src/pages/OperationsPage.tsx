@@ -11,6 +11,10 @@ type Job = {
   consecutive_failures: number;
 };
 type Ticket = { id: string; last_error_code: string | null; attempts: number };
+type EmailQueue = 'payment_reminder' | 'recall';
+type EmailTicket = Ticket & { retryable: boolean };
+type Selection = Ticket & { queue: 'cleanup' | EmailQueue };
+const emailNames = { payment_reminder: 'Payment reminder', recall: 'Recall' };
 const names = ['evidence_scan', 'evidence_cleanup', 'payment_reminders', 'recall_email'];
 const unsafe = ['LIVE_EVIDENCE_REFERENCE', 'INVALID_OBJECT_KEY', 'STORAGE_PROVIDER_MISMATCH'];
 function record(value: unknown): value is Record<string, unknown> {
@@ -61,7 +65,7 @@ function statuses(value: unknown): value is { healthy: boolean; jobs: Job[] } {
         )))
   );
 }
-function tickets(value: unknown): value is { items: Ticket[]; more: boolean } {
+function tickets(value: unknown, email = false): value is { items: EmailTicket[]; more: boolean } {
   return (
     record(value) &&
     typeof value.more === 'boolean' &&
@@ -72,7 +76,9 @@ function tickets(value: unknown): value is { items: Ticket[]; more: boolean } {
         record(row) &&
         typeof row.id === 'string' &&
         /^[0-9a-f-]{36}$/i.test(row.id) &&
-        row.state === 'dead' &&
+        (email
+          ? row.status === 'failed_terminal' && typeof row.retryable === 'boolean'
+          : row.state === 'dead') &&
         code(row.last_error_code) &&
         Number.isSafeInteger(row.attempts) &&
         Number(row.attempts) >= 0,
@@ -85,9 +91,13 @@ export default function OperationsPage() {
   const allowed = canDo('*');
   const [data, setData] = useState<{ healthy: boolean; jobs: Job[] } | null>(null),
     [dead, setDead] = useState<{ items: Ticket[]; more: boolean } | null>(null);
+  const [emails, setEmails] = useState<Record<
+    EmailQueue,
+    { items: EmailTicket[]; more: boolean }
+  > | null>(null);
   const [error, setError] = useState(''),
     [loading, setLoading] = useState(false),
-    [selected, setSelected] = useState<Ticket | null>(null),
+    [selected, setSelected] = useState<Selection | null>(null),
     [reason, setReason] = useState(''),
     [saving, setSaving] = useState(false),
     [decisionError, setDecisionError] = useState('');
@@ -97,21 +107,25 @@ export default function OperationsPage() {
     const current = ++version.current;
     setLoading(true);
     try {
-      const [status, queue] = await Promise.all([
+      const [status, queue, payment, recall] = await Promise.all([
         api<unknown>('GET', '/operations/status'),
         api<unknown>('GET', '/operations/cleanup/dead'),
+        api<unknown>('GET', '/operations/email/payment_reminder/dead'),
+        api<unknown>('GET', '/operations/email/recall/dead'),
       ]);
-      if (!statuses(status) || !tickets(queue))
+      if (!statuses(status) || !tickets(queue) || !tickets(payment, true) || !tickets(recall, true))
         throw new Error('Invalid operations response. Retry to refresh.');
       if (current === version.current) {
         setData(status);
         setDead(queue);
+        setEmails({ payment_reminder: payment, recall });
         setError('');
       }
     } catch {
       if (current === version.current) {
         setData(null);
         setDead(null);
+        setEmails(null);
         setError(
           'Operations status unavailable. Retry to refresh; healthy operation has not been confirmed.',
         );
@@ -131,7 +145,8 @@ export default function OperationsPage() {
     setSaving(true);
     setDecisionError('');
     try {
-      const result = await api<unknown>('POST', `/operations/cleanup/${selected.id}/retry`, {
+      const path = selected.queue === 'cleanup' ? 'cleanup' : `email/${selected.queue}`;
+      const result = await api<unknown>('POST', `/operations/${path}/${selected.id}/retry`, {
         reason: reason.trim(),
       });
       if (!record(result) || result.queued !== true) throw new Error('Retry was not confirmed');
@@ -217,8 +232,9 @@ export default function OperationsPage() {
                         {!unsafe.includes(item.last_error_code ?? '') && (
                           <button
                             className="btn-secondary ml-3"
+                            disabled={saving}
                             onClick={() => {
-                              setSelected(item);
+                              setSelected({ ...item, queue: 'cleanup' });
                               setReason('');
                               setDecisionError('');
                             }}
@@ -238,18 +254,67 @@ export default function OperationsPage() {
                 )}
               </section>
             )}
+            {emails &&
+              (Object.keys(emailNames) as EmailQueue[]).map((queue) => (
+                <section key={queue} aria-label={`${emailNames[queue]} terminal email`}>
+                  <h2 className="text-lg font-bold">{emailNames[queue]} terminal email</h2>
+                  {emails[queue].items.length === 0 ? (
+                    <p>No terminal email records observed.</p>
+                  ) : (
+                    <ul className="space-y-3">
+                      {emails[queue].items.map((item) => (
+                        <li key={item.id} className="rounded-lg border border-border p-3">
+                          <span>
+                            {item.id} · {item.last_error_code ?? 'Unknown incident'} ·{' '}
+                            {item.attempts} attempts
+                          </span>
+                          {item.retryable ? (
+                            <button
+                              className="btn-secondary ml-3"
+                              disabled={saving}
+                              onClick={() => {
+                                setSelected({ ...item, queue });
+                                setReason('');
+                                setDecisionError('');
+                              }}
+                            >
+                              Review email retry
+                            </button>
+                          ) : (
+                            <p>
+                              Recorded submission or lease requires investigation; retry
+                              unavailable.
+                            </p>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {emails[queue].more && (
+                    <p role="status">
+                      Showing the first 50 terminal email records. Resolve reviewed incidents and
+                      refresh for the next records.
+                    </p>
+                  )}
+                </section>
+              ))}
             {selected && (
               <div
                 role="dialog"
                 aria-modal="true"
-                aria-label="Cleanup recovery"
+                aria-label={selected.queue === 'cleanup' ? 'Cleanup recovery' : 'Email recovery'}
                 className="rounded-xl border border-border bg-surface p-5"
               >
-                <h2 className="text-lg font-bold">Review cleanup retry</h2>
+                <h2 className="text-lg font-bold">
+                  {selected.queue === 'cleanup'
+                    ? 'Review cleanup retry'
+                    : `Review ${emailNames[selected.queue].toLowerCase()} email retry`}
+                </h2>
                 <p>{selected.id}</p>
                 <p className="text-sm">
-                  Investigate the incident before requeueing. The worker rechecks references and
-                  storage safety; this action cannot delete evidence directly.
+                  {selected.queue === 'cleanup'
+                    ? 'Investigate the incident before requeueing. The worker rechecks references and storage safety; this action cannot delete evidence directly.'
+                    : 'Correct the delivery incident before requeueing. The existing worker checks current delivery eligibility. An earlier submission may have succeeded before a crash, so retrying can duplicate email. Queueing does not confirm inbox receipt or acknowledge a recall.'}
                 </p>
                 <label className="block" htmlFor="operations-recovery-explanation">
                   Recovery explanation
