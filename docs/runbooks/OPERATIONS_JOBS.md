@@ -1,0 +1,23 @@
+# Scheduled operations and reviewed cleanup recovery
+
+The API schedules four independent jobs after startup migrations. Pending evidence scans process at most five items per run; cleanup at most twenty; payment reminder generation and each email delivery batch at most twenty. Evidence jobs wait 60 seconds after completion; delivery jobs retain their 15-second interval. A slow job cannot overlap itself or block another job's loop.
+
+A PostgreSQL session advisory lock serializes each scheduled job across API instances. Four dedicated lock connections avoid consuming the domain/request pool while provider work requires its own connections. Budget up to four additional PostgreSQL connections per replica. Use a direct/session-pinned PostgreSQL connection; transaction-mode poolers do not preserve session advisory locks. The existing per-object cleanup leases, scan lock and email outbox leases remain authoritative. SMTP is at least once: a crash after submission can duplicate mail.
+
+Migration 036 adds four bounded job-status rows and partial terminal-work indexes. Each run records start, completion, last success, a safe error code and consecutive failures. Missing, failed, never-successful or older-than-15-minute status is unhealthy. Disabled development email is `EMAIL_NOT_CONFIGURED`, not successful delivery; neither SMTP acceptance nor worker health confirms inbox receipt. Existing terminal cleanup/email rows keep reporting `TERMINAL_WORK_PENDING`, even when no new work was selected.
+
+Platform administrators can open **Operations** in navigation, or `/operations`. Ordinary accounts have no controls and the API denies their reads and writes. The monitor explicitly reports unavailable/malformed reads and retains an unsaved recovery explanation during refresh. It shows the first fifty terminal cleanup records with an explicit more-records notice; processing reviewed records and refreshing exposes later records. It never returns object keys or recipient addresses.
+
+`POST /operations/cleanup/:id/retry` requires a 10–500-character explanation, current platform `*` authority, a current session and fresh passkey assurance when required. The transaction locks current identity, permission, session and cleanup state, then requeues only a dead record and writes `operations.cleanup.retry` atomically. Repeated/concurrent requests cannot create duplicate transitions or audits. Live-reference, invalid-key and provider-mismatch failures refuse retry. Investigate these; do not edit the ledger to mark physical bytes deleted. A reviewed transient retry resets attempts and preserves byte/quota ownership until the existing worker physically deletes the object. Recovery does not directly delete evidence, clear safety holds, change trade quantities or release custody.
+
+Hardened runtime status command (no npm inside API image):
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.email-test.yml -f docker-compose.mfa-test.yml exec api node --import tsx api/scripts/operations-status.ts
+```
+
+A nonzero status means attention is needed, including suppressed email or first startup before all jobs have succeeded. Inspect safe job/error fields and the Operations page. Correct the storage/scanner/SMTP incident first. After a lock connection/database/status-write infrastructure failure the affected loop retires, emits a redacted error and its durable status becomes stale; restore the dependency and restart API to resume. Graceful shutdown immediately stops new scheduling and drains active jobs before closing the domain pool; the existing ten-second shutdown deadline still forces exit if a provider does not settle. Durable claims recover after expiry following forced exit.
+
+Rollback: redeploy the previous API/web image; business queues, cleanup ownership and audits remain intact. Migration 036 is additive. Do not drop/recreate business data or manually remove private bytes to make monitoring green.
+
+Remaining operations work: external alert collector/delivery and named incident owner; complete queue-backlog/DB/abuse metrics and thresholds; reviewed recovery of terminal email rows; hosted scheduling/load and failure drills. These remain open under OPS-006/OPS-010; this slice does not close either broad item. There is no newly configured external alert service or real outgoing email provider.
