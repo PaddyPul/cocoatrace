@@ -1,0 +1,390 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-10-13",
+  "authorSourceCommit": "602620e07fad58bcd3d85dd5b04e6d6d42dd4f75",
+  "acceptance": "Founder-reported local release/merge acknowledgements, including prescribed operations correction workflow reported done 2026-10-13 13:59 UTC. Independent CI URL/founder SHA and hosted acceptance are not supplied.",
+  "changes": [
+    {
+      "id": "CUR-003",
+      "from": "partial",
+      "to": "complete",
+      "evidence": [
+        "api/src/services/tradeMoney.ts",
+        "api/src/services/tradeMoney.test.ts",
+        "api/test/integration/tradeCurrency.integration.test.ts",
+        "docs/runbooks/CURRENCY_PRECISION.md"
+      ],
+      "reason": "Exact BigInt/NUMERIC totals, deposits, balances and fees use snapshotted two-decimal/JPY precision. Native and browser currency waves are founder accepted. Refund/FX/commercial approval remain CUR-001/002/004/005, not missing arithmetic.",
+      "remaining": ["CUR-001", "CUR-002", "CUR-004", "CUR-005"]
+    },
+    {
+      "id": "ARC-015",
+      "from": "open",
+      "to": "complete",
+      "evidence": [
+        "web/src/pages/DataPages.tsx",
+        "web/src/pages/ContractRecordsPage.tsx",
+        "web/src/pages/ShipmentRecordsPage.tsx",
+        "e2e/catalogPages.spec.ts"
+      ],
+      "reason": "DataPages.tsx is a compatibility export barrel; inventory, source, contract, shipment, payment, evidence, audit, certificate and organization routes now have feature-owned components and accepted page regressions. Broader component/client/type cleanup remains ARC-016/017/018.",
+      "remaining": ["ARC-016", "ARC-017", "ARC-018"]
+    },
+    {
+      "id": "IDN-003",
+      "from": "partial",
+      "to": "complete",
+      "evidence": [
+        "api/src/modules/accessControls/repository.ts",
+        "api/test/integration/accessSuspension.integration.test.ts",
+        "api/test/integration/privilegedLifecycle.integration.test.ts"
+      ],
+      "reason": "Application/review/verified/rejected states and audited ordinary/two-reviewer privileged suspension/restoration are implemented and founder accepted. Actual pilot enrollment is separately IDN-005/GEO-001.",
+      "remaining": ["IDN-005", "GEO-001"]
+    },
+    {
+      "id": "IDN-012",
+      "from": "partial",
+      "to": "complete",
+      "evidence": [
+        "api/src/modules/mfa/policy.ts",
+        "api/src/middleware/auth.ts",
+        "api/test/integration/mfa.integration.test.ts",
+        "e2e/passkeys.spec.ts"
+      ],
+      "reason": "Deployed privileged-role MFA, restricted password sessions, fresh writes, passkey enrollment/revocation and reset preservation are implemented and founder accepted. Physical/hosted operator review and emergency recovery remain SAF-004/IDN-018/019; no hosted verification is inferred.",
+      "remaining": ["SAF-004", "IDN-018", "IDN-019"]
+    },
+    {
+      "id": "IDN-014",
+      "from": "partial",
+      "to": "complete",
+      "evidence": [
+        "api/src/controllers/authController.ts",
+        "api/src/services/passwordLifecycleService.ts",
+        "api/src/modules/mfa/service.ts",
+        "api/src/services/securityEventService.ts"
+      ],
+      "reason": "Failed login, reset, MFA ceremony and session-revocation security events are implemented and release accepted. External alert routing, immutable retention and recovery notifications remain SEC-017/OPS-006/IDN-018.",
+      "remaining": ["SEC-017", "OPS-006", "IDN-018"]
+    },
+    {
+      "id": "UPL-017",
+      "from": "open",
+      "to": "complete",
+      "evidence": [
+        "api/src/modules/catalog/publicEvidence.ts",
+        "api/test/integration/publicEvidencePages.integration.test.ts",
+        "e2e/publicEvidencePages.spec.ts"
+      ],
+      "reason": "Published evidence uses an explicit metadata-only projection and current independent review/clean-validation eligibility; private access remains entity/party authorized. Native and browser public-field/eligibility cases are founder accepted. Hosted storage provisioning remains UPL-002.",
+      "remaining": ["UPL-002"]
+    },
+    {
+      "id": "QLT-009",
+      "from": "partial",
+      "to": "complete",
+      "evidence": [
+        "e2e/identity.spec.ts",
+        "e2e/sourceEvidenceEntry.spec.ts",
+        "e2e/marketplaceVisibility.spec.ts"
+      ],
+      "reason": "Actual buyer onboarding and sourcing creation/changed-commodity/reviewed-quantity/save/reload browser journeys exist and are founder release accepted. Saved-brief reopening/editing remains PRD-005; it is product follow-up, not an absent creation regression.",
+      "remaining": ["PRD-005"]
+    },
+    {
+      "id": "QLT-013",
+      "from": "open",
+      "to": "complete",
+      "evidence": [
+        "api/test/integration/tradingIntegrity.integration.test.ts",
+        "api/test/integration/paymentWorkflow.integration.test.ts",
+        "api/test/integration/paymentReminders.integration.test.ts",
+        "api/test/integration/operationsWorkers.integration.test.ts"
+      ],
+      "reason": "API retry/idempotency regressions cover critical offer acceptance, installment submission/confirmation, terms agreement, reminder generation and recovery concurrency without duplicate effects. Founder accepted the applicable releases. This does not claim every possible route/future provider operation is covered.",
+      "remaining": ["QLT-002", "SVC-011"]
+    },
+    {
+      "id": "QLT-019",
+      "from": "open",
+      "to": "complete",
+      "evidence": [
+        "api/test/integration/tradingIntegrity.integration.test.ts",
+        "api/test/integration/paymentWorkflow.integration.test.ts"
+      ],
+      "reason": "Equivalent fault injection is implemented: forced downstream fulfillment insertion and payment audit failures prove complete inventory/payment rollback. The founder accepted the native release containing these tests; no mutation-score or exhaustive formal proof is claimed.",
+      "remaining": []
+    },
+    {
+      "id": "PER-003",
+      "from": "partial",
+      "to": "complete",
+      "evidence": [
+        "api/src/modules/security/evidenceConcurrency.ts",
+        "api/src/services/evidenceMalwareScanner.test.ts",
+        "scripts/run-evidence-stress.mjs",
+        "docs/runbooks/OPERATIONS_JOBS.md"
+      ],
+      "reason": "Declared single-process global-four/tenant-two admissions, bounded reads/deadlines, capped scanner work/backpressure and four maximum-size upload/download RSS/rejection canaries are founder accepted. This closes the original bounded-memory criterion, not distributed or hosted capacity. Cross-instance/crash scaling remains PER-006, representative combined workload/SLOs PER-004, streaming efficiency PER-007.",
+      "remaining": ["PER-004", "PER-006", "PER-007"]
+    },
+    {
+      "id": "GOV-004",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "docs/adr/000-template.md",
+        "docs/adr/001-frozen-schema-bootstrap.md",
+        "docs/adr/002-bettertrade-platform-boundaries.md"
+      ],
+      "reason": "ADR template, frozen-bootstrap ADR and proposed platform-boundary ADR exist; accepted hosting/session/tenant/storage/jobs/onboarding/payment decision set remains incomplete.",
+      "remaining": []
+    },
+    {
+      "id": "ARC-002",
+      "from": "open",
+      "to": "partial",
+      "evidence": ["api/src/services/authSessionService.ts", "api/src/services/tradeMoney.ts"],
+      "reason": "Shared authenticated actor, assurance actor and exact money helpers exist; shared organization-scope/quantity/identifier types are not adopted throughout.",
+      "remaining": []
+    },
+    {
+      "id": "ARC-009",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "api/src/controllers/publicProductController.ts",
+        "api/src/modules/catalog/publicEvidence.ts"
+      ],
+      "reason": "Public evidence/journey/notice query modules exist; public profile administration/rendering/recall handlers still share publicProductController.",
+      "remaining": []
+    },
+    {
+      "id": "ARC-011",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "api/src/modules/catalog/repository.ts",
+        "api/src/controllers/publicProductController.ts"
+      ],
+      "reason": "Migrated catalog reads use query/repository modules; remaining controller mutation SQL and full boundary adoption are open.",
+      "remaining": []
+    },
+    {
+      "id": "ARC-018",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "web/src/pages/ContractRecordsPage.tsx",
+        "web/src/pages/ShipmentRecordsPage.tsx"
+      ],
+      "reason": "Feature-owned contract/shipment/source record routes exist; complete focused workflow hook/component extraction remains open.",
+      "remaining": []
+    },
+    {
+      "id": "ARC-020",
+      "from": "open",
+      "to": "partial",
+      "evidence": ["eslint.config.mjs", "api/src/controllers/evidenceController.ts"],
+      "reason": "Strict no-any enforcement covers migrated security/MFA/transport/payment/delivery/trace/catalog/operations modules; legacy evidence/auth/controller paths still require cleanup.",
+      "remaining": []
+    },
+    {
+      "id": "ARC-023",
+      "from": "open",
+      "to": "partial",
+      "evidence": ["api/src/errors.ts", "api/src/controllers/authController.ts"],
+      "reason": "Shared AppError and stable bounded-resource codes exist; manual login/controller responses still omit codes, so a universal envelope is incomplete.",
+      "remaining": []
+    },
+    {
+      "id": "UPL-014",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "api/src/controllers/evidenceController.ts",
+        "api/src/modules/operations/recovery.ts"
+      ],
+      "reason": "Upload/security/infection decisions and reviewed cleanup retries are audited; a complete scan/review/download/physical-deletion event matrix is not yet proved.",
+      "remaining": []
+    },
+    {
+      "id": "TRD-014",
+      "from": "open",
+      "to": "partial",
+      "evidence": ["api/src/modules/trading/offers.ts", "api/src/modules/trading/fulfillment.ts"],
+      "reason": "Accepted goods price/quantity/currency, Incoterm and locations are preserved through the transactional trade/fulfillment path; full immutable assurance-requirement snapshots remain open.",
+      "remaining": []
+    },
+    {
+      "id": "TRD-019",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "api/src/modules/catalog/repository.ts",
+        "api/test/integration/catalogPagination.integration.test.ts"
+      ],
+      "reason": "Server-filtered deterministic marketplace keyset pages and native plan cases are accepted; complete search-index/capacity acceptance and match-explanation policy remain open.",
+      "remaining": []
+    },
+    {
+      "id": "PRD-008",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "api/src/services/emailSender.ts",
+        "api/src/modules/payments/reminders.ts",
+        "api/src/modules/recall/notifications.ts"
+      ],
+      "reason": "Identity/invitation/reset, overdue reminders and recall delivery are implemented; offer/terms/payment/dispatch/delivery/dispute lifecycle email coverage and external inbox acceptance are incomplete.",
+      "remaining": []
+    },
+    {
+      "id": "PRD-010",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "docs/runbooks/PAYMENT_DOCUMENT_RULES.md",
+        "api/src/modules/payments/documentsAndSecurity.ts"
+      ],
+      "reason": "Payment-plan protected-document rules and current evidence guidance exist; complete route/mode/named-place/Incoterm checklists remain open.",
+      "remaining": []
+    },
+    {
+      "id": "UX-003",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "web/src/pages/OperationsPage.tsx",
+        "e2e/reviewQueuePages.spec.ts",
+        "e2e/recallRegisterPages.spec.ts"
+      ],
+      "reason": "Accepted access-review, recall-recovery and operations forms retain drafts with explicit errors; whole-application action/form retention remains unverified.",
+      "remaining": []
+    },
+    {
+      "id": "UX-004",
+      "from": "open",
+      "to": "partial",
+      "evidence": ["e2e/catalogPages.spec.ts", "e2e/workspaceOverview.spec.ts"],
+      "reason": "Accepted paged register, aggregate and selection reads distinguish failure from empty results; a whole-route legacy failure audit remains open.",
+      "remaining": []
+    },
+    {
+      "id": "UX-005",
+      "from": "open",
+      "to": "partial",
+      "evidence": ["web/src/pages/OperationsPage.tsx", "web/src/pages/InventoryPage.tsx"],
+      "reason": "Loading/empty/read-retry/permission states exist in accepted feature pages; universal offline and consistent whole-app treatment remain open.",
+      "remaining": []
+    },
+    {
+      "id": "QLT-014",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "api/src/services/evidenceStorage.test.ts",
+        "api/src/services/evidenceMalwareScanner.test.ts",
+        "api/src/services/emailSender.test.ts"
+      ],
+      "reason": "Real local/S3-compatible storage, TCP scanner and SMTP adapter tests exist; a complete maintained adapter contract matrix and future provider contracts remain open.",
+      "remaining": []
+    },
+    {
+      "id": "PER-006",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "api/test/integration/publicAbuseLimits.integration.test.ts",
+        "api/test/integration/operationsWorkers.integration.test.ts"
+      ],
+      "reason": "Shared abuse budgets, business row locks/outbox leases and deployment job locks have concurrency tests; actual multi-process crash/lease/scaling acceptance remains open.",
+      "remaining": []
+    },
+    {
+      "id": "OPS-018",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "api/test/integration/operationsWorkers.integration.test.ts",
+        "api/test/integration/paymentReminders.integration.test.ts"
+      ],
+      "reason": "Multi-session shared-limit/job ownership regressions exist; complete horizontal deployment/restart and crash validation remains open.",
+      "remaining": []
+    }
+  ],
+  "gateChanges": [
+    {
+      "id": "CORE-trace",
+      "from": "partial",
+      "to": "complete",
+      "reason": "Runtime scoped trace safety is fully met; broad architecture extraction remains ARC-008 and hosted capacity PER-004.",
+      "evidence": [
+        "api/src/modules/trace/limits.ts",
+        "api/test/integration/recallSafety.integration.test.ts",
+        "api/test/integration/recallResponse.integration.test.ts",
+        "e2e/recallSafety.spec.ts"
+      ]
+    }
+  ],
+  "added": [
+    {
+      "id": "PER-007",
+      "reason": "Explicit streaming-efficiency follow-up; hosted/cross-instance requirements stay with existing PER-004/006. No remaining scope is erased."
+    }
+  ],
+  "before": {
+    "roadmap": {
+      "total": 342,
+      "complete": 78,
+      "partial": 59,
+      "open": 205,
+      "completedPercent": 22.8
+    },
+    "corePilot": {
+      "total": 28,
+      "complete": 10,
+      "partial": 12,
+      "blocked": 4,
+      "open": 2,
+      "completedPercent": 35.7
+    }
+  },
+  "after": {
+    "reviewedAt": "2026-10-13",
+    "roadmap": {
+      "total": 343,
+      "complete": 88,
+      "partial": 71,
+      "blocked": 0,
+      "open": 184,
+      "completedPercent": 25.7
+    },
+    "corePilot": {
+      "total": 28,
+      "complete": 11,
+      "partial": 11,
+      "blocked": 4,
+      "open": 2,
+      "completedPercent": 39.3
+    },
+    "providerAdditionalGates": {
+      "total": 12,
+      "complete": 0,
+      "partial": 0,
+      "blocked": 0,
+      "open": 12,
+      "completedPercent": 0
+    },
+    "providerLaunchIncludingCore": {
+      "total": 40,
+      "complete": 11,
+      "partial": 11,
+      "blocked": 4,
+      "open": 14,
+      "completedPercent": 27.5
+    },
+    "note": "Equal gate count, no partial credit. Provider launch also requires every core gate. This is closure evidence, not a safety probability or valuation measure."
+  }
+}
