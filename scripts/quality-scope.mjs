@@ -1,5 +1,7 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'web/src/components/operations/**/*.ts',
+  'api/src/migrations/037_operations_backlog_indexes.ts',
   'api/test/integration/operationsEmailRecovery.integration.test.ts',
   'web/src/pages/OperationsPage.tsx',
   'e2e/operations.spec.ts',

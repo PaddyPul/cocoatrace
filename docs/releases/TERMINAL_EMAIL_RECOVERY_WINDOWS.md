@@ -64,10 +64,10 @@ Docker Desktop must be running. Use the project's Node 24 toolchain. Avoid concu
     node --version
     docker version
     if ($LASTEXITCODE -ne 0) { throw "Docker is not ready." }
-    npm ci *> terminal-email-install-output.txt
+    cmd.exe /d /c "npm ci > terminal-email-install-output.txt 2>&1"
     if ($LASTEXITCODE -ne 0) { Get-Content terminal-email-install-output.txt -Tail 40; throw "Installation failed." }
     $candidate = (git rev-parse HEAD).Trim()
-    npm run verify:release *> terminal-email-release-output.txt
+    cmd.exe /d /c "npm run verify:release > terminal-email-release-output.txt 2>&1"
     $releaseExit = $LASTEXITCODE
     if ($releaseExit -ne 0) {
         Get-Content terminal-email-release-output.txt -Tail 80

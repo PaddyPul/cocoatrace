@@ -26,7 +26,7 @@ Download `bettertrade-listing-summary-read-fix.bundle` into Downloads. This is a
 }
 ```
 
-No stash pop, database reset, dependency changes or removal of your original Compose/log files is needed.
+No stash pop, database reset, dependency changes or removal of your original Compose/log files is needed. Output redirection happens inside cmd.exe so Windows PowerShell 5.1 does not turn normal Docker stderr progress into a NativeCommandError under Stop. Exit codes are still checked immediately.
 
 ## 2. Check the affected integration suite first
 
@@ -35,7 +35,7 @@ Docker Desktop must be running. Keep other builds/test runs stopped. Dependencie
 ```powershell
 & {
     $ErrorActionPreference = "Stop"
-    npm run test:integration:docker --workspace=api -- catalogPagination.integration.test.ts *> listing-summary-integration-output.txt
+    cmd.exe /d /c "npm run test:integration:docker --workspace=api -- catalogPagination.integration.test.ts > listing-summary-integration-output.txt 2>&1"
     if ($LASTEXITCODE -ne 0) {
         Get-Content listing-summary-integration-output.txt -Tail 60
         throw "Focused integration failed. Send the first failure and API code; do not run the full release yet."
@@ -51,7 +51,7 @@ Docker Desktop must be running. Keep other builds/test runs stopped. Dependencie
     $ErrorActionPreference = "Stop"
     $candidate = (git rev-parse HEAD).Trim()
     if ($LASTEXITCODE -ne 0) { throw "Cannot read candidate commit." }
-    npm run verify:release *> terminal-email-release-output.txt
+    cmd.exe /d /c "npm run verify:release > terminal-email-release-output.txt 2>&1"
     if ($LASTEXITCODE -ne 0) {
         Get-Content terminal-email-release-output.txt -Tail 80
         throw "Release failed. Stop before push/merge; send only the first specific failure."

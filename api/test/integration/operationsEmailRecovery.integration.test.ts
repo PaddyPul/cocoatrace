@@ -424,3 +424,38 @@ describe.each(queues)('%s reviewed email recovery', (queue) => {
     expect((await row(queue, id)).status).toBe('suppressed');
   });
 });
+
+describe.each(queues)('%s backlog delivery state visibility', (queue) => {
+  it('observes overdue retries and missing sending leases without recipient metadata or queue mutation', async () => {
+    const pending = await terminal(queue),
+      sending = await terminal(queue);
+    try {
+      await query(
+        `UPDATE ${emailOutboxes[queue]} SET status='failed',attempts=1,next_attempt_at=NOW()-INTERVAL '1 hour' WHERE id=$1`,
+        [pending],
+      );
+      await query(
+        `UPDATE ${emailOutboxes[queue]} SET status='sending',lease_token=NULL,lease_expires_at=NULL WHERE id=$1`,
+        [sending],
+      );
+      const response = await request(app)
+        .get('/operations/backlog')
+        .set('Authorization', `Bearer ${admin.token}`);
+      expect(response.status, JSON.stringify(response.body)).toBe(200);
+      const signal = response.body.queues.find((item: { name: string }) => item.name === queue);
+      expect(signal.queued.count).toBeGreaterThan(0);
+      expect(signal.expiredLeasesObserved).toBeGreaterThan(0);
+      expect(signal.incidents).toEqual(expect.arrayContaining(['EXPIRED_LEASE', 'OVERDUE_WORK']));
+      expect(JSON.stringify(response.body)).not.toMatch(
+        /recipient|private@|object_key|storage_key|last_error/,
+      );
+      expect((await row(queue, pending)).status).toBe('failed');
+      expect((await row(queue, sending)).status).toBe('sending');
+    } finally {
+      await query(
+        `UPDATE ${emailOutboxes[queue]} SET status='suppressed',lease_token=NULL,lease_expires_at=NULL WHERE id=ANY($1::uuid[])`,
+        [[pending, sending]],
+      );
+    }
+  });
+});

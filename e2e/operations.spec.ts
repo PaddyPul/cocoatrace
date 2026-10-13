@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { validBacklog } from '../web/src/components/operations/backlog';
 
 const ticket = '11111111-1111-4111-8111-111111111111';
 async function mock(page: Page, admin = true) {
@@ -9,7 +10,10 @@ async function mock(page: Page, admin = true) {
   const emailRetries: { queue: string; body: unknown }[] = [];
   const recoveredEmails = new Set<string>();
   let emailFailure = '',
-    malformedEmail = false;
+    malformedEmail = false,
+    backlogFailure = false,
+    backlogMalformed = false,
+    backlogCapped = false;
   const permissions = admin ? ['*'] : ['batch.read'];
   await page.addInitScript(
     ({ permissions }) =>
@@ -39,7 +43,40 @@ async function mock(page: Page, admin = true) {
         name: 'Operations reader',
       };
     else if (path === '/api/onboarding') body = { status: 'completed', primary_goal: 'sell' };
-    else if (path === '/api/operations/status') {
+    else if (path === '/api/operations/backlog') {
+      if (backlogFailure)
+        return route.fulfill({ status: 503, json: { code: 'OPERATIONS_BACKLOG_UNAVAILABLE' } });
+      body = backlogMalformed
+        ? { needsAttention: false, queues: [] }
+        : {
+            observedAt: new Date().toISOString(),
+            limit: 1000,
+            overdueAfterSeconds: 900,
+            needsAttention: true,
+            queues: ['cleanup', 'payment_reminder', 'recall'].map((name) => ({
+              name,
+              queued: {
+                count: backlogCapped && name === 'cleanup' ? 1000 : 0,
+                more: backlogCapped && name === 'cleanup',
+              },
+              leased: { count: name === 'recall' ? 1 : 0, more: false },
+              terminal: { count: 2, more: false },
+              retryingObserved: 0,
+              expiredLeasesObserved: name === 'recall' ? 1 : 0,
+              oldestDueAt:
+                backlogCapped && name === 'cleanup'
+                  ? new Date(Date.now() - 3600000).toISOString()
+                  : null,
+              incidents: [
+                'TERMINAL_WORK_PENDING',
+                ...(name === 'recall' ? ['EXPIRED_LEASE'] : []),
+                ...(backlogCapped && name === 'cleanup'
+                  ? ['OVERDUE_WORK', 'MONITOR_LIMIT_REACHED']
+                  : []),
+              ],
+            })),
+          };
+    } else if (path === '/api/operations/status') {
       if (failed) return route.fulfill({ status: 503, json: { error: 'Unavailable' } });
       body = malformed
         ? { healthy: true, jobs: 'missing' }
@@ -118,6 +155,15 @@ async function mock(page: Page, admin = true) {
     return route.fulfill({ json: body });
   });
   return {
+    capBacklog: () => {
+      backlogCapped = true;
+    },
+    failBacklog: (value = true) => {
+      backlogFailure = value;
+    },
+    malformBacklog: () => {
+      backlogMalformed = true;
+    },
     retryBodies,
     emailRetries,
     emailFailure: (value: string) => {
@@ -271,4 +317,100 @@ test('malformed terminal email response never reports an empty or healthy queue'
   await expect(page.getByText('No terminal email records observed.', { exact: true })).toHaveCount(
     0,
   );
+});
+
+test('queue backlog distinguishes capped counts, expired leases and overdue work', async ({
+  page,
+}) => {
+  const state = await mock(page);
+  state.capBacklog();
+  await page.goto('/operations');
+  const backlog = page.getByRole('region', { name: 'Queue backlog', exact: true });
+  const cleanup = backlog.getByRole('row', { name: /Object cleanup/ });
+  await expect(cleanup.getByRole('cell', { name: '≥1,000', exact: true })).toBeVisible();
+  await expect(cleanup).toContainText('Due for at least 15 minutes');
+  await expect(cleanup).toContainText('Observation limit reached');
+  await expect(backlog.getByRole('row', { name: /Recall email/ })).toContainText(
+    'Expired or missing lease',
+  );
+  await expect(
+    backlog.getByText('Queue incidents need investigation', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText('Scheduled jobs healthy', { exact: true })).toHaveCount(0);
+});
+
+test('failed backlog observation stays unknown and preserves an open recovery explanation', async ({
+  page,
+}) => {
+  const state = await mock(page);
+  await page.goto('/operations');
+  await page.getByRole('button', { name: 'Review cleanup retry', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Cleanup recovery', exact: true });
+  const explanation = dialog.getByLabel('Recovery explanation', { exact: true });
+  await explanation.fill('Investigating the delayed queue provider');
+  state.failBacklog();
+  await page.getByRole('button', { name: 'Refresh operations', exact: true }).click();
+  const monitor = page.getByRole('region', { name: 'Operations monitor', exact: true });
+  await expect(monitor.getByRole('alert')).toContainText('Queue backlog is unknown');
+  await expect(page.getByRole('region', { name: 'Queue backlog', exact: true })).toHaveCount(0);
+  await expect(explanation).toHaveValue('Investigating the delayed queue provider');
+  state.failBacklog(false);
+  await page.getByRole('button', { name: 'Refresh operations', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Queue backlog', exact: true })).toBeVisible();
+  state.malformBacklog();
+  await page.getByRole('button', { name: 'Refresh operations', exact: true }).click();
+  await expect(monitor.getByRole('alert')).toContainText('Queue backlog is unknown');
+  await expect(explanation).toHaveValue('Investigating the delayed queue provider');
+});
+
+test('backlog contract rejects inconsistent counts, incidents and missing queue observations', () => {
+  const healthy = {
+    observedAt: '2026-10-13T17:00:00.000Z',
+    limit: 1000,
+    overdueAfterSeconds: 900,
+    needsAttention: false,
+    queues: ['cleanup', 'payment_reminder', 'recall'].map((name) => ({
+      name,
+      queued: { count: 0, more: false },
+      leased: { count: 0, more: false },
+      terminal: { count: 0, more: false },
+      retryingObserved: 0,
+      expiredLeasesObserved: 0,
+      oldestDueAt: null as string | null,
+      incidents: [] as string[],
+    })),
+  };
+  expect(validBacklog(healthy)).toBe(true);
+  const corruptions = [
+    (value: typeof healthy) => {
+      value.needsAttention = true;
+    },
+    (value: typeof healthy) => {
+      value.queues[1].name = 'cleanup';
+    },
+    (value: typeof healthy) => {
+      value.queues[0].queued.count = -1;
+    },
+    (value: typeof healthy) => {
+      value.queues[0].queued.more = true;
+    },
+    (value: typeof healthy) => {
+      value.queues[0].terminal.count = 1;
+    },
+    (value: typeof healthy) => {
+      value.queues[0].expiredLeasesObserved = 1;
+    },
+    (value: typeof healthy) => {
+      value.queues[0].oldestDueAt = '2026-10-13T18:00:00.000Z';
+    },
+    (value: typeof healthy) => {
+      value.queues[0].incidents = ['UNSUPPORTED_CLEAR_CLAIM'];
+    },
+  ];
+  for (const corrupt of corruptions) {
+    const value = structuredClone(healthy);
+    corrupt(value);
+    expect(validBacklog(value)).toBe(false);
+  }
+  expect(validBacklog({ ...healthy, queues: healthy.queues.slice(1) })).toBe(false);
 });

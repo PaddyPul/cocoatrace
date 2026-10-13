@@ -2,6 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import Layout from '../components/layout/Layout';
+import {
+  validBacklog,
+  displayCount,
+  incidentLabels,
+  queueLabels,
+  type Backlog,
+} from '../components/operations/backlog';
 
 type Job = {
   job_name: string;
@@ -95,6 +102,7 @@ export default function OperationsPage() {
     EmailQueue,
     { items: EmailTicket[]; more: boolean }
   > | null>(null);
+  const [backlog, setBacklog] = useState<Backlog | null>(null);
   const [error, setError] = useState(''),
     [loading, setLoading] = useState(false),
     [selected, setSelected] = useState<Selection | null>(null),
@@ -107,16 +115,24 @@ export default function OperationsPage() {
     const current = ++version.current;
     setLoading(true);
     try {
-      const [status, queue, payment, recall] = await Promise.all([
+      const [status, queue, payment, recall, observation] = await Promise.all([
         api<unknown>('GET', '/operations/status'),
         api<unknown>('GET', '/operations/cleanup/dead'),
         api<unknown>('GET', '/operations/email/payment_reminder/dead'),
         api<unknown>('GET', '/operations/email/recall/dead'),
+        api<unknown>('GET', '/operations/backlog'),
       ]);
-      if (!statuses(status) || !tickets(queue) || !tickets(payment, true) || !tickets(recall, true))
+      if (
+        !statuses(status) ||
+        !tickets(queue) ||
+        !tickets(payment, true) ||
+        !tickets(recall, true) ||
+        !validBacklog(observation)
+      )
         throw new Error('Invalid operations response. Retry to refresh.');
       if (current === version.current) {
         setData(status);
+        setBacklog(observation);
         setDead(queue);
         setEmails({ payment_reminder: payment, recall });
         setError('');
@@ -124,10 +140,11 @@ export default function OperationsPage() {
     } catch {
       if (current === version.current) {
         setData(null);
+        setBacklog(null);
         setDead(null);
         setEmails(null);
         setError(
-          'Operations status unavailable. Retry to refresh; healthy operation has not been confirmed.',
+          'Operations status unavailable. Queue backlog is unknown. Retry to refresh; healthy operation has not been confirmed.',
         );
       }
     } finally {
@@ -179,7 +196,9 @@ export default function OperationsPage() {
             {data && (
               <>
                 <p role="status">
-                  {data.healthy ? 'Scheduled jobs healthy' : 'Scheduled jobs need attention'}
+                  {data.healthy && backlog && !backlog.needsAttention
+                    ? 'Scheduled jobs healthy'
+                    : 'Scheduled jobs need attention'}
                 </p>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
@@ -211,6 +230,61 @@ export default function OperationsPage() {
                   </table>
                 </div>
               </>
+            )}
+            {backlog && (
+              <section aria-label="Queue backlog" className="space-y-3">
+                <h2 className="text-lg font-bold">Queue backlog</h2>
+                <p role="status">
+                  {backlog.needsAttention
+                    ? 'Queue incidents need investigation'
+                    : 'No queue incidents observed'}
+                </p>
+                <p className="text-sm text-text-muted">
+                  Cleanup and notification queues. Counts stop at 1,000 per state; ≥ means at least
+                  that many. Retry and expired-lease counts cover the observed records. Due work
+                  ages from its scheduled retry time. Evidence scanning uses the job status above.
+                  This is not inbox-delivery confirmation.
+                </p>
+                <p className="text-sm">Observed: {new Date(backlog.observedAt).toLocaleString()}</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr>
+                        <th>Queue</th>
+                        <th>Queued</th>
+                        <th>Leased</th>
+                        <th>Terminal</th>
+                        <th>Retries observed</th>
+                        <th>Expired leases observed</th>
+                        <th>Oldest due</th>
+                        <th>Incidents</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {backlog.queues.map((queue) => (
+                        <tr key={queue.name}>
+                          <th scope="row">{queueLabels[queue.name]}</th>
+                          <td>{displayCount(queue.queued)}</td>
+                          <td>{displayCount(queue.leased)}</td>
+                          <td>{displayCount(queue.terminal)}</td>
+                          <td>{queue.retryingObserved.toLocaleString('en')}</td>
+                          <td>{queue.expiredLeasesObserved.toLocaleString('en')}</td>
+                          <td>
+                            {queue.oldestDueAt
+                              ? new Date(queue.oldestDueAt).toLocaleString()
+                              : 'No due work observed'}
+                          </td>
+                          <td>
+                            {queue.incidents.length
+                              ? queue.incidents.map((code) => incidentLabels[code]).join(' · ')
+                              : 'None observed'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
             )}
             {dead && (
               <section aria-label="Terminal cleanup">

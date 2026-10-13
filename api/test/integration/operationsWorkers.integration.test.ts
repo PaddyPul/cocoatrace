@@ -232,3 +232,89 @@ describe('scheduled operation ownership and audited recovery', () => {
     ).rejects.toThrow();
   });
 });
+
+describe('bounded private queue backlog observations', () => {
+  // The preceding security suite intentionally revokes admin's session. Use a
+  // separate enrolled identity; never revive that session to make reads pass.
+  let backlogAdmin: Actor;
+  beforeAll(async () => {
+    backlogAdmin = await actor(true);
+  });
+  const read = (who = backlogAdmin) =>
+    request(app).get('/operations/backlog').set('Authorization', `Bearer ${who.token}`);
+  it('denies ordinary and unauthenticated readers and rejects unknown parameters', async () => {
+    expect((await request(app).get('/operations/backlog')).status).toBe(401);
+    expect((await read(admin)).status).toBe(401);
+    expect((await read(ordinary)).status).toBe(403);
+    expect((await read().query({ organization: ordinary.organizationId })).status).toBe(400);
+  });
+  it('caps metadata probes and identifies due, retrying, expired and terminal work without changing it', async () => {
+    const keys = Array.from({ length: 1005 }, () => 'quarantine/test/' + crypto.randomUUID());
+    await query(
+      `INSERT INTO evidence_object_cleanup(object_key,organization_id,bytes,storage_provider,state,reason,attempts,next_attempt_at)
+      SELECT key,$2,100,'local','pending','upload_rejected',3,NOW()-INTERVAL '1 hour' FROM unnest($1::text[]) AS key`,
+      [keys, admin.organizationId],
+    );
+    const expired = (
+      await query(
+        `INSERT INTO evidence_object_cleanup(object_key,organization_id,bytes,storage_provider,state,reason,lease_token,lease_expires_at)
+      VALUES($1,$2,100,'local','processing','upload_rejected',$3,NOW()-INTERVAL '1 minute') RETURNING id`,
+        ['quarantine/test/' + crypto.randomUUID(), admin.organizationId, crypto.randomUUID()],
+      )
+    ).rows[0].id;
+    await dead();
+    const response = await read();
+    expect(response.status, JSON.stringify(response.body)).toBe(200);
+    expect(response.headers['cache-control']).toBe('no-store');
+    expect(response.body.queues.map((row: { name: string }) => row.name)).toEqual([
+      'cleanup',
+      'payment_reminder',
+      'recall',
+    ]);
+    const cleanup = response.body.queues.find((row: { name: string }) => row.name === 'cleanup');
+    expect(cleanup.queued).toEqual({ count: 1000, more: true });
+    // Other suites share the disposable database; this observed subset need not contain our rows.
+    expect(cleanup.retryingObserved).toBeGreaterThanOrEqual(0);
+    expect(cleanup.retryingObserved).toBeLessThanOrEqual(1000);
+    expect(cleanup.expiredLeasesObserved).toBeGreaterThanOrEqual(1);
+    expect(cleanup.incidents).toEqual(
+      expect.arrayContaining([
+        'TERMINAL_WORK_PENDING',
+        'EXPIRED_LEASE',
+        'OVERDUE_WORK',
+        'MONITOR_LIMIT_REACHED',
+      ]),
+    );
+    expect(response.body.needsAttention).toBe(true);
+    expect(JSON.stringify(response.body)).not.toMatch(
+      /object_key|organization_id|recipient|storage_provider|last_error|@/,
+    );
+    expect(
+      (await query('SELECT state FROM evidence_object_cleanup WHERE id=$1', [expired])).rows[0]
+        .state,
+    ).toBe('processing');
+    expect(
+      (
+        await query(
+          "SELECT COUNT(*)::int AS count FROM evidence_object_cleanup WHERE object_key=ANY($1::text[]) AND state='pending'",
+          [keys],
+        )
+      ).rows[0].count,
+    ).toBe(1005);
+  });
+  it('returns explicit unavailable status on a blocked probe, then recovers after the lock is released', async () => {
+    const blocker = await getClient();
+    try {
+      await blocker.query('BEGIN');
+      await blocker.query('LOCK TABLE evidence_object_cleanup IN ACCESS EXCLUSIVE MODE');
+      const blocked = await read();
+      expect(blocked.status, JSON.stringify(blocked.body)).toBe(503);
+      expect(blocked.body.code).toBe('OPERATIONS_BACKLOG_UNAVAILABLE');
+      expect(blocked.body.queues).toBeUndefined();
+    } finally {
+      await blocker.query('ROLLBACK');
+      blocker.release();
+    }
+    expect((await read()).status).toBe(200);
+  });
+});

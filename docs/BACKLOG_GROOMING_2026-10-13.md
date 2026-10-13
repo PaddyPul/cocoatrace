@@ -92,3 +92,13 @@ Use `npm run backlog:progress` for current totals. Keep accepted implementation 
 ## Subsequent implementation candidate
 
 The terminal-email recovery slice is now implemented on the feature branch; see [the handoff](releases/TERMINAL_EMAIL_RECOVERY_WINDOWS.md) for actual tests and remaining release gates. The snapshot above remains the historical grooming baseline. Broad operations items and CORE-workers remain partial; no completion counts or hosted/founder acceptance are inferred from the new candidate.
+
+
+## Subsequent candidate acceptance — 2026-10-13, 17:49 UTC
+
+Founder reports full release checks passed and terminal-email recovery merged, including the listings-summary correction. The candidate pending status above is superseded. The original grooming snapshot remains historical; broad operations gates still lack complete queue/failure monitoring, external alerts and hosted drills, so no full-item completion is added. Next: bounded queue-backlog and incident visibility. No founder SHA, CI link or main pull is inferred.
+
+
+## Queue observation candidate — 2026-10-13
+
+The next bounded queue-backlog/incident slice is implemented, with actual validation in releases/OPERATIONS_BACKLOG_WINDOWS.md. It adds no full-item closures; broader monitoring, external alerts and hosted acceptance still keep operations gates partial. Terminal-email release/merge acceptance above remains separate from this candidate.

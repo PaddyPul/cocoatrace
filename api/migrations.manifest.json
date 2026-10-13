@@ -152,6 +152,10 @@
     {
       "path": "api/src/migrations/036_operations_job_status.ts",
       "sha256": "b415dc205bf3e48b1fbb118966a78c58d82853d26a604fe08ec048c1ae1e0aea"
+    },
+    {
+      "path": "api/src/migrations/037_operations_backlog_indexes.ts",
+      "sha256": "7369641f237d6ab7efc53437f13bc4c0abbf4aef74286ccdda37edef6986effc"
     }
   ]
 }
