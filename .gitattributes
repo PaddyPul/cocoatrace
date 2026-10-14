@@ -156,3 +156,5 @@ api/src/migrations/038_operations_incident_alerts.ts text eol=lf
 api/test/integration/operationsAlerts.integration.test.ts text eol=lf
 api/scripts/operations-alerts.ts text eol=lf
 docker-compose.operations-alerts.local.yml text eol=lf
+
+api/test/integration/operationsAlertRecovery.integration.test.ts text eol=lf

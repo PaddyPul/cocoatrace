@@ -18,10 +18,14 @@ type Job = {
   consecutive_failures: number;
 };
 type Ticket = { id: string; last_error_code: string | null; attempts: number };
-type EmailQueue = 'payment_reminder' | 'recall';
+type EmailQueue = 'payment_reminder' | 'recall' | 'operator_alert';
 type EmailTicket = Ticket & { retryable: boolean };
 type Selection = Ticket & { queue: 'cleanup' | EmailQueue };
-const emailNames = { payment_reminder: 'Payment reminder', recall: 'Recall' };
+const emailNames = {
+  payment_reminder: 'Payment reminder',
+  recall: 'Recall',
+  operator_alert: 'Operator alert',
+};
 const names = ['evidence_scan', 'evidence_cleanup', 'payment_reminders', 'recall_email'];
 const unsafe = ['LIVE_EVIDENCE_REFERENCE', 'INVALID_OBJECT_KEY', 'STORAGE_PROVIDER_MISMATCH'];
 function record(value: unknown): value is Record<string, unknown> {
@@ -168,19 +172,22 @@ export default function OperationsPage() {
     const current = ++version.current;
     setLoading(true);
     try {
-      const [status, queue, payment, recall, observation, alerts] = await Promise.all([
-        api<unknown>('GET', '/operations/status'),
-        api<unknown>('GET', '/operations/cleanup/dead'),
-        api<unknown>('GET', '/operations/email/payment_reminder/dead'),
-        api<unknown>('GET', '/operations/email/recall/dead'),
-        api<unknown>('GET', '/operations/backlog'),
-        api<unknown>('GET', '/operations/alerts'),
-      ]);
+      const [status, queue, payment, recall, observation, alerts, operatorAlerts] =
+        await Promise.all([
+          api<unknown>('GET', '/operations/status'),
+          api<unknown>('GET', '/operations/cleanup/dead'),
+          api<unknown>('GET', '/operations/email/payment_reminder/dead'),
+          api<unknown>('GET', '/operations/email/recall/dead'),
+          api<unknown>('GET', '/operations/backlog'),
+          api<unknown>('GET', '/operations/alerts'),
+          api<unknown>('GET', '/operations/alerts/dead'),
+        ]);
       if (
         !statuses(status) ||
         !tickets(queue) ||
         !tickets(payment, true) ||
         !tickets(recall, true) ||
+        !tickets(operatorAlerts, true) ||
         !validBacklog(observation) ||
         !alertsValid(alerts)
       )
@@ -190,7 +197,7 @@ export default function OperationsPage() {
         setBacklog(observation);
         setAlertStatus(alerts);
         setDead(queue);
-        setEmails({ payment_reminder: payment, recall });
+        setEmails({ payment_reminder: payment, recall, operator_alert: operatorAlerts });
         setError('');
       }
     } catch {
@@ -219,7 +226,12 @@ export default function OperationsPage() {
     setSaving(true);
     setDecisionError('');
     try {
-      const path = selected.queue === 'cleanup' ? 'cleanup' : `email/${selected.queue}`;
+      const path =
+        selected.queue === 'cleanup'
+          ? 'cleanup'
+          : selected.queue === 'operator_alert'
+            ? 'alerts'
+            : `email/${selected.queue}`;
       const result = await api<unknown>('POST', `/operations/${path}/${selected.id}/retry`, {
         reason: reason.trim(),
       });
@@ -448,8 +460,9 @@ export default function OperationsPage() {
                             </button>
                           ) : (
                             <p>
-                              Recorded submission or lease requires investigation; retry
-                              unavailable.
+                              {queue === 'operator_alert'
+                                ? 'Retry unavailable: check alert configuration, the original operator, incident state, recorded submission and lease.'
+                                : 'Recorded submission or lease requires investigation; retry unavailable.'}
                             </p>
                           )}
                         </li>
@@ -480,7 +493,9 @@ export default function OperationsPage() {
                 <p className="text-sm">
                   {selected.queue === 'cleanup'
                     ? 'Investigate the incident before requeueing. The worker rechecks references and storage safety; this action cannot delete evidence directly.'
-                    : 'Correct the delivery incident before requeueing. The existing worker checks current delivery eligibility. An earlier submission may have succeeded before a crash, so retrying can duplicate email. Queueing does not confirm inbox receipt or acknowledge a recall.'}
+                    : selected.queue === 'operator_alert'
+                      ? 'Correct the alert delivery incident first. Alerts must be enabled, the original operator must still be configured and eligible, and the incident must remain open. Retry preserves the recipient and incident. An earlier SMTP submission may have succeeded, so retry can duplicate email. Queueing is not inbox receipt or incident resolution.'
+                      : 'Correct the delivery incident before requeueing. The existing worker checks current delivery eligibility. An earlier submission may have succeeded before a crash, so retrying can duplicate email. Queueing does not confirm inbox receipt or acknowledge a recall.'}
                 </p>
                 <label className="block" htmlFor="operations-recovery-explanation">
                   Recovery explanation

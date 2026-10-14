@@ -3,7 +3,7 @@ import { ConflictError, NotFoundError, ForbiddenError } from '../../errors';
 import { recordAudit, type AuditActor } from '../../services/auditWriter';
 import { assertMutationAssurance } from '../mfa/assurance';
 
-async function assertOperator(
+export async function assertOperator(
   client: PoolClient,
   actor: AuditActor & { sessionId: string },
 ): Promise<void> {
