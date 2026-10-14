@@ -1,30 +1,18 @@
-import { farmPlotCollection } from '../modules/catalog/farmPlots';
-import { farmCertificateCollection } from '../modules/catalog/certificates';
+import { privateFarmDetail } from '../modules/catalog/privateResources';
 import { legacySourceList } from '../modules/catalog/sourceRecords';
 import { withCatalogRead } from '../modules/catalog/paging';
 import { Request, Response } from 'express';
 import { query } from '../db';
 import { inTradeTransaction as inTransaction, recordTradeAudit } from '../modules/trading/transaction';
-import { hasExplicitPermission, hasFarmRelationship } from '../services/resourcePolicy';
 
 export async function listFarms(req: Request, res: Response): Promise<void> {
   res.json(await withCatalogRead(execute=>legacySourceList(execute,req.user!,'farms')));
 }
 
 export async function getFarm(req: Request, res: Response): Promise<void> {
-  const farmRes = await query('SELECT f.*, o.name as farmer_org_name FROM farms f JOIN organizations o ON o.id = f.farmer_organization_id WHERE f.id = $1', [req.params.id]);
-  if (!farmRes.rows[0]) {
-    res.status(404).json({ error: 'Farm not found' });
-    return;
-  }
-  const canSeeAll = hasExplicitPermission(req.user!, 'farm.read.all');
-  if (!canSeeAll && !await hasFarmRelationship(req.user!, req.params.id)) {
-    res.status(403).json({ error: 'Access denied' });
-    return;
-  }
-  const plotCollection = await withCatalogRead(execute=>farmPlotCollection(execute,req.params.id as string,req.query.plotMode));
-  const certificateCollection = await withCatalogRead(execute=>farmCertificateCollection(execute,req.user!,req.params.id as string,req.query.certificateMode));
-  res.json({ farm: farmRes.rows[0], ...plotCollection, ...certificateCollection });
+  const detail = await withCatalogRead(execute => privateFarmDetail(execute,req.user!,req.params.id as string,req.query));
+  if (!detail) { res.status(404).json({error:'Farm not found'}); return; }
+  res.json(detail);
 }
 
 export async function createFarm(req: Request, res: Response): Promise<void> {

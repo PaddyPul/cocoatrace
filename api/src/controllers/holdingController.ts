@@ -1,34 +1,17 @@
+import { privateHoldingDetail } from '../modules/catalog/privateResources';
 import { legacyHoldingList } from '../modules/catalog/repository';
 import { legacyTransferList } from '../modules/catalog/transfers';
 import { withCatalogRead } from '../modules/catalog/paging';
-import { lockRecallBoundary, assertBatchNotRecalled, activeBatchRecallSql } from '../modules/recall/safety';
+import { lockRecallBoundary, assertBatchNotRecalled } from '../modules/recall/safety';
 import { Request, Response } from 'express';
 import { query, getClient } from '../db';
 import { recordTradeAudit } from '../modules/trading/transaction';
 import { lockHoldingListings, pendingTransferQuantity, reconcileHoldingListings } from '../services/inventoryIntegrity';
 
 export async function getHolding(req: Request, res: Response): Promise<void> {
-  const { rows } = await query(
-    `SELECT h.*, ${activeBatchRecallSql('h.batch_id')} AS "activeRecall", b.crop, b.harvest_date, b.organic_claim_status, b.grade, b.farm_id, b.source_mode, b.source_name, b.source_country, b.source_region, f.name as farm_name, b.quantity_kg as batch_quantity
-     FROM batch_holdings h
-     JOIN harvest_batches b ON b.id = h.batch_id
-     LEFT JOIN farms f ON f.id = b.farm_id
-     WHERE h.id = $1 AND h.holder_organization_id = $2`,
-    [req.params.id, req.user!.organizationId]
-  );
-  if (!rows[0]) {
-    res.status(404).json({ error: 'Holding not found' });
-    return;
-  }
-  const batchRes = await query(
-    `SELECT b.*, f.name as farm_name, o.name as holder_name
-     FROM harvest_batches b
-     LEFT JOIN farms f ON f.id = b.farm_id
-     JOIN organizations o ON o.id = b.current_holder_id
-     WHERE b.id = $1`,
-    [rows[0].batch_id]
-  );
-  res.json({ holding: rows[0], batch: batchRes.rows[0] || null });
+  const detail = await withCatalogRead(execute => privateHoldingDetail(execute,req.user!,req.params.id as string));
+  if (!detail) { res.status(404).json({error:'Holding not found'}); return; }
+  res.json(detail);
 }
 
 export async function listHoldings(req: Request, res: Response): Promise<void> {

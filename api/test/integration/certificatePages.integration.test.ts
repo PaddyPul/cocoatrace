@@ -129,7 +129,7 @@ describe('certificate pages and full recorded-state counts', () => {
       400,
     );
     const id = page.body.items[0].id;
-    expect((await get('/certificates/' + id, {}, other)).status).toBe(403);
+    expect((await get('/certificates/' + id, {}, other)).status).toBe(404);
     await query("UPDATE organic_certificates SET status='suspended' WHERE id=$1", [id]);
     const suspended = await get('/certificates/page', { status: 'suspended' });
     expect(suspended.status).toBe(200);

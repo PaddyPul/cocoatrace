@@ -107,7 +107,7 @@ describe('source detail collections', () => {
       ),
     ).toEqual([late]);
     expect((await get(`/farms/${farm}/plots/summary`)).body.count).toBe(1005);
-    expect((await get(`/farms/${farm}/plots/page`, {}, other)).status).toBe(403);
+    expect((await get(`/farms/${farm}/plots/page`, {}, other)).status).toBe(404);
     expect(
       (
         await get(`/farms/${farm}/plots/page`, {

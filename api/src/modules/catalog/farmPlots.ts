@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { AppError, ForbiddenError, NotFoundError, ValidationError } from '../../errors';
+import { AppError, NotFoundError, ValidationError } from '../../errors';
 import { Actor, hasExplicitPermission, hasFarmRelationship } from '../../services/resourcePolicy';
 import { Execute, literal, pageResult, parsePage, withCatalogRead } from './paging';
 async function authorize(execute: Execute, actor: Actor, farmId: string) {
@@ -11,7 +11,7 @@ async function authorize(execute: Execute, actor: Actor, farmId: string) {
     !hasExplicitPermission(actor, 'farm.read.all') &&
     !(await hasFarmRelationship(actor, farmId, execute))
   )
-    throw new ForbiddenError('Farm access denied');
+    throw new NotFoundError('Farm');
 }
 export async function plotPage(
   execute: Execute,

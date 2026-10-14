@@ -144,7 +144,7 @@ At the initial review, direct contract handlers were party-scoped and indirect p
 
 ## Unauthorized-resource response policy
 
-Entry-boundary policy is explicit in the current candidate: missing/invalid session credentials receive 401; a live session lacking a declared route permission receives 403 before parameter/body validation. The access-review endpoints now enforce their existing wildcard-administrator policy at that boundary, while keeping service checks. The added recall response case requires indistinguishable 404 responses for foreign and absent notices. Universal resource-existence conventions still remain open under SEC-006.
+Entry-boundary policy is explicit in the current candidate: missing/invalid session credentials receive 401; a live session lacking a declared route permission receives 403 before parameter/body validation. The access-review endpoints now enforce their existing wildcard-administrator policy at that boundary, while keeping service checks. The added recall response case requires indistinguishable 404 responses for foreign and absent notices. The next source-resource candidate also defines indistinguishable foreign/absent 404 for private farm, farm-plot page/summary, batch, certificate and holding lookups. Direct resource UUID validation follows entry guards; policy and metadata/collections share one bounded snapshot. Session middleware defaults private responses and denials to no-store. Other resource-existence conventions remain open under SEC-006. See SOURCE_RESOURCE_BOUNDARIES_2026-10-14.md; native acceptance is pending for that candidate.
 
 For the remaining resource-level cases:
 

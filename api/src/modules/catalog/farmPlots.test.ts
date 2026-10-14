@@ -20,11 +20,11 @@ describe('bounded farm plots', () => {
     expect(execute.mock.calls.at(-1)?.[0]).toContain('ORDER BY id LIMIT $5::int');
     expect(execute.mock.calls).toHaveLength(3);
   });
-  it('denies unrelated farms before plot reads', async () => {
+  it('hides unrelated farms before plot reads', async () => {
     const execute = vi.fn().mockImplementation(async (sql: string) => ({
       rows: sql.includes('SELECT EXISTS') ? [{ allowed: false }] : [{ id }],
     }));
-    await expect(plotPage(execute, actor, id, {})).rejects.toMatchObject({ statusCode: 403 });
+    await expect(plotPage(execute, actor, id, {})).rejects.toMatchObject({ statusCode: 404 });
     expect(execute).toHaveBeenCalledTimes(2);
   });
   it('validates search and totals and never uses generic analytics as a read-all grant', async () => {

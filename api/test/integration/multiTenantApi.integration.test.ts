@@ -263,8 +263,8 @@ describe('real PostgreSQL multi-tenant API boundary', () => {
       const response = await request(app)
         .get(`/farms/${otherTenant.farmId}`)
         .set('Authorization', `Bearer ${actor.token}`);
-      expect(response.status).toBe(403);
-      expect(response.body).toEqual({ error: 'Access denied' });
+      expect(response.status).toBe(404);
+      expect(response.body).toEqual({ error: 'Farm not found' });
     },
   );
 
@@ -313,7 +313,7 @@ describe('real PostgreSQL multi-tenant API boundary', () => {
       expect(JSON.stringify(ownBatch.body.evidence)).not.toContain('storage_path');
 
       const foreignBatch = await request(app).get(`/batches/${otherTenant.batchId}`).set('Authorization', `Bearer ${actor.token}`);
-      expect(foreignBatch.status).toBe(403);
+      expect(foreignBatch.status).toBe(404);
 
       const lots = await request(app).get('/traceability/lots').set('Authorization', `Bearer ${actor.token}`);
       expect(lots.status).toBe(200);
@@ -342,7 +342,7 @@ describe('real PostgreSQL multi-tenant API boundary', () => {
       expect(list.status).toBe(200);
       expect(list.body.map((certificate: { id: string }) => certificate.id)).not.toContain(otherTenant.certificateId);
       const direct = await request(app).get(`/certificates/${otherTenant.certificateId}`).set('Authorization', `Bearer ${actor.token}`);
-      expect(direct.status).toBe(403);
+      expect(direct.status).toBe(404);
     },
   );
 

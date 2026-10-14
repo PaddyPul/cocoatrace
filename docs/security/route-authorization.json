@@ -56,21 +56,25 @@
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
     "api/src/routes/batches.ts": {
-      "scope": "Batch/attestation reads and writes enforce owned/held/assigned/trade relationships; explicit network permissions remain distinct. Source and certificate scope must match.",
+      "scope": "Batch/attestation reads and writes enforce owned/held/assigned/trade relationships; explicit network permissions remain distinct. Source and certificate scope must match. Private direct reads now hide foreign and absent IDs with the same 404 and use one bounded snapshot; malformed UUIDs are rejected after entry guards.",
       "evidence": [
         "api/src/controllers/batchController.ts",
         "api/src/services/resourcePolicy.ts",
         "api/test/integration/multiTenantApi.integration.test.ts",
-        "api/test/integration/sourceRecordsPagination.integration.test.ts"
+        "api/test/integration/sourceRecordsPagination.integration.test.ts",
+        "api/src/modules/catalog/privateResources.ts",
+        "api/test/integration/sourceResourceBoundary.integration.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
     "api/src/routes/certificates.ts": {
-      "scope": "Issuer, subject, assigned or trade-related certificate scope; issue/status authority belongs to issuer and subject farm/crop/harvest integrity is enforced.",
+      "scope": "Issuer, subject, assigned or trade-related certificate scope; issue/status authority belongs to issuer and subject farm/crop/harvest integrity is enforced. Private direct reads now hide foreign and absent IDs with the same 404 and use one bounded snapshot; malformed UUIDs are rejected after entry guards.",
       "evidence": [
         "api/src/controllers/certificateController.ts",
         "api/test/integration/multiTenantApi.integration.test.ts",
-        "api/test/integration/certificatePages.integration.test.ts"
+        "api/test/integration/certificatePages.integration.test.ts",
+        "api/src/modules/catalog/privateResources.ts",
+        "api/test/integration/sourceResourceBoundary.integration.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
@@ -95,11 +99,13 @@
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
     "api/src/routes/farms.ts": {
-      "scope": "Own source creation; farm and exact-plot reads are tenant/assignment scoped or require explicit network permission. Marketplace origin never authorizes private coordinates.",
+      "scope": "Own source creation; farm and exact-plot reads are tenant/assignment scoped or require explicit network permission. Marketplace origin never authorizes private coordinates. Private direct reads now hide foreign and absent IDs with the same 404 and use one bounded snapshot; malformed UUIDs are rejected after entry guards.",
       "evidence": [
         "api/src/controllers/farmController.ts",
         "api/test/integration/multiTenantApi.integration.test.ts",
-        "api/test/integration/sourceDetailCollections.integration.test.ts"
+        "api/test/integration/sourceDetailCollections.integration.test.ts",
+        "api/src/modules/catalog/privateResources.ts",
+        "api/test/integration/sourceResourceBoundary.integration.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
@@ -112,11 +118,13 @@
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
     "api/src/routes/holdings.ts": {
-      "scope": "Holdings belong to current holder; source/destination transfer views are scoped, acceptance belongs to destination and split/transfer changes are transactional.",
+      "scope": "Holdings belong to current holder; source/destination transfer views are scoped, acceptance belongs to destination and split/transfer changes are transactional. Private direct reads now hide foreign and absent IDs with the same 404 and use one bounded snapshot; malformed UUIDs are rejected after entry guards.",
       "evidence": [
         "api/src/controllers/holdingController.ts",
         "api/test/integration/tradingIntegrity.integration.test.ts",
-        "api/test/integration/catalogPagination.integration.test.ts"
+        "api/test/integration/catalogPagination.integration.test.ts",
+        "api/src/modules/catalog/privateResources.ts",
+        "api/test/integration/sourceResourceBoundary.integration.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
