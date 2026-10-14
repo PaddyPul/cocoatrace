@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth } from '../../middleware/auth';
+import { requireAuth, requirePermission } from '../../middleware/auth';
 import { sensitiveActionLimit } from '../../middleware/security';
 import validate from '../../middleware/validate';
 import { OrganizationAccessController } from './controller';
@@ -24,18 +24,25 @@ export function organizationAccessRoutes(controller: OrganizationAccessControlle
     validate(verifyOrganizationAccessSchema),
     controller.verifyEmail,
   );
-  router.get('/access-applications/page', requireAuth, controller.page);
-  router.get('/access-applications/summary', requireAuth, controller.summary);
-  router.get('/access-applications', requireAuth, controller.list);
+  router.get('/access-applications/page', requireAuth, requirePermission('*'), controller.page);
+  router.get(
+    '/access-applications/summary',
+    requireAuth,
+    requirePermission('*'),
+    controller.summary,
+  );
+  router.get('/access-applications', requireAuth, requirePermission('*'), controller.list);
   router.get(
     '/access-applications/:id',
     requireAuth,
+    requirePermission('*'),
     validate(organizationAccessIdSchema, 'params'),
     controller.detail,
   );
   router.post(
     '/access-applications/:id/approve',
     requireAuth,
+    requirePermission('*'),
     validate(organizationAccessIdSchema, 'params'),
     validate(reviewOrganizationAccessSchema),
     controller.approve,
@@ -43,6 +50,7 @@ export function organizationAccessRoutes(controller: OrganizationAccessControlle
   router.post(
     '/access-applications/:id/reject',
     requireAuth,
+    requirePermission('*'),
     validate(organizationAccessIdSchema, 'params'),
     validate(reviewOrganizationAccessSchema),
     controller.reject,

@@ -112,3 +112,8 @@ The founder reported the queue-backlog workflow done on 2026-10-13 after correct
 ## Subsequent checkpoint — operator alerts and reviewed recovery, 2026-10-14
 
 The founder reports the operator-alert workflow done. That default-off engineering slice is now recorded as founder accepted, without claiming externally verified CI, inbox delivery or hosted incident ownership. The next candidate adds reviewed terminal-operator-alert recovery using fresh assurance, locked current eligibility and atomic audit, with no full-item completion credit. OPS-006/OPS-010/ARC-014 and related gates remain partial. Counts remain roadmap 88/343 (25.7%), core 11/28 (39.3%), provider-inclusive 11/40 (27.5%). After this candidate is accepted, prioritize the authorization/resource evidence matrix; deployment and incident-owner evidence remain distinct.
+
+
+## Subsequent checkpoint — authorization entry-point evidence, 2026-10-14
+
+The founder confirms reviewed operator-alert recovery release/merge/pull at 12:19 UTC; record that slice as accepted. The next candidate maps all 195 explicit entry points, links existing policy/resource-family regressions, checks 178 credential boundaries and supplies 155 native no-permission cases. SEC-006 and QLT-002 move from open to IN PROGRESS without fractional completion credit. Universal resource/foreign-ID/role-union/suspension acceptance and hosted security remain open. Closed-item totals remain 88/343 (25.7%), core 11/28 (39.3%), provider-inclusive 11/40 (27.5%). The older grooming table remains its dated baseline snapshot.

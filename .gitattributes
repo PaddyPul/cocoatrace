@@ -158,3 +158,12 @@ api/scripts/operations-alerts.ts text eol=lf
 docker-compose.operations-alerts.local.yml text eol=lf
 
 api/test/integration/operationsAlertRecovery.integration.test.ts text eol=lf
+
+scripts/authorization-register.mjs text eol=lf
+scripts/authorization-register.test.mjs text eol=lf
+scripts/check-authorization.mjs text eol=lf
+api/test/integration/authorizationRoutes.integration.test.ts text eol=lf
+api/src/modules/organizationAccess/routes.ts text eol=lf
+docs/security/route-authorization.json text eol=lf
+
+api/src/testing/authorizationRoutes.test.ts text eol=lf

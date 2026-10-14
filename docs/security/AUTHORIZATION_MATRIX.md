@@ -1,10 +1,10 @@
-# CocoaTrace authorization matrix
+# BetterTrade authorization matrix
 
-Status: approved authorization contract for Phase 1 implementation  
-Last reviewed: 2026-09-29  
-Backlog owner: SEC-001
+Status: maintained policy contract; universal route/resource acceptance remains partial
+Last reviewed: 2026-10-14
+Backlog references: SEC-001, SEC-006, QLT-002
 
-This document defines who may perform each operation and the tenant or relationship scope that must be enforced by the API. The SEC-002 through SEC-005 and UPL-001 remediations are implemented on the security-boundary branch and await a green real-PostgreSQL regression run before their backlog items close. SEC-006 remains open before a production pilot.
+The earlier source/evidence isolation repairs and identity/transport/operations slices have founder-reported acceptance recorded in DELIVERY_BACKLOG.md. Do not treat the historical findings below as current unpatched disclosures. The 2026-10-14 candidate adds a checked [route register](route-authorization.json) and [review notes](ROUTE_SECURITY_REVIEW_2026-10-14.md): 195 explicit routes, 178 session-protected, 155 with declared permission gates. Authentication/entry-guard coverage is distinct from every resource/role/foreign-ID combination; QLT-002 and SEC-006 remain IN PROGRESS. Hosted ingress, secrets, storage and professional review remain separate gates.
 
 ## Security principles
 
@@ -118,9 +118,9 @@ The following permissions are distinct from their ordinary tenant-bounded counte
 
 The existing `*` permission remains platform-administrator-only. No ordinary permission such as `batch.read`, `certificate.read`, `audit.read`, `offer.create` or `shipment.update` may be used as a proxy for any permission in this table.
 
-## Confirmed security review findings
+## Historical security review findings — 2026-09-29
 
-The findings below were confirmed in the 2026-09-29 review. Findings covered by SEC-002 through SEC-005 and UPL-001 have implemented repairs and negative PostgreSQL regressions pending a green run. Public-field policy, session revocation and other findings outside that scope remain open under their own backlog items. Historical evidence is retained so future changes do not reintroduce repaired defects.
+The original review below is retained as historical evidence for regression prevention. Initial SEC-002 through SEC-005 and UPL-001 repairs, later session/passkey, privacy and resource-scope implementation are recorded as accepted in the delivery backlog. These original file line references describe the reviewed revision and are not current-source pointers. Use the checked register's policy/test references for current source. This is not an assertion that all remaining security work is complete.
 
 | Severity | Defect | Evidence |
 |---|---|---|
@@ -140,13 +140,13 @@ The findings below were confirmed in the 2026-09-29 review. Findings covered by 
 | Medium | Certificate creation does not prove that `farmerOrganizationId` owns `farmId`; attestation does not validate farmer organization or crop scope. | `api/src/controllers/certificateController.ts:44-49`; `api/src/controllers/batchController.ts:198-217` |
 | Medium | JWTs carry organization and permissions for 24 hours without an account, organization, session or role-status recheck, delaying revocation. | `api/src/middleware/auth.ts:27-40,44-67` |
 
-Direct contract handlers are currently party-scoped in `api/src/controllers/contractController.ts:136-252`. The confirmed contract disclosure is indirect through provenance and evidence/static-file paths. Negative tests must preserve the direct party checks while those indirect paths are repaired.
+At the initial review, direct contract handlers were party-scoped and indirect provenance/evidence paths were the identified disclosure route. The later repairs and negative regressions are tracked in the delivery backlog; preserve those party checks while extending coverage.
 
 ## Unauthorized-resource response policy
 
-The consistent `403` versus non-disclosing `404` decision remains open under SEC-006.
+Entry-boundary policy is explicit in the current candidate: missing/invalid session credentials receive 401; a live session lacking a declared route permission receives 403 before parameter/body validation. The access-review endpoints now enforce their existing wildcard-administrator policy at that boundary, while keeping service checks. The added recall response case requires indistinguishable 404 responses for foreign and absent notices. Universal resource-existence conventions still remain open under SEC-006.
 
-Until that decision is recorded:
+For the remaining resource-level cases:
 
 - policies must deny access regardless of which status is returned;
 - tests should assert that no protected data or state change occurs, then use a shared response-policy helper once selected;
@@ -189,7 +189,7 @@ SEC-006 must choose one documented convention per endpoint class and update the 
 
 ## Completion boundaries
 
-SEC-001 is complete when this matrix is maintained in the repository. SEC-002 through SEC-005 and UPL-001 remain in progress until the implemented real-PostgreSQL regressions pass. SEC-006 remains open until the response policy is decided and tested.
+SEC-001 is recorded complete and remains maintained. Accepted SEC-002 through SEC-005 and UPL-001 repairs are recorded in the delivery backlog. SEC-006 and QLT-002 remain IN PROGRESS: the current candidate checks entry guards and links policy/regression evidence, but does not prove every foreign-ID, multi-role, suspension or resource-existence response combination.
 
 ## Recall response boundary (RCL-003–RCL-007)
 
