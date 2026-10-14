@@ -215,3 +215,6 @@ Every response mutation is recorded through the strict transactional trade audit
 | Suspend current/other privileged organization or member | Denied 409; separate privileged recovery required | Denied | Denied |
 
 Access flags are independent of verification/deactivation. Restoring an organization does not restore suspended members or revoked credentials. Scope and adversarial tests: accessSuspension.integration.test.ts; browser admin flow: accessSuspension.spec.ts. MFA and privileged recovery remain pilot blockers; new-request revocation does not abort requests already authorized before the suspension commit.
+
+
+2026-10-14 pending-offer candidate adds buyer withdrawal: checked inventory now196 explicit routes,179 session-protected,156 declared permission gates. Buyer ownership is rechecked under the same inventory lock order as acceptance; new route UUID validation follows entry guards. Seller rejection reason is atomically audited and party-scoped in offer history. Broader resource/field acceptance remains partial.

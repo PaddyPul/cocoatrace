@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { config } from '../../config/env';
 import { AppError, ValidationError } from '../../errors';
 import { type Execute, literal, pageResult, parsePage, text, withCatalogRead } from './paging';
-const select = `SELECT t.*, COALESCE(cs.currency_minor_units,CASE WHEN t.currency='JPY' THEN 0 ELSE 2 END) AS currency_minor_units, ROUND(t.quantity_kg*t.offered_price_per_kg,COALESCE(cs.currency_minor_units,CASE WHEN t.currency='JPY' THEN 0 ELSE 2 END)) AS trade_value, $2::int AS platform_fee_rate_bps,ROUND(t.quantity_kg*t.offered_price_per_kg*$2::integer/10000,COALESCE(cs.currency_minor_units,CASE WHEN t.currency='JPY' THEN 0 ELSE 2 END)) AS platform_fee_estimate,'seller' AS platform_fee_payer, l.seller_organization_id, l.origin_location, l.destination_location,
+const select = `SELECT t.*, (SELECT a.metadata->>'reason' FROM audit_events a WHERE a.entity_type='trade_offer' AND a.entity_id=t.id AND a.action='offer.reject' ORDER BY a.occurred_at,a.id LIMIT 1) AS rejection_reason, COALESCE(cs.currency_minor_units,CASE WHEN t.currency='JPY' THEN 0 ELSE 2 END) AS currency_minor_units, ROUND(t.quantity_kg*t.offered_price_per_kg,COALESCE(cs.currency_minor_units,CASE WHEN t.currency='JPY' THEN 0 ELSE 2 END)) AS trade_value, $2::int AS platform_fee_rate_bps,ROUND(t.quantity_kg*t.offered_price_per_kg*$2::integer/10000,COALESCE(cs.currency_minor_units,CASE WHEN t.currency='JPY' THEN 0 ELSE 2 END)) AS platform_fee_estimate,'seller' AS platform_fee_payer, l.seller_organization_id, l.origin_location, l.destination_location,
             buyer.name as buyer_name, seller.name as seller_name
 `;
 const from = `FROM trade_offers t
@@ -17,7 +17,7 @@ export function offerFilters(parameters: Record<string, unknown>) {
   const status = text(parameters.status, 'offer status', 12) || 'all';
   if (!['all', 'received', 'sent'].includes(direction))
     throw new ValidationError('Invalid offer direction');
-  if (!['all', 'pending', 'accepted', 'rejected', 'expired'].includes(status))
+  if (!['all', 'pending', 'accepted', 'rejected', 'expired', 'cancelled'].includes(status))
     throw new ValidationError('Invalid offer status');
   return { direction, status };
 }

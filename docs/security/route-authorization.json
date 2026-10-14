@@ -79,7 +79,7 @@
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
     "api/src/routes/contracts.ts": {
-      "scope": "Offers are buyer/seller scoped; contract mutations recheck contract party and specific buyer/seller action, payment gates, delivery/cancellation and atomic audit. Direct detail reads are buyer/seller scoped even for wildcard actors; foreign and absent records share 404, UUID validation follows entry guards, and linked detail data uses one bounded snapshot.",
+      "scope": "Offers are buyer/seller scoped; contract mutations recheck contract party and specific buyer/seller action, payment gates, delivery/cancellation and atomic audit. Direct detail reads are buyer/seller scoped even for wildcard actors; foreign and absent records share 404, UUID validation follows entry guards, and linked detail data uses one bounded snapshot. Pending offers can be withdrawn only by the buyer; seller rejection requires a bounded reason recorded atomically in audit. Terminal decisions share inventory lock order.",
       "evidence": [
         "api/src/controllers/contractController.ts",
         "api/test/integration/tradingIntegrity.integration.test.ts",
@@ -87,7 +87,11 @@
         "api/test/integration/cancellation.integration.test.ts",
         "api/src/controllers/contractReadBoundary.test.ts",
         "api/src/services/tradeActionRepository.ts",
-        "api/test/integration/paymentWorkflow.integration.test.ts"
+        "api/test/integration/paymentWorkflow.integration.test.ts",
+        "api/src/modules/trading/withdrawOffer.ts",
+        "api/src/modules/trading/withdrawOffer.test.ts",
+        "api/src/modules/trading/rejectOffer.test.ts",
+        "api/test/integration/offerWithdrawal.integration.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
@@ -3202,6 +3206,25 @@
       ],
       "entryControls": [],
       "handler": "contractController.rejectOffer",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/offers/:id/withdraw",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "offer.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "withdrawOffer",
       "authentication": "session"
     },
     {

@@ -1,3 +1,4 @@
+import PilotLimitationsPage from './pages/PilotLimitationsPage';
 import EvidenceContributionPage from './pages/EvidenceContributionPage';
 import PasskeysPage from './pages/PasskeysPage';
 import { LanguageProvider } from './i18n/LanguageProvider';
@@ -95,6 +96,7 @@ export default function App() {
           <Route path="/demo" element={webConfig.demoMode ? <ProtectedRoute><InvestorDemoPage /></ProtectedRoute> : <Navigate to="/home" replace />} />
           <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
+          <Route path="/pilot/limitations" element={<ProtectedRoute><PilotLimitationsPage /></ProtectedRoute>} />
           <Route path="/pilot" element={<ProtectedRoute><PilotTeamPage /></ProtectedRoute>} />
           <Route path="/marketplace" element={<ProtectedRoute><MarketplacePage /></ProtectedRoute>} />
           <Route path="/listing/:id" element={<ProtectedRoute><ListingDetailPage /></ProtectedRoute>} />

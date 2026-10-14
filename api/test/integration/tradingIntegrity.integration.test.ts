@@ -165,9 +165,49 @@ describe('real PostgreSQL trading inventory integrity', () => {
   it('does not allow rejection to rewrite an accepted offer', async () => {
     const s = await supply(); const id = await offer(await listing(s));
     expect((await accept(id)).status).toBe(200);
-    const rejected = await request(app).post(`/offers/${id}/reject`).set('Authorization', `Bearer ${seller.token}`);
+    const rejected = await request(app).post(`/offers/${id}/reject`).set('Authorization', `Bearer ${seller.token}`).send({ reason: 'Delivery terms do not match' });
     expect(rejected.status).toBe(409);
     expect((await query('SELECT status FROM trade_offers WHERE id=$1', [id])).rows[0].status).toBe('accepted');
+  });
+
+  it('requires seller explanation, records it once atomically and shows it only to the two parties', async () => {
+    const stock = await supply(); const id = await offer(await listing(stock));
+    const reject = (principal: Actor, reason?: string) => request(app).post(`/offers/${id}/reject`)
+      .set('Authorization', `Bearer ${principal.token}`).send(reason === undefined ? {} : { reason });
+    for (const reason of [undefined, '   ', 'x'.repeat(1001)]) expect((await reject(seller, reason)).status).toBe(400);
+    expect((await reject(buyer, 'Buyer cannot reject')).status).toBe(403);
+    expect((await reject(outsider, 'Unrelated organization')).status).toBe(403);
+    const responses = await Promise.all([reject(seller, '  Delivery terms do not match  '), reject(seller, 'Competing reason')]);
+    expect(responses.map(response => response.status).sort()).toEqual([200, 409]);
+    const reason = responses.find(response => response.status === 200)!.body.rejection_reason;
+    const audit = await query("SELECT metadata FROM audit_events WHERE entity_type='trade_offer' AND entity_id=$1 AND action='offer.reject'", [id]);
+    expect(audit.rows).toEqual([{ metadata: { reason } }]);
+    expect((await reject(seller, 'Replacement reason')).status).toBe(409);
+    for (const principal of [seller, buyer]) {
+      const page = await request(app).get('/offers/page').query({ search: id }).set('Authorization', `Bearer ${principal.token}`);
+      expect(page.status, JSON.stringify(page.body)).toBe(200);
+      expect(page.body.items).toHaveLength(1);
+      expect(page.body.items[0].rejection_reason).toBe(reason);
+    }
+    const foreign = await request(app).get('/offers/page').query({ search: id }).set('Authorization', `Bearer ${outsider.token}`);
+    expect(foreign.status).toBe(200); expect(foreign.body.items).toEqual([]);
+    expect(await contractCounts(stock)).toEqual({ contracts: 0, payments: 0, shipments: 0, fees: 0 });
+    await conserved(stock);
+  });
+
+  it('rolls seller rejection back when its immutable audit cannot be inserted', async () => {
+    const stock = await supply(); const id = await offer(await listing(stock));
+    const trigger = `reject_fail_${crypto.randomUUID().replaceAll('-', '')}`;
+    await query(`CREATE FUNCTION ${trigger}() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action='offer.reject' AND NEW.entity_id='${id}'::uuid THEN RAISE EXCEPTION 'injected rejection audit failure'; END IF; RETURN NEW; END $$`);
+    await query(`CREATE TRIGGER ${trigger} BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION ${trigger}()`);
+    try {
+      const response = await request(app).post(`/offers/${id}/reject`).set('Authorization', `Bearer ${seller.token}`).send({ reason: 'Cannot meet requested delivery' });
+      expect(response.status).toBe(500);
+      expect((await query('SELECT status FROM trade_offers WHERE id=$1', [id])).rows[0].status).toBe('pending');
+    } finally {
+      await query(`DROP TRIGGER ${trigger} ON audit_events`); await query(`DROP FUNCTION ${trigger}()`);
+    }
+    await conserved(stock);
   });
 
   it('rolls back inventory, offer and every fulfillment record when a downstream insert fails', async () => {

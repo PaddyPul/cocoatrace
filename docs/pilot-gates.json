@@ -8,7 +8,7 @@
       "status": "partial",
       "title": "Current release passes every gate on the candidate commit",
       "backlog": ["QLT-001", "SEC-014", "LNG-001"],
-      "evidence": "Founder reports prescribed release/merge/correction workflow completion through 2026-10-13. This is local founder-report acceptance; exact founder candidate report/CI URL and hosted staging archive have not been retrieved. Keep gate partial until independently reviewable candidate evidence is attached. A later code candidate needs its own release report."
+      "evidence": "Founder reports prescribed release/merge/correction workflow completion through 2026-10-13. This is local founder-report acceptance; exact founder candidate report/CI URL and hosted staging archive have not been retrieved. Keep gate partial until independently reviewable candidate evidence is attached. A later code candidate needs its own release report. Founder reports the four-outcome security/architecture release pass and merge/pull completed2026-10-14 at20:25UTC; that engineering slice is accepted. Its exact founder SHA/CI URL was not provided. Current offer-lifecycle candidate still requires its own release report."
     },
     {
       "id": "CORE-isolation",

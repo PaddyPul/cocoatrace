@@ -137,3 +137,13 @@ Contract/payment/shipment direct reads are scoped to current buyer/seller partie
 ## 2026-10-14 19:38 UTC closure batch
 
 Founder reports trade-boundary release/merge complete; slice accepted without inventing a final founder SHA or CI URL. Larger next bundle targets complete SEC-009/015 and ARC-016/017 outcomes, plus partial SEC-019 policy work. Rows remain IN PROGRESS until integrated acceptance. Accepted count 88/343 (25.7%); four target closures yield 92/343 (26.8%), with pilot gate counts unchanged. See releases/SECURITY_ARCHITECTURE_CLOSURE_WINDOWS.md for one combined workflow and explicit closure evidence. No hosted/private intake acceptance is inferred.
+
+
+## 2026-10-14 20:25 UTC accepted closures
+
+Founder reports security/architecture release pass and merge/pull completed. Mark SEC-009/015 and ARC-016/017 complete: 92/343 (26.8%). SEC-019 remains partial; core/provider counts unchanged. Exact founder SHA and external CI URL not supplied in this acknowledgement. Next coherent batch combines pending-offer lifecycle, explicit external negotiation, customer limitations and release/deprecation conventions.
+
+
+## Six-outcome offer/pilot candidate — 2026-10-14
+
+TRD-010/011/012 plus GOV-007/009/010 are supplied in one closure candidate. Current accepted total92/343 (26.8%); all six accepted yields98/343 (28.6%). No partial credit or hosted-gate completion is taken. UI and native regressions accompany the payment/stock-safe offer transitions; policy publication is distinct from operating a production release. Review releases/OFFER_LIFECYCLE_CLOSURE_WINDOWS.md and its PR description before acceptance.
