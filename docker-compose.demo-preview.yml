@@ -32,6 +32,8 @@ services:
       APP_ENV: demo
       NODE_ENV: production
       DEMO_MODE: "true"
+      OPERATIONS_ALERTS_ENABLED: "false"
+      OPERATIONS_ALERT_RECIPIENT_USER_IDS: ""
       DEMO_PREVIEW_ENABLED: "true"
       DATABASE_URL: postgresql://preview:${PREVIEW_DB_PASSWORD}@postgres:5432/cocoatrace_demo_preview
       JWT_SECRET: ${PREVIEW_JWT_SECRET:?Use preview runner}

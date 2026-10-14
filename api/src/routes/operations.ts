@@ -12,6 +12,7 @@ import {
 } from '../modules/operations/recovery';
 import { AppError, ValidationError } from '../errors';
 
+import { readAlertStatus } from '../modules/operations/alerts';
 import { readQueueBacklog } from '../modules/operations/backlog';
 
 const router = Router();
@@ -23,6 +24,25 @@ router.get('/operations/status', async (_req, res, next) => {
     );
     res.setHeader('Cache-Control', 'no-store');
     res.json({ healthy: statusHealthy(jobs.rows), jobs: jobs.rows });
+  } catch (error) {
+    next(error);
+  }
+});
+router.get('/operations/alerts', async (req, res, next) => {
+  try {
+    if (Object.keys(req.query).length) throw new ValidationError('Unknown alert status parameter');
+    let result;
+    try {
+      result = await readAlertStatus();
+    } catch {
+      throw new AppError(
+        'Operator alert status unavailable.',
+        503,
+        'OPERATIONS_ALERTS_UNAVAILABLE',
+      );
+    }
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(result);
   } catch (error) {
     next(error);
   }

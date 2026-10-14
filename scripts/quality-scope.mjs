@@ -1,5 +1,9 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/scripts/operations-alerts.ts',
+  'docker-compose.operations-alerts.local.yml',
+  'api/test/integration/operationsAlerts.integration.test.ts',
+  'api/src/migrations/038_operations_incident_alerts.ts',
   'web/src/components/operations/**/*.ts',
   'api/src/migrations/037_operations_backlog_indexes.ts',
   'api/test/integration/operationsEmailRecovery.integration.test.ts',

@@ -156,6 +156,10 @@
     {
       "path": "api/src/migrations/037_operations_backlog_indexes.ts",
       "sha256": "7369641f237d6ab7efc53437f13bc4c0abbf4aef74286ccdda37edef6986effc"
+    },
+    {
+      "path": "api/src/migrations/038_operations_incident_alerts.ts",
+      "sha256": "76b1257fb757c9b929bbd75dfc326cfc40c5872ed9d0302f3d9b8c124834a2db"
     }
   ]
 }

@@ -5,7 +5,7 @@ import tls from 'tls';
 import { config } from '../config/env';
 import logger from '../logger';
 
-export type IdentityEmailCategory = 'email_verification' | 'invitation' | 'password_reset' | 'recall' | 'payment_reminder';
+export type IdentityEmailCategory = 'email_verification' | 'invitation' | 'password_reset' | 'recall' | 'payment_reminder' | 'operations_alert';
 
 export type EmailMessage = Readonly<{
   to: string | readonly string[];
@@ -237,7 +237,7 @@ export class SmtpEmailSender implements EmailSender {
       const accepted = await readResponse(socket, state, timeout);
       if (accepted.code !== 250) throw new Error(`SMTP message was rejected with status ${accepted.code}`);
       await command(socket, state, 'QUIT', [221], timeout).catch(() => undefined);
-      logger.info({ category: message.category, messageId }, 'Identity email accepted by SMTP relay');
+      logger.info({ category: message.category, messageId }, 'Email accepted by SMTP relay');
       return { status: 'sent', messageId };
     } finally {
       socket.destroy();

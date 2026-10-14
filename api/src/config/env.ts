@@ -81,6 +81,8 @@ export type AppConfig = Readonly<{
   evidenceScannerPort: number;
   evidenceScannerTimeoutMs: number;
   evidenceScannerRetries: number;
+  operationsAlertsEnabled: boolean;
+  operationsAlertRecipientUserIds: string[];
   identityEmailEnabled: boolean;
   emailDriver: 'development' | 'smtp';
   emailFrom?: string;
@@ -164,6 +166,8 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
       EVIDENCE_SCANNER_PORT: z.coerce.number().int().min(1).max(65_535).default(3310),
       EVIDENCE_SCANNER_TIMEOUT_MS: z.coerce.number().int().min(500).max(120_000).default(15_000),
       EVIDENCE_SCANNER_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
+      OPERATIONS_ALERTS_ENABLED: booleanValue.default(false),
+      OPERATIONS_ALERT_RECIPIENT_USER_IDS: z.preprocess(value => value === undefined || value === '' ? [] : typeof value === 'string' ? value.split(',').map(id => id.trim()) : value, z.array(z.string().uuid()).max(5).refine(ids => new Set(ids.map(id => id.toLowerCase())).size === ids.length, 'operator IDs must be unique').transform(ids => ids.map(id => id.toLowerCase()))),
       IDENTITY_EMAIL_ENABLED: booleanValue.default(false),
       EMAIL_DRIVER: z.enum(['development', 'smtp']).default('development'),
       EMAIL_FROM: optionalEmail,
@@ -341,6 +345,12 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
           message: 'is required when EVIDENCE_SCANNER_DRIVER is clamav',
         });
       }
+      if (values.OPERATIONS_ALERTS_ENABLED) {
+        if (values.EMAIL_DRIVER !== 'smtp') context.addIssue({code:z.ZodIssueCode.custom,path:['EMAIL_DRIVER'],message:'must be smtp when operations alerts are enabled'});
+        if (!values.OPERATIONS_ALERT_RECIPIENT_USER_IDS.length) context.addIssue({code:z.ZodIssueCode.custom,path:['OPERATIONS_ALERT_RECIPIENT_USER_IDS'],message:'requires 1–5 registered operator user IDs'});
+        if (values.DEMO_MODE) context.addIssue({code:z.ZodIssueCode.custom,path:['OPERATIONS_ALERTS_ENABLED'],message:'must remain disabled for synthetic demos'});
+        if (values.SMTP_CONNECTION_TIMEOUT_MS > 10000) context.addIssue({code:z.ZodIssueCode.custom,path:['SMTP_CONNECTION_TIMEOUT_MS'],message:'must not exceed 10000 when operations alerts are enabled'});
+      }
       if (values.EMAIL_DRIVER === 'smtp') {
         for (const name of ['EMAIL_FROM', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASSWORD'] as const) {
           if (!values[name])
@@ -351,7 +361,7 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
             });
         }
       }
-      if (deployed && values.IDENTITY_EMAIL_ENABLED && values.EMAIL_DRIVER !== 'smtp') {
+      if (deployed && (values.IDENTITY_EMAIL_ENABLED || values.OPERATIONS_ALERTS_ENABLED) && values.EMAIL_DRIVER !== 'smtp') {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['EMAIL_DRIVER'],
@@ -360,20 +370,20 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
       }
       if (
         deployed &&
-        values.IDENTITY_EMAIL_ENABLED &&
+        (values.IDENTITY_EMAIL_ENABLED || values.OPERATIONS_ALERTS_ENABLED) &&
         !(values.SMTP_SECURE || values.SMTP_REQUIRE_TLS)
       ) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['SMTP_REQUIRE_TLS'],
-          message: 'TLS is required for identity email delivery in staging and production',
+          message: 'TLS is required for email delivery in staging and production',
         });
       }
-      if (deployed && values.IDENTITY_EMAIL_ENABLED && !values.SMTP_TLS_REJECT_UNAUTHORIZED) {
+      if (deployed && (values.IDENTITY_EMAIL_ENABLED || values.OPERATIONS_ALERTS_ENABLED) && !values.SMTP_TLS_REJECT_UNAUTHORIZED) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['SMTP_TLS_REJECT_UNAUTHORIZED'],
-          message: 'must be true for identity email delivery in staging and production',
+          message: 'must be true for email delivery in staging and production',
         });
       }
     });
@@ -427,6 +437,8 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     evidenceScannerPort: values.EVIDENCE_SCANNER_PORT,
     evidenceScannerTimeoutMs: values.EVIDENCE_SCANNER_TIMEOUT_MS,
     evidenceScannerRetries: values.EVIDENCE_SCANNER_RETRIES,
+    operationsAlertsEnabled: values.OPERATIONS_ALERTS_ENABLED,
+    operationsAlertRecipientUserIds: values.OPERATIONS_ALERT_RECIPIENT_USER_IDS,
     identityEmailEnabled: values.IDENTITY_EMAIL_ENABLED,
     emailDriver: values.EMAIL_DRIVER,
     emailFrom: values.EMAIL_FROM,
