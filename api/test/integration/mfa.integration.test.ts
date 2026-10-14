@@ -11,6 +11,7 @@ import {query,pool} from '../../src/db';
 import {authenticator} from '../../src/testing/webauthnFixture';
 import {requestPasswordReset,resetPassword} from '../../src/services/passwordLifecycleService';
 import {approveRecovery} from '../../src/modules/mfa/recovery';
+// Assurance probes must remain bounded as other suites add organization fixtures.
 const password='MfaRegressionPassword123!';
 type Account={userId:string;token:string;email:string;sessionId:string};
 const post=(a:Account,path:string,data={})=>request(app).post(path).set('Authorization',`Bearer ${a.token}`).send(data);
@@ -40,10 +41,10 @@ beforeEach(async()=>{await query('TRUNCATE auth_rate_limits');});
 afterAll(async()=>{await pool.end();});
 describe('real PostgreSQL passkey boundaries',()=>{
   it('restricts password-only privileged sessions but permits setup/status/logout',async()=>{
-    const a=await account();expect((await get(a,'/organizations')).status).toBe(403);
+    const a=await account();expect((await get(a,'/organizations/page?limit=1')).status).toBe(403);
     expect((await get(a,'/me')).body.mfa).toMatchObject({required:true,enrolled:false,verified:false});
     expect((await post(a,'/auth/mfa/registration/options',{currentPassword:'wrong'})).status).toBe(403);
-    await enroll(a);expect((await get(a,'/organizations')).status).toBe(200);
+    await enroll(a);expect((await get(a,'/organizations/page?limit=1')).status).toBe(200);
     expect((await post(a,'/auth/logout')).status).toBe(204);
   });
   it('passkey verification clears MFA restriction without granting organization administration',async()=>{
@@ -54,7 +55,7 @@ describe('real PostgreSQL passkey boundaries',()=>{
     await enroll(a);
     expect((await get(a,'/me')).body.mfa).toMatchObject({required:true,enrolled:true,verified:true});
     expect((await get(a,'/holdings')).status).toBe(200);
-    const forbidden=await get(a,'/organizations');
+    const forbidden=await get(a,'/organizations/page?limit=1');
     expect(forbidden.status).toBe(403);
     expect(forbidden.body.error).toBe('Permission required: organization.admin');
   });
@@ -86,7 +87,7 @@ describe('real PostgreSQL passkey boundaries',()=>{
   it('requires a fresh signed assertion for writes and rejects counter replay',async()=>{
     const a=await account(),key=await enroll(a);
     await query("UPDATE sessions SET mfa_verified_at=NOW()-INTERVAL '6 minutes' WHERE id=$1",[a.sessionId]);
-    expect((await get(a,'/organizations')).status).toBe(200);
+    expect((await get(a,'/organizations/page?limit=1')).status).toBe(200);
     expect((await post(a,'/auth/password/change',{currentPassword:password,newPassword:'NewMfaPassword456!'})).body.code).toBe('MFA_STEP_UP_REQUIRED');
     expect((await verify(a,key)).status).toBe(200);expect((await verify(a,key,1)).status).toBe(403);
   });
@@ -102,7 +103,7 @@ describe('real PostgreSQL passkey boundaries',()=>{
     expect((await get(a,'/me')).status).toBe(401);
     const login=await request(app).post('/auth/login').send({email:a.email,password:'ChangedMfaPassword456!'});
     expect(login.body.user.mfa).toMatchObject({enrolled:true,verified:false});
-    expect((await get({...a,token:login.body.accessToken},'/organizations')).status).toBe(403);
+    expect((await get({...a,token:login.body.accessToken},'/organizations/page?limit=1')).status).toBe(403);
   });
   it('forbids removing the last key or verified key and isolates ownership',async()=>{
     const a=await account(),key=await enroll(a),other=await account();await enroll(other);
@@ -117,7 +118,7 @@ describe('real PostgreSQL passkey boundaries',()=>{
     await approveRecovery(target.userId,[first.token,second.token],'SEC_REVIEW_2');
     const login=await request(app).post('/auth/login').send({email:target.email,password});
     const recovering={...target,token:login.body.accessToken};await enroll(recovering);
-    expect((await get(recovering,'/organizations')).status).toBe(200);
+    expect((await get(recovering,'/organizations/page?limit=1')).status).toBe(200);
     expect((await query('SELECT mfa_recovery_approved_until FROM users WHERE id=$1',[target.userId])).rows[0].mfa_recovery_approved_until).toBeNull();
   });
   it('reviewed recovery needs distinct fresh reviewers, revokes sessions/keys and expires',async()=>{

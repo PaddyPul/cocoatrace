@@ -185,10 +185,13 @@ describe('source detail collections', () => {
     ).toBe(400);
     const page = await get(`/farms/${farm}/plots/page`, { limit: '1' });
     await query('UPDATE farms SET farmer_organization_id=$1 WHERE id=$2', [other.org, farm]);
-    expect((await get(`/farms/${farm}/plots/page`, { cursor: page.body.nextCursor })).status).toBe(
-      403,
-    );
-    await query('UPDATE farms SET farmer_organization_id=$1 WHERE id=$2', [own.org, farm]);
+    try {
+      const denied = await get(`/farms/${farm}/plots/page`, { cursor: page.body.nextCursor });
+      expect(denied.status, JSON.stringify(denied.body)).toBe(404);
+      expect(denied.body.error).toBe('Farm not found');
+    } finally {
+      await query('UPDATE farms SET farmer_organization_id=$1 WHERE id=$2', [own.org, farm]);
+    }
     expect((await request(app).get(`/farms/${farm}/plots/page`)).status).toBe(401);
   });
 });

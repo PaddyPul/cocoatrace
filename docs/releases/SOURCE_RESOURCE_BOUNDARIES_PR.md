@@ -21,6 +21,7 @@ A caller with valid ordinary permissions cannot distinguish another organization
 - Validate four direct-detail UUID parameters after credential/permission guards; retain current holder-only holding scope.
 - Establish no-store in session authentication and extend existing 178 credential/155 permission cases to check it.
 - Add paired two-organization, collection/search/total, role-union, network, live revocation/suspension and concurrent holding-snapshot regressions; update old 403 expectations only for the changed classes.
+- Keep MFA authorization probes on the bounded organization page and restore changed farm ownership even when the cursor denial assertion fails.
 - Record the founder's completed authorization-register workflow separately from this candidate.
 
 ## Security and data review
