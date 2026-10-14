@@ -32,7 +32,7 @@
       "status": "partial",
       "title": "All pilot resource families pass negative authorization tests",
       "backlog": ["SEC-002", "QLT-002", "SEC-006"],
-      "evidence": "Existing two-tenant matrix green; full protected-route matrix remains."
+      "evidence": "Existing two-tenant/resource regressions are founder accepted. Current candidate adds a checked 195-route register, actual-registration and 178 credential-boundary cases, 155 native zero-permission route cases and early platform-review guards. Full route/resource/foreign-ID/role-union/suspension and nondisclosure acceptance remains incomplete. See security/ROUTE_SECURITY_REVIEW_2026-10-14.md; native candidate execution pending."
     },
     {
       "id": "CORE-origin",
@@ -152,7 +152,7 @@
       "status": "partial",
       "title": "Scheduled notifications/reminders retry with monitored dead-letter recovery",
       "backlog": ["OPS-010", "ARC-014"],
-      "evidence": "Founder reports scheduled operations/corrected recovery-label workflow done 2026-10-13. Bounded independent jobs, deployment locks, durable last-success/failure/staleness, private monitor and audited cleanup retry are accepted. Founder reports full release passed and terminal-email recovery merged at 17:49 UTC 2026-10-13, including the listings-summary per-batch assessment correction. Transactional assurance/auditing, bounded private reads and automated concurrency/authorization/browser coverage are accepted. Bounded cleanup/reminder/recall backlog and incident visibility, with administrator fixture isolation, is founder workflow accepted 2026-10-13. Opt-in durable operator alert episodes/outbox and private delivery status are founder workflow accepted 2026-10-14. Reviewed terminal-operator-alert recovery is implemented in the next candidate, pending native release acceptance; see releases/OPERATIONS_ALERT_RECOVERY_WINDOWS.md. Broader scanner/DB/HTTP/abuse signals, external alerts and hosted failure operation remain open (OPS-010/ARC-014); no exact founder commit or hosted acceptance is inferred."
+      "evidence": "Founder reports scheduled operations/corrected recovery-label workflow done 2026-10-13. Bounded independent jobs, deployment locks, durable last-success/failure/staleness, private monitor and audited cleanup retry are accepted. Founder reports full release passed and terminal-email recovery merged at 17:49 UTC 2026-10-13, including the listings-summary per-batch assessment correction. Transactional assurance/auditing, bounded private reads and automated concurrency/authorization/browser coverage are accepted. Bounded cleanup/reminder/recall backlog and incident visibility, with administrator fixture isolation, is founder workflow accepted 2026-10-13. Opt-in durable operator alert episodes/outbox and private delivery status are founder workflow accepted 2026-10-14. Reviewed terminal-operator-alert recovery is founder release/merge/pull accepted at 12:19 UTC 2026-10-14; see releases/OPERATIONS_ALERT_RECOVERY_WINDOWS.md. Broader scanner/DB/HTTP/abuse signals, external alerts and hosted failure operation remain open (OPS-010/ARC-014); no exact founder commit or hosted acceptance is inferred."
     },
     {
       "id": "CORE-email",
@@ -168,7 +168,7 @@
       "status": "partial",
       "title": "Release-tagged logs/alerts reach a named incident owner",
       "backlog": ["OPS-003", "OPS-004", "OPS-006", "OPS-007"],
-      "evidence": "Structured redacted/correlated logs and the scheduled-job status/error monitor are founder accepted. The opt-in durable operator incident-alert implementation is founder workflow accepted 2026-10-14; reviewed terminal-alert recovery is the next candidate. External collection, actual inbox receipt, release-tagged frontend/backend monitoring and named incident owner remain unconfigured. Local status is not proof an owner receives an alert."
+      "evidence": "Structured redacted/correlated logs and the scheduled-job status/error monitor are founder accepted. The opt-in durable operator incident-alert implementation is founder workflow accepted 2026-10-14; reviewed terminal-alert recovery is founder release/merge/pull accepted 2026-10-14. External collection, actual inbox receipt, release-tagged frontend/backend monitoring and named incident owner remain unconfigured. Local status is not proof an owner receives an alert."
     },
     {
       "id": "CORE-restore",

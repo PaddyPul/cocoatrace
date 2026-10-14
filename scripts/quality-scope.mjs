@@ -1,5 +1,11 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/testing/authorizationRoutes.test.ts',
+  'scripts/authorization-register.mjs',
+  'scripts/authorization-register.test.mjs',
+  'scripts/check-authorization.mjs',
+  'api/test/integration/authorizationRoutes.integration.test.ts',
+  'api/src/modules/organizationAccess/routes.ts',
   'api/scripts/operations-alerts.ts',
   'docker-compose.operations-alerts.local.yml',
   'api/test/integration/operationsAlerts.integration.test.ts',

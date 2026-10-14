@@ -1,0 +1,3718 @@
+{
+  "version": 1,
+  "coverage": "Checked route and entry-guard inventory; complete resource authorization acceptance is not claimed.",
+  "policies": {
+    "api/src/app.ts": {
+      "scope": "Public health exposes process/dependency metadata only, never business records. Global cookie-origin verification applies before HTTP routers.",
+      "evidence": [
+        "api/src/middleware/security.ts",
+        "api/test/integration/authBoundary.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/modules/accessControls/routes.ts": {
+      "scope": "Platform wildcard administrator only; live actor/session/organization, privileged-target and restoration safeguards remain inside the transaction.",
+      "evidence": [
+        "api/src/modules/accessControls/service.ts",
+        "api/test/integration/accessSuspension.integration.test.ts",
+        "api/test/integration/privilegedLifecycle.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/modules/mfa/routes.ts": {
+      "scope": "Current authenticated account only; ceremony/session binding, fresh assurance, origin/RP checks and reviewed recovery remain mandatory.",
+      "evidence": [
+        "api/src/modules/mfa/assurance.ts",
+        "api/test/integration/mfa.integration.test.ts",
+        "api/test/integration/privilegedLifecycle.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/modules/organizationAccess/routes.ts": {
+      "scope": "Request/verify are rate-limited token flows; application register and review require an early HTTP wildcard-administrator guard plus existing service/query policy checks before resource access.",
+      "evidence": [
+        "api/src/modules/organizationAccess/service.ts",
+        "api/test/integration/multiTenantApi.integration.test.ts",
+        "api/test/integration/accessApplicationPages.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/audit.ts": {
+      "scope": "Own-organization event reads/exports; separate explicit network permissions authorize cross-organization oversight. No ordinary read permission grants global history.",
+      "evidence": [
+        "api/src/controllers/auditController.ts",
+        "api/test/integration/auditRecords.integration.test.ts",
+        "api/test/integration/auditExport.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/auth.ts": {
+      "scope": "Public credential/reset flows use explicit validation and rate limits; identity/logout/password change require the current account and live session. Cookie writes require origin validation.",
+      "evidence": [
+        "api/src/services/authSessionService.ts",
+        "api/test/integration/authBoundary.integration.test.ts",
+        "api/test/integration/multiTenantApi.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/batches.ts": {
+      "scope": "Batch/attestation reads and writes enforce owned/held/assigned/trade relationships; explicit network permissions remain distinct. Source and certificate scope must match.",
+      "evidence": [
+        "api/src/controllers/batchController.ts",
+        "api/src/services/resourcePolicy.ts",
+        "api/test/integration/multiTenantApi.integration.test.ts",
+        "api/test/integration/sourceRecordsPagination.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/certificates.ts": {
+      "scope": "Issuer, subject, assigned or trade-related certificate scope; issue/status authority belongs to issuer and subject farm/crop/harvest integrity is enforced.",
+      "evidence": [
+        "api/src/controllers/certificateController.ts",
+        "api/test/integration/multiTenantApi.integration.test.ts",
+        "api/test/integration/certificatePages.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/contracts.ts": {
+      "scope": "Offers are buyer/seller scoped; contract mutations recheck contract party and specific buyer/seller action, payment gates, delivery/cancellation and atomic audit.",
+      "evidence": [
+        "api/src/controllers/contractController.ts",
+        "api/test/integration/tradingIntegrity.integration.test.ts",
+        "api/test/integration/deliveryAcceptance.integration.test.ts",
+        "api/test/integration/cancellation.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/evidence.ts": {
+      "scope": "Metadata/download inherits linked-resource and document-release policy. Upload capability validates signature, intent, live actor, scope, byte/storage admission before parsing or storage.",
+      "evidence": [
+        "api/src/controllers/evidenceController.ts",
+        "api/src/middleware/evidenceContent.ts",
+        "api/test/integration/multiTenantApi.integration.test.ts",
+        "api/test/integration/evidenceTransferBudgets.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/farms.ts": {
+      "scope": "Own source creation; farm and exact-plot reads are tenant/assignment scoped or require explicit network permission. Marketplace origin never authorizes private coordinates.",
+      "evidence": [
+        "api/src/controllers/farmController.ts",
+        "api/test/integration/multiTenantApi.integration.test.ts",
+        "api/test/integration/sourceDetailCollections.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/fees.ts": {
+      "scope": "Contract-party fee statement/submission; finance permission plus current finance authority for review/write-off. Fee accounting does not grant access to unrelated trades.",
+      "evidence": [
+        "api/src/controllers/feeController.ts",
+        "api/test/integration/platformFees.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/holdings.ts": {
+      "scope": "Holdings belong to current holder; source/destination transfer views are scoped, acceptance belongs to destination and split/transfer changes are transactional.",
+      "evidence": [
+        "api/src/controllers/holdingController.ts",
+        "api/test/integration/tradingIntegrity.integration.test.ts",
+        "api/test/integration/catalogPagination.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/invitations.ts": {
+      "scope": "Token-limited public preview/acceptance; invitation administration remains own-organization with bounded roles and current administrator authority.",
+      "evidence": [
+        "api/src/controllers/invitationController.ts",
+        "api/test/integration/multiTenantApi.integration.test.ts",
+        "api/test/integration/invitationPages.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/listings.ts": {
+      "scope": "Authenticated active marketplace projection; mine/current inventory filters remain tenant scoped and material trust/recall holds constrain visibility and eligibility.",
+      "evidence": [
+        "api/src/controllers/listingController.ts",
+        "api/test/integration/catalogPagination.integration.test.ts",
+        "api/test/integration/trustAccuracy.integration.test.ts",
+        "api/test/integration/recallSafety.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/operations.ts": {
+      "scope": "Global platform administrator only; aggregate observations are private/bounded and retries require fresh transactional authority, original eligibility and atomic audit.",
+      "evidence": [
+        "api/src/modules/operations/recovery.ts",
+        "api/src/modules/operations/alertRecovery.ts",
+        "api/test/integration/operationsWorkers.integration.test.ts",
+        "api/test/integration/operationsAlertRecovery.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/organizations.ts": {
+      "scope": "Organization administrator collection/member views stay scoped; platform-wide creation/access is explicitly checked by controller/query policies.",
+      "evidence": [
+        "api/src/controllers/organizationController.ts",
+        "api/test/integration/organizationPages.integration.test.ts",
+        "api/test/integration/multiTenantApi.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/payments.ts": {
+      "scope": "Contract-party read scope; buyer submission and seller receipt/security verification remain distinct. Current installment/payment state controls dispatch, document release and settlement.",
+      "evidence": [
+        "api/src/controllers/paymentController.ts",
+        "api/test/integration/paymentWorkflow.integration.test.ts",
+        "api/test/integration/paymentPages.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/provenance.ts": {
+      "scope": "Related or explicitly network-authorized lot only; supplied contracts must match both lot and actor party. Complete bounded exports preserve privacy and record attribution.",
+      "evidence": [
+        "api/src/controllers/provenanceController.ts",
+        "api/test/integration/multiTenantApi.integration.test.ts",
+        "api/test/integration/provenanceExport.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/publicProducts.ts": {
+      "scope": "Published slug routes return privacy-reviewed projections only. Private profile management follows current holding scope; recall participants/managers have distinct response/recovery/resolve authority.",
+      "evidence": [
+        "api/src/controllers/publicProductController.ts",
+        "api/src/controllers/recallResponseController.ts",
+        "api/test/integration/productProfilePages.integration.test.ts",
+        "api/test/integration/publicNoticePages.integration.test.ts",
+        "api/test/integration/recallResponsePages.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/readiness.ts": {
+      "scope": "Authenticated organization/relationship metrics only; importer/certifier organization type is not network authority. Explicit analytics.read.network is required for network aggregates.",
+      "evidence": [
+        "api/src/controllers/readinessController.ts",
+        "api/test/integration/multiTenantApi.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/shipments.ts": {
+      "scope": "Contract party or assigned logistics read scope; Incoterm/milestone actor matrix, payment dispatch gate and current transport responsibility apply on writes.",
+      "evidence": [
+        "api/src/controllers/shipmentController.ts",
+        "api/test/integration/transportResponsibilities.integration.test.ts",
+        "api/test/integration/shipmentPages.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/sourcing.ts": {
+      "scope": "Buyer-owned private briefs; open request projections for qualified supply participants. Structure/update/create must not accept foreign organization ownership.",
+      "evidence": [
+        "api/src/controllers/sourcingController.ts",
+        "api/test/integration/sourcingPages.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/traceability.ts": {
+      "scope": "Owned/held/traded/received seed or explicit network authority; bounded traversal and policy-approved connected projection. Ordinary audit permission does not authorize network trace.",
+      "evidence": [
+        "api/src/controllers/traceabilityController.ts",
+        "api/test/integration/multiTenantApi.integration.test.ts",
+        "api/test/integration/recallSafety.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/routes/workspace.ts": {
+      "scope": "Self onboarding/feedback and own/related trade actions/aggregates; organization-admin feedback reads remain scoped. Failed summaries must remain unknown.",
+      "evidence": [
+        "api/src/controllers/workspaceController.ts",
+        "api/test/integration/feedbackPages.integration.test.ts",
+        "api/test/integration/workspaceOverview.integration.test.ts"
+      ],
+      "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    }
+  },
+  "routes": [
+    {
+      "method": "DELETE",
+      "path": "/auth/mfa/keys/:id",
+      "source": "api/src/modules/mfa/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "DELETE",
+      "path": "/listings/:id",
+      "source": "api/src/routes/listings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "listing.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listingController.deleteListing",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/access-applications",
+      "source": "api/src/modules/organizationAccess/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.list",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/access-applications/:id",
+      "source": "api/src/modules/organizationAccess/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.detail",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/access-applications/page",
+      "source": "api/src/modules/organizationAccess/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.page",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/access-applications/summary",
+      "source": "api/src/modules/organizationAccess/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.summary",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/access-controls/:kind",
+      "source": "api/src/modules/accessControls/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/audit/events",
+      "source": "api/src/routes/audit.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "audit.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "auditController.listAuditEvents",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/audit/events/page",
+      "source": "api/src/routes/audit.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "audit.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "auditController.pageAuditEvents",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/audit/events/summary",
+      "source": "api/src/routes/audit.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "audit.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "auditController.summaryAuditEvents",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/audit/export",
+      "source": "api/src/routes/audit.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "audit.export"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "auditController.exportAuditLog",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/invitations/:token",
+      "source": "api/src/routes/invitations.ts",
+      "guards": [],
+      "entryControls": [
+        "publicActionLimiter('invitationPreview')"
+      ],
+      "handler": "controller.invitationDetails",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/mfa/keys",
+      "source": "api/src/modules/mfa/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/batches",
+      "source": "api/src/routes/batches.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "batchController.listBatches",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/batches/:id",
+      "source": "api/src/routes/batches.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "batchController.getBatch",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/batches/page",
+      "source": "api/src/routes/batches.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listBatchPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/batches/summary",
+      "source": "api/src/routes/batches.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "summarizeBatches",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/certificates",
+      "source": "api/src/routes/certificates.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "certificate.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "certController.listCertificates",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/certificates/:id",
+      "source": "api/src/routes/certificates.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "certificate.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "certController.getCertificate",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/certificates/page",
+      "source": "api/src/routes/certificates.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "certificate.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listCertificatePage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/certificates/summary",
+      "source": "api/src/routes/certificates.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "certificate.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "summarizeCertificates",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/contracts",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "contractController.listContracts",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/contracts/:id",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "contractController.getContract",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/contracts/:id/cancellation",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "cancellationController.get",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/contracts/:id/delivery",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "deliveryController.get",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/contracts/:id/fee",
+      "source": "api/src/routes/fees.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "any",
+          "permissions": [
+            "contract.read",
+            "finance.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.get",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/contracts/:id/fee/statement",
+      "source": "api/src/routes/fees.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "any",
+          "permissions": [
+            "contract.read",
+            "finance.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.download",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/contracts/page",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listContractPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/contracts/summary",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "summarizeContracts",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/evidence",
+      "source": "api/src/routes/evidence.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "evidence.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "evidenceController.listEvidence",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/evidence/:id/download",
+      "source": "api/src/routes/evidence.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "evidence.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "evidenceController.downloadEvidence",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/evidence/page",
+      "source": "api/src/routes/evidence.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "evidence.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listEvidencePage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/evidence/record-options",
+      "source": "api/src/routes/evidence.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "evidence.upload"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listEvidenceOptions",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/evidence/summary",
+      "source": "api/src/routes/evidence.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "evidence.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "summarizeEvidence",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/farms",
+      "source": "api/src/routes/farms.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "farm.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "farmController.listFarms",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/farms/:id",
+      "source": "api/src/routes/farms.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "farm.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "farmController.getFarm",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/farms/:id/plots/page",
+      "source": "api/src/routes/farms.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "farm.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listPlotPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/farms/:id/plots/summary",
+      "source": "api/src/routes/farms.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "farm.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "summarizePlots",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/farms/page",
+      "source": "api/src/routes/farms.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "farm.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listFarmPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/farms/summary",
+      "source": "api/src/routes/farms.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "farm.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "summarizeFarms",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "source": "api/src/app.ts",
+      "guards": [],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "GET",
+      "path": "/health/live",
+      "source": "api/src/app.ts",
+      "guards": [],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "GET",
+      "path": "/health/ready",
+      "source": "api/src/app.ts",
+      "guards": [],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "GET",
+      "path": "/holdings",
+      "source": "api/src/routes/holdings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "holding.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "holdingController.listHoldings",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/holdings/:id",
+      "source": "api/src/routes/holdings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "holding.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "holdingController.getHolding",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/holdings/page",
+      "source": "api/src/routes/holdings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "holding.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listHoldingPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/holdings/summary",
+      "source": "api/src/routes/holdings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "holding.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "summarizeHoldings",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/invitations",
+      "source": "api/src/routes/invitations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "member.invite"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.listInvitations",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/invitations/page",
+      "source": "api/src/routes/invitations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "member.invite"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.listInvitationPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/invitations/summary",
+      "source": "api/src/routes/invitations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "member.invite"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.summarizeInvitations",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/listings",
+      "source": "api/src/routes/listings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "listing.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listingController.listListings",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/listings/:id",
+      "source": "api/src/routes/listings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "listing.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listingController.getListing",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/listings/page",
+      "source": "api/src/routes/listings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "listing.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listListingPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/listings/summary",
+      "source": "api/src/routes/listings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "listing.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "summarizeListings",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/me",
+      "source": "api/src/routes/auth.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "authController.me",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/offers",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "any",
+          "permissions": [
+            "offer.respond",
+            "offer.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "contractController.listOffers",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/page",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "any",
+          "permissions": [
+            "offer.respond",
+            "offer.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listOfferPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/offers/summary",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "any",
+          "permissions": [
+            "offer.respond",
+            "offer.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "summarizeOffers",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/onboarding",
+      "source": "api/src/routes/workspace.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.getOnboarding",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/operations/alerts",
+      "source": "api/src/routes/operations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/operations/alerts/dead",
+      "source": "api/src/routes/operations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/operations/backlog",
+      "source": "api/src/routes/operations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/operations/cleanup/dead",
+      "source": "api/src/routes/operations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/operations/email/:queue/dead",
+      "source": "api/src/routes/operations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/operations/status",
+      "source": "api/src/routes/operations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/organizations",
+      "source": "api/src/routes/organizations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "organization.admin"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "orgController.listOrganizations",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/organizations/:id/members",
+      "source": "api/src/routes/organizations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "organization.admin"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "orgController.listOrganizationMembers",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/organizations/:id/members/page",
+      "source": "api/src/routes/organizations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "organization.admin"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "orgController.listOrganizationMemberPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/organizations/:id/members/summary",
+      "source": "api/src/routes/organizations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "organization.admin"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "orgController.summarizeOrganizationMembers",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/organizations/page",
+      "source": "api/src/routes/organizations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "organization.admin"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "orgController.listOrganizationPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/organizations/summary",
+      "source": "api/src/routes/organizations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "organization.admin"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "orgController.summarizeOrganizations",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/payment-requests",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentController.listPaymentRequests",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/payment-requests/:id",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentController.getPaymentRequest",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/payment-requests/:id/operations",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentOperationsController.operations",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/payment-requests/page",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listPaymentPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/payment-requests/summary",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "summarizePayments",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/pilot-feedback",
+      "source": "api/src/routes/workspace.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "organization.admin"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.listFeedback",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/pilot-feedback/page",
+      "source": "api/src/routes/workspace.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "organization.admin"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.listFeedbackPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/pilot-feedback/summary",
+      "source": "api/src/routes/workspace.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "organization.admin"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.summarizeFeedback",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/platform-fees",
+      "source": "api/src/routes/fees.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "any",
+          "permissions": [
+            "payment.read",
+            "finance.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.list",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/platform-fees/reconciliation",
+      "source": "api/src/routes/fees.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "finance.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.reconcile",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/product-profiles",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.listProductProfiles",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/product-profiles/batch/:batchId",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.getProfileForBatch",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/product-profiles/page",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listProductPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/product-profiles/summary",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "summarizeProducts",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/provenance/batches/:batchId",
+      "source": "api/src/routes/provenance.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "provenanceController.getProvenancePack",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/provenance/batches/:batchId/export",
+      "source": "api/src/routes/provenance.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "provenance.export"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "provenanceController.exportProvenancePack",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/public/products/:slug",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [],
+      "entryControls": [
+        "publicActionLimiter('profile')"
+      ],
+      "handler": "controller.getPublicProduct",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "GET",
+      "path": "/public/products/:slug/evidence/page",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [],
+      "entryControls": [
+        "publicActionLimiter('profile')"
+      ],
+      "handler": "getPublicEvidencePage",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "GET",
+      "path": "/public/products/:slug/journey/page",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [],
+      "entryControls": [
+        "publicActionLimiter('profile')"
+      ],
+      "handler": "getPublicJourneyPage",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "GET",
+      "path": "/public/products/:slug/notices/page",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [],
+      "entryControls": [
+        "publicActionLimiter('profile')"
+      ],
+      "handler": "getPublicNoticesPage",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "GET",
+      "path": "/public/products/:slug/qr.svg",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [],
+      "entryControls": [
+        "publicActionLimiter('qr')"
+      ],
+      "handler": "controller.getProductQr",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "GET",
+      "path": "/readiness",
+      "source": "api/src/routes/readiness.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "getReadiness",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/recalls",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.listRecalls",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/recalls/:id/response",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "recallResponse.response",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/recalls/page",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "listRecallPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/recalls/summary",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "summarizeRecalls",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/shipments",
+      "source": "api/src/routes/shipments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "shipment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "shipmentController.listShipments",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/shipments/:id",
+      "source": "api/src/routes/shipments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "shipment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "shipmentController.getShipment",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/shipments/page",
+      "source": "api/src/routes/shipments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "shipment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listShipmentPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/shipments/summary",
+      "source": "api/src/routes/shipments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "shipment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "summarizeShipments",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/sourcing-requests",
+      "source": "api/src/routes/sourcing.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "listing.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.listRequests",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/sourcing-requests/page",
+      "source": "api/src/routes/sourcing.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "listing.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.listRequestPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/sourcing-requests/summary",
+      "source": "api/src/routes/sourcing.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "listing.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.summarizeRequests",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/traceability/lots",
+      "source": "api/src/routes/traceability.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.listLots",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/traceability/lots/:id/trace-back",
+      "source": "api/src/routes/traceability.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.traceBack",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/traceability/lots/:id/trace-forward",
+      "source": "api/src/routes/traceability.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.traceForward",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/traceability/lots/page",
+      "source": "api/src/routes/traceability.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.listLotPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/trade-actions",
+      "source": "api/src/routes/workspace.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.getTradeActions",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/transfers",
+      "source": "api/src/routes/holdings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "custody.transfer.request"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "holdingController.listTransfers",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/transfers/page",
+      "source": "api/src/routes/holdings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "custody.transfer.request"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listTransferPage",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/workspace/overview",
+      "source": "api/src/routes/workspace.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "getWorkspaceTotals",
+      "authentication": "session"
+    },
+    {
+      "method": "PATCH",
+      "path": "/contracts/:id/compliance",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "contractController.updateComplianceReference",
+      "authentication": "session"
+    },
+    {
+      "method": "PATCH",
+      "path": "/contracts/:id/eudr",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "contractController.updateEudrReference",
+      "authentication": "session"
+    },
+    {
+      "method": "PATCH",
+      "path": "/contracts/:id/payment-terms",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "contractController.updatePaymentTerms",
+      "authentication": "session"
+    },
+    {
+      "method": "PATCH",
+      "path": "/listings/:id",
+      "source": "api/src/routes/listings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "listing.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listingController.updateListing",
+      "authentication": "session"
+    },
+    {
+      "method": "PATCH",
+      "path": "/recalls/:id/participants/:organizationId/contact",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "recallResponse.contact",
+      "authentication": "session"
+    },
+    {
+      "method": "PATCH",
+      "path": "/shipments/:id/details",
+      "source": "api/src/routes/shipments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "shipment.update"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "shipmentController.updateShipmentDetails",
+      "authentication": "session"
+    },
+    {
+      "method": "PATCH",
+      "path": "/sourcing-requests/:id",
+      "source": "api/src/routes/sourcing.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "offer.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.updateRequest",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/access-applications/:id/approve",
+      "source": "api/src/modules/organizationAccess/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.approve",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/access-applications/:id/reject",
+      "source": "api/src/modules/organizationAccess/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.reject",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/access-controls/:kind/:id",
+      "source": "api/src/modules/accessControls/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/invitations/:token/accept",
+      "source": "api/src/routes/invitations.ts",
+      "guards": [],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "controller.acceptInvitation",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "source": "api/src/routes/auth.ts",
+      "guards": [],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "authController.login",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/logout",
+      "source": "api/src/routes/auth.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "authController.logout",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/mfa/authentication/options",
+      "source": "api/src/modules/mfa/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/mfa/authentication/verify",
+      "source": "api/src/modules/mfa/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/mfa/registration/options",
+      "source": "api/src/modules/mfa/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/mfa/registration/verify",
+      "source": "api/src/modules/mfa/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/password/change",
+      "source": "api/src/routes/auth.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "authController.updatePassword",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/password/forgot",
+      "source": "api/src/routes/auth.ts",
+      "guards": [],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "authController.forgotPassword",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/password/reset",
+      "source": "api/src/routes/auth.ts",
+      "guards": [],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "authController.completePasswordReset",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/request-access",
+      "source": "api/src/modules/organizationAccess/routes.ts",
+      "guards": [],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "controller.requestAccess",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/request-access/verify",
+      "source": "api/src/modules/organizationAccess/routes.ts",
+      "guards": [],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "controller.verifyEmail",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "POST",
+      "path": "/batches",
+      "source": "api/src/routes/batches.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "batchController.createBatch",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/batches/:id/attest",
+      "source": "api/src/routes/batches.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.attest"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "batchController.attestBatch",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/batches/:id/push-to-marketplace",
+      "source": "api/src/routes/batches.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "batchController.pushToMarketplace",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/certificates",
+      "source": "api/src/routes/certificates.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "certificate.issue"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "certController.issueCertificate",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/certificates/:id/:action",
+      "source": "api/src/routes/certificates.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "certificate.issue"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "certController.updateCertificateStatus",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/cancellation",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        },
+        {
+          "kind": "any",
+          "permissions": [
+            "offer.create",
+            "offer.respond"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "cancellationController.request",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/cancellation/:requestId/approve",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        },
+        {
+          "kind": "any",
+          "permissions": [
+            "offer.create",
+            "offer.respond"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "cancellationController.approve",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/cancellation/:requestId/reject",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        },
+        {
+          "kind": "any",
+          "permissions": [
+            "offer.create",
+            "offer.respond"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "cancellationController.reject",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/delivery/accept",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "deliveryController.accept",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/delivery/discrepancy",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "deliveryController.report",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/delivery/resolution",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "deliveryController.propose",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/delivery/resolution/approve",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "deliveryController.approve",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/fee/submissions/:submissionId/review",
+      "source": "api/src/routes/fees.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "finance.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.review",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/fee/submit",
+      "source": "api/src/routes/fees.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        },
+        {
+          "kind": "any",
+          "permissions": [
+            "offer.create",
+            "offer.respond"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.submit",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/fee/write-off",
+      "source": "api/src/routes/fees.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "finance.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.writeOff",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/payment-requests",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.request"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentController.createPaymentRequest",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/payment-terms/confirm",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "contractController.confirmPaymentTerms",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/evidence/upload-intents",
+      "source": "api/src/routes/evidence.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "evidence.upload"
+          ]
+        }
+      ],
+      "entryControls": [
+        "publicActionLimiter('uploadIntent')"
+      ],
+      "handler": "evidenceController.createEvidenceUploadIntent",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/farms",
+      "source": "api/src/routes/farms.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "farm.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "farmController.createFarm",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/farms/:id/plots",
+      "source": "api/src/routes/farms.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "farm.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "farmController.createPlot",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/holdings",
+      "source": "api/src/routes/holdings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "holding.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "holdingController.createHolding",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/holdings/:id/split",
+      "source": "api/src/routes/holdings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "holding.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "holdingController.splitHolding",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/holdings/:id/transfer",
+      "source": "api/src/routes/holdings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "custody.transfer.request"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "holdingController.transferHolding",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/inventory/direct",
+      "source": "api/src/routes/batches.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "batchController.createDirectInventory",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/invitations",
+      "source": "api/src/routes/invitations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "member.invite"
+          ]
+        }
+      ],
+      "entryControls": [
+        "publicActionLimiter('invitationCreate')"
+      ],
+      "handler": "controller.createInvitation",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/invitations/:id/resend",
+      "source": "api/src/routes/invitations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "member.invite"
+          ]
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "controller.resendInvitation",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/invitations/:id/revoke",
+      "source": "api/src/routes/invitations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "member.invite"
+          ]
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "controller.revokeInvitation",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/listings",
+      "source": "api/src/routes/listings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "listing.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listingController.createListing",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/listings/:id/offers",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "offer.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "contractController.makeOffer",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/offers/:id/accept",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "offer.respond"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "contractController.acceptOffer",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/offers/:id/reject",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "offer.respond"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "contractController.rejectOffer",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/operations/alerts/:id/retry",
+      "source": "api/src/routes/operations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/operations/cleanup/:id/retry",
+      "source": "api/src/routes/operations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/operations/email/:queue/:id/retry",
+      "source": "api/src/routes/operations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/organizations",
+      "source": "api/src/routes/organizations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "organization.admin"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "orgController.createOrganization",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/payment-installments/:id/confirm",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.request"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentController.confirmInstallmentPayment",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/payment-installments/:id/reject",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.request"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentController.rejectInstallmentPayment",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/payment-installments/:id/submit",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.confirm"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentController.submitInstallmentPayment",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/payment-issues/:id/approve-resolution",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentOperationsController.approve",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/payment-issues/:id/propose-resolution",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentOperationsController.propose",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/payment-requests/:id/issues",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentOperationsController.openIssue",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/payment-requests/:id/pay",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.confirm"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentController.payPaymentRequest",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/payment-requests/:id/remind",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentOperationsController.remind",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/payment-requests/:id/security",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.confirm"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentController.submitPaymentSecurity",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/payment-requests/:id/security/confirm",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.request"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentController.confirmPaymentSecurity",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/payment-requests/:id/submit-documents",
+      "source": "api/src/routes/payments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "payment.request"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "paymentController.submitPaymentDocuments",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/pilot-feedback",
+      "source": "api/src/routes/workspace.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.createFeedback",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/product-profiles",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.upsertProfile",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/product-profiles/:id/publish",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "batch.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.publishProfile",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/public/products/:slug/scans",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [],
+      "entryControls": [
+        "publicActionLimiter('scan')"
+      ],
+      "handler": "controller.recordScan",
+      "authentication": "public-or-token"
+    },
+    {
+      "method": "POST",
+      "path": "/recalls",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "recall.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.createRecall",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/recalls/:id/acknowledge",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "recallResponse.acknowledge",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/recalls/:id/resolve",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "recallResponse.resolve",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/shipments/:id/milestones",
+      "source": "api/src/routes/shipments.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "shipment.update"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "shipmentController.recordMilestone",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/sourcing-requests",
+      "source": "api/src/routes/sourcing.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "offer.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.createRequest",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/sourcing-requests/structure",
+      "source": "api/src/routes/sourcing.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "offer.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.structureRequest",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/traceability/recall-impact",
+      "source": "api/src/routes/traceability.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "recall.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.calculateRecallImpact",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/transfers/:id/accept",
+      "source": "api/src/routes/holdings.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "custody.transfer.accept"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "holdingController.acceptTransfer",
+      "authentication": "session"
+    },
+    {
+      "method": "PUT",
+      "path": "/evidence/upload-intents/:id/content",
+      "source": "api/src/routes/evidence.ts",
+      "guards": [],
+      "entryControls": [
+        "publicActionLimiter('uploadContent')",
+        "evidenceContentHandler"
+      ],
+      "handler": "evidenceContentHandler",
+      "authentication": "upload-capability"
+    },
+    {
+      "method": "PUT",
+      "path": "/onboarding",
+      "source": "api/src/routes/workspace.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.updateOnboarding",
+      "authentication": "session"
+    },
+    {
+      "method": "PUT",
+      "path": "/recalls/:id/recovery/:holdingId",
+      "source": "api/src/routes/publicProducts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "recallResponse.recovery",
+      "authentication": "session"
+    }
+  ]
+}

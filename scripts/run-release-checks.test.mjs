@@ -50,3 +50,10 @@ test('real evidence memory stress is required before browser journeys', () => {
  assert.deepEqual(releaseChecks[stress][1], ['run', 'test:evidence:stress:docker']);
  assert.ok(releaseChecks.find(check => check[0] === 'Runner checks')[1].includes('scripts/run-evidence-stress.test.mjs'));
 });
+
+
+test('reviewed authorization entry-point inventory gates application and infrastructure acceptance', () => {
+ const gate=releaseChecks.findIndex(check=>check[0]==='Authorization route register');
+ assert.ok(gate>=0 && gate<releaseChecks.findIndex(check=>check[0]==='API unit tests'));
+ assert.deepEqual(releaseChecks[gate][1],['run','check:authorization']);
+});
