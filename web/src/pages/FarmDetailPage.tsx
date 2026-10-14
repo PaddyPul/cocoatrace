@@ -4,7 +4,7 @@ import FarmBatches from '../components/catalog/FarmBatches';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { farms as farmsApi } from '../api';
-import { Farm } from '../types';
+import type { Farm } from '../domains/source/types';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
 import Layout from '../components/layout/Layout';

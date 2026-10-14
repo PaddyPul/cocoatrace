@@ -1,5 +1,5 @@
 {
-  "reviewedAt": "2026-10-13",
+  "reviewedAt": "2026-10-14",
   "method": "Equal gate count, no partial credit. Provider launch also requires every core gate. This is closure evidence, not a safety probability or valuation measure.",
   "gates": [
     {
@@ -32,7 +32,7 @@
       "status": "partial",
       "title": "All pilot resource families pass negative authorization tests",
       "backlog": ["SEC-002", "QLT-002", "SEC-006"],
-      "evidence": "Founder reports the checked route register and entry-boundary release/merge/pull complete at 13:58 UTC 2026-10-14. Current candidate adds paired source/plot/batch/certificate/holding 404 nondisclosure, post-guard UUID validation, one policy/detail snapshot and no-store session responses; 34 native role/owner/foreign/search/suspension/reassignment cases supplied. Full resource/action/field/role and nondisclosure coverage remains incomplete. See security/SOURCE_RESOURCE_BOUNDARIES_2026-10-14.md; Founder supplied exact-commit release pass/push f74f290f3bb0c72762adf19fb4b958a3fee77352 and main update 606da5bd0 at 18:54 UTC 2026-10-14; source slice accepted. Other action/field boundaries and hosted acceptance remain partial."
+      "evidence": "Founder reports the checked route register and entry-boundary release/merge/pull complete at 13:58 UTC 2026-10-14. Current candidate adds paired source/plot/batch/certificate/holding 404 nondisclosure, post-guard UUID validation, one policy/detail snapshot and no-store session responses; 34 native role/owner/foreign/search/suspension/reassignment cases supplied. Full resource/action/field/role and nondisclosure coverage remains incomplete. See security/SOURCE_RESOURCE_BOUNDARIES_2026-10-14.md; Founder supplied exact-commit release pass/push f74f290f3bb0c72762adf19fb4b958a3fee77352 and main update 606da5bd0 at 18:54 UTC 2026-10-14; source slice accepted. Other action/field boundaries and hosted acceptance remain partial. Founder reports trade-boundary release/merge complete at 19:38 UTC 2026-10-14; current contract/payment/shipment and party-action slice accepted. Remaining action/field and environment requirements keep this gate partial."
     },
     {
       "id": "CORE-origin",

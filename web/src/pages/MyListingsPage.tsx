@@ -3,7 +3,7 @@ import PageNavigation from '../components/catalog/PageNavigation';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listings } from '../api';
-import { Listing } from '../types';
+import type { Listing } from '../domains/marketplace/types';
 import { fmtMoney } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { trustLabel } from '../components/shared/TrustClaims';

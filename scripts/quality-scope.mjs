@@ -1,5 +1,13 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'e2e/externalUrlPolicy.spec.ts',
+  'web/src/api.ts',
+  'web/src/types.ts',
+  'api/src/security/**/*.ts',
+  'web/src/security/**/*.ts',
+  'web/src/api/**/*.ts',
+  'web/src/domains/**/*.ts',
+  'scripts/web-http.test.mjs',
   'api/src/controllers/contractReadBoundary.test.ts',
   'api/test/integration/sourceResourceBoundary.integration.test.ts',
   'api/src/testing/authorizationRoutes.test.ts',

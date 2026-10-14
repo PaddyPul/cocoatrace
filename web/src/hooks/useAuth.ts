@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { User } from '../types';
+import type { User } from '../domains/identity/types';
 import { auth, setAuthToken } from '../api';
 
 export function useAuth() {

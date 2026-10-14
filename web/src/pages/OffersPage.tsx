@@ -4,7 +4,7 @@ import type { OfferSummary } from '../api';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { offers as offersApi } from '../api';
-import { Offer } from '../types';
+import type { Offer } from '../domains/marketplace/types';
 import { StatusBadge, fmtDate, fmtMoney } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import Layout from '../components/layout/Layout';

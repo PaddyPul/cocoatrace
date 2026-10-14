@@ -171,3 +171,13 @@ api/src/testing/authorizationRoutes.test.ts text eol=lf
 api/test/integration/sourceResourceBoundary.integration.test.ts text eol=lf
 
 api/src/controllers/contractReadBoundary.test.ts text eol=lf
+
+api/src/security/**/*.ts text eol=lf
+web/src/security/**/*.ts text eol=lf
+web/src/api/**/*.ts text eol=lf
+web/src/domains/**/*.ts text eol=lf
+scripts/web-http.test.mjs text eol=lf
+
+e2e/externalUrlPolicy.spec.ts text eol=lf
+web/src/api.ts text eol=lf
+web/src/types.ts text eol=lf

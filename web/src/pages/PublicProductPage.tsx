@@ -9,7 +9,8 @@ import {
 } from 'lucide-react';
 import TrustClaims, { trustLabel } from '../components/shared/TrustClaims';
 import { publicProducts } from '../api';
-import { PublicProduct, PublicNoticeSafety } from '../types';
+import type { PublicProduct } from '../domains/product/types';
+import type { PublicNoticeSafety } from '../domains/recall/types';
 
 function formatDate(value: string) {
   const date = new Date(value);

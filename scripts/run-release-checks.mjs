@@ -29,6 +29,7 @@ export const releaseChecks = [
     true,
   ],
   ['Language foundation tests', ['run', 'test:locale']],
+  ['Frontend HTTP boundaries', ['run', 'test:web-boundaries']],
   ['Authorization route register', ['run', 'check:authorization']],
   ['API unit tests', ['run', 'test', '--workspace=api']],
   ['API build', ['run', 'build', '--workspace=api']],

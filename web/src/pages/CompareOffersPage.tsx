@@ -4,7 +4,7 @@ import { ArrowLeft, Scale, ShieldCheck } from 'lucide-react';
 import { trustLabel } from '../components/shared/TrustClaims';
 import Layout from '../components/layout/Layout';
 import { listings } from '../api';
-import { Listing } from '../types';
+import type { Listing } from '../domains/marketplace/types';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { SkeletonTable } from '../components/shared/Skeleton';
 

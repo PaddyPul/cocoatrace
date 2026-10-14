@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { certificates } from '../../api';
-import { Certificate } from '../../types';
+import type { Certificate } from '../../domains/certification/types';
 import { useCatalogPage } from './useCatalogPage';
 import PageNavigation from './PageNavigation';
 export default function CertificatePicker({

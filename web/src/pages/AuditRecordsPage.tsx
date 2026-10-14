@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { audit } from '../api';
-import { AuditEvent } from '../types';
+import type { AuditEvent } from '../domains/audit/types';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import Layout from '../components/layout/Layout';
 import PageNavigation from '../components/catalog/PageNavigation';
@@ -166,6 +166,7 @@ export default function AuditRecordsPage() {
                     : {},
                 ),
                 '_blank',
+                'noopener,noreferrer',
               )
             }
           >

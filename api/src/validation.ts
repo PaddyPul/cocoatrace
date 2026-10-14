@@ -1,6 +1,9 @@
+import { safeExternalHttpsUrl } from './security/externalUrls';
 import { incoterms } from './modules/transport/responsibilities';
 import { tradeCurrencies } from './services/tradeMoney';
 import { z } from 'zod';
+
+const externalHttpsUrlSchema = z.string().refine(value => safeExternalHttpsUrl(value) !== null, 'Use an HTTPS URL on a public host without credentials or a custom port');
 
 export const resourceIdParamsSchema = z.object({ id: z.string().uuid() });
 
@@ -190,7 +193,7 @@ export const updateShipmentDetailsSchema = z.object({
   transportMode: z.enum(['road', 'rail', 'sea', 'air', 'inland_waterway', 'multimodal', 'unspecified']).optional(),
   transportDocumentType: z.enum(['bill_of_lading', 'sea_waybill', 'air_waybill', 'road_consignment_note', 'rail_consignment_note', 'warehouse_release', 'other']).optional(),
   transportDocumentReference: z.string().trim().min(1).optional(),
-  trackingUrl: z.string().url().optional(),
+  trackingUrl: externalHttpsUrlSchema.optional(),
   vesselName: z.string().trim().min(1).optional(),
   containerReference: z.string().trim().min(1).optional(),
   originLocation: z.string().trim().min(1).optional(),
@@ -258,7 +261,7 @@ export const productProfileSchema = z.object({
   description: z.string().max(600).optional(),
   gtin: z.string().regex(/^\d{8,14}$/).optional(),
   lotCode: z.string().min(2).max(80),
-  heroImageUrl: z.string().url().optional(),
+  heroImageUrl: externalHttpsUrlSchema.optional(),
 });
 
 export const createRecallSchema = z.object({
