@@ -2,6 +2,8 @@ import { incoterms } from './modules/transport/responsibilities';
 import { tradeCurrencies } from './services/tradeMoney';
 import { z } from 'zod';
 
+export const resourceIdParamsSchema = z.object({ id: z.string().uuid() });
+
 const inventoryQuantitySchema = z.number().finite().positive().max(999999999.999)
   .refine(value => Math.abs(value * 1000 - Math.round(value * 1000)) < 0.00001, 'Quantity must have at most three decimal places');
 const inventoryPriceSchema = z.number().finite().positive().max(999999.9999)

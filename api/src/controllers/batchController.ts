@@ -1,4 +1,4 @@
-import { batchEvidenceCollection } from '../modules/catalog/evidenceRecords';
+import { privateBatchDetail } from '../modules/catalog/privateResources';
 import { legacySourceList } from '../modules/catalog/sourceRecords';
 import { withCatalogRead } from '../modules/catalog/paging';
 import { lockRecallBoundary, assertBatchNotRecalled } from '../modules/recall/safety';
@@ -8,8 +8,6 @@ import * as audit from '../services/audit';
 import { ensureSourceMaterialLot } from '../services/materialLot';
 import { lockHoldingListings, pendingTransferQuantity } from '../services/inventoryIntegrity';
 import { recordTradeAudit } from '../modules/trading/transaction';
-import { hasBatchRelationship, hasExplicitPermission } from '../services/resourcePolicy';
-import { loadBatchTrust, legacyOrganicStatus } from '../modules/trust/assessment';
 import { attestBatchRecord } from '../modules/trust/certification';
 
 export async function pushToMarketplace(req: Request, res: Response): Promise<void> {
@@ -101,30 +99,9 @@ export async function listBatches(req: Request, res: Response): Promise<void> {
 }
 
 export async function getBatch(req: Request, res: Response): Promise<void> {
-  const { rows } = await query(
-    `SELECT b.*, f.name as farm_name, f.farmer_organization_id, o.name as holder_name,
-            a.attested_at, a.provenance_hash as att_hash, a.notes as att_notes,
-            c.standard as cert_standard, c.valid_to as cert_valid_to
-     FROM harvest_batches b
-     LEFT JOIN farms f ON f.id = b.farm_id
-     JOIN organizations o ON o.id = b.current_holder_id
-     LEFT JOIN batch_attestations a ON a.id = b.attestation_id
-     LEFT JOIN organic_certificates c ON c.id = a.certificate_id
-     WHERE b.id = $1`,
-    [req.params.id]
-  );
-  if (!rows[0]) {
-    res.status(404).json({ error: 'Batch not found' });
-    return;
-  }
-  const seeAll = hasExplicitPermission(req.user!, 'batch.read.all');
-  if (!seeAll && !await hasBatchRelationship(req.user!, req.params.id)) {
-    res.status(403).json({ error: 'Access denied' });
-    return;
-  }
-  const evidenceCollection = await withCatalogRead(execute=>batchEvidenceCollection(execute,req.user!,req.params.id as string,req.query.evidenceMode));
-  const trust = (await loadBatchTrust([rows[0].id])).get(rows[0].id);
-  res.json({ batch: { ...rows[0], recorded_organic_claim_status: rows[0].organic_claim_status, organic_claim_status: trust ? legacyOrganicStatus(trust) : 'self_declared', trust }, ...evidenceCollection });
+  const detail = await withCatalogRead(execute => privateBatchDetail(execute,req.user!,req.params.id as string,req.query));
+  if (!detail) { res.status(404).json({error:'Batch not found'}); return; }
+  res.json(detail);
 }
 
 export async function createBatch(req: Request, res: Response): Promise<void> {

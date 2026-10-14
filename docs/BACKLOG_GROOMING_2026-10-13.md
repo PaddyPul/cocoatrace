@@ -117,3 +117,8 @@ The founder reports the operator-alert workflow done. That default-off engineeri
 ## Subsequent checkpoint — authorization entry-point evidence, 2026-10-14
 
 The founder confirms reviewed operator-alert recovery release/merge/pull at 12:19 UTC; record that slice as accepted. The next candidate maps all 195 explicit entry points, links existing policy/resource-family regressions, checks 178 credential boundaries and supplies 155 native no-permission cases. SEC-006 and QLT-002 move from open to IN PROGRESS without fractional completion credit. Universal resource/foreign-ID/role-union/suspension acceptance and hosted security remain open. Closed-item totals remain 88/343 (25.7%), core 11/28 (39.3%), provider-inclusive 11/40 (27.5%). The older grooming table remains its dated baseline snapshot.
+
+
+## Subsequent checkpoint — paired private resource reads, 2026-10-14
+
+The founder reports authorization-register release/merge/pull complete at 13:58 UTC after a transient Chromium navigation failure. Entry coverage is now accepted. The next candidate groups farm/plot, batch, certificate and holding privacy/role tests with uniform foreign/absent 404, post-guard UUID validation, one scoped read snapshot and a no-store session default. SEC-006/QLT-002/ARC-011 remain partial; broader action/field/relationship/deployment evidence is not inferred. Full-item/gate counts remain 88/343 (25.7%), 11/28 (39.3%), 11/40 (27.5%).

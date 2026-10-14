@@ -32,7 +32,7 @@
       "status": "partial",
       "title": "All pilot resource families pass negative authorization tests",
       "backlog": ["SEC-002", "QLT-002", "SEC-006"],
-      "evidence": "Existing two-tenant/resource regressions are founder accepted. Current candidate adds a checked 195-route register, actual-registration and 178 credential-boundary cases, 155 native zero-permission route cases and early platform-review guards. Full route/resource/foreign-ID/role-union/suspension and nondisclosure acceptance remains incomplete. See security/ROUTE_SECURITY_REVIEW_2026-10-14.md; native candidate execution pending."
+      "evidence": "Founder reports the checked route register and entry-boundary release/merge/pull complete at 13:58 UTC 2026-10-14. Current candidate adds paired source/plot/batch/certificate/holding 404 nondisclosure, post-guard UUID validation, one policy/detail snapshot and no-store session responses; 34 native role/owner/foreign/search/suspension/reassignment cases supplied. Full resource/action/field/role and nondisclosure coverage remains incomplete. See security/SOURCE_RESOURCE_BOUNDARIES_2026-10-14.md; current native acceptance pending."
     },
     {
       "id": "CORE-origin",

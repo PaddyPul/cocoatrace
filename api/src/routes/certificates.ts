@@ -1,3 +1,4 @@
+import { resourceIdParamsSchema } from '../validation';
 import { listCertificatePage, summarizeCertificates } from '../modules/catalog/certificates';
 import { Router } from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth';
@@ -10,7 +11,7 @@ const router = Router();
 router.get('/certificates', requireAuth, requirePermission('certificate.read'), certController.listCertificates);
 router.get('/certificates/page', requireAuth, requirePermission('certificate.read'), listCertificatePage);
 router.get('/certificates/summary', requireAuth, requirePermission('certificate.read'), summarizeCertificates);
-router.get('/certificates/:id', requireAuth, requirePermission('certificate.read'), certController.getCertificate);
+router.get('/certificates/:id', requireAuth, requirePermission('certificate.read'), validate(resourceIdParamsSchema, 'params'), certController.getCertificate);
 router.post('/certificates', requireAuth, requirePermission('certificate.issue'), validate(createCertificateSchema), certController.issueCertificate);
 router.post('/certificates/:id/:action', requireAuth, requirePermission('certificate.issue'), validate(certificateActionSchema), certController.updateCertificateStatus);
 

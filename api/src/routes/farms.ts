@@ -1,3 +1,4 @@
+import { resourceIdParamsSchema } from '../validation';
 import { listPlotPage,summarizePlots } from '../modules/catalog/farmPlots';
 import { Router } from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth';
@@ -14,7 +15,7 @@ router.get('/farms/summary', requireAuth, requirePermission('farm.read'), summar
 router.get('/farms', requireAuth, requirePermission('farm.read'), farmController.listFarms);
 router.get('/farms/:id/plots/page',requireAuth,requirePermission('farm.read'),listPlotPage);
 router.get('/farms/:id/plots/summary',requireAuth,requirePermission('farm.read'),summarizePlots);
-router.get('/farms/:id', requireAuth, requirePermission('farm.read'), farmController.getFarm);
+router.get('/farms/:id', requireAuth, requirePermission('farm.read'), validate(resourceIdParamsSchema, 'params'), farmController.getFarm);
 router.post('/farms', requireAuth, requirePermission('farm.create'), validate(createFarmSchema), farmController.createFarm);
 router.post('/farms/:id/plots', requireAuth, requirePermission('farm.create'), validate(createPlotSchema), farmController.createPlot);
 

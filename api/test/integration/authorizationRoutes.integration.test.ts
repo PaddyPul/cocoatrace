@@ -105,6 +105,7 @@ describe('live-session permission gates across the reviewed route register', () 
         .post(endpoint)
         .set('Authorization', `Bearer ${token}`)
         .send({ reason: 123, recipient: 'unreviewed override' });
+      expect(response.headers['cache-control']).toBe('no-store');
       expect(response.status, JSON.stringify(response.body)).toBe(403);
     }
     expect(

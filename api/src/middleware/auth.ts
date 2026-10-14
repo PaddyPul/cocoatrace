@@ -15,6 +15,8 @@ declare global {
 }
 
 async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
+  // Session-bound data and denials must not be reused by shared/browser HTTP caches.
+  res.setHeader('Cache-Control', 'no-store');
   const token = sessionCredential(req);
   if (!token) {
     res.status(401).json({ error: 'Authentication required' });

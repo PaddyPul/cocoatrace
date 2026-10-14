@@ -1,3 +1,4 @@
+import { resourceIdParamsSchema } from '../validation';
 import { Router } from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth';
 import validate from '../middleware/validate';
@@ -11,7 +12,7 @@ router.get('/batches/summary', requireAuth, requirePermission('batch.read'), sum
 router.get('/batches/page', requireAuth, requirePermission('batch.read'), listBatchPage);
 
 router.get('/batches', requireAuth, requirePermission('batch.read'), batchController.listBatches);
-router.get('/batches/:id', requireAuth, requirePermission('batch.read'), batchController.getBatch);
+router.get('/batches/:id', requireAuth, requirePermission('batch.read'), validate(resourceIdParamsSchema, 'params'), batchController.getBatch);
 router.post('/batches', requireAuth, requirePermission('batch.create'), validate(createBatchSchema), batchController.createBatch);
 router.post('/inventory/direct', requireAuth, requirePermission('batch.create'), validate(createDirectInventorySchema), batchController.createDirectInventory);
 router.post('/batches/:id/attest', requireAuth, requirePermission('batch.attest'), validate(attestBatchSchema), batchController.attestBatch);

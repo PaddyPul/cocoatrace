@@ -1,3 +1,4 @@
+import { resourceIdParamsSchema } from '../validation';
 import { Router } from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth';
 import validate from '../middleware/validate';
@@ -14,7 +15,7 @@ router.get('/transfers', requireAuth, requirePermission('custody.transfer.reques
 router.get('/holdings', requireAuth, requirePermission('holding.read'), holdingController.listHoldings);
 router.get('/holdings/page', requireAuth, requirePermission('holding.read'), listHoldingPage);
 router.get('/holdings/summary', requireAuth, requirePermission('holding.read'), summarizeHoldings);
-router.get('/holdings/:id', requireAuth, requirePermission('holding.read'), holdingController.getHolding);
+router.get('/holdings/:id', requireAuth, requirePermission('holding.read'), validate(resourceIdParamsSchema, 'params'), holdingController.getHolding);
 router.post('/holdings', requireAuth, requirePermission('holding.create'), validate(createHoldingSchema), holdingController.createHolding);
 router.post('/holdings/:id/transfer', requireAuth, requirePermission('custody.transfer.request'), validate(transferHoldingSchema), holdingController.transferHolding);
 router.post('/transfers/:id/accept', requireAuth, requirePermission('custody.transfer.accept'), holdingController.acceptTransfer);
