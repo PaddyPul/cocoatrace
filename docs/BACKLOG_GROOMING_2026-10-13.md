@@ -122,3 +122,13 @@ The founder confirms reviewed operator-alert recovery release/merge/pull at 12:1
 ## Subsequent checkpoint — paired private resource reads, 2026-10-14
 
 The founder reports authorization-register release/merge/pull complete at 13:58 UTC after a transient Chromium navigation failure. Entry coverage is now accepted. The next candidate groups farm/plot, batch, certificate and holding privacy/role tests with uniform foreign/absent 404, post-guard UUID validation, one scoped read snapshot and a no-store session default. SEC-006/QLT-002/ARC-011 remain partial; broader action/field/relationship/deployment evidence is not inferred. Full-item/gate counts remain 88/343 (25.7%), 11/28 (39.3%), 11/40 (27.5%).
+
+
+## Source resource boundary acceptance — 2026-10-14 18:54 UTC
+
+Founder supplied successful focused MFA/source-collection runs, an exact-commit full release pass and push for `f74f290f3bb0c72762adf19fb4b958a3fee77352`, followed by main fast-forward to `606da5bd0`. Record the source/plot/batch/certificate/holding slice as accepted, superseding its earlier pending native status. No independent CI URL or hosted acceptance is inferred. SEC-006/QLT-002/ARC-011 remain IN PROGRESS for other resource/action/field boundaries. The next batch addresses contract/payment/shipment reads and party-specific writes. No full-row completion credit: roadmap 88/343 (25.7%), core 11/28 (39.3%), provider-inclusive 11/40 (27.5%).
+
+
+## Trade resource boundary candidate — 2026-10-14
+
+Contract/payment/shipment direct reads are scoped to current buyer/seller parties before hydration, with matching foreign/absent 404 and post-guard UUID checks. Linked detail/action data shares a bounded snapshot; oversized child arrays fail explicitly. New payment regressions cover wildcard callers' party constraints and unchanged state/audit on denials; transport regressions preserve all eleven Incoterm responsibility rules. See releases/TRADE_RESOURCE_BOUNDARIES_WINDOWS.md and security/TRADE_RESOURCE_BOUNDARIES_2026-10-14.md. No migration or dependency changes. Author static/unit verification is distinct from pending founder native/browser release. SEC-006/QLT-002/ARC-011 remain IN PROGRESS; no percentage increase for a partial item. Field-level evidence/fee/admin/provenance review and hosted operational/security proof remain open.

@@ -91,6 +91,22 @@ describe('all Incoterms enforce physical action responsibilities at the API',()=
    expect((await post(`/shipments/${d.shipmentId}/milestones`,assigned,{milestone:m})).status).toBe(200);
   }
  });
+ it('keeps shipment details private from unrelated wildcard accounts and returns party-specific permissions',async()=>{
+  const d=await deal('pay_after_delivery');
+  const foreign=await get(`/shipments/${d.shipmentId}`,outsider);
+  const absent=await get(`/shipments/${crypto.randomUUID()}`,outsider);
+  expect(foreign.status,JSON.stringify(foreign.body)).toBe(404);
+  expect(absent.status).toBe(404);expect(foreign.body).toEqual(absent.body);
+  expect(foreign.headers['cache-control']).toBe('no-store');
+  for(const principal of [seller,buyer]) {
+   const detail=await get(`/shipments/${d.shipmentId}`,principal);
+   expect(detail.status,JSON.stringify(detail.body)).toBe(200);
+   expect(detail.body.shipment.id).toBe(d.shipmentId);
+   expect(detail.body.permissions.party).toBe(principal===seller?'seller':'buyer');
+   expect(detail.body.permissions.milestones.includes('cargo_ready')).toBe(principal===seller);
+  }
+  expect((await get('/shipments/not-a-uuid',seller)).status).toBe(400);
+ });
  it('blocks skipped origin work, EXW collection and DPU/DDP receipt prerequisites',async()=>{
   for(const term of ['FOB','EXW','FAS','DPU','DDP']) {
    const d=await deal('pay_after_delivery',false,term);

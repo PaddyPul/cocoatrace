@@ -169,3 +169,5 @@ docs/security/route-authorization.json text eol=lf
 api/src/testing/authorizationRoutes.test.ts text eol=lf
 
 api/test/integration/sourceResourceBoundary.integration.test.ts text eol=lf
+
+api/src/controllers/contractReadBoundary.test.ts text eol=lf
