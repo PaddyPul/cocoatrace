@@ -17,10 +17,13 @@ Download bettertrade-source-boundary-fixture-fix.bundle into Downloads. Run from
     if ($LASTEXITCODE -ne 0) { throw 'Bundle fetch failed.' }
     git cherry-pick bundle/source-boundary-fixture-fix
     if ($LASTEXITCODE -ne 0) { throw 'Cherry-pick failed. Send git status.' }
-    cmd.exe /d /c "npm run test:integration:docker --workspace=api -- mfa.integration.test.ts sourceDetailCollections.integration.test.ts > source-boundary-fixture-output.txt 2>&1"
-    if ($LASTEXITCODE -ne 0) {
-        Get-Content source-boundary-fixture-output.txt -Tail 70
-        throw 'Focused tests failed. Stop here.'
+    foreach ($suite in @('mfa.integration.test.ts', 'sourceDetailCollections.integration.test.ts')) {
+        $log = "$suite-output.txt"
+        cmd.exe /d /c "npm run test:integration:docker --workspace=api -- $suite > $log 2>&1"
+        if ($LASTEXITCODE -ne 0) {
+            Get-Content $log -Tail 70
+            throw "$suite failed. Stop here."
+        }
     }
     'Focused tests passed.'
 }

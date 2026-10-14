@@ -1,5 +1,6 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/controllers/contractReadBoundary.test.ts',
   'api/test/integration/sourceResourceBoundary.integration.test.ts',
   'api/src/testing/authorizationRoutes.test.ts',
   'scripts/authorization-register.mjs',

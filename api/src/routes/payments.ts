@@ -2,7 +2,7 @@ import {listPaymentPage,summarizePayments} from '../modules/catalog/payments';
 import { Router } from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth';
 import validate from '../middleware/validate';
-import { createPaymentRequestSchema, payPaymentSchema, rejectInstallmentSchema, submitInstallmentSchema, submitPaymentSecuritySchema } from '../validation';
+import { resourceIdParamsSchema, createPaymentRequestSchema, payPaymentSchema, rejectInstallmentSchema, submitInstallmentSchema, submitPaymentSecuritySchema } from '../validation';
 import * as paymentController from '../controllers/paymentController';
 import * as paymentOperationsController from '../controllers/paymentOperationsController';
 
@@ -11,7 +11,7 @@ const router = Router();
 router.get('/payment-requests/page', requireAuth, requirePermission('payment.read'), listPaymentPage);
 router.get('/payment-requests/summary', requireAuth, requirePermission('payment.read'), summarizePayments);
 router.get('/payment-requests', requireAuth, requirePermission('payment.read'), paymentController.listPaymentRequests);
-router.get('/payment-requests/:id', requireAuth, requirePermission('payment.read'), paymentController.getPaymentRequest);
+router.get('/payment-requests/:id', requireAuth, requirePermission('payment.read'), validate(resourceIdParamsSchema, 'params'), paymentController.getPaymentRequest);
 router.get('/payment-requests/:id/operations', requireAuth, requirePermission('payment.read'), paymentOperationsController.operations);
 router.post('/payment-requests/:id/remind', requireAuth, requirePermission('payment.read'), paymentOperationsController.remind);
 router.post('/payment-requests/:id/issues', requireAuth, requirePermission('payment.read'), paymentOperationsController.openIssue);

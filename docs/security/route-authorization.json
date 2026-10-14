@@ -79,12 +79,15 @@
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
     "api/src/routes/contracts.ts": {
-      "scope": "Offers are buyer/seller scoped; contract mutations recheck contract party and specific buyer/seller action, payment gates, delivery/cancellation and atomic audit.",
+      "scope": "Offers are buyer/seller scoped; contract mutations recheck contract party and specific buyer/seller action, payment gates, delivery/cancellation and atomic audit. Direct detail reads are buyer/seller scoped even for wildcard actors; foreign and absent records share 404, UUID validation follows entry guards, and linked detail data uses one bounded snapshot.",
       "evidence": [
         "api/src/controllers/contractController.ts",
         "api/test/integration/tradingIntegrity.integration.test.ts",
         "api/test/integration/deliveryAcceptance.integration.test.ts",
-        "api/test/integration/cancellation.integration.test.ts"
+        "api/test/integration/cancellation.integration.test.ts",
+        "api/src/controllers/contractReadBoundary.test.ts",
+        "api/src/services/tradeActionRepository.ts",
+        "api/test/integration/paymentWorkflow.integration.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
@@ -167,11 +170,13 @@
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
     "api/src/routes/payments.ts": {
-      "scope": "Contract-party read scope; buyer submission and seller receipt/security verification remain distinct. Current installment/payment state controls dispatch, document release and settlement.",
+      "scope": "Contract-party read scope; buyer submission and seller receipt/security verification remain distinct. Current installment/payment state controls dispatch, document release and settlement. Direct detail reads are buyer/seller scoped even for wildcard actors; foreign and absent records share 404, UUID validation follows entry guards, and linked detail data uses one bounded snapshot.",
       "evidence": [
         "api/src/controllers/paymentController.ts",
         "api/test/integration/paymentWorkflow.integration.test.ts",
-        "api/test/integration/paymentPages.integration.test.ts"
+        "api/test/integration/paymentPages.integration.test.ts",
+        "api/src/modules/catalog/privatePayments.ts",
+        "api/src/modules/catalog/privatePayments.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
@@ -204,11 +209,13 @@
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
     "api/src/routes/shipments.ts": {
-      "scope": "Contract party or assigned logistics read scope; Incoterm/milestone actor matrix, payment dispatch gate and current transport responsibility apply on writes.",
+      "scope": "Contract party or assigned logistics read scope; Incoterm/milestone actor matrix, payment dispatch gate and current transport responsibility apply on writes. Direct detail reads are buyer/seller scoped even for wildcard actors; foreign and absent records share 404, UUID validation follows entry guards, and linked detail data uses one bounded snapshot.",
       "evidence": [
         "api/src/controllers/shipmentController.ts",
         "api/test/integration/transportResponsibilities.integration.test.ts",
-        "api/test/integration/shipmentPages.integration.test.ts"
+        "api/test/integration/shipmentPages.integration.test.ts",
+        "api/src/modules/transport/privateShipmentDetail.ts",
+        "api/src/modules/transport/privateShipmentDetail.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },

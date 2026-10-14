@@ -223,7 +223,46 @@ describe('payment plans, protected documents and atomic retries', () => {
     expect((await post(`/payment-installments/${id}/submit`, seller, { transactionReference: 'WRONG-PARTY' })).status).toBe(404);
     expect((await post(`/payment-installments/${id}/confirm`, buyer)).status).toBe(404);
     expect((await post(`/payment-installments/${id}/submit`, outsider, { transactionReference: 'OTHER-TENANT' })).status).toBe(404);
-    expect((await get(`/payment-requests/${d.paymentId}`, outsider)).status).toBe(403);
+    const foreign = await get(`/payment-requests/${d.paymentId}`, outsider);
+    const absent = await get(`/payment-requests/${crypto.randomUUID()}`, outsider);
+    expect(foreign.status).toBe(404); expect(foreign.body).toEqual(absent.body);
+    expect(foreign.headers['cache-control']).toBe('no-store');
+  });
+
+  it('contract and payment reads disclose only current parties, with matching absent denials and bounded UUID input', async () => {
+    const d = await deal('pay_before_dispatch');
+    for (const resource of [`/contracts/${d.contractId}`, `/payment-requests/${d.paymentId}`]) {
+      for (const principal of [buyer,seller]) {
+        const allowed=await get(resource,principal);
+        expect(allowed.status,JSON.stringify(allowed.body)).toBe(200);
+        expect(allowed.headers['cache-control']).toBe('no-store');
+      }
+      const denied=await get(resource,outsider);
+      const absent=await get(resource.replace(/[^/]+$/,crypto.randomUUID()),outsider);
+      expect(denied.status).toBe(404); expect(absent.status).toBe(404); expect(denied.body).toEqual(absent.body);
+      expect(denied.headers['cache-control']).toBe('no-store');
+      expect((await get(resource.replace(/[^/]+$/,'invalid-id'),outsider)).status).toBe(400);
+    }
+  });
+
+  it('wildcard permissions never substitute for the required payment party or mutate state on denied retries', async () => {
+    const d = await deal('bank_secured');
+    const before = (await query('SELECT * FROM payment_requests WHERE id=$1', [d.paymentId])).rows[0];
+    const actions = [
+      { path: `/payment-requests/${d.paymentId}/security`, denied: [seller, outsider], body: {provider:'External bank',reference:'PARTY-BOUNDARY'} },
+      { path: `/payment-requests/${d.paymentId}/security/confirm`, denied: [buyer, outsider], body: {} },
+      { path: `/payment-requests/${d.paymentId}/submit-documents`, denied: [buyer, outsider], body: {} },
+      { path: `/payment-requests/${d.paymentId}/remind`, denied: [buyer, outsider], body: {} },
+    ];
+    for (const action of actions) for (const principal of action.denied) {
+      const denied = await post(action.path, principal, action.body);
+      expect(denied.status, JSON.stringify(denied.body)).toBe(404);
+      expect(denied.headers['cache-control']).toBe('no-store');
+    }
+    expect((await query('SELECT * FROM payment_requests WHERE id=$1', [d.paymentId])).rows[0]).toEqual(before);
+    expect((await query("SELECT COUNT(*)::int n FROM audit_events WHERE entity_id=$1 AND action IN ('payment.security.submit','payment.security.verify','payment.documents.present','payment.reminder.create')", [d.paymentId])).rows[0].n).toBe(0);
+    expect((await post(`/payment-requests/${d.paymentId}/security`,buyer,{provider:'External bank',reference:'PARTY-BOUNDARY'})).status).toBe(200);
+    expect((await post(`/payment-requests/${d.paymentId}/security/confirm`,seller)).status).toBe(200);
   });
 
   nativeIt('serializes simultaneous identical submissions and confirmations without duplicate audits', async () => {

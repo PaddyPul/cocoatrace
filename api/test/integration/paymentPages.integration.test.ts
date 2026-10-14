@@ -244,7 +244,7 @@ describe('payment pages and complete counts', () => {
     ).rows[0].id;
     expect((await get('/payment-requests/' + id, {}, seller)).status).toBe(200);
     expect((await get('/payment-requests/' + id, {}, buyer)).status).toBe(200);
-    expect((await get('/payment-requests/' + id, {}, outsider)).status).toBe(403);
+    expect((await get('/payment-requests/' + id, {}, outsider)).status).toBe(404);
     const write = await request(app)
       .post('/payment-requests/' + id + '/pay')
       .set('Authorization', `Bearer ${seller.token}`)

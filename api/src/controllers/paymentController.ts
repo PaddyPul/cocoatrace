@@ -2,7 +2,7 @@ import {legacyPayments} from '../modules/catalog/payments';
 import {withCatalogRead} from '../modules/catalog/paging';
 import { activatePaymentInstallments } from '../modules/payments/dueDates';
 import { Request, Response } from 'express';
-import { query } from '../db';
+import { privatePaymentDetail } from '../modules/catalog/privatePayments';
 import { inTradeTransaction, recordTradeAudit } from '../modules/trading/transaction';
 import { ConflictError, NotFoundError, ValidationError } from '../errors';
 import { buildInstallments, requiredBeforeDispatch } from '../services/paymentProtection';
@@ -13,13 +13,9 @@ export async function listPaymentRequests(req:Request,res:Response):Promise<void
   res.json(await withCatalogRead(execute => legacyPayments(execute,req.user!.organizationId)));
 }
 export async function getPaymentRequest(req:Request,res:Response):Promise<void>{
-  const {rows}=await query(`SELECT p.*,c.seller_organization_id,c.buyer_organization_id,c.quantity_kg,c.price_per_kg,c.incoterm,c.payment_plan,c.deposit_percentage,c.credit_days,c.payment_terms_status,c.payment_evidence_required,c.payment_terms_note,c.payment_terms_confirmed_at,c.status AS contract_status,
-    s.name seller_name,b.name buyer_name,sh.current_milestone,fee.amount_total platform_fee_amount,fee.fee_payer,fee.status platform_fee_status
-    FROM payment_requests p JOIN sales_contracts c ON c.id=p.contract_id JOIN organizations s ON s.id=c.seller_organization_id JOIN organizations b ON b.id=c.buyer_organization_id
-    LEFT JOIN LATERAL(SELECT current_milestone FROM shipments WHERE contract_id=c.id ORDER BY created_at DESC LIMIT 1)sh ON TRUE LEFT JOIN platform_fee_invoices fee ON fee.contract_id=c.id WHERE p.id=$1`,[req.params.id]);
-  if(!rows[0]){res.status(404).json({error:'Payment request not found'});return;} const p=rows[0];
-  if(p.seller_organization_id!==req.user!.organizationId&&p.buyer_organization_id!==req.user!.organizationId){res.status(403).json({error:'Access denied'});return;}
-  const installments=await query('SELECT i.*, e.file_name AS payment_evidence_file_name FROM payment_installments i LEFT JOIN evidence_items e ON e.id=i.payment_evidence_id WHERE i.payment_request_id=$1 ORDER BY i.sequence_number',[req.params.id]);res.json({...p,installments:installments.rows});
+  const payment = await withCatalogRead(execute => privatePaymentDetail(execute, req.user!.organizationId, req.params.id));
+  if (!payment) { res.status(404).json({error:'Payment request not found'}); return; }
+  res.json(payment);
 }
 export async function createPaymentRequest(req: Request, res: Response): Promise<void> {
   const payment = await inTradeTransaction(async client => {
