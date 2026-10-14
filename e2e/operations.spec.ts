@@ -14,7 +14,8 @@ async function mock(page: Page, admin = true) {
     backlogFailure = false,
     backlogMalformed = false,
     backlogCapped = false,
-    alertsMode = 'disabled';
+    alertsMode = 'disabled',
+    alertRegisterFailure = false;
   const permissions = admin ? ['*'] : ['batch.read'];
   await page.addInitScript(
     ({ permissions }) =>
@@ -136,13 +137,23 @@ async function mock(page: Page, admin = true) {
               },
             ],
       };
-    else if (/\/operations\/email\/[^/]+\/dead$/.test(path)) {
-      const queue = path.split('/')[4];
+    else if (
+      path === '/api/operations/alerts/dead' ||
+      /\/operations\/email\/[^/]+\/dead$/.test(path)
+    ) {
+      const queue = path.includes('/operations/alerts/') ? 'operator_alert' : path.split('/')[4];
+      if (queue === 'operator_alert' && alertRegisterFailure)
+        return route.fulfill({
+          status: 503,
+          json: { code: 'OPERATIONS_ALERT_REGISTER_UNAVAILABLE' },
+        });
+      const absent =
+        recoveredEmails.has(queue) || (queue === 'operator_alert' && alertsMode === 'disabled');
       body = malformedEmail
         ? { items: null, more: false }
         : {
-            more: !recoveredEmails.has(queue),
-            items: recoveredEmails.has(queue)
+            more: !absent,
+            items: absent
               ? []
               : [
                   {
@@ -161,8 +172,11 @@ async function mock(page: Page, admin = true) {
                   },
                 ],
           };
-    } else if (/\/operations\/email\/[^/]+\/[^/]+\/retry$/.test(path)) {
-      const queue = path.split('/')[4];
+    } else if (
+      /\/operations\/alerts\/[^/]+\/retry$/.test(path) ||
+      /\/operations\/email\/[^/]+\/[^/]+\/retry$/.test(path)
+    ) {
+      const queue = path.includes('/operations/alerts/') ? 'operator_alert' : path.split('/')[4];
       emailRetries.push({ queue, body: route.request().postDataJSON() });
       if (emailFailure)
         return route.fulfill({
@@ -184,6 +198,9 @@ async function mock(page: Page, admin = true) {
     return route.fulfill({ json: body });
   });
   return {
+    failAlertRegister: (value = true) => {
+      alertRegisterFailure = value;
+    },
     alertMode: (value: string) => {
       alertsMode = value;
     },
@@ -295,11 +312,13 @@ test('ordinary workspace cannot see or operate administrator recovery controls',
 for (const [queue, name] of [
   ['payment_reminder', 'Payment reminder'],
   ['recall', 'Recall'],
+  ['operator_alert', 'Operator alert'],
 ]) {
   test(`${name} recovery preserves review through conflicts, assurance failure and refresh`, async ({
     page,
   }) => {
     const state = await mock(page);
+    if (queue === 'operator_alert') state.alertMode('failed');
     await page.goto('/operations');
     const section = page.getByRole('region', { name: `${name} terminal email`, exact: true });
     await expect(
@@ -310,7 +329,7 @@ for (const [queue, name] of [
     ).toHaveCount(1);
     await section.getByRole('button', { name: 'Review email retry', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Email recovery', exact: true });
-    await expect(dialog.getByText('retrying can duplicate email', { exact: false })).toBeVisible();
+    await expect(dialog.getByText(/retry(?:ing)? can duplicate email/)).toBeVisible();
     const submit = dialog.getByRole('button', { name: 'Queue reviewed retry', exact: true });
     await expect(submit).toBeDisabled();
     const reason = 'Provider outage investigated and corrected';
@@ -488,4 +507,33 @@ test('unavailable or malformed alert status never claims healthy delivery and re
       page.getByRole('region', { name: 'Operator alert delivery', exact: true }),
     ).toHaveCount(0);
   }
+});
+
+test('operator alert register failure preserves review and never reports empty terminal work', async ({
+  page,
+}) => {
+  const state = await mock(page);
+  state.alertMode('failed');
+  await page.goto('/operations');
+  const section = page.getByRole('region', { name: 'Operator alert terminal email', exact: true });
+  await section.getByRole('button', { name: 'Review email retry', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Email recovery', exact: true });
+  await dialog
+    .getByLabel('Recovery explanation', { exact: true })
+    .fill('Investigated original alert submission failure');
+  state.failAlertRegister();
+  await page.getByRole('button', { name: 'Refresh operations', exact: true }).click();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Operator alert delivery is unknown' }),
+  ).toBeVisible();
+  await expect(dialog.getByLabel('Recovery explanation', { exact: true })).toHaveValue(
+    'Investigated original alert submission failure',
+  );
+  await expect(section).toHaveCount(0);
+  state.failAlertRegister(false);
+  await page.getByRole('button', { name: 'Refresh operations', exact: true }).click();
+  await expect(section).toBeVisible();
+  await expect(dialog.getByLabel('Recovery explanation', { exact: true })).toHaveValue(
+    'Investigated original alert submission failure',
+  );
 });

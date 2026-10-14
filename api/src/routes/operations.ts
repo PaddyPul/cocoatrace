@@ -12,6 +12,7 @@ import {
 } from '../modules/operations/recovery';
 import { AppError, ValidationError } from '../errors';
 
+import { readTerminalAlerts, retryOperatorAlert } from '../modules/operations/alertRecovery';
 import { readAlertStatus } from '../modules/operations/alerts';
 import { readQueueBacklog } from '../modules/operations/backlog';
 
@@ -43,6 +44,45 @@ router.get('/operations/alerts', async (req, res, next) => {
     }
     res.setHeader('Cache-Control', 'no-store');
     res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+router.get('/operations/alerts/dead', async (req, res, next) => {
+  try {
+    if (Object.keys(req.query).length)
+      throw new ValidationError('Unknown alert register parameter');
+    let result;
+    try {
+      result = await readTerminalAlerts();
+    } catch {
+      throw new AppError(
+        'Operator alert register unavailable. Retry to refresh.',
+        503,
+        'OPERATIONS_ALERT_REGISTER_UNAVAILABLE',
+      );
+    }
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+router.post('/operations/alerts/:id/retry', async (req, res, next) => {
+  try {
+    const id = z.string().uuid().safeParse(req.params.id);
+    const body = z
+      .object({ reason: z.string().trim().min(10).max(500) })
+      .strict()
+      .safeParse(req.body);
+    if (!id.success || !body.success || Object.keys(req.query).length)
+      throw new ValidationError(
+        'An operator alert ID and explanation of 10–500 characters are required',
+      );
+    await inDatabaseTransaction((client) =>
+      retryOperatorAlert(client, req.user!, id.data, body.data.reason),
+    );
+    res.json({ queued: true });
   } catch (error) {
     next(error);
   }

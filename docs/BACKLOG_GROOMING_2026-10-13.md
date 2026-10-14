@@ -107,3 +107,8 @@ The next bounded queue-backlog/incident slice is implemented, with actual valida
 ## Subsequent checkpoint — 2026-10-14
 
 The founder reported the queue-backlog workflow done on 2026-10-13 after correction/push/merge/pull instructions. The delivery backlog and CORE-workers now record that slice as founder accepted. Opt-in durable operator alerts are the next candidate, with default-off configuration and separate native/external acceptance. OPS-006/OPS-010/ARC-014 remain partial. Real external inbox delivery, a named incident owner, reviewed terminal-operator-alert recovery, independent monitoring and hosted drills are still required. No full-row completion or percentage increase is taken: roadmap 88/343 (25.7%), core 11/28 (39.3%), provider-inclusive 11/40 (27.5%).
+
+
+## Subsequent checkpoint — operator alerts and reviewed recovery, 2026-10-14
+
+The founder reports the operator-alert workflow done. That default-off engineering slice is now recorded as founder accepted, without claiming externally verified CI, inbox delivery or hosted incident ownership. The next candidate adds reviewed terminal-operator-alert recovery using fresh assurance, locked current eligibility and atomic audit, with no full-item completion credit. OPS-006/OPS-010/ARC-014 and related gates remain partial. Counts remain roadmap 88/343 (25.7%), core 11/28 (39.3%), provider-inclusive 11/40 (27.5%). After this candidate is accepted, prioritize the authorization/resource evidence matrix; deployment and incident-owner evidence remain distinct.

@@ -102,6 +102,25 @@ export function alertMessage(key: string, detectedAt: string, to: string) {
     text: `Operations signal: ${key}\nDetected: ${new Date(detectedAt).toISOString()}\n\nSign in to investigate current job and queue status:\n${link.toString()}\n\nThis is an operational observation, not confirmation of inbox delivery, data loss or an inventory safety decision.`,
   };
 }
+export async function lockAlertRecipient(
+  client: PoolClient,
+  userId: string,
+): Promise<{ email: string } | undefined> {
+  const identity = (await client.query('SELECT organization_id FROM users WHERE id=$1', [userId]))
+    .rows[0];
+  if (identity)
+    await client.query('SELECT id FROM organizations WHERE id=$1 FOR SHARE', [
+      identity.organization_id,
+    ]);
+  return (
+    await client.query(
+      `SELECT u.email FROM users u JOIN organizations o ON o.id=u.organization_id
+          JOIN user_roles ur ON ur.user_id=u.id JOIN roles r ON r.id=ur.role_id WHERE u.id=$1 AND ${eligibleOperator}
+          FOR SHARE OF u,o,ur,r`,
+      [userId],
+    )
+  ).rows[0];
+}
 export async function deliverAlerts(
   options: AlertOptions,
   delivery: EmailSender = emailSender(),
@@ -154,23 +173,7 @@ export async function deliverAlerts(
             [row.incident_id],
           )
         ).rows[0];
-        const identity = (
-          await client.query('SELECT organization_id FROM users WHERE id=$1', [
-            row.recipient_user_id,
-          ])
-        ).rows[0];
-        if (identity)
-          await client.query('SELECT id FROM organizations WHERE id=$1 FOR SHARE', [
-            identity.organization_id,
-          ]);
-        const recipient = (
-          await client.query(
-            `SELECT u.email FROM users u JOIN organizations o ON o.id=u.organization_id
-          JOIN user_roles ur ON ur.user_id=u.id JOIN roles r ON r.id=ur.role_id WHERE u.id=$1 AND ${eligibleOperator}
-          FOR SHARE OF u,o,ur,r`,
-            [row.recipient_user_id],
-          )
-        ).rows[0];
+        const recipient = await lockAlertRecipient(client, row.recipient_user_id);
         const eligible =
           incident &&
           recipient &&
