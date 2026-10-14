@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import RecallRegister from '../components/catalog/RecallRegister';
 import Layout from '../components/layout/Layout';
 import { recalls as recallsApi, traceability } from '../api';
-import { MaterialLot, RecallImpactResult, TraceBackResult } from '../types';
+import type { MaterialLot, RecallImpactResult, TraceBackResult } from '../domains/traceability/types';
 import { useToast } from '../components/shared/ToastProvider';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 

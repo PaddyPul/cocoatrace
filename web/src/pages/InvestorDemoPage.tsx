@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import { traceability } from '../api';
-import { MaterialLot, RecallImpactResult } from '../types';
+import type { MaterialLot, RecallImpactResult } from '../domains/traceability/types';
 
 const CLEAR_PROFILE = '/p/akwaaba-cocoa-2026-ready';
 const WARNING_PROFILE = '/p/cocoatrace-demo-incident-2026';

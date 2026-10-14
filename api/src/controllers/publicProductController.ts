@@ -1,3 +1,4 @@
+import { safeExternalHttpsUrl } from '../security/externalUrls';
 import { readPublicNotices } from '../modules/catalog/publicNotices';
 import { readPublicJourney } from '../modules/catalog/publicJourney';
 import { readPublicEvidence } from '../modules/catalog/publicEvidence';
@@ -83,7 +84,7 @@ export async function getPublicProduct(req: Request, res: Response): Promise<voi
       description: product.description,
       gtin: product.gtin,
       lotCode: product.lot_code,
-      heroImageUrl: product.hero_image_url,
+      heroImageUrl: safeExternalHttpsUrl(product.hero_image_url),
       publishedAt: product.published_at,
       profileUrl: publicProductUrl(product.slug),
       qrSvgUrl: `/public/products/${product.slug}/qr.svg`,

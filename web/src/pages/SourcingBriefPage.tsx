@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, ArrowRight, Check, LockKeyhole, Sparkles } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import { sourcing } from '../api';
-import { StructuredSourcingBrief } from '../types';
+import type { StructuredSourcingBrief } from '../domains/marketplace/types';
 import { useToast } from '../components/shared/ToastProvider';
 
 const initialBrief = '20 metric tonnes of fully fermented organic cocoa beans from Ghana. Moisture maximum 7.5%, delivered to Rotterdam by 15 November 2026. Require plot-level origin and an EUDR data pack.';

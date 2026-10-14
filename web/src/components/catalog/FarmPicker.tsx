@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { farms } from '../../api';
-import { Farm } from '../../types';
+import type { Farm } from '../../domains/source/types';
 import { useCatalogPage } from './useCatalogPage';
 import PageNavigation from './PageNavigation';
 export default function FarmPicker({

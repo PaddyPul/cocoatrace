@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { recalls } from '../../api';
-import { RecallResponse, RecallResponseCollection } from '../../types';
+import type { RecallResponse, RecallResponseCollection } from '../../domains/recall/types';
 import { useAuthCtx } from '../auth/AuthProvider';
 export const responseCollections: RecallResponseCollection[] = [
   'participants',

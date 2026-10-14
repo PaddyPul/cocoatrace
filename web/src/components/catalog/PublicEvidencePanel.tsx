@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { publicProducts } from '../../api';
 import { useCatalogPage } from './useCatalogPage';
-import type { PublicProduct } from '../../types';
+import type { PublicProduct } from '../../domains/product/types';
 export default function PublicEvidencePanel({ slug }: { slug: string }) {
   const [search, setSearch] = useState('');
   const requestVersion = useRef(0);

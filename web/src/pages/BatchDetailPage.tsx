@@ -3,7 +3,8 @@ import CertificatePicker from '../components/catalog/CertificatePicker';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { batches as batchesApi, productProfiles as productProfilesApi } from '../api';
-import { Batch, ProductProfile } from '../types';
+import type { Batch } from '../domains/source/types';
+import type { ProductProfile } from '../domains/product/types';
 import { StatusBadge, fmtDate } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import { useToast } from '../components/shared/ToastProvider';
@@ -195,7 +196,7 @@ export default function BatchDetailPage() {
                       <img className="h-36 w-36" src={`/api${productProfile.qrSvgUrl}`} alt={`QR code for ${productProfile.display_name}`} />
                     </div>
                     <div className="mt-3 text-center"><span className="badge badge-green">Live</span><p className="mt-2 text-xs text-text-muted font-mono">{productProfile.lot_code}</p></div>
-                    <button className="btn w-full justify-center mt-3" onClick={() => window.open(productProfile.profileUrl, '_blank')}><ExternalLink size={13} /> View scanned experience</button>
+                    <button className="btn w-full justify-center mt-3" onClick={() => window.open(`/p/${encodeURIComponent(productProfile.slug)}`, '_blank', 'noopener,noreferrer')}><ExternalLink size={13} /> View scanned experience</button>
                   </>
                 ) : (
                   <>

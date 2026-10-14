@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { evidence, recalls } from '../../api';
-import { RecallResponse } from '../../types';
+import type { RecallResponse } from '../../domains/recall/types';
 import { useRecallResponsePages, RecallCollectionNavigation } from '../catalog/useRecallResponsePages';
 import { useAuthCtx } from '../auth/AuthProvider';
 

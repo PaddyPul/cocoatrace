@@ -10,7 +10,7 @@ import {
   UsersRound,
 } from 'lucide-react';
 import { publicProducts } from '../../api';
-import type { JourneyEvent } from '../../types';
+import type { JourneyEvent } from '../../domains/product/types';
 import { useCatalogPage } from './useCatalogPage';
 const eventIcons = {
   harvest: Sprout,

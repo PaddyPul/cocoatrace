@@ -14,7 +14,7 @@ import PageNavigation from '../components/catalog/PageNavigation';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 import Layout from '../components/layout/Layout';
 import { productProfiles } from '../api';
-import { ProductProfileSummary } from '../types';
+import type { ProductProfileSummary } from '../domains/product/types';
 import { SkeletonTable } from '../components/shared/Skeleton';
 
 export default function ProductsPage() {

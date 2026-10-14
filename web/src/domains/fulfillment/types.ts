@@ -1,0 +1,31 @@
+export interface Shipment {
+  incoterm?: string;
+  id: string;
+  contract_id: string;
+  transport_coordinator_organization_id?: string;
+  transport_coordinator_name?: string;
+  service_provider_name?: string;
+  booking_reference?: string;
+  transport_mode?: string;
+  transport_document_type?: string;
+  transport_document_reference?: string;
+  tracking_url?: string;
+  vessel_name?: string;
+  container_reference?: string;
+  origin_port: string;
+  destination_port: string;
+  bill_of_lading_number?: string;
+  eta_arrival: string;
+  current_milestone: string;
+  payment_request_id?: string;
+  payment_status?: string;
+  payment_plan?: string;
+  payment_terms_status?: string;
+  amount_total?: number;
+  amount_confirmed?: number;
+  dispatch_required_amount?: number;
+  security_status?: string;
+  release_status?: string;
+  dispatch_exception?: boolean;
+  dispatch_exception_reason?: string;
+}

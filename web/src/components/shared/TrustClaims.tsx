@@ -1,4 +1,4 @@
-import { TrustClaim, TrustSummary } from '../../types';
+import type { TrustClaim, TrustSummary } from '../../domains/trust/types';
 
 export function isReviewed(claim?: TrustClaim) {
   return claim?.status === 'reviewed' && (!claim.expiresAt || new Date(claim.expiresAt).getTime() > Date.now());

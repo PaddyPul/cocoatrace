@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { publicProducts } from '../../api';
-import type { PublicNotice, PublicNoticeSafety } from '../../types';
+import type { PublicNotice, PublicNoticeSafety } from '../../domains/recall/types';
 import { useCatalogPage } from './useCatalogPage';
 export function validNoticeSafety(value: PublicNoticeSafety, count: number) {
   if (

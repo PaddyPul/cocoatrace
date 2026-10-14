@@ -1,3 +1,4 @@
+import { safeExternalHttpsUrl } from '../security/externalUrls';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { shipments } from '../api';
@@ -52,6 +53,7 @@ export default function ShipmentDetailPage() {
   if (error || !data) return <Layout currentPage="shipments"><div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{error || 'Not found'}</div></Layout>;
 
   const { shipment: s, milestones } = data;
+  const trackingUrl = safeExternalHttpsUrl(s.tracking_url);
   const isCoordinator = data.permissions.canArrange;
   const isSeller = s.seller_organization_id === user?.organizationId;
   const availableMilestones = MILESTONES.filter(item => data.permissions.milestones.includes(item));
@@ -122,7 +124,8 @@ export default function ShipmentDetailPage() {
             <Field label="Destination" value={s.destination_port} />
             {(s.vessel_name || s.container_reference) && <Field label="Vessel / equipment" value={[s.vessel_name, s.container_reference].filter(Boolean).join(' · ')} />}
           </div>
-          {s.tracking_url && <a className="btn btn-sm mt-4" href={s.tracking_url} target="_blank" rel="noreferrer">Open provider tracking <ExternalLink size={13} /></a>}
+          {trackingUrl && <a className="btn btn-sm mt-4" href={trackingUrl} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">Open provider tracking · {new URL(trackingUrl).hostname} <ExternalLink size={13} /></a>}
+          {s.tracking_url && !trackingUrl && <p role="status" className="text-xs mt-4">Tracking link unavailable: ask the arranging party to provide a valid HTTPS link.</p>}
           <button className="btn btn-sm mt-4 ml-2" onClick={() => navigate(`/contracts/${s.contract_id}`)}><FileText size={13} /> View contract</button>
         </div>
 

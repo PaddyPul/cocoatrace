@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode, useCallback, useEffect, useState } from 'react';
-import { OnboardingState, User } from '../../types';
+import type { OnboardingState, User } from '../../domains/identity/types';
 import { useAuth } from '../../hooks/useAuth';
 import { workspace } from '../../api';
 

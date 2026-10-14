@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, BadgeCheck, CheckCircle2, MapPin, Search, ShieldCheck, SlidersHorizontal, Sparkles, TriangleAlert } from 'lucide-react';
 import { listings, sourcing } from '../api';
-import { Listing, SourcingRequest } from '../types';
+import type { Listing, SourcingRequest } from '../domains/marketplace/types';
 import { isReviewed, trustLabel } from '../components/shared/TrustClaims';
 import Layout from '../components/layout/Layout';
 import { useAuthCtx } from '../components/auth/AuthProvider';

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { certificates as certApi } from '../../api';
-import { Farm } from '../../types';
+import type { Farm } from '../../domains/source/types';
 import { StatusBadge, fmtDate } from '../shared/helpers';
 import { useAuthCtx } from '../auth/AuthProvider';
 import { useToast } from '../shared/ToastProvider';

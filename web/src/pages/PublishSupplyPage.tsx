@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Check, Circle, PackageCheck, Sparkles, Sprout } 
 import TrustClaims from '../components/shared/TrustClaims';
 import Layout from '../components/layout/Layout';
 import { holdings, listings } from '../api';
-import { Holding } from '../types';
+import type { Holding } from '../domains/source/types';
 import { useToast } from '../components/shared/ToastProvider';
 
 export default function PublishSupplyPage() {
