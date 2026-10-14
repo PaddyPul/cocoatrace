@@ -33,6 +33,8 @@ services:
     command: ["sh", "-c", "node --import tsx api/scripts/prepare-browser-tests.ts && exec node api/dist/server.js"]
     environment:
       APP_ENV: test
+      OPERATIONS_ALERTS_ENABLED: "false"
+      OPERATIONS_ALERT_RECIPIENT_USER_IDS: ""
       NODE_ENV: test
       DEMO_MODE: "false"
       BROWSER_TEST_FIXTURES: "true"

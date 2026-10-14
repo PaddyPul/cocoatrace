@@ -1,5 +1,6 @@
 import { startOperationsWorkers } from './modules/operations/worker';
 import logger from './logger';
+import { startOperationsAlertWorker } from './modules/operations/alertWorker';
 import { config } from './config/env';
 import { pool } from './db';
 import { registerGracefulShutdown } from './gracefulShutdown';
@@ -15,7 +16,10 @@ async function start(): Promise<void> {
     );
   });
   const stopWorkers = startOperationsWorkers();
-  registerGracefulShutdown(server, pool, logger, { stopBackgroundWork: stopWorkers });
+  const stopAlerts = startOperationsAlertWorker();
+  registerGracefulShutdown(server, pool, logger, {
+    stopBackgroundWork: () => Promise.all([stopWorkers(), stopAlerts()]).then(() => undefined),
+  });
 }
 
 start().catch((error) => {

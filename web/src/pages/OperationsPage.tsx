@@ -93,6 +93,58 @@ function tickets(value: unknown, email = false): value is { items: EmailTicket[]
   );
 }
 
+type AlertStatus = {
+  enabled: boolean;
+  configuredRecipients: number;
+  healthy: boolean;
+  terminal: boolean;
+  pending: boolean;
+  observation: {
+    last_poll_at: string;
+    last_success_at: string | null;
+    error_code: string | null;
+    consecutive_failures: number;
+  } | null;
+};
+function alertsValid(value: unknown): value is AlertStatus {
+  if (
+    !record(value) ||
+    typeof value.enabled !== 'boolean' ||
+    !Number.isSafeInteger(value.configuredRecipients) ||
+    Number(value.configuredRecipients) < 0 ||
+    Number(value.configuredRecipients) > 5 ||
+    typeof value.healthy !== 'boolean' ||
+    typeof value.terminal !== 'boolean' ||
+    typeof value.pending !== 'boolean'
+  )
+    return false;
+  const row = value.observation;
+  if (
+    row !== null &&
+    (!record(row) ||
+      typeof row.last_poll_at !== 'string' ||
+      !Number.isFinite(Date.parse(row.last_poll_at)) ||
+      !(
+        row.last_success_at === null ||
+        (typeof row.last_success_at === 'string' &&
+          Number.isFinite(Date.parse(row.last_success_at)))
+      ) ||
+      !code(row.error_code) ||
+      !Number.isSafeInteger(row.consecutive_failures) ||
+      Number(row.consecutive_failures) < 0)
+  )
+    return false;
+  return (
+    !value.healthy ||
+    (value.enabled &&
+      Number(value.configuredRecipients) > 0 &&
+      !value.terminal &&
+      record(row) &&
+      row.last_success_at !== null &&
+      row.error_code === null &&
+      row.consecutive_failures === 0)
+  );
+}
 export default function OperationsPage() {
   const { canDo } = useAuthCtx();
   const allowed = canDo('*');
@@ -102,6 +154,7 @@ export default function OperationsPage() {
     EmailQueue,
     { items: EmailTicket[]; more: boolean }
   > | null>(null);
+  const [alertStatus, setAlertStatus] = useState<AlertStatus | null>(null);
   const [backlog, setBacklog] = useState<Backlog | null>(null);
   const [error, setError] = useState(''),
     [loading, setLoading] = useState(false),
@@ -115,24 +168,27 @@ export default function OperationsPage() {
     const current = ++version.current;
     setLoading(true);
     try {
-      const [status, queue, payment, recall, observation] = await Promise.all([
+      const [status, queue, payment, recall, observation, alerts] = await Promise.all([
         api<unknown>('GET', '/operations/status'),
         api<unknown>('GET', '/operations/cleanup/dead'),
         api<unknown>('GET', '/operations/email/payment_reminder/dead'),
         api<unknown>('GET', '/operations/email/recall/dead'),
         api<unknown>('GET', '/operations/backlog'),
+        api<unknown>('GET', '/operations/alerts'),
       ]);
       if (
         !statuses(status) ||
         !tickets(queue) ||
         !tickets(payment, true) ||
         !tickets(recall, true) ||
-        !validBacklog(observation)
+        !validBacklog(observation) ||
+        !alertsValid(alerts)
       )
         throw new Error('Invalid operations response. Retry to refresh.');
       if (current === version.current) {
         setData(status);
         setBacklog(observation);
+        setAlertStatus(alerts);
         setDead(queue);
         setEmails({ payment_reminder: payment, recall });
         setError('');
@@ -141,10 +197,11 @@ export default function OperationsPage() {
       if (current === version.current) {
         setData(null);
         setBacklog(null);
+        setAlertStatus(null);
         setDead(null);
         setEmails(null);
         setError(
-          'Operations status unavailable. Queue backlog is unknown. Retry to refresh; healthy operation has not been confirmed.',
+          'Operations status unavailable. Queue backlog is unknown. Operator alert delivery is unknown. Retry to refresh; healthy operation has not been confirmed.',
         );
       }
     } finally {
@@ -230,6 +287,41 @@ export default function OperationsPage() {
                   </table>
                 </div>
               </>
+            )}
+            {alertStatus && (
+              <section aria-label="Operator alert delivery" className="space-y-2">
+                <h2 className="text-lg font-bold">Operator alert delivery</h2>
+                <p role="status">
+                  {!alertStatus.enabled
+                    ? 'Operator alerts disabled'
+                    : alertStatus.healthy
+                      ? 'Alert polling and submission checks passed'
+                      : 'Operator alert delivery needs investigation'}
+                </p>
+                <p className="text-sm">
+                  {alertStatus.configuredRecipients} configured operator targets. SMTP submission is
+                  not proof of inbox receipt. Incident alerts contain redacted operational signals
+                  only.
+                </p>
+                {alertStatus.enabled && (
+                  <p className="text-sm">
+                    Last successful cycle:{' '}
+                    {alertStatus.observation?.last_success_at
+                      ? new Date(alertStatus.observation.last_success_at).toLocaleString()
+                      : 'Not yet observed'}{' '}
+                    ·{' '}
+                    {alertStatus.observation?.error_code ??
+                      (alertStatus.terminal
+                        ? 'Terminal alert pending'
+                        : 'No current error recorded')}
+                  </p>
+                )}
+                {alertStatus.pending && (
+                  <p className="text-sm">
+                    Alert work remains queued or leased. Delivery runs in bounded batches.
+                  </p>
+                )}
+              </section>
             )}
             {backlog && (
               <section aria-label="Queue backlog" className="space-y-3">

@@ -102,3 +102,8 @@ Founder reports full release checks passed and terminal-email recovery merged, i
 ## Queue observation candidate — 2026-10-13
 
 The next bounded queue-backlog/incident slice is implemented, with actual validation in releases/OPERATIONS_BACKLOG_WINDOWS.md. It adds no full-item closures; broader monitoring, external alerts and hosted acceptance still keep operations gates partial. Terminal-email release/merge acceptance above remains separate from this candidate.
+
+
+## Subsequent checkpoint — 2026-10-14
+
+The founder reported the queue-backlog workflow done on 2026-10-13 after correction/push/merge/pull instructions. The delivery backlog and CORE-workers now record that slice as founder accepted. Opt-in durable operator alerts are the next candidate, with default-off configuration and separate native/external acceptance. OPS-006/OPS-010/ARC-014 remain partial. Real external inbox delivery, a named incident owner, reviewed terminal-operator-alert recovery, independent monitoring and hosted drills are still required. No full-row completion or percentage increase is taken: roadmap 88/343 (25.7%), core 11/28 (39.3%), provider-inclusive 11/40 (27.5%).

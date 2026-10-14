@@ -17,6 +17,8 @@ export default defineConfig({
       JWT_SECRET: process.env.JWT_SECRET || 'integration-only-secret-at-least-32-characters',
       NODE_ENV: 'test',
       APP_ENV: 'test',
+      OPERATIONS_ALERTS_ENABLED: 'false',
+      OPERATIONS_ALERT_RECIPIENT_USER_IDS: '',
       // Fee boundary fixtures use a deterministic 1% policy, independent of local app configuration.
       PLATFORM_FEE_BPS: '100',
       IDENTITY_EMAIL_ENABLED: 'false',

@@ -28,6 +28,8 @@ export function requireStressPorts(environment = {}) {
 export function stressEnvironment(ports) {
   return {
     APP_ENV: 'test',
+    OPERATIONS_ALERTS_ENABLED: 'false',
+    OPERATIONS_ALERT_RECIPIENT_USER_IDS: '',
     NODE_ENV: 'test',
     DEMO_MODE: 'false',
     EVIDENCE_STRESS_FIXTURES: 'true',

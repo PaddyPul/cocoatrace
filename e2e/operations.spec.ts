@@ -13,7 +13,8 @@ async function mock(page: Page, admin = true) {
     malformedEmail = false,
     backlogFailure = false,
     backlogMalformed = false,
-    backlogCapped = false;
+    backlogCapped = false,
+    alertsMode = 'disabled';
   const permissions = admin ? ['*'] : ['batch.read'];
   await page.addInitScript(
     ({ permissions }) =>
@@ -43,7 +44,35 @@ async function mock(page: Page, admin = true) {
         name: 'Operations reader',
       };
     else if (path === '/api/onboarding') body = { status: 'completed', primary_goal: 'sell' };
-    else if (path === '/api/operations/backlog') {
+    else if (path === '/api/operations/alerts') {
+      if (alertsMode === 'unavailable')
+        return route.fulfill({ status: 503, json: { code: 'OPERATIONS_ALERTS_UNAVAILABLE' } });
+      body =
+        alertsMode === 'malformed'
+          ? { enabled: false, healthy: true }
+          : alertsMode === 'disabled'
+            ? {
+                enabled: false,
+                configuredRecipients: 0,
+                healthy: false,
+                terminal: false,
+                pending: false,
+                observation: null,
+              }
+            : {
+                enabled: true,
+                configuredRecipients: 1,
+                healthy: alertsMode === 'healthy',
+                terminal: alertsMode !== 'healthy',
+                pending: alertsMode !== 'healthy',
+                observation: {
+                  last_poll_at: new Date().toISOString(),
+                  last_success_at: alertsMode === 'healthy' ? new Date().toISOString() : null,
+                  error_code: alertsMode === 'healthy' ? null : 'TERMINAL_ALERT_PENDING',
+                  consecutive_failures: alertsMode === 'healthy' ? 0 : 1,
+                },
+              };
+    } else if (path === '/api/operations/backlog') {
       if (backlogFailure)
         return route.fulfill({ status: 503, json: { code: 'OPERATIONS_BACKLOG_UNAVAILABLE' } });
       body = backlogMalformed
@@ -155,6 +184,9 @@ async function mock(page: Page, admin = true) {
     return route.fulfill({ json: body });
   });
   return {
+    alertMode: (value: string) => {
+      alertsMode = value;
+    },
     capBacklog: () => {
       backlogCapped = true;
     },
@@ -413,4 +445,47 @@ test('backlog contract rejects inconsistent counts, incidents and missing queue 
     expect(validBacklog(value)).toBe(false);
   }
   expect(validBacklog({ ...healthy, queues: healthy.queues.slice(1) })).toBe(false);
+});
+
+test('operator alerts distinguish opt-out, pending terminal work and verified polling from inbox receipt', async ({
+  page,
+}) => {
+  const state = await mock(page);
+  await page.goto('/operations');
+  const alerts = page.getByRole('region', { name: 'Operator alert delivery', exact: true });
+  await expect(alerts.getByText('Operator alerts disabled', { exact: true })).toBeVisible();
+  state.alertMode('failed');
+  await page.getByRole('button', { name: 'Refresh operations', exact: true }).click();
+  await expect(
+    alerts.getByText('Operator alert delivery needs investigation', { exact: true }),
+  ).toBeVisible();
+  await expect(alerts).toContainText('Alert work remains queued or leased');
+  state.alertMode('healthy');
+  await page.getByRole('button', { name: 'Refresh operations', exact: true }).click();
+  await expect(
+    alerts.getByText('Alert polling and submission checks passed', { exact: true }),
+  ).toBeVisible();
+  await expect(alerts).toContainText('SMTP submission is not proof of inbox receipt');
+});
+test('unavailable or malformed alert status never claims healthy delivery and retains a recovery draft', async ({
+  page,
+}) => {
+  const state = await mock(page);
+  await page.goto('/operations');
+  await page.getByRole('button', { name: 'Review cleanup retry', exact: true }).click();
+  const explanation = page
+    .getByRole('dialog', { name: 'Cleanup recovery', exact: true })
+    .getByLabel('Recovery explanation', { exact: true });
+  await explanation.fill('Provider incident investigation is still in progress');
+  for (const mode of ['unavailable', 'malformed']) {
+    state.alertMode(mode);
+    await page.getByRole('button', { name: 'Refresh operations', exact: true }).click();
+    await expect(
+      page.getByRole('region', { name: 'Operations monitor', exact: true }).getByRole('alert'),
+    ).toContainText('Operator alert delivery is unknown');
+    await expect(explanation).toHaveValue('Provider incident investigation is still in progress');
+    await expect(
+      page.getByRole('region', { name: 'Operator alert delivery', exact: true }),
+    ).toHaveCount(0);
+  }
 });

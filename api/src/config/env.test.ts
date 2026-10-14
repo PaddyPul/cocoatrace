@@ -183,3 +183,28 @@ describe('environment configuration', () => {
     expect(() => parseConfig({ APP_ENV: 'prodution' })).toThrow(/Invalid CocoaTrace APP_ENV/);
   });
 });
+
+ describe('operator alert opt-in configuration', () => {
+  const id='11111111-1111-4111-8111-111111111111';
+  const smtp={ EMAIL_DRIVER:'smtp',EMAIL_FROM:'alerts@example.test',SMTP_HOST:'localhost',SMTP_USER:'test-user',SMTP_PASSWORD:'test-password' };
+  it('defaults to disabled with no selected operator',()=>{
+    expect(parseConfig({APP_ENV:'development'})).toMatchObject({operationsAlertsEnabled:false,operationsAlertRecipientUserIds:[]});
+  });
+  it('requires registered IDs and SMTP and rejects duplicate or invalid IDs',()=>{
+    expect(()=>parseConfig({APP_ENV:'development',OPERATIONS_ALERTS_ENABLED:'true'})).toThrow(/OPERATIONS_ALERT_RECIPIENT_USER_IDS/);
+    expect(()=>parseConfig({APP_ENV:'development',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:'not-an-id'})).toThrow(/OPERATIONS_ALERT_RECIPIENT_USER_IDS/);
+    expect(()=>parseConfig({APP_ENV:'development',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:`${id},${id}`})).toThrow(/unique/);
+    expect(parseConfig({APP_ENV:'development',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:id})).toMatchObject({operationsAlertsEnabled:true,operationsAlertRecipientUserIds:[id]});
+  });
+  it('keeps synthetic demos disabled and bounds SMTP command timeouts',()=>{
+    expect(()=>parseConfig({APP_ENV:'demo',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:id})).toThrow(/synthetic demos/);
+    expect(()=>parseConfig({APP_ENV:'development',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:id,SMTP_CONNECTION_TIMEOUT_MS:'11000'})).toThrow(/SMTP_CONNECTION_TIMEOUT_MS/);
+  });
+  it('preserves the existing demo storage namespace for an explicit local non-synthetic capture setup',()=>{
+    expect(parseConfig({APP_ENV:'demo',DEMO_MODE:'false',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:id}).environment).toBe('demo');
+  });
+  it('requires verified TLS for deployed operator alerts even without identity email enabled',()=>{
+    expect(()=>parseConfig({...deployedBase,APP_ENV:'staging',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:id,SMTP_SECURE:'false',SMTP_REQUIRE_TLS:'false'})).toThrow(/SMTP_REQUIRE_TLS/);
+    expect(()=>parseConfig({...deployedBase,APP_ENV:'staging',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:id,SMTP_TLS_REJECT_UNAUTHORIZED:'false'})).toThrow(/SMTP_TLS_REJECT_UNAUTHORIZED/);
+  });
+ });

@@ -1,0 +1,8 @@
+# Local Mailpit capture only. Combine with email-test and mfa-test overrides.
+# This is not a public synthetic demo configuration.
+services:
+  api:
+    environment:
+      DEMO_MODE: 'false'
+      OPERATIONS_ALERTS_ENABLED: ${OPERATIONS_ALERTS_ENABLED:-false}
+      OPERATIONS_ALERT_RECIPIENT_USER_IDS: ${OPERATIONS_ALERT_RECIPIENT_USER_IDS:-}
