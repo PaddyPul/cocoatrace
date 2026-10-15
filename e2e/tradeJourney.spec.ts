@@ -114,6 +114,10 @@ test('full prepayment trade: offer, verified payment gate, document sharing, del
 
     // The buyer coordinates FOB transport without a carrier account.
     await buyer.goto(`/shipments/${shipment.id}`);
+    const missingArrangement=await buyer.request.post(`/api/shipments/${shipment.id}/milestones`,{data:{milestone:'departed'}});
+    expect(missingArrangement.status()).toBe(409);
+    expect((await missingArrangement.json()).code).toBe('TRANSPORT_ARRANGEMENT_REQUIRED');
+    await expect(buyer.getByText('Departure requires an arrangement', {exact:false})).toBeVisible();
     await buyer.getByRole('button', { name: 'Add arrangement', exact: true }).click();
     await modalField(buyer, 'Provider name').fill('Browser external haulier');
     await modalField(buyer, 'Booking reference').fill('BROWSER-BOOKING-1');

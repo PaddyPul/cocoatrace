@@ -1,5 +1,10 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'scripts/risk-register.mjs',
+  'scripts/risk-register.test.mjs',
+  'api/test/integration/certificateValidity.integration.test.ts',
+  'api/test/integration/certificateDuplicates.integration.test.ts',
+
   'api/src/controllers/offerWithdrawalController.ts',
   'api/src/modules/trading/withdrawOffer.ts',
   'api/src/modules/trading/withdrawOffer.test.ts',

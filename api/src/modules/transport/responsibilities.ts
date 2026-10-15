@@ -160,3 +160,25 @@ export function transportPermissions(facts: TransportFacts, organizationId: stri
     ),
   };
 }
+
+/** Minimum operational record for reporting departure; not proof of provider verification. */
+export function missingDepartureArrangement(facts: {
+  service_provider_name?: string | null;
+  booking_reference?: string | null;
+  transport_mode?: string | null;
+  origin_port?: string | null;
+  destination_port?: string | null;
+}): string[] {
+  const missing: string[] = [];
+  if (!facts.service_provider_name?.trim() && !facts.booking_reference?.trim())
+    missing.push('provider name or booking reference');
+  if (
+    !['road', 'rail', 'sea', 'air', 'inland_waterway', 'multimodal'].includes(
+      facts.transport_mode || '',
+    )
+  )
+    missing.push('transport mode');
+  if (!facts.origin_port?.trim()) missing.push('origin');
+  if (!facts.destination_port?.trim()) missing.push('destination');
+  return missing;
+}

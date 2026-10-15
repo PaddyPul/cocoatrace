@@ -2,7 +2,7 @@ import { privateShipmentDetail } from '../modules/transport/privateShipmentDetai
 import {legacyShipments} from '../modules/catalog/shipments';
 import {withCatalogRead} from '../modules/catalog/paging';
 import { loadOriginConfirmations } from '../modules/transport/confirmations';
-import { canArrange, canRecord, progressPrerequisite, milestoneOrder } from '../modules/transport/responsibilities';
+import { canArrange, canRecord, progressPrerequisite, milestoneOrder, missingDepartureArrangement } from '../modules/transport/responsibilities';
 import { activatePaymentInstallments } from '../modules/payments/dueDates';
 import { lockRecallBoundary, assertBatchNotRecalled } from '../modules/recall/safety';
 import { Request, Response } from 'express';
@@ -105,6 +105,7 @@ export async function recordMilestone(req: Request, res: Response): Promise<void
     if (crosses && (s.contract_currency !== s.payment_currency || s.contract_minor_units !== s.payment_minor_units)) { await client.query('ROLLBACK'); res.status(409).json({error:'Payment currency differs from the contract; resolve the discrepancy before dispatch.',code:'CURRENCY_MISMATCH'}); return; }
     if (crosses) { const issue = await client.query("SELECT id FROM payment_issues WHERE payment_request_id=$1 AND status<>'resolved' LIMIT 1", [s.payment_request_id]); if (issue.rows[0]) { await client.query('ROLLBACK'); res.status(409).json({ error: 'Resolve the active payment issue before dispatch', code: 'PAYMENT_ISSUE_HOLD' }); return; } }
     if(crosses){const d=dispatchDecision({plan:s.payment_plan as PaymentPlan,termsStatus:s.payment_terms_status,amountConfirmed:s.amount_confirmed||'0',dispatchRequiredAmount:s.dispatch_required_amount||'0',securityStatus:s.security_status||'not_required',currencyMinorUnits:s.payment_minor_units});if(!d.allowed){if(!exceptionalDispatch){await client.query('ROLLBACK');res.status(409).json({error:d.reason,code:'PAYMENT_DISPATCH_GATE'});return;}if(s.seller_organization_id!==org){await client.query('ROLLBACK');res.status(403).json({error:'Only the seller can authorize exceptional dispatch'});return;}exception=true;await client.query(`UPDATE shipments SET dispatch_exception=TRUE,dispatch_exception_reason=$1,dispatch_exception_recorded_at=NOW(),dispatch_exception_recorded_by_user_id=$2 WHERE id=$3`,[exceptionalDispatch.reason,req.user!.id,id]);}}
+    if (milestone === 'departed') { const missingFields = missingDepartureArrangement(s); if (missingFields.length) { await client.query('ROLLBACK'); res.status(409).json({error:`The arranging party must complete ${missingFields.join(', ')} in the transport arrangement before departure.`,code:'TRANSPORT_ARRANGEMENT_REQUIRED',missingFields}); return; } }
     const confirmations = await loadOriginConfirmations(client,id,s);
     const prerequisite = progressPrerequisite({...s,...confirmations},milestone); if (prerequisite) { await client.query('ROLLBACK'); res.status(409).json({error:prerequisite,code:'TRANSPORT_PREREQUISITE'}); return; }
     await client.query('INSERT INTO shipment_milestones(shipment_id,milestone,recorded_by_user_id,location,notes)VALUES($1,$2,$3,$4,$5)',[id,milestone,req.user!.id,location||null,notes||null]);

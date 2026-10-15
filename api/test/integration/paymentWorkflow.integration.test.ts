@@ -370,6 +370,8 @@ describe('shared dashboard and deal-room action contract', () => {
 
 it('uses the same document-presentation prerequisite after DPU unloading', async () => {
   const d = await deal('documentary_collection', false, 'DPU');
+  const arrangement=await request(app).patch(`/shipments/${d.shipmentId}/details`).set('Authorization',`Bearer ${seller.token}`).send({bookingReference:'DPU-BOOKING',transportMode:'road',originLocation:'Tema',destinationLocation:'Rotterdam'});
+  expect(arrangement.status,JSON.stringify(arrangement.body)).toBe(200);
   for(const [milestone,principal] of [['loaded',seller],['departed',seller],['arrived',seller],['customs_cleared',buyer],['unloaded',seller]] as const) {
     expect((await post(`/shipments/${d.shipmentId}/milestones`,principal,{milestone})).status).toBe(200);
   }

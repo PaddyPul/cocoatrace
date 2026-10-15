@@ -192,3 +192,10 @@ e2e/pilotLimitations.spec.ts text eol=lf
 web/src/content/pilotLimitations.ts text eol=lf
 web/src/components/trading/ExternalNegotiationNotice.tsx text eol=lf
 web/src/pages/PilotLimitationsPage.tsx text eol=lf
+
+scripts/risk-register.mjs text eol=lf
+scripts/risk-register.test.mjs text eol=lf
+api/test/integration/certificateValidity.integration.test.ts text eol=lf
+api/test/integration/certificateDuplicates.integration.test.ts text eol=lf
+
+docs/RISK_REGISTER.md text eol=lf

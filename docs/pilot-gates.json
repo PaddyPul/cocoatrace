@@ -1,5 +1,5 @@
 {
-  "reviewedAt": "2026-10-14",
+  "reviewedAt": "2026-10-15",
   "method": "Equal gate count, no partial credit. Provider launch also requires every core gate. This is closure evidence, not a safety probability or valuation measure.",
   "gates": [
     {
@@ -128,7 +128,7 @@
       "status": "partial",
       "title": "Pilot milestone authority and required route information are explicit",
       "backlog": ["LOG-001", "LOG-002", "LOG-003", "LOG-004", "GEO-001"],
-      "evidence": "Founder confirms Incoterm responsibility bundle tested/merged on 2026-10-06: all-term actor matrix, persisted origin, DPU/DDP gates and UI/dashboard. Mode/named-place/domestic policies remain open under LOG-002/003/004 and GEO-001."
+      "evidence": "Accepted all-eleven-term authority and persisted origin/DPU/DDP predecessor rules reconcile LOG-002/004 complete; safe provider links reconcile LOG-011 complete. LOG-003 current departure-arrangement candidate requires mode, origin/destination and provider OR booking before departed. Native/browser acceptance pending. GEO-001 approved corridor/named-place/domestic policy remains open; gate stays partial."
     },
     {
       "id": "CORE-exceptions",

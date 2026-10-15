@@ -147,3 +147,8 @@ Founder reports security/architecture release pass and merge/pull completed. Mar
 ## Six-outcome offer/pilot candidate — 2026-10-14
 
 TRD-010/011/012 plus GOV-007/009/010 are supplied in one closure candidate. Current accepted total92/343 (26.8%); all six accepted yields98/343 (28.6%). No partial credit or hosted-gate completion is taken. UI and native regressions accompany the payment/stock-safe offer transitions; policy publication is distinct from operating a production release. Review releases/OFFER_LIFECYCLE_CLOSURE_WINDOWS.md and its PR description before acceptance.
+
+
+## 2026-10-15 15:27 UTC acceptance and reconciliation
+
+Corrected offer release passed and merged per founder; six rows close to98/343. Audit of exact LOG-002/004/011 criteria confirms prior accepted implementation and closes those three without reimplementation:101/343 (29.4%). New LOG-003, DAT-005/006 and GOV-004/008 candidate targets106/343 (30.9%) after acceptance. No independent CI URL, exact founder commit or hosted/corridor acceptance inferred. Full evidence and limits are in releases/PILOT_INTEGRITY_CLOSURE_WINDOWS.md.

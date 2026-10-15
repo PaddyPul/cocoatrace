@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  missingDepartureArrangement,
   canArrange,
   canRecord,
   coordinatorParty,
@@ -105,5 +106,38 @@ describe('Incoterm contract-party authority', () => {
     };
     expect(transportPermissions(f, buyer).milestones).not.toContain('cargo_ready');
     expect(transportPermissions(f, seller).milestones).toContain('cargo_ready');
+  });
+});
+
+describe('departure arrangement minimum', () => {
+  const complete = {
+    service_provider_name: 'Haulier',
+    transport_mode: 'road',
+    origin_port: 'Tamale',
+    destination_port: 'Accra',
+  };
+  it('reports every missing field without requiring international-only documents', () => {
+    expect(missingDepartureArrangement({})).toEqual([
+      'provider name or booking reference',
+      'transport mode',
+      'origin',
+      'destination',
+    ]);
+    expect(missingDepartureArrangement(complete)).toEqual([]);
+    expect(
+      missingDepartureArrangement({
+        ...complete,
+        service_provider_name: ' ',
+        booking_reference: 'REF-1',
+      }),
+    ).toEqual([]);
+  });
+  it('rejects whitespace and unspecified or unrecognized modes', () => {
+    expect(
+      missingDepartureArrangement({ ...complete, origin_port: ' ', transport_mode: 'unspecified' }),
+    ).toEqual(['transport mode', 'origin']);
+    expect(missingDepartureArrangement({ ...complete, transport_mode: 'teleport' })).toEqual([
+      'transport mode',
+    ]);
   });
 });
