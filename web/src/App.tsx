@@ -5,6 +5,7 @@ import { AuthProvider, useAuthCtx } from './components/auth/AuthProvider';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import { ToastProvider } from './components/shared/ToastProvider';
 import { webConfig } from './config';
+import EnvironmentNotice from './components/environment/EnvironmentNotice';
 
 const PilotLimitationsPage = lazy(() => import('./pages/PilotLimitationsPage'));
 const EvidenceContributionPage = lazy(() => import('./pages/EvidenceContributionPage'));
@@ -85,7 +86,7 @@ export default function App() {
         Supervised demo: synthetic records and simulated payments. Do not enter personal data or upload real documents.
       </div>}
       <AuthProvider>
-        <LanguageProvider><ToastProvider>
+        <LanguageProvider><EnvironmentNotice /><ToastProvider>
         <ErrorBoundary><Suspense fallback={<main className="grid min-h-[60vh] place-items-center" role="status">Loading page…</main>}>
         <Routes>
           <Route path="/" element={<RootRedirect />} />

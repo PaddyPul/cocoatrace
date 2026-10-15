@@ -33,6 +33,8 @@ export default tseslint.config(
   {
     files: [
       'api/src/modules/trace/**/*.ts',
+      'api/src/modules/dealActivity/**/*.ts',
+      'api/src/modules/sourcing/**/*.ts',
       'api/src/modules/catalog/**/*.ts',
       'api/src/modules/operations/**/*.ts',
       'api/src/services/tradeNextAction*.ts',

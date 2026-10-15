@@ -1,5 +1,13 @@
 # Changelog
 
+## Pilot workspace closure — 2026-10-15
+
+- Reopen and update saved sourcing briefs through canonical links, preserving reviewed specifications and atomic attribution.
+- Filter buyer/supplier next actions and overdue payments using durable server deadlines.
+- Add bounded on-demand customer deal activity with current-party authorization and safe fixed projections.
+- Identify workspace environment in English/French with an honest unknown fallback; reconcile accepted deployment policy work.
+
+
 ## Pilot request and deployment guardrails — 2026-10-15
 
 - Bound query bytes, parameter counts, decoded fields and nesting before ordinary Express parsing; retain route validation and evidence capability/admission gates.

@@ -11,6 +11,7 @@ export interface TradeAction {
   contractId?: string;
   offerId?: string;
   installmentId?: string;
+  paymentDueState?: 'due' | 'overdue';
   operation?:
     | 'view'
     | 'configure_terms'

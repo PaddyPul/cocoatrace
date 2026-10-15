@@ -1,5 +1,18 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'scripts/environment-notice.test.mjs',
+  'web/src/components/environment/**/*.ts',
+  'web/src/components/environment/**/*.tsx',
+  'web/src/components/trading/ActionCenter.tsx',
+  'web/src/components/trading/DealActivity.tsx',
+  'api/src/modules/dealActivity/**/*.ts',
+  'api/src/modules/sourcing/**/*.ts',
+  'api/test/integration/workspaceProductivity.integration.test.ts',
+  'e2e/environmentNotice.spec.ts',
+  'e2e/tradeActionFilters.spec.ts',
+  'e2e/dealActivity.spec.ts',
+  'e2e/sourcingEdit.spec.ts',
+
   'api/src/middleware/requestLimits.ts',
   'api/src/middleware/requestLimits.test.ts',
   'scripts/build-metadata.test.mjs',

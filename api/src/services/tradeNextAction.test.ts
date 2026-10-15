@@ -356,3 +356,50 @@ it('defaults to no permissions and fails closed on hydrated missing payment prot
     )[0],
   ).toMatchObject({ requiresAction: false, title: 'Payment protection needs review' });
 });
+
+describe('server-owned overdue trade filtering facts', () => {
+  it('uses the durable payment deadline for both parties without giving the seller buyer powers', () => {
+    const overdue = deal({
+      payment_terms_status: 'agreed',
+      installment_status: 'due',
+      installment_due_at: '2000-01-01T00:00:00.000Z',
+    });
+    expect(buildTradeActions([], [overdue], buyer)[0]).toMatchObject({
+      paymentDueState: 'overdue',
+      requiresAction: true,
+    });
+    expect(buildTradeActions([], [overdue], seller)[0]).toMatchObject({
+      paymentDueState: 'overdue',
+      requiresAction: false,
+    });
+    expect(buildTradeActions([], [overdue], 'unrelated')).toEqual([]);
+  });
+  it('does not invent overdue status for absent deadlines, submitted funds or safety holds', () => {
+    const due = { payment_terms_status: 'agreed', installment_status: 'due' };
+    expect(buildTradeActions([], [deal(due)], buyer)[0].paymentDueState).toBe('due');
+    expect(
+      buildTradeActions([], [deal({ ...due, installment_due_at: 'invalid' })], buyer)[0]
+        .paymentDueState,
+    ).toBe('due');
+    expect(
+      buildTradeActions(
+        [],
+        [
+          deal({
+            ...due,
+            installment_status: 'payment_submitted',
+            installment_due_at: '2000-01-01',
+          }),
+        ],
+        buyer,
+      )[0].paymentDueState,
+    ).toBeUndefined();
+    expect(
+      buildTradeActions(
+        [],
+        [deal({ ...due, recall_held: true, installment_due_at: '2000-01-01' })],
+        buyer,
+      )[0].paymentDueState,
+    ).toBeUndefined();
+  });
+});

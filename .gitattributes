@@ -212,3 +212,16 @@ scripts/build-metadata.test.mjs text eol=lf
 
 api/src/middleware/requestLimits.ts text eol=lf
 api/src/middleware/requestLimits.test.ts text eol=lf
+
+scripts/environment-notice.test.mjs text eol=lf
+web/src/components/environment/**/*.ts text eol=lf
+web/src/components/environment/**/*.tsx text eol=lf
+web/src/components/trading/ActionCenter.tsx text eol=lf
+web/src/components/trading/DealActivity.tsx text eol=lf
+api/src/modules/dealActivity/**/*.ts text eol=lf
+api/src/modules/sourcing/**/*.ts text eol=lf
+api/test/integration/workspaceProductivity.integration.test.ts text eol=lf
+e2e/environmentNotice.spec.ts text eol=lf
+e2e/tradeActionFilters.spec.ts text eol=lf
+e2e/dealActivity.spec.ts text eol=lf
+e2e/sourcingEdit.spec.ts text eol=lf

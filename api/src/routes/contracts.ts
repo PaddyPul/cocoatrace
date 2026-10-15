@@ -1,3 +1,4 @@
+import { listDealActivity } from '../modules/dealActivity/history';
 import { listContractPage, summarizeContracts } from '../modules/catalog/contracts';
 import { listOfferPage, summarizeOffers } from '../modules/catalog/offers';
 import { Router } from 'express';
@@ -82,6 +83,13 @@ router.get(
   requireAuth,
   requirePermission('contract.read'),
   summarizeContracts,
+);
+router.get(
+  '/contracts/:id/activity/page',
+  requireAuth,
+  requirePermission('contract.read'),
+  validate(resourceIdParamsSchema, 'params'),
+  listDealActivity,
 );
 router.get(
   '/contracts/:id',

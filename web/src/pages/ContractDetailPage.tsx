@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { contracts, evidence, payments } from '../api';
+import DealActivity from '../components/trading/DealActivity';
 import FeeStatement from '../components/fees/FeeStatement';
 import ContractCancellation from '../components/trading/ContractCancellation';
 import DeliveryAcceptance from '../components/delivery/DeliveryAcceptance';
@@ -169,7 +170,7 @@ export default function ContractDetailPage() {
     <Layout currentPage="contracts" actions={<button className="btn btn-sm" onClick={() => navigate('/contracts')}><ArrowLeft size={14} /> Back</button>}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-5">
-          <FeeStatement contractId={c.id}/><ContractCancellation contractId={id!} organizationId={user?.organizationId || ''} onChanged={loadContract} />
+          <DealActivity contractId={c.id} /><FeeStatement contractId={c.id}/><ContractCancellation contractId={id!} organizationId={user?.organizationId || ''} onChanged={loadContract} />
           <DeliveryAcceptance contractId={c.id} organizationId={user?.organizationId || ''} onChanged={loadContract} />
           <div className="bg-brand-500/10 border border-brand-500/30 rounded p-4"><div className="text-[10px] text-brand-400 uppercase tracking-wider mb-1">Your next action</div><div data-testid="contract-next-action" data-action-id={c.nextAction?.id}><div className="text-sm font-semibold">{c.nextAction?.title || 'Next action unavailable'}</div><p className="mt-1 text-xs">{c.nextAction?.description || 'Refresh the contract before continuing.'}</p><button className="btn btn-sm mt-2" onClick={() => navigate(`/deal-room/${c.id}`)}>Open guided deal</button></div></div>
 

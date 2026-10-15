@@ -14,7 +14,7 @@ import { useAuthCtx } from '../components/auth/AuthProvider';
 export default function MarketplacePage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const { user } = useAuthCtx();
+  const { user, canDo } = useAuthCtx();
   const SHORTLIST_KEY = `ct_shortlisted_listings:${user?.id}`;
   const [publishedListing, setPublishedListing] = useState<Listing | null>(null);
   const [publishedLoading, setPublishedLoading] = useState(false);
@@ -100,6 +100,7 @@ export default function MarketplacePage() {
         const next = new URLSearchParams(params); next.set('request',selected.id); next.delete('browse'); next.delete('published'); setParams(next);
       }}><option value="">Choose a sourcing request</option>{contextRequest && !requestPage.items.some(item => item.id === contextRequest.id) && <option value={contextRequest.id}>{contextRequest.title}</option>}{requestPage.items.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></div>}
       {!requestPage.loading && !requestPage.error && !requestPage.items.length && <p>No sourcing requests match this search.</p>}
+      {canDo('offer.create') && contextRequest && ['draft','open'].includes(contextRequest.status) && <button className="btn" onClick={() => navigate(`/source/new?request=${encodeURIComponent(contextRequest.id)}`)}>Edit selected brief</button>}
       <PageNavigation page={requestPage} label="sourcing requests" />
     </section>
     <div className="mt-4 flex flex-wrap items-center gap-3" aria-label="Supply browsing mode"><button className={`btn ${!activeRequest ? 'btn-primary' : ''}`} onClick={browseAll} aria-pressed={!activeRequest}>Browse all supply</button><button className={`btn ${activeRequest ? 'btn-primary' : ''}`} onClick={matchRequest} disabled={!contextRequest} aria-pressed={Boolean(activeRequest)}>Match my sourcing request</button><span className="text-xs text-text-muted">{activeRequest ? `Filtered to ${activeRequest.commodity}; other commodities are hidden.` : 'All published commodities are included. Your search and filters still apply.'}</span></div>
