@@ -29,7 +29,7 @@ export async function acceptOffer(req: Request, res: Response): Promise<void> {
 }
 
 export async function rejectOffer(req: Request, res: Response): Promise<void> {
-  res.json(await rejectTradeOffer(req.user!, req.params.id as string));
+  res.json(await rejectTradeOffer(req.user!, req.params.id as string, req.body.reason));
 }
 
 export async function listContracts(req: Request, res: Response): Promise<void> {

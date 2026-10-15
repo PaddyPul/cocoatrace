@@ -65,6 +65,7 @@ async function mock(page: Page, fail = false, malformed = false) {
                   offered_price_per_kg: 5,
                   currency: 'EUR',
                   status: reject ? 'rejected' : 'pending',
+                  rejection_reason: reject ? 'Delivery terms do not match' : null,
                 },
               ],
               hasMore: !later,
@@ -74,6 +75,7 @@ async function mock(page: Page, fail = false, malformed = false) {
       return;
     }
     if (path.endsWith('/reject')) {
+      expect(route.request().postDataJSON()).toEqual({ reason: 'Delivery terms do not match' });
       reject = true;
       await route.fulfill({ json: { ok: true } });
       return;
@@ -147,8 +149,18 @@ test('received offer can still reject and refresh its current page', async ({ pa
   await page.goto('/offers');
   await expect(page).toHaveURL(/\/offers(?:\?|$)/);
   await page.getByRole('button', { name: 'Reject', exact: true }).click();
-  await page.getByRole('button', { name: 'Reject', exact: true }).last().click();
+  const decision = page.getByRole('dialog', { name: 'Reject offer', exact: true });
+  await expect(decision.getByRole('button', { name: 'Reject', exact: true })).toBeDisabled();
+  const reason = decision.getByRole('textbox', { name: 'Rejection reason', exact: true });
+  await reason.fill('Delivery terms do not match');
+  await expect(reason).toHaveValue('Delivery terms do not match');
+  const refreshed = page.waitForResponse(response => new URL(response.url()).pathname === '/api/offers/page');
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await refreshed;
+  await expect(reason).toHaveValue('Delivery terms do not match');
+  await page.getByRole('dialog', { name: 'Reject offer', exact: true }).getByRole('button', { name: 'Reject', exact: true }).click();
   await expect(page.getByText('History (1)', { exact: true })).toBeVisible();
+  await expect(page.getByText('Seller reason: Delivery terms do not match', { exact: true })).toBeVisible();
 });
 
 test('supplier home reads aggregate offer counts instead of an array', async ({ page }) => {

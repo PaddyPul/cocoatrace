@@ -2,6 +2,7 @@ import { listContractPage, summarizeContracts } from '../modules/catalog/contrac
 import { listOfferPage, summarizeOffers } from '../modules/catalog/offers';
 import { Router } from 'express';
 import { z } from 'zod';
+import { withdrawOffer } from '../controllers/offerWithdrawalController';
 import * as cancellationController from '../controllers/cancellationController';
 import { requireAuth, requireAnyPermission, requirePermission } from '../middleware/auth';
 import validate from '../middleware/validate';
@@ -48,6 +49,13 @@ router.post(
   contractController.makeOffer,
 );
 router.post(
+  '/offers/:id/withdraw',
+  requireAuth,
+  requirePermission('offer.create'),
+  validate(resourceIdParamsSchema, 'params'),
+  withdrawOffer,
+);
+router.post(
   '/offers/:id/accept',
   requireAuth,
   requirePermission('offer.respond'),
@@ -58,6 +66,8 @@ router.post(
   '/offers/:id/reject',
   requireAuth,
   requirePermission('offer.respond'),
+  validate(resourceIdParamsSchema, 'params'),
+  validate(z.object({ reason: z.string().trim().min(1).max(1000) })),
   contractController.rejectOffer,
 );
 router.get(

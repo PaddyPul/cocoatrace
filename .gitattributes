@@ -181,3 +181,14 @@ scripts/web-http.test.mjs text eol=lf
 e2e/externalUrlPolicy.spec.ts text eol=lf
 web/src/api.ts text eol=lf
 web/src/types.ts text eol=lf
+
+api/src/controllers/offerWithdrawalController.ts text eol=lf
+api/src/modules/trading/withdrawOffer.ts text eol=lf
+api/src/modules/trading/withdrawOffer.test.ts text eol=lf
+api/src/modules/trading/rejectOffer.test.ts text eol=lf
+api/test/integration/offerWithdrawal.integration.test.ts text eol=lf
+e2e/offerWithdrawal.spec.ts text eol=lf
+e2e/pilotLimitations.spec.ts text eol=lf
+web/src/content/pilotLimitations.ts text eol=lf
+web/src/components/trading/ExternalNegotiationNotice.tsx text eol=lf
+web/src/pages/PilotLimitationsPage.tsx text eol=lf

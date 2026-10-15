@@ -8,7 +8,7 @@ import { createFulfillment } from './fulfillment';
 import { inTradeTransaction, recordTradeAudit, TradeActor } from './transaction';
 
 /** Discovery takes no locks. Every mutable inventory path locks holding -> listings -> offers. */
-async function lockOfferInventory(client: PoolClient, offerId: string) {
+export async function lockOfferInventory(client: PoolClient, offerId: string) {
   const found = await client.query(`SELECT l.holding_id FROM trade_offers o
     JOIN listings l ON l.id=o.listing_id WHERE o.id=$1`, [offerId]);
   if (!found.rows[0]) throw new NotFoundError('Offer');
@@ -146,14 +146,16 @@ export async function createTradeOffer(actor: TradeActor, listingId: string, inp
   });
 }
 
-export async function rejectTradeOffer(actor: TradeActor, offerId: string) {
+export async function rejectTradeOffer(actor: TradeActor, offerId: string, reason: string) {
+  const explanation = typeof reason === 'string' ? reason.trim() : '';
+  if (!explanation || explanation.length > 1000) throw new ValidationError('Rejection reason must contain 1 to 1000 characters');
   return inTradeTransaction(async (client) => {
     await lockRecallBoundary(client);
     const { offer, holding } = await lockOfferInventory(client, offerId);
     requireSeller(actor, offer, holding);
     if (offer.status !== 'pending') throw new ConflictError('Offer is no longer pending');
     const result = await client.query("UPDATE trade_offers SET status='rejected' WHERE id=$1 RETURNING *", [offerId]);
-    await recordTradeAudit(client, actor, 'offer.reject', 'trade_offer', offerId);
-    return result.rows[0];
+    await recordTradeAudit(client, actor, 'offer.reject', 'trade_offer', offerId, { reason: explanation });
+    return { ...result.rows[0], rejection_reason: explanation };
   });
 }

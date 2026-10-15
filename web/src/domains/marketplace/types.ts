@@ -60,6 +60,7 @@ export interface SourcingRequest {
 }
 
 export interface Offer {
+  rejection_reason?: string | null;
   currency_minor_units?: number;
   trade_value?: string;
   platform_fee_rate_bps?: number;

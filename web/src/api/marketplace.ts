@@ -122,6 +122,8 @@ export interface OfferSummary {
 }
 
 export const offers = {
+  withdraw: (offerId: string) =>
+    api<import('../types').Offer>('POST', `/offers/${offerId}/withdraw`),
   page: (parameters: Record<string, string> = {}) =>
     api<CatalogPage<import('../types').Offer>>(
       'GET',
@@ -135,5 +137,6 @@ export const offers = {
   ) => api('POST', `/listings/${listingId}/offers`, data),
   accept: (offerId: string, feeRateBps?: number) =>
     api<any>('POST', `/offers/${offerId}/accept`, { feeRateBps }),
-  reject: (offerId: string) => api<any>('POST', `/offers/${offerId}/reject`),
+  reject: (offerId: string, reason: string) =>
+    api<any>('POST', `/offers/${offerId}/reject`, { reason }),
 };

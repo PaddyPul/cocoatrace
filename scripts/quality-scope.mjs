@@ -1,5 +1,16 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/controllers/offerWithdrawalController.ts',
+  'api/src/modules/trading/withdrawOffer.ts',
+  'api/src/modules/trading/withdrawOffer.test.ts',
+  'api/src/modules/trading/rejectOffer.test.ts',
+  'api/test/integration/offerWithdrawal.integration.test.ts',
+  'e2e/offerWithdrawal.spec.ts',
+  'e2e/pilotLimitations.spec.ts',
+  'web/src/content/pilotLimitations.ts',
+  'web/src/components/trading/ExternalNegotiationNotice.tsx',
+  'web/src/pages/PilotLimitationsPage.tsx',
+
   'e2e/externalUrlPolicy.spec.ts',
   'web/src/api.ts',
   'web/src/types.ts',
