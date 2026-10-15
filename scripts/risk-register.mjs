@@ -65,7 +65,8 @@ export function checkRisks(
   const output = renderRisks(data),
     target = path.join(base, 'docs/RISK_REGISTER.md');
   if (write) fs.writeFileSync(target, output);
-  else if (fs.readFileSync(target, 'utf8') !== output)
+  // Git may materialize CRLF on Windows; compare content without treating that as drift.
+  else if (fs.readFileSync(target, 'utf8').replaceAll('\r\n', '\n') !== output)
     throw new Error('Risk register view is stale; regenerate explicitly');
   return {
     status: 'passed',

@@ -197,3 +197,5 @@ scripts/risk-register.mjs text eol=lf
 scripts/risk-register.test.mjs text eol=lf
 api/test/integration/certificateValidity.integration.test.ts text eol=lf
 api/test/integration/certificateDuplicates.integration.test.ts text eol=lf
+
+docs/RISK_REGISTER.md text eol=lf

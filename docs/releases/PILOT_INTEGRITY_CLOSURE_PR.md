@@ -22,6 +22,7 @@ An arranging party must record essential transport information before reporting 
 - Serialize certificate issuance/reinstatement on the farm row and reject active same-issuer/subject/standard intersecting crop/date scope. Preserve independent issuers, standards, crops and nonoverlapping periods.
 - Use civil DATE text for reinstatement overlap checks; avoid timezone conversion of validity bounds.
 - Add seven native validity and five native duplicate-scope regressions, plus departure and fixture updates.
+- Normalize Git-materialized Windows CRLF only during risk-view comparison; retain strict content/whitespace drift detection and add a real temporary-checkout regression.
 - Publish seven architecture records and eight likelihood/impact/mitigation/owner/review-date risks. Require risk-source/view consistency in CI/release.
 
 ## Security and data review
