@@ -1,5 +1,5 @@
 # Build tooling stays in this stage.
-FROM node:24-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 COPY api/package*.json ./api/
@@ -10,7 +10,7 @@ COPY api/scripts/stamp-build-metadata.mjs ./api/scripts/
 ARG BUILD_GIT_SHA
 RUN BUILD_GIT_SHA="$BUILD_GIT_SHA" npm run build --workspace=api
 
-FROM node:24-alpine AS runtime
+FROM node:25-alpine AS runtime
 WORKDIR /app
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 COPY package*.json ./
