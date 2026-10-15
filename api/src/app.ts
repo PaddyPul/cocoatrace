@@ -8,6 +8,7 @@ import logger, { requestLogSerializer } from './logger';
 import { AppError } from './errors';
 import { verifyBrowserOrigin } from './middleware/security';
 import { config } from './config/env';
+import { createQueryBudget, isEvidenceContentRequest, requestLimits } from './middleware/requestLimits';
 import { evidenceStorage } from './services/evidenceStorage';
 import { evidenceMalwareScanner } from './services/evidenceMalwareScanner';
 import { assignRequestId, requestLogContext } from './requestContext';
@@ -40,6 +41,7 @@ import organizationAccessRoutes from './modules/organizationAccess';
 const app = express();
 // Forwarded IP/host headers are untrusted until an explicit ingress policy is introduced.
 app.set('trust proxy', false);
+const queryBudget = createQueryBudget(app);
 
 app.use(
   pinoHttp({
@@ -51,11 +53,12 @@ app.use(
 );
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: config.webUrl, credentials: true }));
-const jsonParser = express.json();
+app.use(queryBudget);
+const jsonParser = express.json({ limit: requestLimits.jsonBytes });
 app.use((req, res, next) => {
   // Signed upload bodies must pass capability validation/admission first,
   // including clients that claim application/json rather than a file MIME.
-  if (req.method === 'PUT' && /^\/evidence\/upload-intents\/[^/]+\/content\/?$/i.test(req.path))
+  if (isEvidenceContentRequest(req.method, req.path))
     return next();
   jsonParser(req, res, next);
 });
@@ -126,9 +129,17 @@ app.use((_req, res) => {
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   if ((err as Error & { type?: string }).type === 'entity.too.large') {
     res.status(413).json({
-      error: 'Request body exceeds the configured evidence file limit',
-      code: 'EVIDENCE_FILE_TOO_LARGE',
+      error: isEvidenceContentRequest(req.method, req.path)
+        ? 'Request body exceeds the configured evidence file limit'
+        : 'JSON request body exceeds the 100 KiB limit',
+      code: isEvidenceContentRequest(req.method, req.path)
+        ? 'EVIDENCE_FILE_TOO_LARGE'
+        : 'REQUEST_BODY_TOO_LARGE',
     });
+    return;
+  }
+  if ((err as Error & { type?: string }).type === 'entity.parse.failed') {
+    res.status(400).json({ error: 'Malformed JSON request body', code: 'REQUEST_JSON_INVALID' });
     return;
   }
   if (err instanceof AppError) {

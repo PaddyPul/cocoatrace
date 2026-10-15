@@ -107,6 +107,11 @@ Rollback when the new release causes failing readiness, elevated errors, broken 
 
 ### Application rollback procedure
 
+Apply the [migration compatibility rules](MIGRATION_COMPATIBILITY.md) first.
+An older image may reject newly applied migration filenames during its default
+startup, even when its serving code tolerates the forward schema. Use only a
+rehearsed artifact and launch procedure; do not rewrite the migration ledger.
+
 1. Freeze further deployments and record the current and previous immutable image digests/Git SHAs.
 2. Stop traffic promotion to the new release. Preserve logs and the release-time database snapshot/restore-point reference.
 3. Determine database compatibility:

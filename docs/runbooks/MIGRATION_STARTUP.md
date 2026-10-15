@@ -72,6 +72,11 @@ accounts or database reset of the ordinary app is needed.
 
 ## Failure handling and deployment
 
+Use the [migration compatibility rules](MIGRATION_COMPATIBILITY.md) to classify
+expand/transition/contract changes, rehearse mixed versions and choose the
+rollback launch strategy. Older images can reject a newer migration ledger;
+application compatibility alone does not prove their default startup works.
+
 A failure should be investigated before another release. Do not delete ledger
 rows, mark missing migrations as applied, run `down` functions, force-unlock, or
 reset the customer database to suppress an error. Preserve the failed command
