@@ -18,7 +18,7 @@ Buyers can withdraw a pending offer before seller acceptance. Sellers must expla
 
 - Add buyer-only pending-offer withdrawal using the existing cancelled state and shared inventory lock order; duplicate withdrawals are idempotent.
 - Require a trimmed 1–1,000-character seller rejection reason; commit decision and audit atomically and project only the first reason into party-scoped history.
-- Add sent-offer confirmation/history and seller explanation UI with retained form state; distinguish missing legacy/automatic reasons.
+- Add sent-offer confirmation/history and seller explanation UI with an explicit stable textarea label and retained form state; distinguish missing legacy/automatic reasons.
 - Label negotiation external on offer entry/register and publish a versioned customer limitations page discoverable from workspace navigation.
 - Publish release naming, semantic compatibility, changelog, notice/migration and security-exception rules.
 - Mark the previously accepted SEC-009/015 and ARC-016/017 complete:92/343 (26.8%).
@@ -48,7 +48,7 @@ Buyers can withdraw a pending offer before seller acceptance. Sellers must expla
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: author passed 1,080 API cases, six HTTP regressions, workspace/browser types, both builds, quality, checked 196-route authorization inventory and backlog checks. New withdrawal and expanded integrity suites compile strictly. Seven new native withdrawal cases cover ownership, terminal states, duplicate requests, acceptance race and audit rollback; rejection regressions cover visibility, state/audit safety and concurrency. Actual Docker/browser runtime remains exact-commit release and required CI acceptance. Add passing SHA/date and CI result before merge; update relevant boxes after pass.
+- Evidence/results: author passed 1,080 API cases, six HTTP regressions, workspace/browser types, both builds, quality, checked 196-route authorization inventory and backlog checks. New withdrawal and expanded integrity suites compile strictly. Seven new native withdrawal cases cover ownership, terminal states, duplicate requests, acceptance race and audit rollback; rejection regressions cover visibility, state/audit safety and concurrency. Founder report a5e87af600f9e1544a3b0aec45609b6feaa9de6a passed through native integration and memory stress; browser rejection-field lookup failed, with backup rehearsal not run. The correction explicitly associates the label and checks typed text before/after a completed refresh. Corrected actual browser/full runtime remains exact-commit release and required CI acceptance. Add passing SHA/date and CI result before merge; update relevant boxes after pass.
 
 ## Product and operations
 

@@ -151,9 +151,13 @@ test('received offer can still reject and refresh its current page', async ({ pa
   await page.getByRole('button', { name: 'Reject', exact: true }).click();
   const decision = page.getByRole('dialog', { name: 'Reject offer', exact: true });
   await expect(decision.getByRole('button', { name: 'Reject', exact: true })).toBeDisabled();
-  await page.getByLabel('Rejection reason', { exact: true }).fill('Delivery terms do not match');
+  const reason = decision.getByRole('textbox', { name: 'Rejection reason', exact: true });
+  await reason.fill('Delivery terms do not match');
+  await expect(reason).toHaveValue('Delivery terms do not match');
+  const refreshed = page.waitForResponse(response => new URL(response.url()).pathname === '/api/offers/page');
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
-  await expect(page.getByLabel('Rejection reason', { exact: true })).toHaveValue('Delivery terms do not match');
+  await refreshed;
+  await expect(reason).toHaveValue('Delivery terms do not match');
   await page.getByRole('dialog', { name: 'Reject offer', exact: true }).getByRole('button', { name: 'Reject', exact: true }).click();
   await expect(page.getByText('History (1)', { exact: true })).toBeVisible();
   await expect(page.getByText('Seller reason: Delivery terms do not match', { exact: true })).toBeVisible();

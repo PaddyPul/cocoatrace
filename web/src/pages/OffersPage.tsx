@@ -143,7 +143,7 @@ export default function OffersPage() {
       {confirmReject && <div className="modal-overlay"><section role="dialog" aria-modal="true" aria-label="Reject offer" className="modal max-w-sm">
         <h2 className="text-base font-semibold">Reject offer</h2>
         <p className="my-3 text-sm">The buyer will see this explanation. Rejection cannot be undone.</p>
-        <label className="block text-sm">Rejection reason<textarea className="form-input mt-2" maxLength={1000} value={rejectionReason} onChange={event => setRejectionReason(event.target.value)} /></label>
+        <label htmlFor="offer-rejection-reason" className="block text-sm">Rejection reason</label><textarea id="offer-rejection-reason" className="form-input mt-2" maxLength={1000} value={rejectionReason} onChange={event => setRejectionReason(event.target.value)} />
         <div className="mt-4 flex gap-2"><button className="btn" disabled={!!processing} onClick={() => setConfirmReject(null)}>Cancel</button><button className="btn btn-danger" disabled={!!processing || !rejectionReason.trim()} onClick={() => handleReject(confirmReject)}>{processing ? 'Rejecting…' : 'Reject'}</button></div>
       </section></div>}
     </Layout>
