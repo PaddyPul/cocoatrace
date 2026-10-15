@@ -4,7 +4,7 @@ export function assertDemoResetAllowed(
   connectionString: string,
   environment: AppEnvironment = config.environment,
   demoMode = config.demoMode,
-  allowRemote = config.allowRemoteDemoReset,
+  _allowRemote = config.allowRemoteDemoReset,
 ): void {
   if (environment === 'production' || environment === 'staging') {
     throw new Error(`Demo reset is disabled in ${environment}.`);
@@ -13,12 +13,20 @@ export function assertDemoResetAllowed(
     throw new Error('Demo reset requires DEMO_MODE=true.');
   }
   const url = new URL(connectionString);
-  const local = ['localhost', '127.0.0.1', '::1'].includes(url.hostname);
-  const recognizedName = /^(cocoatrace|cocoatrace_demo|cocoatrace_test)$/.test(url.pathname.slice(1));
-  if ((!local || !recognizedName) && !allowRemote) {
+  // The legacy override argument is retained for callers, but can never bypass target safety.
+  if (!['postgres:', 'postgresql:'].includes(url.protocol) || url.search || url.hash) {
+    throw new Error(
+      'Refusing demo reset: use a simple local PostgreSQL URL without query or fragment overrides.',
+    );
+  }
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+  const recognizedName = /^(cocoatrace|cocoatrace_demo|cocoatrace_test)$/.test(
+    url.pathname.slice(1),
+  );
+  if (!local || !recognizedName) {
     throw new Error(
       `Refusing to reset ${url.hostname}/${url.pathname.slice(1)}. ` +
-      'Use a recognized local demo database or set COCOATRACE_ALLOW_REMOTE_DEMO_RESET=I_UNDERSTAND explicitly.',
+        'Only recognized local demo databases are permitted; remote overrides cannot bypass this guard.',
     );
   }
 }

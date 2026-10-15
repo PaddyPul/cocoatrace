@@ -6,6 +6,11 @@ Material customer/operator changes are recorded here using the [release and comp
 
 ### Added
 
+- Lazy route modules and enforced90KiB gzip initial JavaScript budget; current measured initial transfer about72KB (UX-009).
+- Public rendering/administration/recall ownership split with compatibility exports (ARC-009).
+- Protected build-artifact diagnostics with explicit incomplete metadata when no SHA is supplied (ENV-014, partial).
+- Stronger explicit demo reset guards: staging/production cannot bypass; remote targets and URL query/fragment target overrides are refused even with the legacy override (ENV-016). This deliberately tightens a dangerous maintenance exemption; no automatic reset is added or run.
+
 - Actual departure readiness with a known mode, origin/destination and provider name OR booking reference (LOG-003); draft/loading/recovery remain available.
 - Inclusive certificate validity regression evidence and serialized overlapping active certificate issuance/reinstatement prevention (DAT-005/006).
 - Seven engineering ADRs and a versioned owner-assigned risk register checked in release/CI (GOV-004/008).
