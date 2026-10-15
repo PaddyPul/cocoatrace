@@ -1,5 +1,14 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'scripts/build-metadata.test.mjs',
+  'scripts/check-web-budget.mjs',
+  'scripts/check-web-budget.test.mjs',
+  'api/scripts/stamp-build-metadata.mjs',
+  'api/src/demoDataGuard.test.ts',
+  'api/src/services/demoResetGuard.ts',
+  'api/test/integration/deploymentDiagnostics.integration.test.ts',
+  'api/src/controllers/publicProducts/**/*.ts',
+
   'scripts/risk-register.mjs',
   'scripts/risk-register.test.mjs',
   'api/test/integration/certificateValidity.integration.test.ts',

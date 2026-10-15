@@ -113,3 +113,15 @@ test('risk register ownership and current rendered evidence are required before 
   assert.ok(risk >= 0 && risk < api);
   assert.deepEqual(releaseChecks[risk][1], ['run', 'check:risks']);
 });
+
+test('initial JavaScript budget runs after production web build and before infrastructure acceptance', () => {
+  const build = releaseChecks.findIndex((check) => check[0] === 'Web build');
+  const budget = releaseChecks.findIndex(
+    (check) => check[0] === 'Initial frontend JavaScript budget',
+  );
+  const infra = releaseChecks.findIndex(
+    (check) => check[0] === 'Container runtime and vulnerability checks',
+  );
+  assert.ok(build >= 0 && budget > build && budget < infra);
+  assert.deepEqual(releaseChecks[budget][1], ['run', 'check:web-budget']);
+});

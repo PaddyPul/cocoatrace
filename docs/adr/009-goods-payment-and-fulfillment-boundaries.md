@@ -2,7 +2,7 @@
 
 Date: 2026-10-15. Backlog: GOV-004.
 
-Status: records the accepted current engineering direction and existing implementation boundaries; publication/founder review of this decision record is pending. This status does not assert hosted deployment or independent security acceptance.
+Status: records the accepted current engineering direction and existing implementation boundaries; publication/founder review accepted on 2026-10-15 with the pilot-integrity release. This status does not assert hosted deployment or independent security acceptance.
 
 ## Context
 

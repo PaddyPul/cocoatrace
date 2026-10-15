@@ -12,6 +12,7 @@ export const releaseChecks = [
     [
       '--test',
       'scripts/run-release-checks.test.mjs',
+      'scripts/build-metadata.test.mjs',
       'scripts/check-dependencies.test.mjs',
       'scripts/shell-quote-security.test.mjs',
       'scripts/check-container-security.test.mjs',
@@ -35,6 +36,7 @@ export const releaseChecks = [
   ['API unit tests', ['run', 'test', '--workspace=api']],
   ['API build', ['run', 'build', '--workspace=api']],
   ['Web build', ['run', 'build', '--workspace=web']],
+  ['Initial frontend JavaScript budget', ['run', 'check:web-budget']],
   ['Browser type checks', ['run', 'typecheck:browser']],
   ['Migration integrity', ['run', 'migrations:verify', '--workspace=api']],
   ['Container runtime and vulnerability checks', ['run', 'check:containers']],

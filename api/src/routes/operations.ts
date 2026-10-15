@@ -15,9 +15,21 @@ import { AppError, ValidationError } from '../errors';
 import { readTerminalAlerts, retryOperatorAlert } from '../modules/operations/alertRecovery';
 import { readAlertStatus } from '../modules/operations/alerts';
 import { readQueueBacklog } from '../modules/operations/backlog';
+import { config } from '../config/env';
+import { readDeploymentDiagnostics } from '../modules/operations/deployment';
 
 const router = Router();
 router.use('/operations', requireAuth, requirePermission('*'));
+router.get('/operations/deployment', (req, res, next) => {
+  try {
+    if (Object.keys(req.query).length)
+      throw new ValidationError('Unknown deployment diagnostics parameter');
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(readDeploymentDiagnostics(config.environment));
+  } catch (error) {
+    next(error);
+  }
+});
 router.get('/operations/status', async (_req, res, next) => {
   try {
     const jobs = await query(

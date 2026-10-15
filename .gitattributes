@@ -199,3 +199,13 @@ api/test/integration/certificateValidity.integration.test.ts text eol=lf
 api/test/integration/certificateDuplicates.integration.test.ts text eol=lf
 
 docs/RISK_REGISTER.md text eol=lf
+
+scripts/check-web-budget.mjs text eol=lf
+scripts/check-web-budget.test.mjs text eol=lf
+api/scripts/stamp-build-metadata.mjs text eol=lf
+api/src/demoDataGuard.test.ts text eol=lf
+api/src/services/demoResetGuard.ts text eol=lf
+api/test/integration/deploymentDiagnostics.integration.test.ts text eol=lf
+api/src/controllers/publicProducts/**/*.ts text eol=lf
+
+scripts/build-metadata.test.mjs text eol=lf

@@ -1,47 +1,58 @@
-import PilotLimitationsPage from './pages/PilotLimitationsPage';
-import EvidenceContributionPage from './pages/EvidenceContributionPage';
-import PasskeysPage from './pages/PasskeysPage';
+import { lazy, Suspense } from 'react';
 import { LanguageProvider } from './i18n/LanguageProvider';
-import PlatformFeesPage from './pages/PlatformFeesPage';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuthCtx } from './components/auth/AuthProvider';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import { ToastProvider } from './components/shared/ToastProvider';
-import LoginPage from './pages/LoginPage';
-import ControlTowerPage from './pages/ControlTowerPage';
-import MarketplacePage from './pages/MarketplacePage';
-import ListingDetailPage from './pages/ListingDetailPage';
-import ContractDetailPage from './pages/ContractDetailPage';
-import ShipmentDetailPage from './pages/ShipmentDetailPage';
-import PaymentDetailPage from './pages/PaymentDetailPage';
-import { FarmsPage, BatchesPage, HoldingsPage, ContractsPage, ShipmentsPage, PaymentsPage, EvidencePage, AuditPage, CertsPage, OrganizationsPage } from './pages/DataPages';
-import FarmDetailPage from './pages/FarmDetailPage';
-import BatchDetailPage from './pages/BatchDetailPage';
-import HoldingDetailPage from './pages/HoldingDetailPage';
-import OffersPage from './pages/OffersPage';
-import MyListingsPage from './pages/MyListingsPage';
-import PublicProductPage from './pages/PublicProductPage';
-import RecallCenterPage from './pages/RecallCenterPage';
-import InvestorDemoPage from './pages/InvestorDemoPage';
-import ProductsPage from './pages/ProductsPage';
-import OnboardingPage from './pages/OnboardingPage';
-import PilotTeamPage from './pages/PilotTeamPage';
-import AcceptInvitationPage from './pages/AcceptInvitationPage';
-import ExperienceHomePage from './pages/ExperienceHomePage';
-import SourcingBriefPage from './pages/SourcingBriefPage';
-import CompareOffersPage from './pages/CompareOffersPage';
-import PublishSupplyPage from './pages/PublishSupplyPage';
-import DealRoomPage from './pages/DealRoomPage';
-import DirectInventoryPage from './pages/DirectInventoryPage';
-import RequestAccessPage from './pages/RequestAccessPage';
-import AccessVerificationPage from './pages/AccessVerificationPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import ChangePasswordPage from './pages/ChangePasswordPage';
-import AccessControlsPage from './pages/AccessControlsPage';
-import AccessApplicationsPage from './pages/AccessApplicationsPage';
-import OperationsPage from './pages/OperationsPage';
 import { webConfig } from './config';
+
+const PilotLimitationsPage = lazy(() => import('./pages/PilotLimitationsPage'));
+const EvidenceContributionPage = lazy(() => import('./pages/EvidenceContributionPage'));
+const PasskeysPage = lazy(() => import('./pages/PasskeysPage'));
+const PlatformFeesPage = lazy(() => import('./pages/PlatformFeesPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const ControlTowerPage = lazy(() => import('./pages/ControlTowerPage'));
+const MarketplacePage = lazy(() => import('./pages/MarketplacePage'));
+const ListingDetailPage = lazy(() => import('./pages/ListingDetailPage'));
+const ContractDetailPage = lazy(() => import('./pages/ContractDetailPage'));
+const ShipmentDetailPage = lazy(() => import('./pages/ShipmentDetailPage'));
+const PaymentDetailPage = lazy(() => import('./pages/PaymentDetailPage'));
+const FarmsPage = lazy(() => import('./pages/SourceFarmsPage'));
+const BatchesPage = lazy(() => import('./pages/SourceBatchesPage'));
+const HoldingsPage = lazy(() => import('./pages/InventoryPage'));
+const ContractsPage = lazy(() => import('./pages/ContractRecordsPage'));
+const ShipmentsPage = lazy(() => import('./pages/ShipmentRecordsPage'));
+const PaymentsPage = lazy(() => import('./pages/PaymentRecordsPage'));
+const EvidencePage = lazy(() => import('./pages/EvidenceRecordsPage'));
+const AuditPage = lazy(() => import('./pages/AuditRecordsPage'));
+const CertsPage = lazy(() => import('./components/catalog/CertificateRecordsPage'));
+const OrganizationsPage = lazy(() => import('./pages/OrganizationsPage'));
+const FarmDetailPage = lazy(() => import('./pages/FarmDetailPage'));
+const BatchDetailPage = lazy(() => import('./pages/BatchDetailPage'));
+const HoldingDetailPage = lazy(() => import('./pages/HoldingDetailPage'));
+const OffersPage = lazy(() => import('./pages/OffersPage'));
+const MyListingsPage = lazy(() => import('./pages/MyListingsPage'));
+const PublicProductPage = lazy(() => import('./pages/PublicProductPage'));
+const RecallCenterPage = lazy(() => import('./pages/RecallCenterPage'));
+const InvestorDemoPage = lazy(() => import('./pages/InvestorDemoPage'));
+const ProductsPage = lazy(() => import('./pages/ProductsPage'));
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
+const PilotTeamPage = lazy(() => import('./pages/PilotTeamPage'));
+const AcceptInvitationPage = lazy(() => import('./pages/AcceptInvitationPage'));
+const ExperienceHomePage = lazy(() => import('./pages/ExperienceHomePage'));
+const SourcingBriefPage = lazy(() => import('./pages/SourcingBriefPage'));
+const CompareOffersPage = lazy(() => import('./pages/CompareOffersPage'));
+const PublishSupplyPage = lazy(() => import('./pages/PublishSupplyPage'));
+const DealRoomPage = lazy(() => import('./pages/DealRoomPage'));
+const DirectInventoryPage = lazy(() => import('./pages/DirectInventoryPage'));
+const RequestAccessPage = lazy(() => import('./pages/RequestAccessPage'));
+const AccessVerificationPage = lazy(() => import('./pages/AccessVerificationPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const ChangePasswordPage = lazy(() => import('./pages/ChangePasswordPage'));
+const AccessControlsPage = lazy(() => import('./pages/AccessControlsPage'));
+const AccessApplicationsPage = lazy(() => import('./pages/AccessApplicationsPage'));
+const OperationsPage = lazy(() => import('./pages/OperationsPage'));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, onboarding, onboardingLoading } = useAuthCtx();
@@ -75,6 +86,7 @@ export default function App() {
       </div>}
       <AuthProvider>
         <LanguageProvider><ToastProvider>
+        <ErrorBoundary><Suspense fallback={<main className="grid min-h-[60vh] place-items-center" role="status">Loading page…</main>}>
         <Routes>
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
@@ -129,6 +141,7 @@ export default function App() {
           <Route path="/account/security" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
+        </Suspense></ErrorBoundary>
         </ToastProvider></LanguageProvider>
       </AuthProvider>
     </BrowserRouter>

@@ -6,7 +6,9 @@ COPY api/package*.json ./api/
 COPY api/tsconfig.json ./api/
 RUN npm ci --workspace=api --include-workspace-root --ignore-scripts
 COPY api/src/ ./api/src/
-RUN npm run build --workspace=api
+COPY api/scripts/stamp-build-metadata.mjs ./api/scripts/
+ARG BUILD_GIT_SHA
+RUN BUILD_GIT_SHA="$BUILD_GIT_SHA" npm run build --workspace=api
 
 FROM node:24-alpine AS runtime
 WORKDIR /app

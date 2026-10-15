@@ -155,12 +155,14 @@
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
     "api/src/routes/operations.ts": {
-      "scope": "Global platform administrator only; aggregate observations are private/bounded and retries require fresh transactional authority, original eligibility and atomic audit.",
+      "scope": "Global platform administrator only; aggregate observations are private/bounded and retries require fresh transactional authority, original eligibility and atomic audit. Deployment diagnostics remain wildcard-only and no-store, exposing only validated build metadata/environment; missing stamps are explicitly incomplete.",
       "evidence": [
         "api/src/modules/operations/recovery.ts",
         "api/src/modules/operations/alertRecovery.ts",
         "api/test/integration/operationsWorkers.integration.test.ts",
-        "api/test/integration/operationsAlertRecovery.integration.test.ts"
+        "api/test/integration/operationsAlertRecovery.integration.test.ts",
+        "api/src/modules/operations/deployment.ts",
+        "api/test/integration/deploymentDiagnostics.integration.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
@@ -200,7 +202,10 @@
         "api/src/controllers/recallResponseController.ts",
         "api/test/integration/productProfilePages.integration.test.ts",
         "api/test/integration/publicNoticePages.integration.test.ts",
-        "api/test/integration/recallResponsePages.integration.test.ts"
+        "api/test/integration/recallResponsePages.integration.test.ts",
+        "api/src/controllers/publicProducts/rendering.ts",
+        "api/src/controllers/publicProducts/administration.ts",
+        "api/src/controllers/publicProducts/recalls.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
@@ -1377,6 +1382,25 @@
     {
       "method": "GET",
       "path": "/operations/cleanup/dead",
+      "source": "api/src/routes/operations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/operations/deployment",
       "source": "api/src/routes/operations.ts",
       "guards": [
         {

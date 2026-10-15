@@ -152,3 +152,8 @@ TRD-010/011/012 plus GOV-007/009/010 are supplied in one closure candidate. Curr
 ## 2026-10-15 15:27 UTC acceptance and reconciliation
 
 Corrected offer release passed and merged per founder; six rows close to98/343. Audit of exact LOG-002/004/011 criteria confirms prior accepted implementation and closes those three without reimplementation:101/343 (29.4%). New LOG-003, DAT-005/006 and GOV-004/008 candidate targets106/343 (30.9%) after acceptance. No independent CI URL, exact founder commit or hosted/corridor acceptance inferred. Full evidence and limits are in releases/PILOT_INTEGRITY_CLOSURE_WINDOWS.md.
+
+
+## 2026-10-15 16:32 UTC integrity acceptance and decision reconciliation
+
+Corrected integrity release accepted per founder:106/343. Four technical decision rows DEC-002/003/004/006 reconcile to accepted ADR004–007:110/343 (32.1%). Target ARC-009/UX-009/ENV-016 after integrated acceptance gives113/343 (32.9%). ENV-014 implementation has honest incomplete-stamp semantics and no hosted readback evidence; keep partial. Core/provider counts unchanged. No reset executed. See releases/ARCHITECTURE_RELEASE_CLOSURE_WINDOWS.md.
