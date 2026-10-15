@@ -106,3 +106,10 @@ test('shared frontend transport regressions gate release before application and 
   assert.ok(boundaryIndex >= 0 && boundaryIndex < unitIndex);
   assert.deepEqual(releaseChecks[boundaryIndex][1], ['run', 'test:web-boundaries']);
 });
+
+test('risk register ownership and current rendered evidence are required before runtime release work', () => {
+  const risk = releaseChecks.findIndex((check) => check[0] === 'Pilot risk register');
+  const api = releaseChecks.findIndex((check) => check[0] === 'API unit tests');
+  assert.ok(risk >= 0 && risk < api);
+  assert.deepEqual(releaseChecks[risk][1], ['run', 'check:risks']);
+});

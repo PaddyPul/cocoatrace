@@ -6,6 +6,10 @@ Material customer/operator changes are recorded here using the [release and comp
 
 ### Added
 
+- Actual departure readiness with a known mode, origin/destination and provider name OR booking reference (LOG-003); draft/loading/recovery remain available.
+- Inclusive certificate validity regression evidence and serialized overlapping active certificate issuance/reinstatement prevention (DAT-005/006).
+- Seven engineering ADRs and a versioned owner-assigned risk register checked in release/CI (GOV-004/008).
+
 - Buyer withdrawal of pending offers with serialized terminal decisions and atomic audit (TRD-010).
 - Seller rejection explanations with party-visible immutable history (TRD-011).
 - Explicit external negotiation guidance and versioned customer pilot limitations (TRD-012, GOV-009).

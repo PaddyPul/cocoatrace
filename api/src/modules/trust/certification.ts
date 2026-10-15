@@ -1,3 +1,4 @@
+import { rejectDuplicateActiveCertificate } from './certificateDuplicates';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../errors';
 import { inTradeTransaction as inTransaction, recordTradeAudit, TradeActor } from '../trading/transaction';
 import { certificateExpiry, recordClaimReview } from './writeReviews';
@@ -10,7 +11,7 @@ type CertificateInput = {
 
 export async function issueCertificateRecord(actor: TradeActor, input: CertificateInput) {
   return inTransaction(async client => {
-    const farm = (await client.query('SELECT * FROM farms WHERE id=$1 AND farmer_organization_id=$2 FOR SHARE',
+    const farm = (await client.query('SELECT * FROM farms WHERE id=$1 AND farmer_organization_id=$2 FOR UPDATE',
       [input.farmId,input.farmerOrganizationId])).rows[0];
     if (!farm) throw new ValidationError('Farm does not belong to the supplied farmer organization');
     const issuer = (await client.query('SELECT type,verification_status FROM organizations WHERE id=$1 FOR SHARE',
@@ -18,6 +19,7 @@ export async function issueCertificateRecord(actor: TradeActor, input: Certifica
     if (!issuer || issuer.type !== 'certifier' || issuer.verification_status !== 'verified' || actor.organizationId === farm.farmer_organization_id) {
       throw new ForbiddenError('Certificates require an approved certifier independent of the farm owner');
     }
+    await rejectDuplicateActiveCertificate(client, actor.organizationId, input);
     const certificate = (await client.query(`INSERT INTO organic_certificates
       (certifier_organization_id,farmer_organization_id,farm_id,standard,crop_scope,valid_from,valid_to,issuing_authority,accreditation_reference)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
@@ -65,13 +67,21 @@ export async function changeCertificateStatusRecord(actor: TradeActor, certifica
   const states: Record<string, string> = {suspend:'suspended',revoke:'revoked',reinstate:'active'};
   if (!states[action]) throw new ValidationError('Invalid certificate action');
   return inTransaction(async client => {
-    const cert = (await client.query('SELECT * FROM organic_certificates WHERE id=$1 AND certifier_organization_id=$2 FOR UPDATE',[certificateId,actor.organizationId])).rows[0];
+    const cert = (await client.query('SELECT *,valid_from::text AS scope_valid_from,valid_to::text AS scope_valid_to FROM organic_certificates WHERE id=$1 AND certifier_organization_id=$2 FOR UPDATE',[certificateId,actor.organizationId])).rows[0];
     if (!cert) throw new NotFoundError('Certificate');
     if (action === 'suspend' && cert.status !== 'active') throw new ConflictError('Only active certificates can be suspended');
     if (action === 'reinstate' && cert.status !== 'suspended') throw new ConflictError('Only suspended certificates can be reinstated; revoked certificates require a new issuance');
     if (action === 'reinstate' && (new Date() < new Date(cert.valid_from) || new Date() >= certificateExpiry(cert.valid_to))) throw new ConflictError('Certificate must be currently valid to reinstate');
     const issuer = (await client.query('SELECT type,verification_status FROM organizations WHERE id=$1 FOR SHARE',[actor.organizationId])).rows[0];
     if (!issuer || issuer.type !== 'certifier' || issuer.verification_status !== 'verified') throw new ForbiddenError('Certificate actions require an approved issuing certifier');
+    if (action === 'reinstate') {
+      await client.query('SELECT id FROM farms WHERE id=$1 FOR UPDATE', [cert.farm_id]);
+      await rejectDuplicateActiveCertificate(client, actor.organizationId, {
+        farmId: cert.farm_id, farmerOrganizationId: cert.farmer_organization_id,
+        standard: cert.standard, cropScope: cert.crop_scope,
+        validFrom: cert.scope_valid_from, validTo: cert.scope_valid_to,
+      }, certificateId);
+    }
     const updated = (await client.query('UPDATE organic_certificates SET status=$1 WHERE id=$2 RETURNING *',[states[action],certificateId])).rows[0];
     if (action === 'reinstate') {
       await recordClaimReview(client,actor,{entityType:'certificate',entityId:certificateId,sourceReference:certificateId,

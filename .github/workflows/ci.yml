@@ -25,6 +25,7 @@ jobs:
       - run: npm ci
       - run: npm run check:quality
       - run: npm run test:backlog
+      - run: npm run check:risks
       - run: npm run check:authorization
       - run: npm run test:locale
       - run: npm run test:web-boundaries

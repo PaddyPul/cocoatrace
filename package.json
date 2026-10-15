@@ -51,7 +51,9 @@
     "test:backlog": "node --test scripts/backlog-progress.test.mjs",
     "test:evidence:stress:docker": "node scripts/run-evidence-stress.mjs",
     "check:authorization": "node scripts/check-authorization.mjs && node --test scripts/authorization-register.test.mjs",
-    "test:web-boundaries": "node --import tsx --test scripts/web-http.test.mjs"
+    "test:web-boundaries": "node --import tsx --test scripts/web-http.test.mjs",
+    "risk:report": "node scripts/risk-register.mjs",
+    "check:risks": "node scripts/risk-register.mjs && node --test scripts/risk-register.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

@@ -76,7 +76,7 @@ describe('all Incoterms enforce physical action responsibilities at the API',()=
    expect((await request(app).patch(arrangement).set('Authorization',`Bearer ${wrong.token}`).send({bookingReference:'FORBIDDEN'})).status).toBe(403);
    expect(await snapshot(d)).toEqual(before);
   }
-  expect((await request(app).patch(arrangement).set('Authorization',`Bearer ${coordinator.token}`).send({bookingReference:'ASSIGNED'})).status).toBe(200);
+  expect((await request(app).patch(arrangement).set('Authorization',`Bearer ${coordinator.token}`).send({bookingReference:'ASSIGNED',transportMode:'road',originLocation:'Tema',destinationLocation:'Rotterdam'})).status).toBe(200);
   // Explicit origin/unloading/clearance confirmations are fixture prerequisites.
   for(const m of ['cargo_ready','handed_over','loaded','unloaded','customs_cleared']) await query('INSERT INTO shipment_milestones(shipment_id,milestone,recorded_by_user_id) VALUES($1,$2,$3)',[d.shipmentId,m,seller.userId]);
   const milestones=['booked','cargo_ready','export_cleared','loaded','departed','arrived','customs_cleared','unloaded','delivered'];
@@ -90,6 +90,30 @@ describe('all Incoterms enforce physical action responsibilities at the API',()=
    }
    expect((await post(`/shipments/${d.shipmentId}/milestones`,assigned,{milestone:m})).status).toBe(200);
   }
+ });
+
+ it('requires a complete departure arrangement without blocking draft, loading or receipt',async()=>{
+  const d=await deal('pay_after_delivery');
+  const endpoint=`/shipments/${d.shipmentId}/milestones`;
+  // Both source confirmations and later receipt stay usable without provider metadata.
+  expect((await post(endpoint,seller,{milestone:'loaded'})).status).toBe(200);
+  const before=await snapshot(d);
+  const denied=await post(endpoint,buyer,{milestone:'departed',exceptionalDispatch:{reason:'An exception cannot replace arrangement details',acknowledgePaymentRisk:true}});
+  expect(denied.status,JSON.stringify(denied.body)).toBe(409);
+  expect(denied.body).toMatchObject({code:'TRANSPORT_ARRANGEMENT_REQUIRED',missingFields:['provider name or booking reference','transport mode']});
+  expect(await snapshot(d)).toEqual(before);
+  expect((await post(endpoint,seller,{milestone:'departed'})).status).toBe(403);
+  // The assigned party can save partial draft information, then complete the minimum.
+  const details=`/shipments/${d.shipmentId}/details`;
+  expect((await request(app).patch(details).set('Authorization',`Bearer ${buyer.token}`).send({bookingReference:'MINIMUM-BOOKING'})).status).toBe(200);
+  const incomplete=await post(endpoint,buyer,{milestone:'departed'});
+  expect(incomplete.status).toBe(409);expect(incomplete.body.missingFields).toEqual(['transport mode']);
+  expect((await request(app).patch(details).set('Authorization',`Bearer ${buyer.token}`).send({transportMode:'road'})).status).toBe(200);
+  const departure=await post(endpoint,buyer,{milestone:'departed'});
+  expect(departure.status,JSON.stringify(departure.body)).toBe(200);
+  const recovery=await deal('pay_after_delivery');
+  expect((await post(`/shipments/${recovery.shipmentId}/milestones`,seller,{milestone:'loaded'})).status).toBe(200);
+  expect((await post(`/shipments/${recovery.shipmentId}/milestones`,buyer,{milestone:'arrived'})).status).toBe(200);
  });
  it('keeps shipment details private from unrelated wildcard accounts and returns party-specific permissions',async()=>{
   const d=await deal('pay_after_delivery');
