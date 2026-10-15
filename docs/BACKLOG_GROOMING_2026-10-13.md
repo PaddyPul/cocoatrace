@@ -157,3 +157,7 @@ Corrected offer release passed and merged per founder; six rows close to98/343. 
 ## 2026-10-15 16:32 UTC integrity acceptance and decision reconciliation
 
 Corrected integrity release accepted per founder:106/343. Four technical decision rows DEC-002/003/004/006 reconcile to accepted ADR004–007:110/343 (32.1%). Target ARC-009/UX-009/ENV-016 after integrated acceptance gives113/343 (32.9%). ENV-014 implementation has honest incomplete-stamp semantics and no hosted readback evidence; keep partial. Core/provider counts unchanged. No reset executed. See releases/ARCHITECTURE_RELEASE_CLOSURE_WINDOWS.md.
+
+## 2026-10-15 request and deployment guardrails sprint
+
+Founder reports architecture release passed and merged: UX-009, ARC-009 and ENV-016 close. Accepted roadmap is113/343 (32.9%). New ENV-012/ENV-018 policy closure targets yield115/343 (33.5%) after review/release acceptance. SEC-010 advances with real HTTP request-budget/error tests but remains partial for broader admission/load evidence. Core11/28 and provider-inclusive11/40 remain unchanged. No hosted resource, rolling deployment or valuation claim.

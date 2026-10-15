@@ -1,5 +1,7 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/middleware/requestLimits.ts',
+  'api/src/middleware/requestLimits.test.ts',
   'scripts/build-metadata.test.mjs',
   'scripts/check-web-budget.mjs',
   'scripts/check-web-budget.test.mjs',

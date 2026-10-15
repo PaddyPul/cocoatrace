@@ -1,5 +1,13 @@
 # Changelog
 
+## Pilot request and deployment guardrails — 2026-10-15
+
+- Bound query bytes, parameter counts, decoded fields and nesting before ordinary Express parsing; retain route validation and evidence capability/admission gates.
+- Return redacted stable generic JSON overflow/malformed-body errors; evidence file overflow retains its existing code.
+- Publish source-checked environment ingress and migration compatibility/rollback rules, including older-artifact ledger refusal and current proxy trust limitations.
+- Reconcile founder-accepted route splitting, public module ownership and demo-reset closures.
+
+
 Material customer/operator changes are recorded here using the [release and compatibility policy](docs/governance/RELEASE_AND_COMPATIBILITY_POLICY.md). The full Git SHA and immutable artifact manifest identify a release; workspace package versions do not establish product release history.
 
 ## Unreleased
