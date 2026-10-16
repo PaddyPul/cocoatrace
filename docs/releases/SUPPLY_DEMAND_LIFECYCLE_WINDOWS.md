@@ -47,8 +47,7 @@ Start Docker Desktop. Stop other test/build runs. Redirection happens inside cmd
     if ($LASTEXITCODE -ne 0) { throw "Cannot read candidate commit." }
     cmd.exe /d /c "npm run verify:release > supply-demand-lifecycle-release-output.txt 2>&1"
     if ($LASTEXITCODE -ne 0) {
-        Select-String -Path supply-demand-lifecycle-release-output.txt -Pattern 'FAILED:|FAIL  |Error:|errorCode' -Context 0,20 | Select-Object -First 3
-        Get-Content supply-demand-lifecycle-release-output.txt -Tail 25
+        Get-Content supply-demand-lifecycle-release-output.txt -Tail 180
         throw "Release failed. Stop before push/merge; send only the first specific failure."
     }
     $release = Get-Content ".\release-test-results\summary.json" -Raw | ConvertFrom-Json

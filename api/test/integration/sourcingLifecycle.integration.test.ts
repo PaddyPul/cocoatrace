@@ -1,12 +1,16 @@
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import request from 'supertest';
-import { afterAll, beforeAll, describe, it, expect } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, it, expect } from 'vitest';
 import app from '../../src/app';
 import { pool, query } from '../../src/db';
-import { inDatabaseTransaction } from '../../src/services/databaseTransaction';
-import { recordAudit } from '../../src/services/auditWriter';
-import { closeoutSourcing } from '../../src/modules/sourcing/lifecycle';
+import { requireDisposableTestDatabase } from '../../src/testing/databaseSafety';
+// This suite intentionally exercises several denied mutations with one actor.
+// Reset disposable counters between scenarios, never within a concurrent test.
+beforeEach(async () => {
+  requireDisposableTestDatabase(process.env.TEST_DATABASE_URL || process.env.DATABASE_URL);
+  await query('TRUNCATE auth_rate_limits');
+});
 let token: string, org: string, user: string, id: string;
 beforeAll(async () => {
   const suffix = crypto.randomUUID();
@@ -201,23 +205,25 @@ describe('award contract association and transaction safety', () => {
   });
   it('rolls back closeout when the atomic audit fails', async () => {
     const target = await newRequest();
-    await expect(
-      inDatabaseTransaction(async (client) => {
-        await closeoutSourcing(
-          client.query.bind(client),
-          { id: user, organizationId: org },
-          target,
-          { status: 'closed', reason: 'Reviewed allocations before closing', confirmed: true },
-        );
-        await recordAudit(
-          client,
-          { id: crypto.randomUUID(), organizationId: org },
-          'sourcing_request.closeout',
-          'sourcing_request',
-          target,
-        );
-      }),
-    ).rejects.toThrow();
+    const trigger = `fail_sourcing_${crypto.randomUUID().replaceAll('-', '')}`;
+    await query(`CREATE FUNCTION ${trigger}() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN
+      IF NEW.action='sourcing_request.closeout' AND NEW.entity_id='${target}'::uuid THEN
+        RAISE EXCEPTION 'synthetic sourcing audit failure';
+      END IF; RETURN NEW; END $$`);
+    await query(
+      `CREATE TRIGGER ${trigger} BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION ${trigger}()`,
+    );
+    try {
+      const response = await post(target, {
+        status: 'closed',
+        reason: 'Reviewed allocations before closing',
+        confirmed: true,
+      });
+      expect(response.status, JSON.stringify(response.body)).toBe(500);
+    } finally {
+      await query(`DROP TRIGGER ${trigger} ON audit_events`);
+      await query(`DROP FUNCTION ${trigger}()`);
+    }
     expect(
       (await query('SELECT status FROM sourcing_requests WHERE id=$1', [target])).rows[0].status,
     ).toBe('open');
@@ -239,7 +245,12 @@ describe('award contract association and transaction safety', () => {
         confirmed: true,
       }),
     ]);
-    expect(results.map((r) => r.status).sort()).toEqual([200, 409]);
+    expect(
+      results.map((r) => r.status).sort(),
+      results
+        .map((r) => JSON.stringify({ status: r.status, code: r.body.code, error: r.body.error }))
+        .join('; '),
+    ).toEqual([200, 409]);
     expect(
       (await query('SELECT * FROM sourcing_request_closeouts WHERE request_id=$1', [target])).rows,
     ).toHaveLength(1);

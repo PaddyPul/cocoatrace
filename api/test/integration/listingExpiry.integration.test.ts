@@ -53,7 +53,7 @@ beforeAll(async () => {
   ).rows[0].id;
   listing = (
     await query(
-      "INSERT INTO listings(seller_organization_id,holding_id,available_quantity_kg,price_per_kg,currency,expires_at) VALUES($1,$2,50,10,'EUR',clock_timestamp()-INTERVAL '1 day') RETURNING id",
+      "INSERT INTO listings(seller_organization_id,holding_id,available_quantity_kg,price_per_kg,currency,origin_location,destination_location,expires_at) VALUES($1,$2,50,10,'EUR','Tamale','Rotterdam',clock_timestamp()-INTERVAL '1 day') RETURNING id",
       [owner.org, holding],
     )
   ).rows[0].id;
