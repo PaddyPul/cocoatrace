@@ -181,3 +181,7 @@ Founder accepts corrected team administration and privileged review: IDN-016/017
 ## 2026-10-16 workspace filters/support sprint
 
 Founder accepts corrected supply/demand lifecycle: TRD-018/020 close;127/343 (37.0%). PRD-013/015 target129/343 (37.6%) after full candidate release/review/merge. Device-local saved filters must be account/workspace isolated; support reports must be private, idempotent, bounded and attributable without invented external-response guarantees. Core11/28 and provider-inclusive11/40 unchanged.
+
+## Agreement and notification wave — 2026-10-16
+
+Founder accepts corrected saved filters/support release and merge: PRD-013/015 complete, 129/343 (37.6%). TRD-015 and PRD-007 are in progress together; acceptance would yield131/343 (38.2%). Core11/28 and provider-inclusive11/40 unchanged. Payment terms remain separately confirmed; acknowledgements are not legal signatures. Current notices are not a historical event archive or outbound email delivery.

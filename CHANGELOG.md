@@ -1,5 +1,12 @@
 # Changelog
 
+## Agreement acknowledgement and current notices — 2026-10-16
+
+- Record explicit per-party acknowledgement of a hashed, versioned base commercial snapshot without implying a legal signature or changing fulfilment gates.
+- Add private current trade notices with read/unread receipts, responsible party and safe workflow links.
+- Reconcile founder-accepted saved filters/support; new wave remains pending full runtime release and merge.
+
+
 ## BetterTrade customer identity and compatibility — 2026-10-16
 
 - Rename customer-facing web identity, metadata and current email templates to BetterTrade; qualify evidence/review and transformation wording.

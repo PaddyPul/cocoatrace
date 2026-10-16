@@ -180,6 +180,14 @@
     {
       "path": "api/src/migrations/043_support_requests.ts",
       "sha256": "eedb540e5bf682668bc54eef7fe501e9b690a63f5d4eb5ffa5145e1c95c886e2"
+    },
+    {
+      "path": "api/src/migrations/044_agreement_acceptance.ts",
+      "sha256": "5905b173215b97d2bfeb56948b271266a213285d189c69d0301fdaa74adbc8f1"
+    },
+    {
+      "path": "api/src/migrations/045_notification_reads.ts",
+      "sha256": "62bb6a21fda9f82dcd5e5ca09867b00117dcb62aec2e73ccbdf6649cc6873da1"
     }
   ]
 }

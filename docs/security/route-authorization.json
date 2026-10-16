@@ -293,6 +293,22 @@
         "api/test/integration/supportRequests.integration.test.ts"
       ],
       "remaining": "Hosted monitoring/response owner and external contacts are not implied. Resource references in reports are user-reported, not authorization or ownership proof."
+    },
+    "api/src/modules/agreements/routes.ts": {
+      "scope": "Current buyer/seller contract parties only, including wildcard users. Live transactional grants authorize explicit party acknowledgement of current immutable snapshot hash; no legal signature or fulfilment gate.",
+      "evidence": [
+        "api/src/modules/agreements/repository.ts",
+        "api/test/integration/agreementAcceptance.integration.test.ts"
+      ],
+      "remaining": "Native/browser runtime acceptance pending; universal resource matrix and hosted deployment remain separately tracked."
+    },
+    "api/src/modules/notifications/routes.ts": {
+      "scope": "Current user/organization current-action feed only, bounded complete source and private read receipts; current permission and session rechecked for every request, including receipt writes. No global inbox or outbound send.",
+      "evidence": [
+        "api/src/modules/notifications/repository.ts",
+        "api/test/integration/notificationCenter.integration.test.ts"
+      ],
+      "remaining": "Native/browser runtime acceptance pending; universal resource matrix and hosted deployment remain separately tracked."
     }
   },
   "routes": [
@@ -751,6 +767,25 @@
       ],
       "entryControls": [],
       "handler": "contractController.getContract",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/contracts/:id/acceptance",
+      "source": "api/src/modules/agreements/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
       "authentication": "session"
     },
     {
@@ -1344,6 +1379,32 @@
       ],
       "entryControls": [],
       "handler": "authController.me",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/notifications/page",
+      "source": "api/src/modules/notifications/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/notifications/summary",
+      "source": "api/src/modules/notifications/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
       "authentication": "session"
     },
     {
@@ -2960,6 +3021,27 @@
     },
     {
       "method": "POST",
+      "path": "/contracts/:id/acceptance",
+      "source": "api/src/modules/agreements/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
       "path": "/contracts/:id/cancellation",
       "source": "api/src/routes/contracts.ts",
       "guards": [
@@ -3463,6 +3545,21 @@
           "permissions": [
             "listing.create"
           ]
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/notifications/:fingerprint/read",
+      "source": "api/src/modules/notifications/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
         }
       ],
       "entryControls": [
