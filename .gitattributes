@@ -253,3 +253,16 @@ e2e/sourcingCloseout.spec.ts text eol=lf
 e2e/listingExpiry.spec.ts text eol=lf
 api/src/migrations/041_sourcing_closeout.ts text eol=lf
 api/src/migrations/042_listing_expiry.ts text eol=lf
+
+api/src/modules/support/**/*.ts text eol=lf
+api/test/integration/supportRequests.integration.test.ts text eol=lf
+web/src/api/support.ts text eol=lf
+web/src/pages/SupportPage.tsx text eol=lf
+web/src/components/savedFilters/**/*.tsx text eol=lf
+web/src/domains/savedFilters/**/*.ts text eol=lf
+web/src/domains/support/**/*.ts text eol=lf
+scripts/saved-filters.test.mjs text eol=lf
+scripts/support-context.test.mjs text eol=lf
+e2e/savedFilters.spec.ts text eol=lf
+e2e/supportRequests.spec.ts text eol=lf
+api/src/migrations/043_support_requests.ts text eol=lf

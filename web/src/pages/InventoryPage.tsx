@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import SavedFilterControls from '../components/savedFilters/SavedFilterControls';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 import { holdings as holdingsApi } from '../api';
@@ -14,10 +15,19 @@ import TransferRecords from '../components/catalog/TransferRecords';
 
 export default function InventoryPage() {
   const navigate = useNavigate();
-  const { canDo } = useAuthCtx();
+  const { user, canDo } = useAuthCtx();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
+  const filterIdentity = JSON.stringify([user?.id, user?.organizationId]);
+  const previousFilterIdentity = useRef(filterIdentity);
+  useEffect(() => {
+    if (previousFilterIdentity.current === filterIdentity) return;
+    previousFilterIdentity.current = filterIdentity;
+    setSearch('');
+    setAppliedSearch('');
+  }, [filterIdentity]);
+
   const page = useCatalogPage(holdingsApi.page, { search: appliedSearch });
   const { items: holdings, loading, error, refresh: refetch } = page;
 
@@ -58,6 +68,15 @@ export default function InventoryPage() {
   const filtered = holdings;
   return (
     <Layout currentPage="holdings">
+      <SavedFilterControls
+        scope="inventory"
+        values={{ search }}
+        onApply={(values) => {
+          setSearch(values.search);
+          setAppliedSearch(values.search);
+          page.reset();
+        }}
+      />
       <div className="table-wrap">
         <div className="flex flex-wrap items-center gap-3 mb-3">
           <div className="relative flex-1 min-w-[180px]">

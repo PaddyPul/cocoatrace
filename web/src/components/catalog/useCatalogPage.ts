@@ -8,7 +8,7 @@ export function useCatalogPage<T>(
   options: { retainDuringRefresh?: boolean } = {},
 ) {
   const { user } = useAuthCtx();
-  const key = JSON.stringify([user?.id, parameters]);
+  const key = JSON.stringify([user?.id, user?.organizationId, parameters]);
   const [state, setState] = useState<{
     key: string;
     cursors: string[];
@@ -93,6 +93,10 @@ export function useCatalogPage<T>(
     previous: () => change(cursors.slice(0, -1)),
     hasNext: Boolean(state.next),
     hasPrevious: cursors.length > 0,
+    reset: () => {
+      change([]);
+      refresh();
+    },
     refresh,
   };
 }

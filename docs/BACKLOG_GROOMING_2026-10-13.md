@@ -177,3 +177,7 @@ Founder accepts BRD-001/002 and TRD-016:122/343 (35.6%). IDN-016/017/019 are can
 ## 2026-10-16 supply/demand lifecycle sprint
 
 Founder accepts corrected team administration and privileged review: IDN-016/017/019 close;125/343 (36.4%). Sourcing award/closure TRD-018 and listing expiry/renewal TRD-020 target127/343 (37.0%) after full candidate release/review/merge. Existing accepted deals and audit history must remain intact. Core11/28 and provider-inclusive11/40 unchanged.
+
+## 2026-10-16 workspace filters/support sprint
+
+Founder accepts corrected supply/demand lifecycle: TRD-018/020 close;127/343 (37.0%). PRD-013/015 target129/343 (37.6%) after full candidate release/review/merge. Device-local saved filters must be account/workspace isolated; support reports must be private, idempotent, bounded and attributable without invented external-response guarantees. Core11/28 and provider-inclusive11/40 unchanged.
