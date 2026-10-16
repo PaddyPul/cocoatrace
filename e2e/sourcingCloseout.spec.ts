@@ -77,7 +77,7 @@ test('manual closeout requires review and retains its reason after reload', asyn
       if (route.request().method() === 'POST')
         return route.fulfill({
           status: 400,
-          json: { message: 'Choose a noncancelled buyer contract with the same commodity' },
+          json: { error: 'Choose a noncancelled buyer contract with the same commodity' },
         });
       return route.fallback();
     },
