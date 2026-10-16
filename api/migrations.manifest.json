@@ -176,6 +176,10 @@
     {
       "path": "api/src/migrations/042_listing_expiry.ts",
       "sha256": "b8213a4b33cab3a78b73bab8d981916c27ecf3cbd95143c2e6affbe617231975"
+    },
+    {
+      "path": "api/src/migrations/043_support_requests.ts",
+      "sha256": "eedb540e5bf682668bc54eef7fe501e9b690a63f5d4eb5ffa5145e1c95c886e2"
     }
   ]
 }

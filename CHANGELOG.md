@@ -57,3 +57,7 @@ Bounded customer team role administration and deactivation with live assurance, 
 ## Supply/demand lifecycle candidate —2026-10-16
 
 Buyer-confirmed immutable sourcing award/closeout and supplier reviewed listing expiry/renewal. New listings default30 days; legacy no-expiry terms remain explicit. Atomic audits, marketplace/offer and inventory gates; forward migrations041/042. Full candidate release pending.
+
+## Workspace filters/support candidate —2026-10-16
+
+Account/workspace isolated device-local named filters for Marketplace, Inventory and Offers; private contextual support references with idempotent retry and fresh-passkey audited operator review. Forward migration043. Full candidate release pending.

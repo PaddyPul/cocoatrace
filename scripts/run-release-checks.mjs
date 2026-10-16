@@ -32,6 +32,7 @@ export const releaseChecks = [
   ['Language foundation tests', ['run', 'test:locale']],
   ['Pilot risk register', ['run', 'check:risks']],
   ['Frontend HTTP boundaries', ['run', 'test:web-boundaries']],
+  ['Workspace filters and support context', ['run', 'test:workspace-tools']],
   ['Authorization route register', ['run', 'check:authorization']],
   ['Branding and compatibility', ['run', 'check:branding']],
   ['API unit tests', ['run', 'test', '--workspace=api']],

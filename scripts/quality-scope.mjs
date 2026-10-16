@@ -1,5 +1,17 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/modules/support/**/*.ts',
+  'api/test/integration/supportRequests.integration.test.ts',
+  'web/src/api/support.ts',
+  'web/src/pages/SupportPage.tsx',
+  'web/src/components/savedFilters/**/*.tsx',
+  'web/src/domains/savedFilters/**/*.ts',
+  'web/src/domains/support/**/*.ts',
+  'scripts/saved-filters.test.mjs',
+  'scripts/support-context.test.mjs',
+  'e2e/savedFilters.spec.ts',
+  'e2e/supportRequests.spec.ts',
+
   'api/src/modules/listingLifecycle/**/*.ts',
   'api/test/integration/sourcingLifecycle.integration.test.ts',
   'api/test/integration/listingExpiry.integration.test.ts',

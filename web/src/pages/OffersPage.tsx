@@ -1,8 +1,9 @@
+import SavedFilterControls from '../components/savedFilters/SavedFilterControls';
 import ExternalNegotiationNotice from '../components/trading/ExternalNegotiationNotice';
 import { useCatalogPage } from '../components/catalog/useCatalogPage';
 import PageNavigation from '../components/catalog/PageNavigation';
 import type { OfferSummary } from '../api';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { offers as offersApi } from '../api';
 import type { Offer } from '../domains/marketplace/types';
@@ -18,15 +19,66 @@ import { Search, Check, X } from 'lucide-react';
 export default function OffersPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const { canDo } = useAuthCtx();
+  const { user, canDo } = useAuthCtx();
   const { toast } = useToast();
-  const [tab, setTab] = useState<'received' | 'sent'>(() => params.get('tab') === 'sent' || (!canDo('offer.respond') && canDo('offer.create')) ? 'sent' : 'received');
+  const [tab, setTab] = useState<'received' | 'sent'>(() =>
+    params.get('tab') === 'sent' || (!canDo('offer.respond') && canDo('offer.create'))
+      ? 'sent'
+      : 'received',
+  );
   const [search, setSearch] = useState('');
-  const page = useCatalogPage(offersApi.page,{direction:tab,search});
-  const {items:data,loading,error,refresh:refetch}=page;
-  const [summary,setSummary]=useState<OfferSummary|null>(null);
-  const [summaryError,setSummaryError]=useState(false);
-  useEffect(()=>{let active=true;const load=()=>offersApi.summary().then(row=>{if(!row||!['received_count','sent_count','received_pending','sent_pending'].every(key=>Number.isInteger(row[key as keyof OfferSummary])&&row[key as keyof OfferSummary]>=0))throw new Error('Invalid offer totals');if(active){setSummary(row);setSummaryError(false);}}).catch(()=>{if(active){setSummary(null);setSummaryError(true);}});load();const focus=()=>{page.refresh();load();};window.addEventListener('focus',focus);return()=>{active=false;window.removeEventListener('focus',focus);};},[data]);
+  const filterIdentity = JSON.stringify([user?.id, user?.organizationId]);
+  const previousFilterIdentity = useRef(filterIdentity);
+  useEffect(() => {
+    if (previousFilterIdentity.current === filterIdentity) return;
+    previousFilterIdentity.current = filterIdentity;
+    setSearch('');
+    const direction = !canDo('offer.respond') && canDo('offer.create') ? 'sent' : 'received';
+    setTab(direction);
+    setParams({ tab: direction }, { replace: true });
+  }, [filterIdentity, canDo, setParams]);
+
+  const page = useCatalogPage(offersApi.page, { direction: tab, search });
+  const { items: data, loading, error, refresh: refetch } = page;
+  const [summary, setSummary] = useState<OfferSummary | null>(null);
+  const [summaryError, setSummaryError] = useState(false);
+  useEffect(() => {
+    let active = true;
+    const load = () =>
+      offersApi
+        .summary()
+        .then((row) => {
+          if (
+            !row ||
+            !['received_count', 'sent_count', 'received_pending', 'sent_pending'].every(
+              (key) =>
+                Number.isInteger(row[key as keyof OfferSummary]) &&
+                row[key as keyof OfferSummary] >= 0,
+            )
+          )
+            throw new Error('Invalid offer totals');
+          if (active) {
+            setSummary(row);
+            setSummaryError(false);
+          }
+        })
+        .catch(() => {
+          if (active) {
+            setSummary(null);
+            setSummaryError(true);
+          }
+        });
+    load();
+    const focus = () => {
+      page.refresh();
+      load();
+    };
+    window.addEventListener('focus', focus);
+    return () => {
+      active = false;
+      window.removeEventListener('focus', focus);
+    };
+  }, [data]);
   const [rejectionReason, setRejectionReason] = useState('');
   const [confirmReject, setConfirmReject] = useState<string | null>(null);
   const [confirmWithdraw, setConfirmWithdraw] = useState<string | null>(null);
@@ -35,10 +87,17 @@ export default function OffersPage() {
   const handleAccept = async (offerId: string) => {
     setProcessing(offerId);
     try {
-      const result: any = await offersApi.accept(offerId,data.find(o=>o.id===offerId)?.platform_fee_rate_bps);
+      const result: any = await offersApi.accept(
+        offerId,
+        data.find((o) => o.id === offerId)?.platform_fee_rate_bps,
+      );
       toast('success', 'Offer accepted. Contract and fulfilment workflow created.');
       navigate(`/deal-room/${result.contract.id}`);
-    } catch (e: any) { toast('error', e.message); } finally { setProcessing(''); }
+    } catch (e: any) {
+      toast('error', e.message);
+    } finally {
+      setProcessing('');
+    }
   };
 
   const handleReject = async (offerId: string) => {
@@ -50,7 +109,11 @@ export default function OffersPage() {
       setRejectionReason('');
       toast('info', 'Offer rejected.');
       refetch();
-    } catch (e: any) { toast('error', e.message); } finally { setProcessing(''); }
+    } catch (e: any) {
+      toast('error', e.message);
+    } finally {
+      setProcessing('');
+    }
   };
 
   const handleWithdraw = async (offerId: string) => {
@@ -60,92 +123,318 @@ export default function OffersPage() {
       setConfirmWithdraw(null);
       toast('success', 'Offer withdrawn. The seller can no longer accept it.');
       refetch();
-    } catch (e: any) { toast('error', e.message); refetch(); } finally { setProcessing(''); }
+    } catch (e: any) {
+      toast('error', e.message);
+      refetch();
+    } finally {
+      setProcessing('');
+    }
   };
 
   const offers = data as Offer[];
   const visible = offers;
   const pending = visible.filter((o) => o.status === 'pending');
   const history = visible.filter((o) => o.status !== 'pending');
-  const selectTab = (next: 'received' | 'sent') => { setTab(next); setParams({ tab: next }, { replace: true }); };
+  const selectTab = (next: 'received' | 'sent') => {
+    setTab(next);
+    setParams({ tab: next }, { replace: true });
+  };
 
   return (
     <Layout currentPage="offers">
+      <SavedFilterControls
+        scope="offers"
+        values={{ search, direction: tab }}
+        onApply={(values) => {
+          setSearch(values.search);
+          const direction = values.direction === 'sent' ? 'sent' : 'received';
+          if (
+            (direction === 'sent' && canDo('offer.create')) ||
+            (direction === 'received' && canDo('offer.respond'))
+          )
+            selectTab(direction);
+          page.reset();
+        }}
+      />
       <ExternalNegotiationNotice />
-      {summaryError && <p role="alert">Offer totals could not be refreshed. Reload or return to this window to retry.</p>}
-      {loading ? <SkeletonTable rows={5} cols={6} /> : error ? <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{error}<button className="btn ml-3" onClick={refetch}>Retry offers</button></div> : <div className="table-wrap">
-        <div className="flex flex-wrap items-center gap-3 mb-3">
-          <div className="flex gap-1 bg-surface-darker rounded p-0.5">
-            {canDo('offer.respond') && <button className={`btn btn-sm ${tab === 'received' ? 'btn-primary' : ''}`} onClick={() => selectTab('received')}>Received ({summary?.received_count ?? '—'})</button>}
-            {canDo('offer.create') && <button className={`btn btn-sm ${tab === 'sent' ? 'btn-primary' : ''}`} onClick={() => selectTab('sent')}>Sent ({summary?.sent_count ?? '—'})</button>}
-          </div>
-          <div className="relative flex-1 min-w-[160px]"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" /><input type="text" aria-label="Search offers" maxLength={80} placeholder="Search offers…" className="form-input pl-8" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
-          <div className="text-xs text-text-muted">{visible.length} offers on this page</div>
+      {summaryError && (
+        <p role="alert">
+          Offer totals could not be refreshed. Reload or return to this window to retry.
+        </p>
+      )}
+      {loading ? (
+        <SkeletonTable rows={5} cols={6} />
+      ) : error ? (
+        <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">
+          {error}
+          <button className="btn ml-3" onClick={refetch}>
+            Retry offers
+          </button>
         </div>
+      ) : (
+        <div className="table-wrap">
+          <div className="flex flex-wrap items-center gap-3 mb-3">
+            <div className="flex gap-1 bg-surface-darker rounded p-0.5">
+              {canDo('offer.respond') && (
+                <button
+                  className={`btn btn-sm ${tab === 'received' ? 'btn-primary' : ''}`}
+                  onClick={() => selectTab('received')}
+                >
+                  Received ({summary?.received_count ?? '—'})
+                </button>
+              )}
+              {canDo('offer.create') && (
+                <button
+                  className={`btn btn-sm ${tab === 'sent' ? 'btn-primary' : ''}`}
+                  onClick={() => selectTab('sent')}
+                >
+                  Sent ({summary?.sent_count ?? '—'})
+                </button>
+              )}
+            </div>
+            <div className="relative flex-1 min-w-[160px]">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+              />
+              <input
+                type="text"
+                aria-label="Search offers"
+                maxLength={80}
+                placeholder="Search offers…"
+                className="form-input pl-8"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="text-xs text-text-muted">{visible.length} offers on this page</div>
+          </div>
 
-        {pending.length > 0 && (
-          <>
-            <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Pending ({pending.length})</div>
-            <table className="mb-6">
-              <thead><tr><th>Listing</th><th>{tab === 'received' ? 'Buyer' : 'Seller'}</th><th>Qty (kg)</th><th>Price/kg</th><th>Total</th><th>Seller fee at completion</th><th>Valid Until</th><th></th></tr></thead>
-              <tbody>
-                {pending.map((o) => (
-                  <tr key={o.id} className="hover:bg-brand-500/5">
-                    <td className="font-mono text-[11px]">{o.listing_id.slice(0, 8)}…</td>
-                    <td className="text-text-primary font-medium">{tab === 'received' ? (o.buyer_name || '—') : (o.seller_name || '—')}</td>
-                    <td>{(o.quantity_kg || 0).toLocaleString()}</td>
-                    <td className="font-mono">{fmtMoney(Number(o.offered_price_per_kg),o.currency,4)}</td>
-                    <td className="text-brand-400 font-mono">{fmtMoney(Number(o.trade_value ?? Number(o.quantity_kg || 0)*Number(o.offered_price_per_kg || 0)),o.currency,o.currency_minor_units)}</td>
-                    <td className="text-xs">{o.platform_fee_estimate == null ? 'Fee estimate unavailable' : `${fmtMoney(Number(o.platform_fee_estimate),o.currency,o.currency_minor_units)} (${Number(o.platform_fee_rate_bps || 0)/100}%)`}<div className="text-text-muted">Separate from buyer payment; tax not configured</div></td>
-                    <td className="text-[11px]">{o.valid_until ? fmtDate(o.valid_until) : '—'}</td>
-                    <td>
-                      {tab === 'received' ? (
-                        <div className="flex gap-1">
-                          <button className="btn btn-sm text-[10px] text-green-400 border-green-500/30" onClick={() => handleAccept(o.id)} disabled={processing === o.id}><Check size={12} /> {processing === o.id ? '…' : 'Accept'}</button>
-                          <button className="btn btn-sm text-[10px] text-red-400 border-red-500/30" onClick={() => { setRejectionReason(''); setConfirmReject(o.id); }} disabled={processing === o.id}><X size={12} /> Reject</button>
+          {pending.length > 0 && (
+            <>
+              <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
+                Pending ({pending.length})
+              </div>
+              <table className="mb-6">
+                <thead>
+                  <tr>
+                    <th>Listing</th>
+                    <th>{tab === 'received' ? 'Buyer' : 'Seller'}</th>
+                    <th>Qty (kg)</th>
+                    <th>Price/kg</th>
+                    <th>Total</th>
+                    <th>Seller fee at completion</th>
+                    <th>Valid Until</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pending.map((o) => (
+                    <tr key={o.id} className="hover:bg-brand-500/5">
+                      <td className="font-mono text-[11px]">{o.listing_id.slice(0, 8)}…</td>
+                      <td className="text-text-primary font-medium">
+                        {tab === 'received' ? o.buyer_name || '—' : o.seller_name || '—'}
+                      </td>
+                      <td>{(o.quantity_kg || 0).toLocaleString()}</td>
+                      <td className="font-mono">
+                        {fmtMoney(Number(o.offered_price_per_kg), o.currency, 4)}
+                      </td>
+                      <td className="text-brand-400 font-mono">
+                        {fmtMoney(
+                          Number(
+                            o.trade_value ??
+                              Number(o.quantity_kg || 0) * Number(o.offered_price_per_kg || 0),
+                          ),
+                          o.currency,
+                          o.currency_minor_units,
+                        )}
+                      </td>
+                      <td className="text-xs">
+                        {o.platform_fee_estimate == null
+                          ? 'Fee estimate unavailable'
+                          : `${fmtMoney(Number(o.platform_fee_estimate), o.currency, o.currency_minor_units)} (${Number(o.platform_fee_rate_bps || 0) / 100}%)`}
+                        <div className="text-text-muted">
+                          Separate from buyer payment; tax not configured
                         </div>
-                      ) : (
-                        <div className="space-y-2"><span className="text-xs text-text-muted">Awaiting seller response</span>{canDo('offer.create') && <button className="btn btn-sm" onClick={() => setConfirmWithdraw(o.id)} disabled={!!processing}>Withdraw offer</button>}</div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </>
-        )}
+                      </td>
+                      <td className="text-[11px]">
+                        {o.valid_until ? fmtDate(o.valid_until) : '—'}
+                      </td>
+                      <td>
+                        {tab === 'received' ? (
+                          <div className="flex gap-1">
+                            <button
+                              className="btn btn-sm text-[10px] text-green-400 border-green-500/30"
+                              onClick={() => handleAccept(o.id)}
+                              disabled={processing === o.id}
+                            >
+                              <Check size={12} /> {processing === o.id ? '…' : 'Accept'}
+                            </button>
+                            <button
+                              className="btn btn-sm text-[10px] text-red-400 border-red-500/30"
+                              onClick={() => {
+                                setRejectionReason('');
+                                setConfirmReject(o.id);
+                              }}
+                              disabled={processing === o.id}
+                            >
+                              <X size={12} /> Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <span className="text-xs text-text-muted">
+                              Awaiting seller response
+                            </span>
+                            {canDo('offer.create') && (
+                              <button
+                                className="btn btn-sm"
+                                onClick={() => setConfirmWithdraw(o.id)}
+                                disabled={!!processing}
+                              >
+                                Withdraw offer
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
 
-        {history.length > 0 && (
-          <>
-            <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">History ({history.length})</div>
-            <table>
-              <thead><tr><th>Listing</th><th>{tab === 'received' ? 'Buyer' : 'Seller'}</th><th>Qty (kg)</th><th>Price/kg</th><th>Total</th><th>Status</th></tr></thead>
-              <tbody>
-                {history.map((o) => (
-                  <tr key={o.id} className="hover:bg-brand-500/5">
-                    <td className="font-mono text-[11px]">{o.listing_id.slice(0, 8)}…</td>
-                    <td className="text-text-primary font-medium">{tab === 'received' ? (o.buyer_name || '—') : (o.seller_name || '—')}</td>
-                    <td>{(o.quantity_kg || 0).toLocaleString()}</td>
-                    <td className="font-mono">{fmtMoney(Number(o.offered_price_per_kg),o.currency,4)}</td>
-                    <td className="text-brand-400 font-mono">{fmtMoney(Number(o.trade_value ?? Number(o.quantity_kg || 0)*Number(o.offered_price_per_kg || 0)),o.currency,o.currency_minor_units)}</td>
-                    <td><StatusBadge status={o.status} />{o.status === 'rejected' && <p className="mt-2 max-w-md whitespace-pre-wrap break-words text-xs text-text-muted">{o.rejection_reason ? `Seller reason: ${o.rejection_reason}` : 'No seller reason recorded (legacy or automatic rejection).'}</p>}</td>
+          {history.length > 0 && (
+            <>
+              <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
+                History ({history.length})
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Listing</th>
+                    <th>{tab === 'received' ? 'Buyer' : 'Seller'}</th>
+                    <th>Qty (kg)</th>
+                    <th>Price/kg</th>
+                    <th>Total</th>
+                    <th>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </>
-        )}
+                </thead>
+                <tbody>
+                  {history.map((o) => (
+                    <tr key={o.id} className="hover:bg-brand-500/5">
+                      <td className="font-mono text-[11px]">{o.listing_id.slice(0, 8)}…</td>
+                      <td className="text-text-primary font-medium">
+                        {tab === 'received' ? o.buyer_name || '—' : o.seller_name || '—'}
+                      </td>
+                      <td>{(o.quantity_kg || 0).toLocaleString()}</td>
+                      <td className="font-mono">
+                        {fmtMoney(Number(o.offered_price_per_kg), o.currency, 4)}
+                      </td>
+                      <td className="text-brand-400 font-mono">
+                        {fmtMoney(
+                          Number(
+                            o.trade_value ??
+                              Number(o.quantity_kg || 0) * Number(o.offered_price_per_kg || 0),
+                          ),
+                          o.currency,
+                          o.currency_minor_units,
+                        )}
+                      </td>
+                      <td>
+                        <StatusBadge status={o.status} />
+                        {o.status === 'rejected' && (
+                          <p className="mt-2 max-w-md whitespace-pre-wrap break-words text-xs text-text-muted">
+                            {o.rejection_reason
+                              ? `Seller reason: ${o.rejection_reason}`
+                              : 'No seller reason recorded (legacy or automatic rejection).'}
+                          </p>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
 
-        {visible.length === 0 && <EmptyState icon="📨" title={search ? 'No matching offers' : tab === 'received' ? 'No offers on this page' : 'No offers on this page'} description={tab === 'received' ? 'When buyers make offers on your listings, they appear here.' : 'When you make offers on marketplace listings, they appear here.'} action={<button className="btn btn-sm" onClick={() => navigate('/marketplace')}>Browse Marketplace →</button>} />}
-      </div>}
+          {visible.length === 0 && (
+            <EmptyState
+              icon="📨"
+              title={
+                search
+                  ? 'No matching offers'
+                  : tab === 'received'
+                    ? 'No offers on this page'
+                    : 'No offers on this page'
+              }
+              description={
+                tab === 'received'
+                  ? 'When buyers make offers on your listings, they appear here.'
+                  : 'When you make offers on marketplace listings, they appear here.'
+              }
+              action={
+                <button className="btn btn-sm" onClick={() => navigate('/marketplace')}>
+                  Browse Marketplace →
+                </button>
+              }
+            />
+          )}
+        </div>
+      )}
       <PageNavigation page={page} label="offers" />
-      <ConfirmDialog open={!!confirmWithdraw} title="Withdraw offer" message="Withdraw this pending offer? The seller will no longer be able to accept it. An already accepted offer must use contract cancellation." confirmLabel="Withdraw" danger loading={!!processing} onConfirm={() => confirmWithdraw && handleWithdraw(confirmWithdraw)} onCancel={() => !processing && setConfirmWithdraw(null)} />
-      {confirmReject && <div className="modal-overlay"><section role="dialog" aria-modal="true" aria-label="Reject offer" className="modal max-w-sm">
-        <h2 className="text-base font-semibold">Reject offer</h2>
-        <p className="my-3 text-sm">The buyer will see this explanation. Rejection cannot be undone.</p>
-        <label htmlFor="offer-rejection-reason" className="block text-sm">Rejection reason</label><textarea id="offer-rejection-reason" className="form-input mt-2" maxLength={1000} value={rejectionReason} onChange={event => setRejectionReason(event.target.value)} />
-        <div className="mt-4 flex gap-2"><button className="btn" disabled={!!processing} onClick={() => setConfirmReject(null)}>Cancel</button><button className="btn btn-danger" disabled={!!processing || !rejectionReason.trim()} onClick={() => handleReject(confirmReject)}>{processing ? 'Rejecting…' : 'Reject'}</button></div>
-      </section></div>}
+      <ConfirmDialog
+        open={!!confirmWithdraw}
+        title="Withdraw offer"
+        message="Withdraw this pending offer? The seller will no longer be able to accept it. An already accepted offer must use contract cancellation."
+        confirmLabel="Withdraw"
+        danger
+        loading={!!processing}
+        onConfirm={() => confirmWithdraw && handleWithdraw(confirmWithdraw)}
+        onCancel={() => !processing && setConfirmWithdraw(null)}
+      />
+      {confirmReject && (
+        <div className="modal-overlay">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-label="Reject offer"
+            className="modal max-w-sm"
+          >
+            <h2 className="text-base font-semibold">Reject offer</h2>
+            <p className="my-3 text-sm">
+              The buyer will see this explanation. Rejection cannot be undone.
+            </p>
+            <label htmlFor="offer-rejection-reason" className="block text-sm">
+              Rejection reason
+            </label>
+            <textarea
+              id="offer-rejection-reason"
+              className="form-input mt-2"
+              maxLength={1000}
+              value={rejectionReason}
+              onChange={(event) => setRejectionReason(event.target.value)}
+            />
+            <div className="mt-4 flex gap-2">
+              <button
+                className="btn"
+                disabled={!!processing}
+                onClick={() => setConfirmReject(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger"
+                disabled={!!processing || !rejectionReason.trim()}
+                onClick={() => handleReject(confirmReject)}
+              >
+                {processing ? 'Rejecting…' : 'Reject'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </Layout>
   );
 }

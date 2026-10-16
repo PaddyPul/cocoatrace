@@ -30,6 +30,7 @@ jobs:
       - run: npm run check:branding
       - run: npm run test:locale
       - run: npm run test:web-boundaries
+      - run: npm run test:workspace-tools
       - run: node --test scripts/check-dependencies.test.mjs scripts/build-metadata.test.mjs
       - run: npm run check:dependencies
       - uses: actions/upload-artifact@v4

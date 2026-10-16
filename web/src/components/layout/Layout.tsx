@@ -1,8 +1,9 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAuthCtx } from '../auth/AuthProvider';
 import Sidebar from './Sidebar';
-import { useNavigate } from 'react-router-dom';
-import { Boxes, FileText, GitBranch, Home, LayoutDashboard, Menu, QrCode, Search, Ship, ShoppingBag, Sparkles, Trees, X } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { supportLink } from '../../domains/support/context';
+import { Boxes, FileText, GitBranch, Home, LayoutDashboard, LifeBuoy, Menu, QrCode, Search, Ship, ShoppingBag, Sparkles, Trees, X } from 'lucide-react';
 import PilotFeedback from '../shared/PilotFeedback';
 import { useLanguage, LanguageSelector } from '../../i18n/LanguageProvider';
 import { webConfig } from '../../config';
@@ -19,6 +20,7 @@ export default function Layout({
   const { user } = useAuthCtx();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [commandSearch, setCommandSearch] = useState('');
@@ -81,6 +83,7 @@ export default function Layout({
             <p className="mt-0.5 hidden truncate text-[11px] text-text-muted sm:block">{t(`description.${currentPage}`, '')}</p>
           </div>
           <LanguageSelector />
+          <button className="btn btn-sm" aria-label={t('shell.reportIssue')} title={t('shell.reportIssue')} onClick={() => navigate(supportLink(currentPage, location.pathname))}><LifeBuoy size={16} /></button>
           <div className="flex items-center gap-2">{actions}</div>
           <button className="hidden min-h-10 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-[11px] text-text-muted transition hover:border-brand-400/30 hover:text-text-primary md:flex" onClick={() => setCommandOpen(true)}><Search size={14} /> {t('shell.find')} <kbd className="ml-3 rounded border border-border bg-surface-darker px-1.5 py-0.5 font-mono text-[9px]">⌘K</kbd></button>
           <div className="hidden items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 sm:flex">

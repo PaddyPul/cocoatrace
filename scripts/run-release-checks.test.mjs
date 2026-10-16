@@ -133,3 +133,13 @@ test('customer branding and compatibility anchors gate API and infrastructure ac
   assert.ok(branding >= 0 && branding < api && branding < recovery);
   assert.deepEqual(releaseChecks[branding][1], ['run', 'check:branding']);
 });
+
+test('workspace filter isolation and support context gate release before application runtime', () => {
+  const index = releaseChecks.findIndex(
+    (check) => check[0] === 'Workspace filters and support context',
+  );
+  assert.ok(
+    index >= 0 && index < releaseChecks.findIndex((check) => check[0] === 'API unit tests'),
+  );
+  assert.deepEqual(releaseChecks[index][1], ['run', 'test:workspace-tools']);
+});

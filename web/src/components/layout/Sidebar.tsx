@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { BadgeCheck, Boxes, Building2, FileCheck2, FileClock, Handshake, Home, KeyRound, Leaf, LogOut, LucideIcon, PackageCheck, QrCode, RefreshCw, ScrollText, ShieldAlert, Ship, ShoppingBag, Store, Trees, UserCheck, WalletCards, X } from 'lucide-react';
+import { BadgeCheck, Boxes, Building2, FileCheck2, FileClock, Handshake, Home, KeyRound, Leaf, LifeBuoy, LogOut, LucideIcon, PackageCheck, QrCode, RefreshCw, ScrollText, ShieldAlert, Ship, ShoppingBag, Store, Trees, UserCheck, WalletCards, X } from 'lucide-react';
 import { useAuthCtx } from '../auth/AuthProvider';
 import { usePermission } from '../../hooks/usePermission';
 import { useLanguage } from '../../i18n/LanguageProvider';
@@ -36,6 +36,7 @@ const TOOL_NAV: NavGroup[] = [
     { icon: PackageCheck, label: 'nav.holdings', page: 'holdings', orPermissions: ['holding.read', 'holding.create', 'listing.create'] },
   ] },
   { label: 'group.4', items: [
+    { icon: LifeBuoy, label: 'nav.support', page: 'support', path: '/support', orPermissions: [] },
     { icon: FileClock, label: 'nav.audit', page: 'audit', orPermissions: ['audit.read'] },
     { icon: ShieldAlert, label: 'nav.operations', page: 'operations', orPermissions: ['*'] },
     { icon: Building2, label: 'nav.organizations', page: 'organizations', orPermissions: ['organization.admin'] },

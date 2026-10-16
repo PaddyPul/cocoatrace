@@ -285,6 +285,14 @@
         "api/test/integration/listingExpiry.integration.test.ts"
       ],
       "remaining": "Hosted load and operator approval remain separate; policy references are not universal authorization proof."
+    },
+    "api/src/modules/support/routes.ts": {
+      "scope": "Authenticated reporter-only request history/details and immutable-body idempotent create. Platform wildcard review, live actor/session/fresh passkey, expected-status conflict and atomic audit.",
+      "evidence": [
+        "api/src/modules/support/repository.ts",
+        "api/test/integration/supportRequests.integration.test.ts"
+      ],
+      "remaining": "Hosted monitoring/response owner and external contacts are not implied. Resource references in reports are user-reported, not authorization or ownership proof."
     }
   },
   "routes": [
@@ -421,6 +429,25 @@
       "method": "GET",
       "path": "/admin/access-review",
       "source": "api/src/modules/accessReview/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/support/requests/page",
+      "source": "api/src/modules/support/routes.ts",
       "guards": [
         {
           "kind": "session"
@@ -2218,6 +2245,45 @@
     },
     {
       "method": "GET",
+      "path": "/support/requests",
+      "source": "api/src/modules/support/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/support/requests/:id",
+      "source": "api/src/modules/support/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/support/requests/page",
+      "source": "api/src/modules/support/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
       "path": "/team/members/page",
       "source": "api/src/modules/teamMembers/routes.ts",
       "guards": [
@@ -2392,6 +2458,27 @@
       ],
       "entryControls": [],
       "handler": "getWorkspaceTotals",
+      "authentication": "session"
+    },
+    {
+      "method": "PATCH",
+      "path": "/admin/support/requests/:id",
+      "source": "api/src/modules/support/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
       "authentication": "session"
     },
     {
@@ -3909,6 +3996,21 @@
       ],
       "entryControls": [],
       "handler": "controller.structureRequest",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/support/requests",
+      "source": "api/src/modules/support/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
       "authentication": "session"
     },
     {
