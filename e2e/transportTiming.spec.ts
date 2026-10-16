@@ -113,6 +113,9 @@ test('reviewed arrival timing retains explanation after conflict and saves a rev
   await panel
     .getByLabel('Timing change or delay reason', { exact: true })
     .fill('Port congestion investigated');
+  await expect(panel.getByLabel('Timing change or delay reason', { exact: true })).toHaveValue(
+    'Port congestion investigated',
+  );
   await panel.getByRole('button', { name: 'Save reviewed timing', exact: true }).click();
   await expect(panel.getByRole('alert')).toContainText('Timing changed');
   await expect(panel.getByLabel('Timing change or delay reason', { exact: true })).toHaveValue(

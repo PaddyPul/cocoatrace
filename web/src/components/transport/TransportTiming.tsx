@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { api } from '../../api/http';
 type Timing = {
   shipmentId: string;
@@ -10,6 +10,7 @@ type Timing = {
   history: { revision: number; etaArrival: string; reason: string; recordedAt: string }[];
 };
 export default function TransportTiming({ shipmentId }: { shipmentId: string }) {
+  const formId = useId();
   const [data, setData] = useState<Timing | null>(null),
     [opened, setOpened] = useState(false),
     [eta, setEta] = useState(''),
@@ -94,29 +95,31 @@ export default function TransportTiming({ shipmentId }: { shipmentId: string }) 
               }}
               className="space-y-2"
             >
-              <label className="block">
+              <label className="block" htmlFor={`${formId}-eta`}>
                 Arrival estimate (UTC date)
-                <input
-                  className="form-input"
-                  type="date"
-                  required
-                  value={eta}
-                  disabled={busy}
-                  onChange={(e) => setEta(e.target.value)}
-                />
               </label>
-              <label className="block">
+              <input
+                id={`${formId}-eta`}
+                className="form-input"
+                type="date"
+                required
+                value={eta}
+                disabled={busy}
+                onChange={(e) => setEta(e.target.value)}
+              />
+              <label className="block" htmlFor={`${formId}-reason`}>
                 Timing change or delay reason
-                <textarea
-                  className="form-input"
-                  required
-                  minLength={3}
-                  maxLength={1000}
-                  value={reason}
-                  disabled={busy}
-                  onChange={(e) => setReason(e.target.value)}
-                />
               </label>
+              <textarea
+                id={`${formId}-reason`}
+                className="form-input"
+                required
+                minLength={3}
+                maxLength={1000}
+                value={reason}
+                disabled={busy}
+                onChange={(e) => setReason(e.target.value)}
+              />
               <button className="btn" disabled={busy}>
                 Save reviewed timing
               </button>
