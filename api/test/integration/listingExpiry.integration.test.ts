@@ -69,10 +69,13 @@ afterAll(async () => {
 });
 it('hides expired supply, blocks offers and bypass updates, then explicitly renews with audit and retires pending offers', async () => {
   const headers = { Authorization: `Bearer ${owner.token}` };
-  const page = await request(app).get('/listings/page').set(headers);
+  const page = await request(app).get('/listings/page').query({ id: listing }).set(headers);
   expect(page.status, JSON.stringify(page.body)).toBe(200);
   expect(page.body.items.some((l: { id: string }) => l.id === listing)).toBe(false);
-  const mine = await request(app).get('/listings/page?mine=true').set(headers);
+  const mine = await request(app)
+    .get('/listings/page')
+    .query({ mine: 'true', id: listing })
+    .set(headers);
   expect(mine.status, JSON.stringify(mine.body)).toBe(200);
   expect(mine.body.items.some((l: { id: string }) => l.id === listing)).toBe(true);
   const offer = await request(app)
@@ -152,7 +155,7 @@ it('hides expired supply, blocks offers and bypass updates, then explicitly rene
   ).rows[0];
   expect(audit.metadata.reason).toBe('Reviewed available stock');
   expect(audit.metadata.rejectedOfferCount).toBe(1);
-  const visible = await request(app).get('/listings/page').set(headers);
+  const visible = await request(app).get('/listings/page').query({ id: listing }).set(headers);
   expect(visible.status, JSON.stringify(visible.body)).toBe(200);
   expect(visible.body.items.some((l: { id: string }) => l.id === listing)).toBe(true);
   const old = await request(app).post(`/offers/${pending}/accept`).set(headers).send({});
