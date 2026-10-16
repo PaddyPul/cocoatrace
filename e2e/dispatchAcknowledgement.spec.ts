@@ -62,6 +62,12 @@ test('buyer reviews exceptional dispatch reason and retries awareness without ch
         json: {
           shipment: {
             id,
+            payment_plan: 'pay_before_dispatch',
+            payment_terms_status: 'agreed',
+            transport_mode: 'sea',
+            security_status: 'not_required',
+            amount_confirmed: '0',
+            dispatch_required_amount: '500',
             contract_id: id,
             buyer_organization_id: 'buyer',
             seller_organization_id: 'seller',
