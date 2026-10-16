@@ -232,13 +232,15 @@
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
     "api/src/routes/sourcing.ts": {
-      "scope": "Buyer-owned private briefs; open request projections for qualified supply participants. Structure/update/create must not accept foreign organization ownership. Reviewed edits target only the owner organization and draft/open rows and write their audit in the same transaction.",
+      "scope": "Buyer-owned private briefs; open request projections for qualified supply participants. Structure/update/create must not accept foreign organization ownership. Reviewed edits target only the owner organization and draft/open rows and write their audit in the same transaction. Closeout is buyer-owned only; confirmed manual same-buyer/commodity agreement association, terminal immutable receipt and atomic audit.",
       "evidence": [
         "api/src/controllers/sourcingController.ts",
         "api/test/integration/sourcingPages.integration.test.ts",
         "api/src/modules/sourcing/edit.ts",
         "api/src/modules/sourcing/edit.test.ts",
-        "api/test/integration/workspaceProductivity.integration.test.ts"
+        "api/test/integration/workspaceProductivity.integration.test.ts",
+        "api/src/modules/sourcing/lifecycle.ts",
+        "api/test/integration/sourcingLifecycle.integration.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
@@ -275,6 +277,14 @@
         "api/test/integration/accessReview.integration.test.ts"
       ],
       "remaining": "Hosted operator acceptance and independent reviewer exercises remain required."
+    },
+    "api/src/modules/listingLifecycle/routes.ts": {
+      "scope": "Supplier listing.create with current seller/holding ownership, recall and inventory locks; explicit bounded renewal expiry and pending offer retirement; foreign target404.",
+      "evidence": [
+        "api/src/modules/listingLifecycle/policy.ts",
+        "api/test/integration/listingExpiry.integration.test.ts"
+      ],
+      "remaining": "Hosted load and operator approval remain separate; policy references are not universal authorization proof."
     }
   },
   "routes": [
@@ -2151,6 +2161,25 @@
     },
     {
       "method": "GET",
+      "path": "/sourcing-requests/:id/closeout",
+      "source": "api/src/routes/sourcing.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "offer.create"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "controller.getCloseout",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
       "path": "/sourcing-requests/page",
       "source": "api/src/routes/sourcing.ts",
       "guards": [
@@ -3336,6 +3365,27 @@
     },
     {
       "method": "POST",
+      "path": "/listings/:id/renew",
+      "source": "api/src/modules/listingLifecycle/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "listing.create"
+          ]
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
       "path": "/offers/:id/accept",
       "source": "api/src/routes/contracts.ts",
       "guards": [
@@ -3819,6 +3869,27 @@
       ],
       "entryControls": [],
       "handler": "controller.createRequest",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/sourcing-requests/:id/closeout",
+      "source": "api/src/routes/sourcing.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "offer.create"
+          ]
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "controller.closeoutRequest",
       "authentication": "session"
     },
     {

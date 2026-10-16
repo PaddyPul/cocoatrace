@@ -47,6 +47,8 @@ test('saved sourcing deep link reviews and updates the same brief while preservi
           name: 'Buyer',
         },
       });
+    if (path === `/api/sourcing-requests/${id}/closeout`)
+      return route.fulfill({ json: { closeout: null } });
     if (path === '/api/onboarding')
       return route.fulfill({ json: { status: 'completed', primary_goal: 'buy' } });
     if (path === '/api/sourcing-requests/page')

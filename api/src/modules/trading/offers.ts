@@ -1,3 +1,4 @@
+import { assertListingCurrent } from '../listingLifecycle/policy';
 import { requireTradeCurrency, requireSameCurrency, tradeTotal, tradeMinorUnits } from '../../services/tradeMoney';
 import { config } from '../../config/env';
 import { PoolClient, QueryResultRow } from 'pg';
@@ -18,7 +19,7 @@ export async function lockOfferInventory(client: PoolClient, offerId: string) {
   await lockHoldingListings(client, holdingId);
   await client.query(`SELECT o.id FROM trade_offers o JOIN listings l ON l.id=o.listing_id
     WHERE l.holding_id=$1 ORDER BY o.id FOR UPDATE OF o`, [holdingId]);
-  const result = await client.query(`SELECT o.*, l.holding_id, l.seller_organization_id,l.active,
+  const result = await client.query(`SELECT o.*, l.holding_id, l.seller_organization_id,l.active,l.expires_at,(l.expires_at IS NOT NULL AND l.expires_at<=clock_timestamp()) AS listing_expired,
     l.available_quantity_kg,l.price_per_kg AS listing_price_per_kg,l.currency AS listing_currency,
     l.incoterm,l.origin_location,l.destination_location,
     o.valid_until>clock_timestamp() AS valid_now
@@ -46,6 +47,7 @@ export async function acceptTradeOffer(actor: TradeActor, offerId: string, quote
     requireSameCurrency(offer.currency, offer.listing_currency);
     tradeTotal(offer.quantity_kg, offer.offered_price_per_kg, tradeMinorUnits(offer.currency));
     if (quotedRateBps !== undefined && quotedRateBps !== config.platformFeeBps) throw new ConflictError('Platform fee rate changed; refresh the offer before accepting');
+    assertListingCurrent(offer.expires_at, offer.listing_expired);
     if (!offer.valid_now) throw new AppError('Offer has expired; request a new offer', 409, 'OFFER_EXPIRED');
     if (!offer.active || holding.status !== 'available') throw new ConflictError('Supply is no longer available');
     if (offer.buyer_organization_id === actor.organizationId) throw new ConflictError('A seller cannot accept its own offer');
@@ -86,11 +88,11 @@ export async function acceptTradeOffer(actor: TradeActor, offerId: string, quote
     let remainingListing: QueryResultRow | null = null;
     if (remainingListingGrams > 0) {
       const continuation = await client.query(`INSERT INTO listings
-        (seller_organization_id,holding_id,available_quantity_kg,price_per_kg,currency,incoterm,origin_location,destination_location)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+        (seller_organization_id,holding_id,available_quantity_kg,price_per_kg,currency,incoterm,origin_location,destination_location,expires_at)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
       [actor.organizationId, holding.id, remainingListingGrams / 1000,
         offer.listing_price_per_kg, offer.listing_currency, offer.incoterm,
-        offer.origin_location, offer.destination_location]);
+        offer.origin_location, offer.destination_location, offer.expires_at]);
       const publishedRemainder: QueryResultRow = continuation.rows[0];
       remainingListing = publishedRemainder;
       await recordTradeAudit(client, actor, 'listing.continue', 'listing', publishedRemainder.id, {
@@ -121,12 +123,13 @@ export async function createTradeOffer(actor: TradeActor, listingId: string, inp
     const holdingId = found.rows[0].holding_id;
     const result = await client.query('SELECT * FROM batch_holdings WHERE id=$1 FOR UPDATE', [holdingId]);
     await lockHoldingListings(client, holdingId);
-    const listingRes = await client.query('SELECT * FROM listings WHERE id=$1', [listingId]);
+    const listingRes = await client.query('SELECT *, (expires_at IS NOT NULL AND expires_at<=clock_timestamp()) AS listing_expired FROM listings WHERE id=$1', [listingId]);
     const listing = listingRes.rows[0], holding = result.rows[0];
     if (!listing || listing.holding_id !== holdingId || !listing.active || !holding || holding.status !== 'available') {
       throw new ConflictError('Supply is no longer available');
     }
     await assertBatchNotRecalled(client, holding.batch_id);
+    assertListingCurrent(listing.expires_at, listing.listing_expired);
     requireTradeCurrency(input.currency);
     requireSameCurrency(input.currency, listing.currency);
     tradeTotal(input.quantityKg, input.offeredPricePerKg, tradeMinorUnits(input.currency));

@@ -16,7 +16,7 @@ const holdingProjection = (held: string) =>
 export const holdingSelect = holdingProjection(activeBatchRecallSql('h.batch_id'));
 export const holdingPageSqlTag = '/* catalog:holdings-page */';
 export const listingFrom = `FROM listings l JOIN organizations o ON o.id=l.seller_organization_id JOIN batch_holdings h ON h.id=l.holding_id JOIN harvest_batches b ON b.id=h.batch_id LEFT JOIN farms f ON f.id=b.farm_id`;
-export const listingVisible = `l.active=TRUE AND l.available_quantity_kg>0 AND NOT ${activeBatchRecallSql('b.id')} AND h.status='available' AND h.holder_organization_id=l.seller_organization_id`;
+export const listingVisible = `l.active=TRUE AND (l.expires_at IS NULL OR l.expires_at>clock_timestamp()) AND l.available_quantity_kg>0 AND NOT ${activeBatchRecallSql('b.id')} AND h.status='available' AND h.holder_organization_id=l.seller_organization_id`;
 const listingProjection = (held: string) =>
   `SELECT l.*,o.name AS seller_name,h.batch_id,b.crop,b.organic_claim_status,b.grade,b.harvest_date,b.source_mode,b.source_name,b.source_country,b.source_region,${held} AS "activeRecall",f.name AS farm_name,f.region AS farm_region,f.country AS farm_country`;
 export const listingSelect = listingProjection(activeBatchRecallSql('b.id'));
@@ -106,7 +106,7 @@ export async function listingPage(
   const result = await execute(
     `WITH candidates AS MATERIALIZED (
       SELECT l.id,h.batch_id ${listingFrom}
-      WHERE l.active=TRUE AND l.available_quantity_kg>0 AND h.status='available' AND h.holder_organization_id=l.seller_organization_id
+      WHERE l.active=TRUE AND ($4::boolean OR l.expires_at IS NULL OR l.expires_at>clock_timestamp()) AND l.available_quantity_kg>0 AND h.status='available' AND h.holder_organization_id=l.seller_organization_id
       AND (NOT $4::boolean OR l.seller_organization_id=$1::uuid) AND ($13::uuid IS NULL OR l.id=$13::uuid) AND ($14::text='' OR l.currency=$14::text)
       AND ($3::uuid IS NULL OR ${boundary})
       AND ($5::text='' OR concat_ws(' ',l.id,o.name,f.name,b.source_name,f.region,b.source_region,b.crop,b.grade) ILIKE $6::text ESCAPE '\\')
@@ -175,7 +175,7 @@ export async function listingSummary(execute: Execute, organizationId: string) {
           SUM(l.available_quantity_kg) AS quantity_kg,
           COUNT(*) FILTER (WHERE l.seller_organization_id=$1)::int AS own_count
         ${listingFrom}
-        WHERE l.active=TRUE AND l.available_quantity_kg>0 AND h.status='available'
+        WHERE l.active=TRUE AND (l.expires_at IS NULL OR l.expires_at>clock_timestamp()) AND l.available_quantity_kg>0 AND h.status='available'
           AND h.holder_organization_id=l.seller_organization_id
         GROUP BY h.batch_id
       ), assessed AS MATERIALIZED (
@@ -217,7 +217,7 @@ export async function legacyListingList(execute: Execute) {
   // Thousands of listings from one batch must not repeat the recall graph query.
   const candidates = await execute(`WITH candidates AS MATERIALIZED (
     SELECT l.id,l.created_at,h.batch_id FROM listings l JOIN batch_holdings h ON h.id=l.holding_id
-    WHERE l.active=TRUE AND h.status='available' AND h.holder_organization_id=l.seller_organization_id
+    WHERE l.active=TRUE AND (l.expires_at IS NULL OR l.expires_at>clock_timestamp()) AND h.status='available' AND h.holder_organization_id=l.seller_organization_id
   ), assessed AS MATERIALIZED (
     SELECT candidate_batches.batch_id,${activeBatchRecallSql('candidate_batches.batch_id')} AS held
     FROM (SELECT DISTINCT batch_id FROM candidates) candidate_batches

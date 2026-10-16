@@ -4,6 +4,8 @@ import type { CatalogPage } from './http';
 export type ListingSummary = { count: number; own_count: number; quantity_kg: string };
 
 export const listings = {
+  renew: (id: string, data: { expiresAt: string; reason: string }) =>
+    api<import('../types').Listing>('POST', `/listings/${id}/renew`, data),
   list: () => api<import('../types').Listing[]>('GET', '/listings'),
   page: (parameters: Record<string, string> = {}) =>
     api<CatalogPage<import('../types').Listing>>(

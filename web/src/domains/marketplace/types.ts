@@ -1,6 +1,9 @@
 import type { TrustSummary } from '../trust/types';
 
 export interface Listing {
+  expires_at?: string | null;
+  renewed_at?: string | null;
+  active?: boolean;
   currency: string;
   activeRecall?: boolean;
   trust?: TrustSummary;

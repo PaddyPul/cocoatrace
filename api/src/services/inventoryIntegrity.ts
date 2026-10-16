@@ -13,11 +13,13 @@ export async function pendingTransferQuantity(client: PoolClient, holdingId: str
 
 /** Keep published quantities within remaining free stock; stale offers must be decided again. */
 export async function reconcileHoldingListings(client: PoolClient, holdingId: string, availableKg: number): Promise<void> {
-  const listings = await client.query('SELECT * FROM listings WHERE holding_id=$1 ORDER BY id FOR UPDATE', [holdingId]);
+  const listings = await client.query('SELECT *, (expires_at IS NOT NULL AND expires_at<=clock_timestamp()) AS expired FROM listings WHERE holding_id=$1 ORDER BY id FOR UPDATE', [holdingId]);
   await client.query(`SELECT o.id FROM trade_offers o JOIN listings l ON l.id=o.listing_id
     WHERE l.holding_id=$1 ORDER BY o.id FOR UPDATE OF o`, [holdingId]);
   let remainingGrams = Math.max(0, Math.round(availableKg * 1000));
   for (const listing of listings.rows) {
+    // Expiry releases publication budget without mutating its reviewable historical terms.
+    if (listing.expired) continue;
     const quantityGrams = Math.round(Number(listing.available_quantity_kg) * 1000);
     const quantity = listing.active ? Math.min(quantityGrams, remainingGrams) / 1000 : quantityGrams / 1000;
     const active = listing.active && quantity > 0;

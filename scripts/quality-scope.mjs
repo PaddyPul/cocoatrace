@@ -1,5 +1,13 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/modules/listingLifecycle/**/*.ts',
+  'api/test/integration/sourcingLifecycle.integration.test.ts',
+  'api/test/integration/listingExpiry.integration.test.ts',
+  'web/src/components/sourcing/**/*.tsx',
+  'web/src/components/listings/**/*.tsx',
+  'e2e/sourcingCloseout.spec.ts',
+  'e2e/listingExpiry.spec.ts',
+
   'api/src/modules/teamMembers/**/*.ts',
   'api/src/modules/accessReview/**/*.ts',
   'web/src/components/team/**/*.tsx',
