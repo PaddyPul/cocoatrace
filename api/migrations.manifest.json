@@ -160,6 +160,14 @@
     {
       "path": "api/src/migrations/038_operations_incident_alerts.ts",
       "sha256": "76b1257fb757c9b929bbd75dfc326cfc40c5872ed9d0302f3d9b8c124834a2db"
+    },
+    {
+      "path": "api/src/migrations/039_team_member_management.ts",
+      "sha256": "8bff8cd67c28f78fde1af179a00422e70096f615081da35fa82f86681f6e2ea4"
+    },
+    {
+      "path": "api/src/migrations/040_access_reviews.ts",
+      "sha256": "79ed37b0d820a42f16d1cfb9342b051dc5d5b8970567e04c871864b9239463f1"
     }
   ]
 }

@@ -231,3 +231,15 @@ scripts/check-branding.test.mjs text eol=lf
 docs/branding/compatibility-v1.json text eol=lf
 e2e/brandIdentity.spec.ts text eol=lf
 e2e/agreementPresentation.spec.ts text eol=lf
+
+api/src/modules/teamMembers/**/*.ts text eol=lf
+api/src/modules/accessReview/**/*.ts text eol=lf
+web/src/components/team/**/*.tsx text eol=lf
+web/src/api/teamMembers.ts text eol=lf
+web/src/pages/AccessReviewPage.tsx text eol=lf
+api/test/integration/teamMembers.integration.test.ts text eol=lf
+api/test/integration/accessReview.integration.test.ts text eol=lf
+e2e/teamMembers.spec.ts text eol=lf
+e2e/accessReview.spec.ts text eol=lf
+api/src/migrations/039_team_member_management.ts text eol=lf
+api/src/migrations/040_access_reviews.ts text eol=lf

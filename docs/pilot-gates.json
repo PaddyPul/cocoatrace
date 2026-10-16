@@ -1,5 +1,5 @@
 {
-  "reviewedAt": "2026-10-15",
+  "reviewedAt": "2026-10-16",
   "method": "Equal gate count, no partial credit. Provider launch also requires every core gate. This is closure evidence, not a safety probability or valuation measure.",
   "gates": [
     {
@@ -8,7 +8,7 @@
       "status": "partial",
       "title": "Current release passes every gate on the candidate commit",
       "backlog": ["QLT-001", "SEC-014", "LNG-001"],
-      "evidence": "Founder reports release checks and merge completion through 2026-10-16, including the corrected workspace productivity batch. This is local founder-report acceptance; the latest exact founder candidate report/CI URL and hosted staging archive have not been independently retrieved. The current BetterTrade identity/compatibility candidate requires its own full release and required CI. Keep this gate partial until independently reviewable candidate evidence is attached."
+      "evidence": "Founder reports BetterTrade identity full release and merge accepted 2026-10-16. Team access/review candidate requires its own full release and required CI. Hosted candidate evidence and CI archive remain unverified; gate stays partial."
     },
     {
       "id": "CORE-isolation",

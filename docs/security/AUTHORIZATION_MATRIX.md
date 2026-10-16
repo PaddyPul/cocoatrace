@@ -218,3 +218,9 @@ Access flags are independent of verification/deactivation. Restoring an organiza
 
 
 2026-10-14 pending-offer candidate adds buyer withdrawal: checked inventory now196 explicit routes,179 session-protected,156 declared permission gates. Buyer ownership is rechecked under the same inventory lock order as acceptance; new route UUID validation follows entry guards. Seller rejection reason is atomically audited and party-scoped in offer history. Broader resource/field acceptance remains partial.
+
+## Team administration and privileged review
+
+Team endpoints require member.manage, a single canonical bounded buyer/supplier administrator role, current live session and verified unsuspended organization. Role/deactivation mutations also require current password and applicable fresh passkey assurance. Foreign membership returns404; self changes and platform/custom/protected targets are refused. Permissions cannot exceed the actor's bounded role. Decisions serialize with existing access lifecycle locking, revoke target sessions/reset/recovery artifacts and audit atomically. Team management refuses >500-member decision rosters; reads paginate server-side. Legacy invitations remain compatible.
+
+/admin/access-review requires wildcard access. A complete privileged roster is capped at500 with explicit refusal on overflow. POST binds the observed snapshot hash and rechecks live assurance/authority under the access-decision lock. Retained-session evidence is an observation; absence means unknown. Receipts do not resolve findings or assert safety. Native suites teamMembers.integration.test.ts/accessReview.integration.test.ts require release runtime acceptance.
