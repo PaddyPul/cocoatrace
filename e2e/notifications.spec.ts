@@ -12,7 +12,9 @@ const user = {
 test('current notice failures are explicit and receipts can be retried', async ({ page }) => {
   await page.addInitScript((v) => localStorage.setItem('ct_user', JSON.stringify(v)), user);
   let failed = true,
-    read = false;
+    read = false,
+    rejectWrite = true;
+  let finishWrite: (() => void) | undefined;
   const fingerprint = 'a'.repeat(64);
   await page.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -26,6 +28,13 @@ test('current notice failures are explicit and receipts can be retried', async (
         return;
       }
       if (path.endsWith('/read')) {
+        await new Promise<void>((resolve) => {
+          finishWrite = resolve;
+        });
+        if (rejectWrite) {
+          await route.fulfill({ status: 503, json: { error: 'Receipt storage unavailable' } });
+          return;
+        }
         read = route.request().postDataJSON().read;
         body = { fingerprint, read };
       } else if (path.endsWith('/summary'))
@@ -60,7 +69,21 @@ test('current notice failures are explicit and receipts can be retried', async (
   failed = false;
   await page.getByRole('button', { name: 'Retry notifications', exact: true }).click();
   await expect(page.getByText('1 unread of 1 current notices')).toBeVisible();
-  await page.getByLabel('Mark “Review offer” as read', { exact: true }).check();
+  const checkbox = page.getByLabel('Mark “Review offer” as read', { exact: true });
+  await checkbox.check();
+  await expect(page.getByText('Saving read status…', { exact: true })).toBeVisible();
+  await expect.poll(() => Boolean(finishWrite)).toBe(true);
+  finishWrite!();
+  finishWrite = undefined;
+  await expect(page.getByRole('alert')).toContainText('Receipt storage unavailable');
+  await expect(checkbox).not.toBeChecked();
+  await expect(page.getByText('1 unread of 1 current notices')).toBeVisible();
+  rejectWrite = false;
+  await checkbox.check();
+  await expect(page.getByText('Saving read status…', { exact: true })).toBeVisible();
+  await expect.poll(() => Boolean(finishWrite)).toBe(true);
+  finishWrite!();
+  finishWrite = undefined;
   await expect(page.getByLabel('Mark “Review offer” as read', { exact: true })).toBeChecked();
   await expect(page.getByText('0 unread of 1 current notices')).toBeVisible();
 });

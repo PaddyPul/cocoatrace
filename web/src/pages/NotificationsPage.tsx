@@ -16,6 +16,9 @@ function CurrentNotifications() {
   const [summary, setSummary] = useState<{ currentCount: number; unreadCount: number } | null>(
     null,
   );
+  const [pendingRead, setPendingRead] = useState<{ fingerprint: string; read: boolean } | null>(
+    null,
+  );
   const sequence = useRef(0);
   async function load(cursor?: string) {
     const request = ++sequence.current;
@@ -44,6 +47,7 @@ function CurrentNotifications() {
     };
   }, [filter]);
   async function toggle(fingerprint: string, read: boolean) {
+    setPendingRead({ fingerprint, read });
     setBusy(true);
     setError('');
     try {
@@ -52,6 +56,8 @@ function CurrentNotifications() {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Read receipt unavailable');
       setBusy(false);
+    } finally {
+      setPendingRead(null);
     }
   }
   return (
@@ -108,12 +114,17 @@ function CurrentNotifications() {
             <label className="block">
               <input
                 type="checkbox"
-                checked={item.read}
+                checked={
+                  pendingRead?.fingerprint === item.fingerprint ? pendingRead.read : item.read
+                }
                 disabled={busy}
                 onChange={(event) => void toggle(item.fingerprint, event.target.checked)}
               />{' '}
               Mark “{item.title}” as read
             </label>
+            {pendingRead?.fingerprint === item.fingerprint && (
+              <p role="status">Saving read status…</p>
+            )}
           </article>
         ))}
         {page?.hasMore && (
