@@ -1,6 +1,8 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Clock3, Copy, MailPlus, Users } from 'lucide-react';
 import Layout from '../components/layout/Layout';
+import TeamMembers from '../components/team/TeamMembers';
+import { useAuthCtx } from '../components/auth/AuthProvider';
 import FeedbackRegister from '../components/pilot/FeedbackRegister';
 import {
   invitations,
@@ -13,6 +15,7 @@ import PageNavigation from '../components/catalog/PageNavigation';
 import { useCatalogPage } from '../components/catalog/useCatalogPage';
 
 export default function PilotTeamPage() {
+  const { canDo } = useAuthCtx();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [totals, setTotals] = useState<InvitationSummary | null>(null);
@@ -343,6 +346,7 @@ export default function PilotTeamPage() {
           <PageNavigation page={page} label="invitations" />
         </section>
       </section>
+      {canDo('member.manage') && <TeamMembers />}
       <FeedbackRegister />
       <div className="mt-5 rounded-2xl border border-border bg-surface p-4 text-[10px] leading-5 text-text-muted">
         Invitation emails use the configured identity-email provider. In development/demo mode the

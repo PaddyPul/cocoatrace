@@ -169,3 +169,7 @@ Founder reports request/deployment guardrails release passed and merged: ENV-012
 ## 2026-10-16 BetterTrade customer identity sprint
 
 Founder reports corrected workspace release passed and merged: PRD-002/005/009/012 close,119/343 (34.7%). New targets BRD-001/002 and TRD-016 combine customer branding, versioned protected-identifier inventory and unsigned agreement presentation. Acceptance yields122/343 (35.6%). No internal migration, domain/legal availability, hosted readiness or full translation claim. Existing real identity/upgrade/backup restore gates remain mandatory. Core11/28 and provider-inclusive11/40 unchanged.
+
+## 2026-10-16 team access sprint
+
+Founder accepts BRD-001/002 and TRD-016:122/343 (35.6%). IDN-016/017/019 are candidates pending exact-commit release and review; target125/343 (36.4%). Core11/28 and provider-inclusive11/40 remain unchanged. No valuation or hosted readiness claim.

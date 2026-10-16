@@ -32,6 +32,8 @@ export default tseslint.config(
   },
   {
     files: [
+      'api/src/modules/teamMembers/**/*.ts',
+      'api/src/modules/accessReview/**/*.ts',
       'api/src/modules/trace/**/*.ts',
       'api/src/modules/dealActivity/**/*.ts',
       'api/src/modules/sourcing/**/*.ts',

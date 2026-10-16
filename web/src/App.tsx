@@ -51,6 +51,7 @@ const AccessVerificationPage = lazy(() => import('./pages/AccessVerificationPage
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const ChangePasswordPage = lazy(() => import('./pages/ChangePasswordPage'));
+const AccessReviewPage = lazy(() => import('./pages/AccessReviewPage'));
 const AccessControlsPage = lazy(() => import('./pages/AccessControlsPage'));
 const AccessApplicationsPage = lazy(() => import('./pages/AccessApplicationsPage'));
 const OperationsPage = lazy(() => import('./pages/OperationsPage'));
@@ -135,6 +136,7 @@ export default function App() {
           <Route path="/certs" element={<ProtectedRoute><CertsPage /></ProtectedRoute>} />
           <Route path="/my-listings" element={<ProtectedRoute><MyListingsPage /></ProtectedRoute>} />
           <Route path="/organizations" element={<ProtectedRoute><OrganizationsPage /></ProtectedRoute>} />
+          <Route path="/access-review" element={<ProtectedRoute><AccessReviewPage /></ProtectedRoute>} />
           <Route path="/access-controls" element={<ProtectedRoute><AccessControlsPage /></ProtectedRoute>} />
           <Route path="/access-applications" element={<ProtectedRoute><AccessApplicationsPage /></ProtectedRoute>} />
           <Route path="/operations" element={<ProtectedRoute><OperationsPage /></ProtectedRoute>} />

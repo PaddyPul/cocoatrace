@@ -259,6 +259,22 @@
         "api/test/integration/workspaceOverview.integration.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
+    },
+    "api/src/modules/teamMembers/routes.ts": {
+      "scope": "Organization-scoped bounded member administrators; live role, session, password, assurance and atomic audit on mutations.",
+      "evidence": [
+        "api/src/modules/teamMembers/policy.ts",
+        "api/test/integration/teamMembers.integration.test.ts"
+      ],
+      "remaining": "Hosted operator acceptance and independent reviewer exercises remain required."
+    },
+    "api/src/modules/accessReview/routes.ts": {
+      "scope": "Wildcard administrator complete bounded roster and exact snapshot-bound audited review receipt.",
+      "evidence": [
+        "api/src/modules/accessReview/policy.ts",
+        "api/test/integration/accessReview.integration.test.ts"
+      ],
+      "remaining": "Hosted operator acceptance and independent reviewer exercises remain required."
     }
   },
   "routes": [
@@ -376,6 +392,25 @@
       "method": "GET",
       "path": "/admin/access-controls/:kind",
       "source": "api/src/modules/accessControls/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/access-review",
+      "source": "api/src/modules/accessReview/routes.ts",
       "guards": [
         {
           "kind": "session"
@@ -2154,6 +2189,44 @@
     },
     {
       "method": "GET",
+      "path": "/team/members/page",
+      "source": "api/src/modules/teamMembers/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "member.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/team/roles",
+      "source": "api/src/modules/teamMembers/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "member.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
       "path": "/traceability/lots",
       "source": "api/src/routes/traceability.ts",
       "guards": [
@@ -2420,6 +2493,27 @@
       "authentication": "session"
     },
     {
+      "method": "PATCH",
+      "path": "/team/members/:id/role",
+      "source": "api/src/modules/teamMembers/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "member.manage"
+          ]
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
       "method": "POST",
       "path": "/access-applications/:id/approve",
       "source": "api/src/modules/organizationAccess/routes.ts",
@@ -2461,6 +2555,27 @@
       "method": "POST",
       "path": "/admin/access-controls/:kind/:id",
       "source": "api/src/modules/accessControls/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/access-review",
+      "source": "api/src/modules/accessReview/routes.ts",
       "guards": [
         {
           "kind": "session"
@@ -3723,6 +3838,27 @@
       ],
       "entryControls": [],
       "handler": "controller.structureRequest",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/team/members/:id/deactivate",
+      "source": "api/src/modules/teamMembers/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "member.manage"
+          ]
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
       "authentication": "session"
     },
     {

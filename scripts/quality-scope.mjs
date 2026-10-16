@@ -1,5 +1,15 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/modules/teamMembers/**/*.ts',
+  'api/src/modules/accessReview/**/*.ts',
+  'web/src/components/team/**/*.tsx',
+  'web/src/api/teamMembers.ts',
+  'web/src/pages/AccessReviewPage.tsx',
+  'api/test/integration/teamMembers.integration.test.ts',
+  'api/test/integration/accessReview.integration.test.ts',
+  'e2e/teamMembers.spec.ts',
+  'e2e/accessReview.spec.ts',
+
   'scripts/check-branding.mjs',
   'scripts/check-branding.test.mjs',
   'docs/branding/compatibility-v1.json',
