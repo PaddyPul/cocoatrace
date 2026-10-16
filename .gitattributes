@@ -243,3 +243,13 @@ e2e/teamMembers.spec.ts text eol=lf
 e2e/accessReview.spec.ts text eol=lf
 api/src/migrations/039_team_member_management.ts text eol=lf
 api/src/migrations/040_access_reviews.ts text eol=lf
+
+api/src/modules/listingLifecycle/**/*.ts text eol=lf
+api/test/integration/sourcingLifecycle.integration.test.ts text eol=lf
+api/test/integration/listingExpiry.integration.test.ts text eol=lf
+web/src/components/sourcing/**/*.tsx text eol=lf
+web/src/components/listings/**/*.tsx text eol=lf
+e2e/sourcingCloseout.spec.ts text eol=lf
+e2e/listingExpiry.spec.ts text eol=lf
+api/src/migrations/041_sourcing_closeout.ts text eol=lf
+api/src/migrations/042_listing_expiry.ts text eol=lf

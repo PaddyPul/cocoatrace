@@ -32,6 +32,7 @@ export default tseslint.config(
   },
   {
     files: [
+      'api/src/modules/listingLifecycle/**/*.ts',
       'api/src/modules/teamMembers/**/*.ts',
       'api/src/modules/accessReview/**/*.ts',
       'api/src/modules/trace/**/*.ts',

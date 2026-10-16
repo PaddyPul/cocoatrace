@@ -1,3 +1,5 @@
+import { sensitiveActionLimit } from '../middleware/security';
+import { closeoutSchema } from '../modules/sourcing/lifecycle';
 import { editSourcingSchema } from '../modules/sourcing/edit';
 import { Router } from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth';
@@ -7,11 +9,59 @@ import * as controller from '../controllers/sourcingController';
 import { structureSourcingBriefSchema } from '../validation';
 
 const router = Router();
-router.get('/sourcing-requests/page', requireAuth, requirePermission('listing.read'), controller.listRequestPage);
-router.get('/sourcing-requests/summary', requireAuth, requirePermission('listing.read'), controller.summarizeRequests);
-router.get('/sourcing-requests', requireAuth, requirePermission('listing.read'), controller.listRequests);
-router.post('/sourcing-requests/structure', requireAuth, requirePermission('offer.create'), validate(structureSourcingBriefSchema), controller.structureRequest);
-router.post('/sourcing-requests', requireAuth, requirePermission('offer.create'), validate(createSourcingRequestSchema), controller.createRequest);
-router.patch('/sourcing-requests/:id', requireAuth, requirePermission('offer.create'), validate(editSourcingSchema), controller.updateRequest);
+router.get(
+  '/sourcing-requests/page',
+  requireAuth,
+  requirePermission('listing.read'),
+  controller.listRequestPage,
+);
+router.get(
+  '/sourcing-requests/summary',
+  requireAuth,
+  requirePermission('listing.read'),
+  controller.summarizeRequests,
+);
+router.get(
+  '/sourcing-requests',
+  requireAuth,
+  requirePermission('listing.read'),
+  controller.listRequests,
+);
+router.post(
+  '/sourcing-requests/structure',
+  requireAuth,
+  requirePermission('offer.create'),
+  validate(structureSourcingBriefSchema),
+  controller.structureRequest,
+);
+router.post(
+  '/sourcing-requests',
+  requireAuth,
+  requirePermission('offer.create'),
+  validate(createSourcingRequestSchema),
+  controller.createRequest,
+);
+router.patch(
+  '/sourcing-requests/:id',
+  requireAuth,
+  requirePermission('offer.create'),
+  validate(editSourcingSchema),
+  controller.updateRequest,
+);
+
+router.get(
+  '/sourcing-requests/:id/closeout',
+  requireAuth,
+  requirePermission('offer.create'),
+  controller.getCloseout,
+);
+router.post(
+  '/sourcing-requests/:id/closeout',
+  requireAuth,
+  requirePermission('offer.create'),
+  sensitiveActionLimit,
+  validate(closeoutSchema),
+  controller.closeoutRequest,
+);
 
 export = router;

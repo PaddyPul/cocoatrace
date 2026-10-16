@@ -1,3 +1,4 @@
+import ListingLifecycle from '../components/listings/ListingLifecycle';
 import { useCatalogPage } from '../components/catalog/useCatalogPage';
 import PageNavigation from '../components/catalog/PageNavigation';
 import { useState, useEffect } from 'react';
@@ -45,6 +46,7 @@ export default function MyListingsPage() {
                   <div className="absolute top-2 right-2"><span className="badge badge-amber">Organic: {trustLabel(l.trust?.organic)}</span></div>
                 </div>
                 <div className="p-3.5 space-y-2">
+                  <ListingLifecycle listing={l} owner={l.seller_organization_id === user?.organizationId} onRenew={page.refresh} />
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <h3 className="text-sm font-semibold text-text-primary truncate">{l.farm_name || 'Unknown Farm'}</h3>

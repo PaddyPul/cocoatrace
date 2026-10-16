@@ -8,7 +8,7 @@
       "status": "partial",
       "title": "Current release passes every gate on the candidate commit",
       "backlog": ["QLT-001", "SEC-014", "LNG-001"],
-      "evidence": "Founder reports BetterTrade identity full release and merge accepted 2026-10-16. Team access/review candidate requires its own full release and required CI. Hosted candidate evidence and CI archive remain unverified; gate stays partial."
+      "evidence": "Founder reports corrected team access/review full release and merge accepted 2026-10-16. Supply/demand lifecycle candidate requires its own full release and required CI. Hosted candidate evidence and CI archive remain unverified; gate stays partial."
     },
     {
       "id": "CORE-isolation",

@@ -22,7 +22,7 @@ export const editSourcingSchema = createSourcingRequestSchema
       .nullable()
       .optional(),
     offerDeadline: z.string().datetime().nullable().optional(),
-    status: z.enum(['draft', 'open', 'closed', 'cancelled']).optional(),
+    status: z.enum(['draft', 'open', 'cancelled']).optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, 'No reviewed changes supplied');

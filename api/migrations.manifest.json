@@ -168,6 +168,14 @@
     {
       "path": "api/src/migrations/040_access_reviews.ts",
       "sha256": "79ed37b0d820a42f16d1cfb9342b051dc5d5b8970567e04c871864b9239463f1"
+    },
+    {
+      "path": "api/src/migrations/041_sourcing_closeout.ts",
+      "sha256": "900a939c5c47b4427fcfeb2bd45dccebc31e025bad5f75c6b8b111092a060338"
+    },
+    {
+      "path": "api/src/migrations/042_listing_expiry.ts",
+      "sha256": "b8213a4b33cab3a78b73bab8d981916c27ecf3cbd95143c2e6affbe617231975"
     }
   ]
 }

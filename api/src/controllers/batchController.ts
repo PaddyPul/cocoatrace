@@ -36,7 +36,7 @@ export async function pushToMarketplace(req: Request, res: Response): Promise<vo
     const holdingRes = await client.query(
       `SELECT h.* FROM batch_holdings h WHERE h.batch_id=$1 AND h.holder_organization_id=$2 AND h.status='available'
        ORDER BY (h.quantity_kg
-         - COALESCE((SELECT SUM(l.available_quantity_kg) FROM listings l WHERE l.holding_id=h.id AND l.active=TRUE),0)
+         - COALESCE((SELECT SUM(l.available_quantity_kg) FROM listings l WHERE l.holding_id=h.id AND l.active=TRUE AND (l.expires_at IS NULL OR l.expires_at>clock_timestamp())),0)
          - COALESCE((SELECT SUM(t.quantity_kg) FROM custody_transfers t WHERE t.holding_id=h.id AND t.status='requested'),0)) DESC,h.id
        LIMIT 1 FOR UPDATE OF h`,
       [batchId, req.user!.organizationId]
@@ -66,7 +66,7 @@ export async function pushToMarketplace(req: Request, res: Response): Promise<vo
     await lockHoldingListings(client, holding.id);
     const reserved = await pendingTransferQuantity(client, holding.id);
     const listed = (await client.query(
-      'SELECT COALESCE(SUM(available_quantity_kg),0) AS quantity FROM listings WHERE holding_id=$1 AND active=TRUE',
+      'SELECT COALESCE(SUM(available_quantity_kg),0) AS quantity FROM listings WHERE holding_id=$1 AND active=TRUE AND (expires_at IS NULL OR expires_at>clock_timestamp())',
       [holding.id]
     )).rows[0];
     const remainingGrams = Math.round(Number(holding.quantity_kg) * 1000)

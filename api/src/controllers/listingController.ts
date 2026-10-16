@@ -1,3 +1,4 @@
+import { assertListingCurrent } from '../modules/listingLifecycle/policy';
 import { legacyListingList } from '../modules/catalog/repository';
 import { withCatalogRead } from '../modules/catalog/paging';
 import { lockRecallBoundary, assertBatchNotRecalled, activeBatchRecallSql } from '../modules/recall/safety';
@@ -48,7 +49,7 @@ export async function createListing(req: Request, res: Response): Promise<void> 
     }
     await assertBatchNotRecalled(client, holding.batch_id);
     await lockHoldingListings(client, holdingId);
-    const listed = await client.query('SELECT COALESCE(SUM(available_quantity_kg),0) AS quantity FROM listings WHERE holding_id=$1 AND active=TRUE', [holdingId]);
+    const listed = await client.query('SELECT COALESCE(SUM(available_quantity_kg),0) AS quantity FROM listings WHERE holding_id=$1 AND active=TRUE AND (expires_at IS NULL OR expires_at>clock_timestamp())', [holdingId]);
     const remainingGrams = Math.round(Number(holding.quantity_kg) * 1000)
       - Math.round(Number(listed.rows[0].quantity) * 1000)
       - Math.round(await pendingTransferQuantity(client, holdingId) * 1000);
@@ -84,16 +85,16 @@ export async function updateListing(req: Request, res: Response): Promise<void> 
     if (!discovered) { await client.query('ROLLBACK'); res.status(404).json({ error: 'Listing not found' }); return; }
     const holding = (await client.query('SELECT * FROM batch_holdings WHERE id=$1 FOR UPDATE', [discovered.holding_id])).rows[0];
     await lockHoldingListings(client, discovered.holding_id);
-    const listing = (await client.query('SELECT * FROM listings WHERE id=$1 AND seller_organization_id=$2', [id, req.user!.organizationId])).rows[0];
+    const listing = (await client.query('SELECT *, (expires_at IS NOT NULL AND expires_at<=clock_timestamp()) AS listing_expired FROM listings WHERE id=$1 AND seller_organization_id=$2', [id, req.user!.organizationId])).rows[0];
     // Acceptance may have moved the listing while this request waited for its original holding.
     if (!listing || listing.holding_id !== discovered.holding_id || holding.holder_organization_id !== req.user!.organizationId || holding.status !== 'available') {
       await client.query('ROLLBACK'); res.status(409).json({ error: 'Inventory changed; refresh before editing', code: 'INVENTORY_UNAVAILABLE' }); return;
     }
     const nextActive = active ?? listing.active;
     // Withdrawing recalled stock remains permitted; any continuing publication is blocked.
-    if (nextActive) await assertBatchNotRecalled(client, holding.batch_id);
+    if (nextActive) { assertListingCurrent(listing.expires_at, listing.listing_expired); await assertBatchNotRecalled(client, holding.batch_id); }
     const nextQuantity = availableQuantityKg ?? Number(listing.available_quantity_kg);
-    const sibling = (await client.query('SELECT COALESCE(SUM(available_quantity_kg),0) AS quantity FROM listings WHERE holding_id=$1 AND active=TRUE AND id<>$2', [holding.id, id])).rows[0];
+    const sibling = (await client.query('SELECT COALESCE(SUM(available_quantity_kg),0) AS quantity FROM listings WHERE holding_id=$1 AND active=TRUE AND (expires_at IS NULL OR expires_at>clock_timestamp()) AND id<>$2', [holding.id, id])).rows[0];
     const freeGrams = Math.round(Number(holding.quantity_kg) * 1000)
       - Math.round(Number(sibling.quantity) * 1000)
       - Math.round(await pendingTransferQuantity(client, holding.id) * 1000);
@@ -121,7 +122,7 @@ export async function deleteListing(req: Request, res: Response): Promise<void> 
     if (!discovered) { await client.query('ROLLBACK'); res.status(404).json({ error: 'Listing not found' }); return; }
     const holding = (await client.query('SELECT * FROM batch_holdings WHERE id=$1 FOR UPDATE', [discovered.holding_id])).rows[0];
     await lockHoldingListings(client, discovered.holding_id);
-    const listing = (await client.query('SELECT * FROM listings WHERE id=$1 AND seller_organization_id=$2', [id, req.user!.organizationId])).rows[0];
+    const listing = (await client.query('SELECT *, (expires_at IS NOT NULL AND expires_at<=clock_timestamp()) AS listing_expired FROM listings WHERE id=$1 AND seller_organization_id=$2', [id, req.user!.organizationId])).rows[0];
     if (!listing || listing.holding_id !== discovered.holding_id || holding.status !== 'available' || holding.holder_organization_id !== req.user!.organizationId) {
       await client.query('ROLLBACK'); res.status(409).json({ error: 'Inventory changed; refresh before withdrawing', code: 'INVENTORY_UNAVAILABLE' }); return;
     }

@@ -53,3 +53,7 @@ Material customer/operator changes are recorded here using the [release and comp
 ## Team access review candidate —2026-10-16
 
 Bounded customer team role administration and deactivation with live assurance, session revocation and atomic audit; exact-snapshot privileged review receipts with explicit activity uncertainty and30-day due dates. Forward migrations039/040. Full candidate release pending.
+
+## Supply/demand lifecycle candidate —2026-10-16
+
+Buyer-confirmed immutable sourcing award/closeout and supplier reviewed listing expiry/renewal. New listings default30 days; legacy no-expiry terms remain explicit. Atomic audits, marketplace/offer and inventory gates; forward migrations041/042. Full candidate release pending.
