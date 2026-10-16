@@ -16,7 +16,7 @@ export default function AuthPageShell({
     <section className="w-full max-w-xl rounded-[2rem] border border-white/10 bg-white/[.035] p-6 shadow-2xl shadow-black/30 sm:p-8">
       <Link to="/login" className="inline-flex items-center gap-3">
         <span className="grid h-10 w-10 place-items-center rounded-2xl bg-brand-500"><Leaf size={19} /></span>
-        <span><span className="block text-sm font-bold">CocoaTrace</span><span className="block text-[9px] uppercase tracking-[.16em] text-white/35">Secure workspace access</span></span>
+        <span><span className="block text-sm font-bold">BetterTrade</span><span className="block text-[9px] uppercase tracking-[.16em] text-white/35">Secure workspace access</span></span>
       </Link>
       <div className="mt-8 text-[10px] font-bold uppercase tracking-[.16em] text-brand-300">{eyebrow}</div>
       <h1 className="mt-2 text-3xl font-bold tracking-tight">{title}</h1>

@@ -1,14 +1,11 @@
-import type { PoolClient } from "pg";
-import crypto from "node:crypto";
-import { getClient, query } from "../../db";
-import { config } from "../../config/env";
-import { emailSender, EmailSender } from "../../services/emailSender";
-import logger from "../../logger";
+import type { PoolClient } from 'pg';
+import crypto from 'node:crypto';
+import { getClient, query } from '../../db';
+import { config } from '../../config/env';
+import { emailSender, EmailSender } from '../../services/emailSender';
+import logger from '../../logger';
 
-export async function registerRecallParticipants(
-  client: PoolClient,
-  recallId: string,
-) {
+export async function registerRecallParticipants(client: PoolClient, recallId: string) {
   await client.query(
     `INSERT INTO recall_participants(recall_id,organization_id)
     SELECT id,initiated_by_organization_id FROM recall_notices WHERE id=$1
@@ -31,12 +28,12 @@ export async function registerRecallParticipants(
     WHERE p.recall_id=$1 AND NOT EXISTS(SELECT 1 FROM users member WHERE member.organization_id=p.organization_id AND member.active)`,
     [recallId],
   );
-  await queueRecallEmails(client, recallId, "activated");
+  await queueRecallEmails(client, recallId, 'activated');
 }
 export async function queueRecallEmails(
   client: PoolClient,
   recallId: string,
-  eventType: "activated" | "resolved",
+  eventType: 'activated' | 'resolved',
 ) {
   await client.query(
     `INSERT INTO recall_email_outbox(recall_id,recipient_user_id,event_type)
@@ -53,17 +50,14 @@ export async function queueRecallEmails(
 
 // Durable, leased and retryable. SMTP acceptance is not proof of inbox delivery;
 // acknowledgements are a separate participant decision. No raw email is logged.
-export async function processRecallEmails(
-  sender: EmailSender = emailSender(),
-  limit = 20,
-) {
+export async function processRecallEmails(sender: EmailSender = emailSender(), limit = 20) {
   const totals = { sent: 0, suppressed: 0, failed: 0 };
   for (let i = 0; i < limit; i++) {
     const client = await getClient();
     let row: any;
     const lease = crypto.randomUUID();
     try {
-      await client.query("BEGIN");
+      await client.query('BEGIN');
       await client.query(`UPDATE recall_email_outbox SET status='failed_terminal',last_error=COALESCE(last_error,'FINAL_LEASE_EXPIRED'),exhausted_at=NOW(),lease_token=NULL,lease_expires_at=NULL
         WHERE attempts>=8 AND (status IN ('queued','failed') OR (status='sending' AND lease_expires_at<NOW()))`);
       await client.query(`UPDATE recall_email_outbox queue SET status='suppressed',last_error='RECIPIENT_INACTIVE',lease_token=NULL,lease_expires_at=NULL
@@ -79,29 +73,29 @@ export async function processRecallEmails(
           "UPDATE recall_email_outbox SET status='sending',attempts=attempts+1,lease_token=$2,lease_expires_at=NOW()+INTERVAL '5 minutes' WHERE id=$1",
           [row.id, lease],
         );
-      await client.query("COMMIT");
+      await client.query('COMMIT');
     } catch (error) {
-      await client.query("ROLLBACK");
+      await client.query('ROLLBACK');
       throw error;
     } finally {
       client.release();
     }
     if (!row) break;
-    let status: "sent" | "suppressed" | "failed";
+    let status: 'sent' | 'suppressed' | 'failed';
     try {
       status = (
         await sender.send({
           to: row.email,
-          category: "recall",
-          subject: `CocoaTrace recall ${row.event_type}: ${String(row.reference_code).replace(/[\r\n]/g, " ")}`,
-          text: `${row.title}\n\nReference: ${row.reference_code}\nCurrent status: ${row.recall_status}\nInstructions: ${row.instructions}\n\nSign in to review the notice and acknowledge your organization's response:\n${new URL("/recalls", config.publicWebUrl).toString()}\n\nA resolved notice does not automatically release retained stock or republish listings.`,
+          category: 'recall',
+          subject: `BetterTrade recall ${row.event_type}: ${String(row.reference_code).replace(/[\r\n]/g, ' ')}`,
+          text: `${row.title}\n\nReference: ${row.reference_code}\nCurrent status: ${row.recall_status}\nInstructions: ${row.instructions}\n\nSign in to review the notice and acknowledge your organization's response:\n${new URL('/recalls', config.publicWebUrl).toString()}\n\nA resolved notice does not automatically release retained stock or republish listings.`,
         })
       ).status;
     } catch {
-      status = "failed";
+      status = 'failed';
       logger.error(
         { notificationId: row.id },
-        "Recall email submission failed; queued retry retained",
+        'Recall email submission failed; queued retry retained',
       );
     }
     await query(
@@ -124,7 +118,7 @@ export function startRecallEmailWorker() {
     try {
       await processRecallEmails();
     } catch {
-      logger.error("Recall email worker failed; durable queue retained");
+      logger.error('Recall email worker failed; durable queue retained');
     } finally {
       running = false;
     }

@@ -1,5 +1,10 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'scripts/check-branding.mjs',
+  'scripts/check-branding.test.mjs',
+  'docs/branding/compatibility-v1.json',
+  'e2e/brandIdentity.spec.ts',
+  'e2e/agreementPresentation.spec.ts',
   'scripts/environment-notice.test.mjs',
   'web/src/components/environment/**/*.ts',
   'web/src/components/environment/**/*.tsx',

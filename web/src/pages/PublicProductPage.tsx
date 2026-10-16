@@ -33,7 +33,7 @@ export default function PublicProductPage() {
       refreshing = true;
       try {
         const product = await publicProducts.get(slug);
-        if (alive) { setData(product); setError(''); document.title = `${product.profile.displayName} — CocoaTrace`; }
+        if (alive) { setData(product); setError(''); document.title = `${product.profile.displayName} — BetterTrade`; }
       } catch (err) {
         if (alive) setError(err instanceof Error ? err.message : 'Unable to refresh product record');
       } finally { refreshing = false; }
@@ -58,7 +58,7 @@ export default function PublicProductPage() {
     <main className="min-h-screen bg-[#f6f4ee] text-stone-900 selection:bg-emerald-100">
       <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-[#f6f4ee]/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2 font-bold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-900 text-white"><Leaf size={17} /></span>CocoaTrace</div>
+          <div className="flex items-center gap-2 font-bold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-900 text-white"><Leaf size={17} /></span>BetterTrade</div>
           <div className={`rounded-full px-3 py-1.5 text-xs font-semibold ${unsafe ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900'}`}>
             {!safety?'Safety status unavailable':safety.inventoryHeld?'INVENTORY SAFETY HOLD':unsafe?`${safety.status.toUpperCase()} NOTICE`:'No active recalls recorded'}
           </div>
@@ -109,7 +109,7 @@ export default function PublicProductPage() {
             </div>
           </section>
         </div>
-        <footer className="py-8 text-center text-xs text-stone-400"><p>Live product record · Recall records checked {safety?new Date(safety.checkedAt).toLocaleTimeString():'unavailable'}</p><p className="mt-1">CocoaTrace shows recorded evidence; it does not replace regulator or manufacturer recall instructions.</p></footer>
+        <footer className="py-8 text-center text-xs text-stone-400"><p>Live product record · Recall records checked {safety?new Date(safety.checkedAt).toLocaleTimeString():'unavailable'}</p><p className="mt-1">BetterTrade shows recorded evidence; it does not replace regulator or manufacturer recall instructions.</p></footer>
       </div>
     </main>
   );

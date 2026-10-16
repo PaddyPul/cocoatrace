@@ -20,7 +20,7 @@ export default function RequestAccessPage() {
     finally { setBusy(false); }
   };
 
-  return <AuthPageShell eyebrow="Controlled pilot access" title="Request an organization workspace" description="CocoaTrace reviews each buyer and supplier organization before creating its first administrator. Submitting this form does not create an account or mark your organization as verified.">
+  return <AuthPageShell eyebrow="Controlled pilot access" title="Request an organization workspace" description="BetterTrade reviews each buyer and supplier organization before creating its first administrator. Submitting this form does not create an account or mark your organization as verified.">
     {submitted ? <div className="rounded-2xl border border-brand-300/20 bg-brand-300/5 p-5">
       <CheckCircle2 size={30} className="text-brand-300" />
       <h2 className="mt-4 text-lg font-bold">Verify your email address</h2>

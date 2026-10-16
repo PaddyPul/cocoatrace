@@ -82,7 +82,7 @@ export default function LoginPage() {
       <section className="relative hidden min-h-screen overflow-hidden border-r border-white/10 p-12 lg:flex lg:flex-col">
         <div className="absolute -left-24 top-1/4 h-80 w-80 rounded-full bg-brand-500/15 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-amber-300/10 blur-3xl" />
-        <div className="relative flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-brand-500 shadow-xl shadow-brand-900/40"><Leaf size={22} /></span><div><div className="text-lg font-bold">CocoaTrace</div><div className="text-[10px] uppercase tracking-[.2em] text-emerald-200/50">Verified sourcing network</div></div></div>
+        <div className="relative flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-brand-500 shadow-xl shadow-brand-900/40"><Leaf size={22} /></span><div><div className="text-lg font-bold">BetterTrade</div><div className="text-[10px] uppercase tracking-[.2em] text-emerald-200/50">Evidence-aware sourcing network</div></div></div>
 
         <div className="relative my-auto max-w-2xl py-14">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-[11px] font-semibold text-emerald-200"><span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />Ghana → Netherlands corridor</div>
@@ -96,7 +96,7 @@ export default function LoginPage() {
 
       <section className="flex min-h-screen items-center justify-center p-5 sm:p-10">
         <div className="w-full max-w-md">
-          <div className="mb-9 flex items-center gap-3 lg:hidden"><span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-500"><Leaf size={20} /></span><div><div className="font-bold">CocoaTrace</div><div className="text-[9px] uppercase tracking-[.18em] text-white/40">Verified sourcing network</div></div></div>
+          <div className="mb-9 flex items-center gap-3 lg:hidden"><span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-500"><Leaf size={20} /></span><div><div className="font-bold">BetterTrade</div><div className="text-[9px] uppercase tracking-[.18em] text-white/40">Evidence-aware sourcing network</div></div></div>
           <div className="mb-7"><div className="text-[10px] font-bold uppercase tracking-[.18em] text-brand-300">{webConfig.demoMode ? 'Explore the full product' : 'Secure workspace access'}</div><h2 className="mt-2 text-3xl font-bold tracking-tight">{webConfig.demoMode ? 'Choose your starting point' : 'Sign in'}</h2><p className="mt-2 text-sm text-white/45">{webConfig.demoMode ? 'Start as a new user, or sign in to an existing organization workspace.' : 'Use the account provided by your organization.'}</p></div>
 
           {error && <div className="mb-5 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-xs text-red-200">{error}</div>}

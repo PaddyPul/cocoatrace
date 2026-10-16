@@ -1,5 +1,13 @@
 # Changelog
 
+## BetterTrade customer identity and compatibility — 2026-10-16
+
+- Rename customer-facing web identity, metadata and current email templates to BetterTrade; qualify evidence/review and transformation wording.
+- Keep persistent infrastructure, authentication, preference, evidence/link and export identifiers unchanged through a versioned compatibility inventory and required release/CI guard.
+- Present trade agreements as unsigned platform records with recorded commercial terms and no signature/legal-effect guarantee.
+- Reconcile four founder-accepted workspace closures. Internal identifiers and domain/legal approval remain separate work.
+
+
 ## Pilot workspace closure — 2026-10-15
 
 - Reopen and update saved sourcing briefs through canonical links, preserving reviewed specifications and atomic attribution.

@@ -304,8 +304,8 @@ export async function sendPasswordResetEmail(
   return delivery.send({
     to: input.to,
     category: 'password_reset',
-    subject: 'Reset your CocoaTrace password',
-    text: `${greeting(input.recipientName)}\n\nUse this link to reset your CocoaTrace password:\n${url}\n\nIf you did not request this, you can ignore this email.`,
+    subject: 'Reset your BetterTrade password',
+    text: `${greeting(input.recipientName)}\n\nUse this link to reset your BetterTrade password:\n${url}\n\nIf you did not request this, you can ignore this email.`,
   });
 }
 
@@ -318,8 +318,8 @@ export async function sendInvitationEmail(
   return delivery.send({
     to: input.to,
     category: 'invitation',
-    subject: 'Your CocoaTrace invitation',
-    text: `${greeting(input.recipientName)}\n\nYou have been invited${organization} on CocoaTrace. Accept the invitation here:\n${url}\n\nIf you were not expecting this invitation, you can ignore this email.`,
+    subject: 'Your BetterTrade invitation',
+    text: `${greeting(input.recipientName)}\n\nYou have been invited${organization} on BetterTrade. Accept the invitation here:\n${url}\n\nIf you were not expecting this invitation, you can ignore this email.`,
   });
 }
 
@@ -332,7 +332,7 @@ export async function sendVerificationEmail(
   return delivery.send({
     to: input.to,
     category: 'email_verification',
-    subject: 'Verify your CocoaTrace email',
+    subject: 'Verify your BetterTrade email',
     text: `${greeting(input.recipientName)}\n\nVerify your email address${organization} by opening this link:\n${url}\n\nIf you did not start this request, you can ignore this email.`,
   });
 }

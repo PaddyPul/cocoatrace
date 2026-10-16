@@ -125,3 +125,11 @@ test('initial JavaScript budget runs after production web build and before infra
   assert.ok(build >= 0 && budget > build && budget < infra);
   assert.deepEqual(releaseChecks[budget][1], ['run', 'check:web-budget']);
 });
+
+test('customer branding and compatibility anchors gate API and infrastructure acceptance', () => {
+  const branding = releaseChecks.findIndex((check) => check[0] === 'Branding and compatibility');
+  const api = releaseChecks.findIndex((check) => check[0] === 'API unit tests');
+  const recovery = releaseChecks.findIndex((check) => check[0] === 'Backup and restore rehearsal');
+  assert.ok(branding >= 0 && branding < api && branding < recovery);
+  assert.deepEqual(releaseChecks[branding][1], ['run', 'check:branding']);
+});
