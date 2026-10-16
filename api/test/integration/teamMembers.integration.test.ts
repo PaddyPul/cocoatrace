@@ -11,9 +11,10 @@ async function account(role = 'buyer_admin', organizationId?: string) {
   const id =
     organizationId ||
     (
-      await query("INSERT INTO organizations(name,type) VALUES($1,'importer') RETURNING id", [
-        `Team ${crypto.randomUUID()}`,
-      ])
+      await query(
+        "INSERT INTO organizations(name,type,verification_status) VALUES($1,'importer','verified') RETURNING id",
+        [`Team ${crypto.randomUUID()}`],
+      )
     ).rows[0].id;
   const user = (
     await query(
