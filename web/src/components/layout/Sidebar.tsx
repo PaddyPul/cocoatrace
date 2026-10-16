@@ -63,7 +63,7 @@ export default function Sidebar({ currentPage, onNavigate, className = '' }: { c
 
   return <aside className={`${className} flex flex-col overflow-y-auto bg-[#0c1913] text-white`}>
     <div className="flex h-20 shrink-0 items-center gap-3 border-b border-white/10 px-5">
-      <button className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => go({ page: 'home' })}><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-lg shadow-brand-900/40"><Leaf size={20} /></span><span className="min-w-0"><span className="block text-[15px] font-bold tracking-tight">CocoaTrace</span><span className="block truncate text-[10px] font-medium uppercase tracking-[0.16em] text-emerald-200/50">{t('shell.verified')}</span></span></button>
+      <button className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => go({ page: 'home' })}><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-lg shadow-brand-900/40"><Leaf size={20} /></span><span className="min-w-0"><span className="block text-[15px] font-bold tracking-tight">BetterTrade</span><span className="block truncate text-[10px] font-medium uppercase tracking-[0.16em] text-emerald-200/50">{t('shell.verified')}</span></span></button>
       <button className="rounded-lg p-2 text-white/50 hover:bg-white/10 hover:text-white lg:hidden" onClick={onNavigate} title={t('shell.close')}><X size={18} /></button>
     </div>
     <nav className="flex-1 space-y-5 px-3 py-5">

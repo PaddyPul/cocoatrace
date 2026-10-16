@@ -8,7 +8,7 @@
       "status": "partial",
       "title": "Current release passes every gate on the candidate commit",
       "backlog": ["QLT-001", "SEC-014", "LNG-001"],
-      "evidence": "Founder reports exact-commit release checks and merge completion through 2026-10-15, including architecture and request/deployment guardrails batches. This is local founder-report acceptance; the latest exact founder candidate report/CI URL and hosted staging archive have not been independently retrieved. The current workspace-productivity candidate requires its own full release and required CI. Keep this gate partial until independently reviewable candidate evidence is attached."
+      "evidence": "Founder reports release checks and merge completion through 2026-10-16, including the corrected workspace productivity batch. This is local founder-report acceptance; the latest exact founder candidate report/CI URL and hosted staging archive have not been independently retrieved. The current BetterTrade identity/compatibility candidate requires its own full release and required CI. Keep this gate partial until independently reviewable candidate evidence is attached."
     },
     {
       "id": "CORE-isolation",

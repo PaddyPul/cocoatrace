@@ -400,7 +400,7 @@ export default function FarmsPage() {
               <div className="text-3xl mb-3">✓</div>
               <div className="text-lg font-semibold text-brand-400 mb-1">Source ready</div>
               <p className="text-xs text-text-muted mb-5">
-                Record the harvested quantity next. CocoaTrace will create the inventory holding
+                Record the harvested quantity next. BetterTrade will create the inventory holding
                 automatically.
               </p>
               <div className="flex gap-2 justify-center">

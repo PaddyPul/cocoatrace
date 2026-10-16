@@ -177,7 +177,7 @@ export async function processPaymentReminderEmails(sender?: EmailSender, limit =
             await delivery.send({
               to: current.email,
               category: 'payment_reminder',
-              subject: 'CocoaTrace: overdue trade payment',
+              subject: 'BetterTrade: overdue trade payment',
               text: `A payment of ${current.amount_due} ${current.currency.trim()} was due on ${new Date(current.due_at).toISOString()}.\n\nSign in to review the agreed payment terms and next action:\n${link}\n\nIf you have already sent funds, record the payment in the deal room. A submitted payment awaits supplier receipt verification.`,
             })
           ).status;

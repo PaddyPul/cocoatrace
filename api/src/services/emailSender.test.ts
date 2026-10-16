@@ -33,6 +33,9 @@ describe('identity email templates', () => {
     await sendVerificationEmail({ to: 'owner@example.com', verificationUrl: 'http://localhost:3000/verify?token=verify-secret', organizationName: 'Buyer Ltd' }, sender);
 
     expect(sender.messages.map(({ category }) => category)).toEqual(['password_reset', 'invitation', 'email_verification']);
+    expect(sender.messages.map(message => message.subject)).toEqual(['Reset your BetterTrade password', 'Your BetterTrade invitation', 'Verify your BetterTrade email']);
+    expect(sender.messages.map(message => message.to)).toEqual(['buyer@example.com', 'supplier@example.com', 'owner@example.com']);
+    expect(sender.messages.every(message => !message.text.includes('CocoaTrace'))).toBe(true);
     expect(sender.messages[0].text).toContain('reset-secret');
     expect(sender.messages[1].text).toContain('Supplier Ltd');
     expect(sender.messages[2].text).toContain('verify-secret');

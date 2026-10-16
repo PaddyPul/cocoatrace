@@ -225,3 +225,9 @@ e2e/environmentNotice.spec.ts text eol=lf
 e2e/tradeActionFilters.spec.ts text eol=lf
 e2e/dealActivity.spec.ts text eol=lf
 e2e/sourcingEdit.spec.ts text eol=lf
+
+scripts/check-branding.mjs text eol=lf
+scripts/check-branding.test.mjs text eol=lf
+docs/branding/compatibility-v1.json text eol=lf
+e2e/brandIdentity.spec.ts text eol=lf
+e2e/agreementPresentation.spec.ts text eol=lf

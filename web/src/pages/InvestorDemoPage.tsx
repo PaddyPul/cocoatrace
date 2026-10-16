@@ -53,7 +53,7 @@ export default function InvestorDemoPage() {
             <Sparkles size={13} /> Investor demo · Ghana to Netherlands
           </div>
           <h2 className="max-w-2xl text-3xl font-bold leading-tight tracking-[-.035em] text-white sm:text-5xl">One scan tells the product story. One trace contains the risk.</h2>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-emerald-50/65 sm:text-base">CocoaTrace gives every physical lot a live identity—from farm evidence to finished-product safety—then calculates exactly where affected material went.</p>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-emerald-50/65 sm:text-base">BetterTrade links recorded lots from source evidence to product records, then calculates affected material paths from recorded movements and transformations.</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-emerald-400 px-5 text-sm font-bold text-emerald-950 transition hover:bg-emerald-300" href={CLEAR_PROFILE} target="_blank" rel="noreferrer"><QrCode size={17} /> Open a product profile <ExternalLink size={14} /></a>
             <button className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/[.06] px-5 text-sm font-semibold text-white transition hover:bg-white/10" onClick={() => document.getElementById('recall-demo')?.scrollIntoView({ behavior: 'smooth' })}><Play size={16} /> Run recall simulation</button>
@@ -82,7 +82,7 @@ export default function InvestorDemoPage() {
         </div>
 
         <div id="recall-demo" className="scroll-mt-6 rounded-3xl border border-amber-300/20 bg-[linear-gradient(145deg,rgba(120,76,20,.18),rgba(24,37,30,1)_52%)] p-5 sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-amber-300">Isolated incident calculation</div><h3 className="mt-1 text-lg font-bold">What if 500 kg is suspect?</h3><p className="mt-2 max-w-xl text-xs leading-5 text-text-secondary">Start with the separately seeded source lot GH-2026-0917. CocoaTrace follows material distributed before the 20 September incident; the lot never appears in the live marketplace.</p></div><span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-[10px] font-semibold text-amber-200">Safe simulation</span></div>
+          <div className="flex flex-wrap items-start justify-between gap-4"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-amber-300">Isolated incident calculation</div><h3 className="mt-1 text-lg font-bold">What if 500 kg is suspect?</h3><p className="mt-2 max-w-xl text-xs leading-5 text-text-secondary">Start with the separately seeded source lot GH-2026-0917. BetterTrade follows material distributed before the 20 September incident; the lot never appears in the live marketplace.</p></div><span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-[10px] font-semibold text-amber-200">Safe simulation</span></div>
 
           {!impact ? (
             <div className="mt-6 rounded-2xl border border-dashed border-amber-200/20 bg-black/10 p-5 text-center">
@@ -99,7 +99,7 @@ export default function InvestorDemoPage() {
                 <Metric label="Recipients" value={impact.totals.recipientCount.toString()} />
               </div>
               <div className="mt-4 rounded-2xl border border-amber-300/15 bg-black/10 p-4">
-                <div className="flex items-start gap-3"><AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-300" /><div><div className="text-sm font-semibold text-white">Precise contamination mass, conservative recall scope</div><p className="mt-1 text-xs leading-5 text-text-secondary">CocoaTrace keeps the suspect-equivalent quantity precise, but recalls each commingled finished lot in full. That distinction prevents both false precision and double-counting.</p></div></div>
+                <div className="flex items-start gap-3"><AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-300" /><div><div className="text-sm font-semibold text-white">Precise contamination mass, conservative recall scope</div><p className="mt-1 text-xs leading-5 text-text-secondary">BetterTrade keeps the suspect-equivalent quantity precise, but recalls each commingled finished lot in full. That distinction prevents both false precision and double-counting.</p></div></div>
               </div>
               <div className="mt-4 flex flex-wrap gap-2"><span className={`badge ${impact.exactness === 'declared' ? 'badge-green' : 'badge-amber'}`}>{impact.exactness} allocations</span><span className="badge badge-gray">{impact.impactedDistributions.length} distributions found</span></div>
               <button className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-brand-300 hover:text-brand-200" onClick={() => navigate('/recalls')}>Open the full investigation workspace <ArrowRight size={14} /></button>

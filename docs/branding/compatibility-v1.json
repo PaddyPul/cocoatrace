@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "customerBrand": "BetterTrade",
+  "reviewedAt": "2026-10-16",
+  "strategy": "Customer presentation rename only; internal identifier migration remains BRD-003. Do not replace existing databases, volumes, sessions, accounts, object keys, URLs or GitHub remote.",
+  "anchors": [
+    {
+      "id": "primary-database",
+      "path": "docker-compose.yml",
+      "includes": ["POSTGRES_DB: cocoatrace", "cocoatrace_pgdata:/var/lib/postgresql/data"],
+      "reason": "Keep existing local database and persistent volume; no empty replacement installation."
+    },
+    {
+      "id": "evidence-volume",
+      "path": "docker-compose.yml",
+      "includes": ["cocoatrace_evidence:/app/private-evidence", "cocoatrace_clamav_signatures:"],
+      "reason": "Keep stored evidence and scanner signatures."
+    },
+    {
+      "id": "preview-database",
+      "path": "docker-compose.demo-preview.yml",
+      "includes": ["POSTGRES_DB: cocoatrace_demo_preview"],
+      "reason": "Keep the separate synthetic preview database."
+    },
+    {
+      "id": "preview-project",
+      "path": "scripts/demo-preview.mjs",
+      "includes": [
+        "'cocoatrace-demo-preview'",
+        "newbuyer@cocoatrace.io",
+        "newsupplier@cocoatrace.io"
+      ],
+      "reason": "Preserve project identity and existing synthetic fixture accounts; never rename users implicitly."
+    },
+    {
+      "id": "session-token-contract",
+      "path": "api/src/services/authSessionService.ts",
+      "includes": ["issuer: 'cocoatrace-api'", "audience: 'cocoatrace'"],
+      "reason": "Existing bearer and cookie sessions retain their issuer/audience."
+    },
+    {
+      "id": "session-cookie-writer",
+      "path": "api/src/controllers/authController.ts",
+      "includes": ["res.cookie('ct_session'", "res.clearCookie('ct_session'"],
+      "reason": "Cookie creation and removal keep the established host-only session name."
+    },
+    {
+      "id": "session-cookie-reader",
+      "path": "api/src/middleware/credentials.ts",
+      "includes": ["'ct_session='"],
+      "reason": "Existing browser sessions remain readable."
+    },
+    {
+      "id": "browser-identity",
+      "path": "web/src/api/http.ts",
+      "includes": ["'ct_token'", "'ct_user'", "export const API_BASE = '/api'"],
+      "reason": "Keep prior browser identity cleanup and same-origin API prefix."
+    },
+    {
+      "id": "locale-preference",
+      "path": "web/src/i18n/locale.ts",
+      "includes": ["ct_language_v1:"],
+      "reason": "Existing per-account language preferences survive."
+    },
+    {
+      "id": "workspace-preferences",
+      "path": "web/src/pages/ExperienceHomePage.tsx",
+      "includes": ["ct_experience_mode:", "ct_guided_fresh_start"],
+      "reason": "Keep workspace role/mode selection and existing setup preference."
+    },
+    {
+      "id": "shortlist-preference",
+      "path": "web/src/pages/MarketplacePage.tsx",
+      "includes": ["ct_shortlisted_listings:"],
+      "reason": "Preserve per-account shortlists."
+    },
+    {
+      "id": "sourcing-preference",
+      "path": "web/src/pages/SourcingBriefPage.tsx",
+      "includes": ["'ct_active_sourcing_request'"],
+      "reason": "Keep existing active request hints; server ownership and explicit URL remain authoritative."
+    },
+    {
+      "id": "private-object-keys",
+      "path": "api/src/services/evidenceUploadService.ts",
+      "includes": ["evidence/${config.environment}/${crypto.randomUUID()}"],
+      "reason": "No object-key rewrite or evidence pointer migration."
+    },
+    {
+      "id": "private-local-root",
+      "path": "api/src/config/env.ts",
+      "includes": ["default('api/private-evidence')"],
+      "reason": "Retain the existing local storage root and deployed configuration variable names."
+    },
+    {
+      "id": "public-and-private-routes",
+      "path": "web/src/App.tsx",
+      "includes": ["/contracts/:id", "/p/:slug", "/accept-invite/:token", "/reset-password/:token"],
+      "reason": "Existing links and invitation/reset paths stay valid."
+    },
+    {
+      "id": "contract-export-filename",
+      "path": "web/src/pages/ContractDetailPage.tsx",
+      "includes": ["contract-${c.id.slice(0, 8)}.json"],
+      "reason": "Customer download workflows retain existing filename compatibility."
+    },
+    {
+      "id": "deal-export-filename",
+      "path": "web/src/pages/DealRoomPage.tsx",
+      "includes": ["cocoatrace-deal-"],
+      "reason": "Keep existing exported deal-log filename prefix."
+    },
+    {
+      "id": "fee-export-filename",
+      "path": "web/src/pages/PlatformFeesPage.tsx",
+      "includes": ["cocoatrace-fee-reconciliation.json"],
+      "reason": "Keep existing finance export filename."
+    },
+    {
+      "id": "workspace-package",
+      "path": "package.json",
+      "includes": ["\"name\": \"cocoatrace\""],
+      "reason": "Keep root npm package/workspace command identity."
+    },
+    {
+      "id": "container-image-identities",
+      "path": "scripts/check-container-security.mjs",
+      "includes": ["cocoatrace-api:security", "cocoatrace-web:security", "cocoatrace-trivy-cache:"],
+      "reason": "Keep image tags/cache identity; rebuild same deployment artifacts rather than rename storage."
+    },
+    {
+      "id": "recovery-project",
+      "path": "scripts/run-recovery-tests.mjs",
+      "includes": [
+        "cocoatrace-recovery-tests",
+        "cocoatrace_recovery_source",
+        "cocoatrace_recovery_restored"
+      ],
+      "reason": "Existing backup/restore rehearsal remains required by full release."
+    },
+    {
+      "id": "migration-verification",
+      "path": "scripts/run-release-checks.mjs",
+      "includes": ["'Migration integrity'", "'Backup and restore rehearsal'"],
+      "reason": "Frozen migration verification and real restore rehearsal remain mandatory release gates."
+    },
+    {
+      "id": "passkey-rp",
+      "path": "api/src/modules/mfa/service.ts",
+      "includes": ["new URL(config.webUrl).origin", "new URL(origin).hostname"],
+      "reason": "RP ID stays derived from the configured hostname; no domain/credential migration."
+    }
+  ],
+  "runtimeEvidence": [
+    "scripts/run-recovery-tests.mjs",
+    "api/test/integration/authBoundary.integration.test.ts",
+    "api/test/integration/mfa.integration.test.ts",
+    "e2e/identity.spec.ts",
+    "e2e/brandIdentity.spec.ts",
+    "e2e/agreementPresentation.spec.ts"
+  ],
+  "externalIdentity": {
+    "githubRemote": "https://github.com/PaddyPul/cocoatrace",
+    "domainChange": "none",
+    "emailSenderChange": "none; existing configured EMAIL_FROM and SMTP identities retained",
+    "historicalRecords": "no rewrite of audits, evidence, captured emails or issued files",
+    "legalAvailability": "not established; BRD-004 remains open"
+  }
+}

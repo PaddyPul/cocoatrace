@@ -12,10 +12,10 @@ for (const role of ['buyer', 'supplier'] as const) {
     await expect(page.getByLabel('Langue', { exact: true })).toHaveValue('fr');
     await expect(page.locator('nav').getByRole('button', { name: 'Propositions', exact: true })).toBeVisible();
     await page.getByRole('button', { name: /Rechercher/ }).click();
-    await page.getByPlaceholder('Rechercher une rubrique ou un parcours…').fill('Contrats');
-    await page.getByRole('button', { name: /Contrats Accords entre acheteurs/ }).click();
+    await page.getByPlaceholder('Rechercher une rubrique ou un parcours…').fill('Accords commerciaux');
+    await page.getByRole('button', { name: /Accords commerciaux Accords entre acheteurs/ }).click();
     await expect(page).toHaveURL(/\/contracts$/);
-    await expect(page.getByRole('heading', { name: 'Contrats de vente', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Accords commerciaux', exact: true })).toBeVisible();
     await page.getByTitle('Se déconnecter', { exact: true }).click();
     await expect(page).toHaveURL(/\/login$/);
     const second = await createWorkspace(page, browser, role);

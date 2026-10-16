@@ -27,6 +27,7 @@ jobs:
       - run: npm run test:backlog
       - run: npm run check:risks
       - run: npm run check:authorization
+      - run: npm run check:branding
       - run: npm run test:locale
       - run: npm run test:web-boundaries
       - run: node --test scripts/check-dependencies.test.mjs scripts/build-metadata.test.mjs
