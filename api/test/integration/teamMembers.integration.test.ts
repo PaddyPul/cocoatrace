@@ -1,12 +1,33 @@
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import request from 'supertest';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import app from '../../src/app';
 import { pool, query } from '../../src/db';
 import { createSession } from '../../src/services/authSessionService';
 import { authenticator } from '../../src/testing/webauthnFixture';
+import { definitions } from '../../src/modules/teamMembers/policy';
 const password = 'TeamPassword123!';
+// globalSetup deliberately truncates every application table after migration,
+// including roles. Seed only this suite's finite customer role fixtures.
+const previousRoles = new Map<string, string[]>();
+beforeAll(async () => {
+  for (const [name, permissions] of Object.entries(definitions('importer'))) {
+    const existing = (await query('SELECT permissions FROM roles WHERE name=$1', [name])).rows[0];
+    if (existing) previousRoles.set(name, existing.permissions);
+    await query(
+      'INSERT INTO roles(name,permissions) VALUES($1,$2) ON CONFLICT(name) DO UPDATE SET permissions=EXCLUDED.permissions',
+      [name, permissions],
+    );
+    const role = (await query('SELECT permissions FROM roles WHERE name=$1', [name])).rows[0];
+    expect([...role.permissions].sort(), `Unexpected fixture role definition: ${name}`).toEqual(
+      [...permissions].sort(),
+    );
+  }
+});
+const diagnostic = (response: { status: number; body: { code?: string; error?: string } }) =>
+  `HTTP ${response.status}; code=${response.body.code || 'none'}; error=${response.body.error || 'none'}`;
+
 async function account(role = 'buyer_admin', organizationId?: string) {
   const id =
     organizationId ||
@@ -22,10 +43,11 @@ async function account(role = 'buyer_admin', organizationId?: string) {
       [id, 'Team member', `${crypto.randomUUID()}@team.test`, await bcrypt.hash(password, 4)],
     )
   ).rows[0];
-  await query('INSERT INTO user_roles(user_id,role_id) SELECT $1,id FROM roles WHERE name=$2', [
-    user.id,
-    role,
-  ]);
+  const assigned = await query(
+    'INSERT INTO user_roles(user_id,role_id) SELECT $1,id FROM roles WHERE name=$2 RETURNING role_id',
+    [user.id, role],
+  );
+  expect(assigned.rowCount, `Fixture role missing: ${role}`).toBe(1);
   const token = (await createSession(user.id)).token;
   if (role.endsWith('_admin')) {
     const authorization = { Authorization: `Bearer ${token}` };
@@ -33,18 +55,24 @@ async function account(role = 'buyer_admin', organizationId?: string) {
       .post('/auth/mfa/registration/options')
       .set(authorization)
       .send({ currentPassword: password });
-    expect(options.status).toBe(200);
+    expect(options.status, diagnostic(options)).toBe(200);
     const key = authenticator();
     const verified = await request(app)
       .post('/auth/mfa/registration/verify')
       .set(authorization)
       .send({ response: key.registration(options.body.challenge), label: 'Team management test' });
-    expect(verified.status).toBe(200);
+    expect(verified.status, diagnostic(verified)).toBe(200);
   }
   return { id: user.id, organizationId: id, token };
 }
 afterAll(async () => {
-  await pool.end();
+  try {
+    for (const [name, permissions] of previousRoles) {
+      await query('UPDATE roles SET permissions=$1 WHERE name=$2', [permissions, name]);
+    }
+  } finally {
+    await pool.end();
+  }
 });
 const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
 const body = { reason: 'Reviewed team membership decision', currentPassword: password };
@@ -54,7 +82,7 @@ describe('tenant team management', () => {
       target = await account('buyer_member', actor.organizationId),
       foreign = await account();
     const page = await request(app).get('/team/members/page?limit=1').set(auth(actor.token));
-    expect(page.status).toBe(200);
+    expect(page.status, diagnostic(page)).toBe(200);
     expect(page.body.rows).toHaveLength(1);
     expect(page.body.next).toBeTruthy();
     const roles = await request(app).get('/team/roles').set(auth(actor.token));
@@ -96,7 +124,7 @@ describe('tenant team management', () => {
       .patch(`/team/members/${target.id}/role`)
       .set(auth(actor.token))
       .send({ ...body, role: 'buyer_viewer' });
-    expect(result.status).toBe(200);
+    expect(result.status, diagnostic(result)).toBe(200);
     expect(result.body.revokedSessions).toBe(1);
     expect((await request(app).get('/me').set(auth(target.token))).status).toBe(401);
     expect(
@@ -119,6 +147,19 @@ describe('tenant team management', () => {
           .send({ ...body, role: 'admin' })
       ).body.code,
     ).toBe('ROLE_NOT_ASSIGNABLE');
+    const original = (await query("SELECT permissions FROM roles WHERE name='buyer_viewer'"))
+      .rows[0].permissions;
+    try {
+      await query("UPDATE roles SET permissions=ARRAY['*']::text[] WHERE name='buyer_viewer'");
+      const poisoned = await request(app)
+        .patch(`/team/members/${target.id}/role`)
+        .set(auth(actor.token))
+        .send({ ...body, role: 'buyer_viewer' });
+      expect(poisoned.status, diagnostic(poisoned)).toBe(403);
+      expect(poisoned.body.code).toBe('ROLE_NOT_ASSIGNABLE');
+    } finally {
+      await query("UPDATE roles SET permissions=$1 WHERE name='buyer_viewer'", [original]);
+    }
     expect(
       (
         await request(app)
@@ -176,7 +217,10 @@ describe('team audit transaction boundary', () => {
           .send({ ...body, role: 'buyer_viewer' }),
       ),
     );
-    expect(responses.map((r) => r.status)).toEqual([200, 200]);
+    expect(
+      responses.map((r) => r.status),
+      responses.map(diagnostic).join('; '),
+    ).toEqual([200, 200]);
     expect(responses.filter((r) => r.body.changed)).toHaveLength(1);
     expect(
       (
