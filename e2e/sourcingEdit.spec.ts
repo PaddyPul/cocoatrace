@@ -76,9 +76,15 @@ test('saved sourcing deep link reviews and updates the same brief while preservi
   ).toBeVisible();
   await expect(page.getByLabel('Quantity (kg)', { exact: true })).toHaveValue('10.000');
   await page.getByLabel('Quantity (kg)', { exact: true }).fill('43');
-  await page.getByLabel('Quality requirements', { exact: true }).fill('Reviewed note');
+  const quality = page.getByRole('textbox', { name: 'Quality requirements', exact: true });
+  await expect(quality).toHaveValue('Original note');
+  await page.getByText('Quality requirements', { exact: true }).click();
+  await expect(quality).toBeFocused();
+  await quality.fill('Reviewed note');
   await page.getByRole('button', { name: 'Save reviewed changes', exact: true }).click();
-  await expect(page).toHaveURL(new RegExp(`/marketplace\\?request=${id}`));
+  await expect(page).toHaveURL(
+    (url) => url.pathname === '/marketplace' && url.searchParams.get('request') === id,
+  );
   expect(edits).toHaveLength(1);
   expect(edits[0]).toMatchObject({
     quantityKg: 43,

@@ -17,6 +17,7 @@ Buyers can reopen a saved sourcing brief, review and save changes to the same re
 
 ## Change summary
 
+- Make the sourcing quality textarea label association explicit, test label focus with saved text, and verify matching navigation by URL pathname/query rather than an escaped regex.
 - Add canonical saved-brief edit links, exact own-record loading and validated owner/mutable-state PATCH with atomic audit; preserve unrepresented quality/assurance keys and support clearing dates.
 - Filter the full loaded next-action set by all/action-required/overdue payment, retaining choice through refresh. Overdue comes from durable installment deadlines and the server clock.
 - Add no-store contract activity pages with current-party checks, scope-bound precise cursors, a fixed action allowlist and safe buyer/seller/platform attribution. Exclude raw metadata, individual IDs, hashes and administrative events.
@@ -48,6 +49,7 @@ Buyers can reopen a saved sourcing brief, review and save changes to the same re
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
+- Correction evidence: frontend/browser type checks, production build, initial JS budget and quality checks rerun for the label/URL fix; real browser runtime still requires founder/CI.
 - Evidence/results: author 1,142 API cases, nine frontend transport/environment tests, locale tests, types/builds, initial JS budget, quality and authorization/backlog/risk checks passed. Native productivity suite strictly compiles; runtime native/browser and exact-commit full release remain required on founder/CI. Enter passing SHA/date and check runtime boxes after verification. No extra manual persona loop is required.
 
 ## Product and operations
