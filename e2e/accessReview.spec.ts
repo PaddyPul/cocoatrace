@@ -54,7 +54,9 @@ test('privileged review preserves evidence uncertainty and binds confirmation to
     await route.fulfill({ json: body });
   });
   await page.goto('/access-review');
-  await expect(page.getByRole('heading', { name: 'Privileged access review' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Privileged access review', exact: true, level: 2 }),
+  ).toBeVisible();
   await expect(page.getByText('No retained evidence', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Record review receipt' })).toBeDisabled();
   await page
