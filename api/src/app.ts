@@ -40,6 +40,8 @@ import teamMembersRoutes from './modules/teamMembers/routes';
 import accessReviewRoutes from './modules/accessReview/routes';
 import listingLifecycleRoutes from './modules/listingLifecycle/routes';
 import supportRoutes from './modules/support/routes';
+import agreementRoutes from './modules/agreements/routes';
+import notificationRoutes from './modules/notifications/routes';
 import organizationAccessRoutes from './modules/organizationAccess';
 
 const app = express();
@@ -129,6 +131,8 @@ app.use(teamMembersRoutes);
 app.use(accessReviewRoutes);
 app.use(listingLifecycleRoutes);
 app.use(supportRoutes);
+app.use(agreementRoutes);
+app.use(notificationRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });

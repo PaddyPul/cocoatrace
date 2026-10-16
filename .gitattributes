@@ -266,3 +266,15 @@ scripts/support-context.test.mjs text eol=lf
 e2e/savedFilters.spec.ts text eol=lf
 e2e/supportRequests.spec.ts text eol=lf
 api/src/migrations/043_support_requests.ts text eol=lf
+
+api/src/modules/agreements/**/*.ts text eol=lf
+api/src/modules/notifications/**/*.ts text eol=lf
+api/src/migrations/044_agreement_acceptance.ts text eol=lf
+api/src/migrations/045_notification_reads.ts text eol=lf
+api/test/integration/agreementAcceptance.integration.test.ts text eol=lf
+api/test/integration/notificationCenter.integration.test.ts text eol=lf
+web/src/components/trading/AgreementAcceptance.tsx text eol=lf
+web/src/pages/NotificationsPage.tsx text eol=lf
+web/src/api/notifications.ts text eol=lf
+e2e/agreementAcceptance.spec.ts text eol=lf
+e2e/notifications.spec.ts text eol=lf

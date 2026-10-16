@@ -41,3 +41,39 @@ describe('permission-scoped shared action reads', () => {
     ).rejects.toThrow('Database unavailable');
   });
 });
+
+describe('bounded current notification sources', () => {
+  it('applies the sentinel limit before enrichment and rejects overflow', async () => {
+    mockedQuery.mockResolvedValue({ rows: [], command: 'SELECT', rowCount: 0, oid: 0, fields: [] });
+    await loadTradeActions(
+      { organizationId: 'org', permissions: ['contract.read', 'offer.create'] },
+      undefined,
+      query,
+      1000,
+    );
+    expect(mockedQuery.mock.calls).toHaveLength(2);
+    expect(mockedQuery.mock.calls.every(([sql]) => sql.includes('LIMIT 1001'))).toBe(true);
+    const contractSql = mockedQuery.mock.calls.find(([sql]) =>
+      sql.includes('FROM (SELECT * FROM sales_contracts'),
+    )?.[0];
+    expect(contractSql).toBeDefined();
+    expect(contractSql!.indexOf('LIMIT 1001')).toBeLessThan(
+      contractSql!.indexOf('LEFT JOIN LATERAL'),
+    );
+    mockedQuery.mockResolvedValue({
+      rows: Array.from({ length: 1001 }, () => ({})),
+      command: 'SELECT',
+      rowCount: 1001,
+      oid: 0,
+      fields: [],
+    });
+    await expect(
+      loadTradeActions(
+        { organizationId: 'org', permissions: ['offer.create'] },
+        undefined,
+        query,
+        1000,
+      ),
+    ).rejects.toMatchObject({ code: 'NOTICE_SCOPE_EXCEEDED' });
+  });
+});

@@ -8,7 +8,7 @@
       "status": "partial",
       "title": "Current release passes every gate on the candidate commit",
       "backlog": ["QLT-001", "SEC-014", "LNG-001"],
-      "evidence": "Founder reports corrected supply/demand lifecycle full release and merge accepted 2026-10-16. Workspace filters/support candidate requires its own full release and required CI. Hosted candidate evidence and CI archive remain unverified; gate stays partial."
+      "evidence": "Founder reports corrected workspace filters/support full release and merge accepted 2026-10-16. Agreement/notification candidate requires its own full release and required CI. Hosted candidate evidence and CI archive remain unverified; gate stays partial."
     },
     {
       "id": "CORE-isolation",

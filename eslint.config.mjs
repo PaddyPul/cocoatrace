@@ -33,6 +33,8 @@ export default tseslint.config(
   {
     files: [
       'api/src/modules/support/**/*.ts',
+      'api/src/modules/agreements/**/*.ts',
+      'api/src/modules/notifications/**/*.ts',
       'api/src/modules/listingLifecycle/**/*.ts',
       'api/src/modules/teamMembers/**/*.ts',
       'api/src/modules/accessReview/**/*.ts',

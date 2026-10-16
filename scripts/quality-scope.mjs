@@ -1,5 +1,14 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/modules/agreements/**/*.ts',
+  'api/src/modules/notifications/**/*.ts',
+  'api/test/integration/agreementAcceptance.integration.test.ts',
+  'api/test/integration/notificationCenter.integration.test.ts',
+  'web/src/components/trading/AgreementAcceptance.tsx',
+  'web/src/pages/NotificationsPage.tsx',
+  'web/src/api/notifications.ts',
+  'e2e/agreementAcceptance.spec.ts',
+  'e2e/notifications.spec.ts',
   'api/src/modules/support/**/*.ts',
   'api/test/integration/supportRequests.integration.test.ts',
   'web/src/api/support.ts',
