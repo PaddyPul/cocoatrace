@@ -278,3 +278,14 @@ web/src/pages/NotificationsPage.tsx text eol=lf
 web/src/api/notifications.ts text eol=lf
 e2e/agreementAcceptance.spec.ts text eol=lf
 e2e/notifications.spec.ts text eol=lf
+
+api/src/modules/transportTiming/**/*.ts text eol=lf
+api/src/modules/dispatchAcknowledgement/**/*.ts text eol=lf
+api/src/migrations/046_transport_timing.ts text eol=lf
+api/src/migrations/047_dispatch_acknowledgements.ts text eol=lf
+api/test/integration/transportTiming.integration.test.ts text eol=lf
+api/test/integration/dispatchAcknowledgement.integration.test.ts text eol=lf
+web/src/components/transport/TransportTiming.tsx text eol=lf
+web/src/components/transport/DispatchAcknowledgement.tsx text eol=lf
+e2e/transportTiming.spec.ts text eol=lf
+e2e/dispatchAcknowledgement.spec.ts text eol=lf

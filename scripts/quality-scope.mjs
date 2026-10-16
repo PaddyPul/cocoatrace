@@ -1,5 +1,13 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/modules/transportTiming/**/*.ts',
+  'api/src/modules/dispatchAcknowledgement/**/*.ts',
+  'api/test/integration/transportTiming.integration.test.ts',
+  'api/test/integration/dispatchAcknowledgement.integration.test.ts',
+  'web/src/components/transport/TransportTiming.tsx',
+  'web/src/components/transport/DispatchAcknowledgement.tsx',
+  'e2e/transportTiming.spec.ts',
+  'e2e/dispatchAcknowledgement.spec.ts',
   'api/src/modules/agreements/**/*.ts',
   'api/src/modules/notifications/**/*.ts',
   'api/test/integration/agreementAcceptance.integration.test.ts',

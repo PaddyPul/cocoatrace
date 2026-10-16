@@ -185,3 +185,7 @@ Founder accepts corrected supply/demand lifecycle: TRD-018/020 close;127/343 (37
 ## Agreement and notification wave — 2026-10-16
 
 Founder accepts corrected saved filters/support release and merge: PRD-013/015 complete, 129/343 (37.6%). TRD-015 and PRD-007 are in progress together; acceptance would yield131/343 (38.2%). Core11/28 and provider-inclusive11/40 unchanged. Payment terms remain separately confirmed; acknowledgements are not legal signatures. Current notices are not a historical event archive or outbound email delivery.
+
+## Transport awareness closure candidate — 2026-10-16
+
+Founder accepts corrected agreement/notification full release and merge: TRD-015 and PRD-007 complete,131/343 (38.2%). LOG-008/010 are in progress together: exception awareness acknowledgement and ETA/delay/overdue arrival notices. Two whole-item targets yield133/343 (38.8%) only after runtime release, review and merge. Incoterm authority, payment gates and legal risk transfer remain unchanged; core11/28 and provider-inclusive11/40 unchanged.

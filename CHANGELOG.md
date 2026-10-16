@@ -1,5 +1,12 @@
 # Changelog
 
+## Transport awareness — 2026-10-16
+
+- Record explicit buyer awareness of seller exceptional dispatch, without waiving payment obligations or changing fulfilment gates.
+- Review ETA revisions and delay reasons; surface overdue arrival notices through the private current feed.
+- Reconcile accepted agreement/notification wave; transport awareness remains pending full runtime release and merge.
+
+
 ## Agreement acknowledgement and current notices — 2026-10-16
 
 - Record explicit per-party acknowledgement of a hashed, versioned base commercial snapshot without implying a legal signature or changing fulfilment gates.
