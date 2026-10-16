@@ -25,7 +25,7 @@ export async function loadTradeActions(
       EXISTS(SELECT 1 FROM payment_installments WHERE payment_request_id=p.id AND status='awaiting_trigger' AND due_trigger='documents_presented') documents_pending,
       (SELECT status FROM payment_issues WHERE payment_request_id=p.id AND status<>'resolved' LIMIT 1) payment_issue_status,
       ${activeBatchRecallSql('h.batch_id')} recall_held,
-      i.id installment_id,i.status installment_status,i.installment_type,i.amount_due,
+      i.id installment_id,i.status installment_status,i.due_at installment_due_at,i.installment_type,i.amount_due,
       sh.id shipment_id,sh.transport_coordinator_organization_id,sh.current_milestone,
       (SELECT accepted_at FROM delivery_acceptances WHERE contract_id=c.id) AS delivery_accepted_at,
       (SELECT status FROM delivery_discrepancies WHERE contract_id=c.id AND status<>'resolved' LIMIT 1) AS delivery_discrepancy_status,

@@ -1,3 +1,6 @@
+import { inDatabaseTransaction } from '../services/databaseTransaction';
+import { recordAudit } from '../services/auditWriter';
+import { editSourcingRequest } from '../modules/sourcing/edit';
 import { Request, Response } from 'express';
 import { query } from '../db';
 import * as audit from '../services/audit';
@@ -41,15 +44,10 @@ export async function createRequest(req: Request, res: Response): Promise<void> 
 }
 
 export async function updateRequest(req: Request, res: Response): Promise<void> {
-  const { id } = req.params;
-  const { status, title, offerDeadline } = req.body;
-  const result = await query(
-    `UPDATE sourcing_requests SET
-       status=COALESCE($1,status), title=COALESCE($2,title),
-       offer_deadline=COALESCE($3,offer_deadline), updated_at=NOW()
-     WHERE id=$4 AND buyer_organization_id=$5 RETURNING *`,
-    [status || null, title || null, offerDeadline || null, id, req.user!.organizationId]
-  );
-  if (!result.rows[0]) { res.status(404).json({ error: 'Sourcing request not found' }); return; }
-  res.json(result.rows[0]);
+  const result = await inDatabaseTransaction(async client => {
+    const row = await editSourcingRequest(client.query.bind(client), req.user!, req.params.id, req.body);
+    await recordAudit(client, req.user!, 'sourcing_request.update', 'sourcing_request', req.params.id, { changedFields: Object.keys(req.body) });
+    return row;
+  });
+  res.json(result);
 }

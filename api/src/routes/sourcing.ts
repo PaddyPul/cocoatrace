@@ -1,3 +1,4 @@
+import { editSourcingSchema } from '../modules/sourcing/edit';
 import { Router } from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth';
 import validate from '../middleware/validate';
@@ -11,6 +12,6 @@ router.get('/sourcing-requests/summary', requireAuth, requirePermission('listing
 router.get('/sourcing-requests', requireAuth, requirePermission('listing.read'), controller.listRequests);
 router.post('/sourcing-requests/structure', requireAuth, requirePermission('offer.create'), validate(structureSourcingBriefSchema), controller.structureRequest);
 router.post('/sourcing-requests', requireAuth, requirePermission('offer.create'), validate(createSourcingRequestSchema), controller.createRequest);
-router.patch('/sourcing-requests/:id', requireAuth, requirePermission('offer.create'), controller.updateRequest);
+router.patch('/sourcing-requests/:id', requireAuth, requirePermission('offer.create'), validate(editSourcingSchema), controller.updateRequest);
 
 export = router;

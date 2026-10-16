@@ -24,6 +24,7 @@ export interface TradeAction {
   offerId?: string;
   installmentId?: string;
   operation?: TradeOperation;
+  paymentDueState?: 'due' | 'overdue';
 }
 
 export type TradeOperation =
@@ -69,6 +70,7 @@ export type DealFact = {
   security_status?: string;
   installment_id?: string;
   installment_status?: string;
+  installment_due_at?: Date | string | null;
   installment_type?: string;
   amount_due?: number;
   currency?: string;

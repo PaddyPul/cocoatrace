@@ -79,7 +79,7 @@
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
     "api/src/routes/contracts.ts": {
-      "scope": "Offers are buyer/seller scoped; contract mutations recheck contract party and specific buyer/seller action, payment gates, delivery/cancellation and atomic audit. Direct detail reads are buyer/seller scoped even for wildcard actors; foreign and absent records share 404, UUID validation follows entry guards, and linked detail data uses one bounded snapshot. Pending offers can be withdrawn only by the buyer; seller rejection requires a bounded reason recorded atomically in audit. Terminal decisions share inventory lock order.",
+      "scope": "Offers are buyer/seller scoped; contract mutations recheck contract party and specific buyer/seller action, payment gates, delivery/cancellation and atomic audit. Direct detail reads are buyer/seller scoped even for wildcard actors; foreign and absent records share 404, UUID validation follows entry guards, and linked detail data uses one bounded snapshot. Pending offers can be withdrawn only by the buyer; seller rejection requires a bounded reason recorded atomically in audit. Terminal decisions share inventory lock order. Customer activity uses a bounded allowlisted event projection for current contract parties only; no metadata, hashes or individual identities are exposed.",
       "evidence": [
         "api/src/controllers/contractController.ts",
         "api/test/integration/tradingIntegrity.integration.test.ts",
@@ -91,7 +91,10 @@
         "api/src/modules/trading/withdrawOffer.ts",
         "api/src/modules/trading/withdrawOffer.test.ts",
         "api/src/modules/trading/rejectOffer.test.ts",
-        "api/test/integration/offerWithdrawal.integration.test.ts"
+        "api/test/integration/offerWithdrawal.integration.test.ts",
+        "api/src/modules/dealActivity/history.ts",
+        "api/src/modules/dealActivity/history.test.ts",
+        "api/test/integration/workspaceProductivity.integration.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
@@ -229,10 +232,13 @@
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
     "api/src/routes/sourcing.ts": {
-      "scope": "Buyer-owned private briefs; open request projections for qualified supply participants. Structure/update/create must not accept foreign organization ownership.",
+      "scope": "Buyer-owned private briefs; open request projections for qualified supply participants. Structure/update/create must not accept foreign organization ownership. Reviewed edits target only the owner organization and draft/open rows and write their audit in the same transaction.",
       "evidence": [
         "api/src/controllers/sourcingController.ts",
-        "api/test/integration/sourcingPages.integration.test.ts"
+        "api/test/integration/sourcingPages.integration.test.ts",
+        "api/src/modules/sourcing/edit.ts",
+        "api/src/modules/sourcing/edit.test.ts",
+        "api/test/integration/workspaceProductivity.integration.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
@@ -673,6 +679,25 @@
       ],
       "entryControls": [],
       "handler": "contractController.getContract",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/contracts/:id/activity/page",
+      "source": "api/src/routes/contracts.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "contract.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "listDealActivity",
       "authentication": "session"
     },
     {

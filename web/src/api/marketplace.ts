@@ -110,8 +110,23 @@ export const sourcing = {
     visibility?: 'matched' | 'invited' | 'private';
     status?: 'draft' | 'open';
   }) => api<import('../types').SourcingRequest>('POST', '/sourcing-requests', data),
-  update: (id: string, data: { status?: string; title?: string; offerDeadline?: string }) =>
-    api<import('../types').SourcingRequest>('PATCH', `/sourcing-requests/${id}`, data),
+  update: (
+    id: string,
+    data: {
+      status?: string;
+      title?: string;
+      offerDeadline?: string | null;
+      requiredBy?: string | null;
+      commodity?: string;
+      quantityKg?: number;
+      originCountries?: string[];
+      qualityRequirements?: Record<string, unknown>;
+      assuranceRequirements?: Record<string, unknown>;
+      deliveryLocation?: string;
+      incoterm?: string;
+      visibility?: string;
+    },
+  ) => api<import('../types').SourcingRequest>('PATCH', `/sourcing-requests/${id}`, data),
 };
 
 export interface OfferSummary {

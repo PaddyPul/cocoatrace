@@ -1,3 +1,4 @@
+import { installmentDueState } from '../payments/dueState';
 import type { ActionContext, TradeAction } from './types';
 import { money, pretty } from './labels';
 export function commercialActions({
@@ -148,7 +149,12 @@ export function commercialActions({
     return actions;
   }
   if (deal.installment_status === 'due') {
+    const paymentDueState =
+      installmentDueState({ status: 'due', due_at: deal.installment_due_at }) === 'overdue'
+        ? 'overdue'
+        : 'due';
     actions.push({
+      paymentDueState,
       id: `deal:${deal.id}:payment`,
       kind: buyer ? 'payment' : 'waiting',
       priority: buyer ? 20 : 70,

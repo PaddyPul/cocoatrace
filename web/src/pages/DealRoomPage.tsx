@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BadgeCheck, Check, Circle, Download, FileText, Landmark, LockKeyhole, Settings, Ship, WalletCards } from 'lucide-react';
 import DealNextAction from '../components/trading/DealNextAction';
 import FeeStatement from '../components/fees/FeeStatement';
+import DealActivity from '../components/trading/DealActivity';
 import ContractCancellation from '../components/trading/ContractCancellation';
 import DeliveryAcceptance from '../components/delivery/DeliveryAcceptance';
 import Layout from '../components/layout/Layout';
@@ -40,7 +41,7 @@ export default function DealRoomPage() {
   if (!deal && !error) return <Layout currentPage="deal-room"><SkeletonDetail /></Layout>;
   if (error || !deal) return <Layout currentPage="deal-room"><div className="rounded-2xl border border-red-500/30 bg-red-900/10 p-4 text-xs text-red-300">{error || 'Deal not found'}</div></Layout>;
 
-  if (deal.status === 'cancelled') return <Layout currentPage="deal-room"><h1 className="text-xl font-semibold mb-4">Trade cancelled</h1><ContractCancellation contractId={deal.id} organizationId={user?.organizationId || ''} onChanged={refresh} /><div className="mt-4"><FeeStatement contractId={deal.id}/></div><button className="btn mt-4" onClick={() => navigate(`/contracts/${deal.id}`)}>View archived contract and documents</button></Layout>;
+  if (deal.status === 'cancelled') return <Layout currentPage="deal-room"><h1 className="text-xl font-semibold mb-4">Trade cancelled</h1><DealActivity contractId={deal.id} /><ContractCancellation contractId={deal.id} organizationId={user?.organizationId || ''} onChanged={refresh} /><div className="mt-4"><FeeStatement contractId={deal.id}/></div><button className="btn mt-4" onClick={() => navigate(`/contracts/${deal.id}`)}>View archived contract and documents</button></Layout>;
 
   const total = Number(deal.payment_amount ?? Number(deal.quantity_kg) * Number(deal.price_per_kg));
   const termsReady = deal.payment_terms_status === 'agreed';
@@ -78,7 +79,7 @@ export default function DealRoomPage() {
     <DealNextAction key={`${deal.nextAction?.id}:${deal.nextAction?.operation}:${deal.nextAction?.installmentId || ''}`} action={deal.nextAction || null} contractId={deal.id} proofRequired={Boolean(deal.payment_evidence_required)} submittedReference={(deal.installments || []).find((item:any)=>item.id===deal.nextAction?.installmentId)?.payment_reference_external} run={run} />
 
     <div className="mt-5"><FeeStatement contractId={deal.id}/></div>
-    <div className="mt-5"><ContractCancellation contractId={deal.id} organizationId={user?.organizationId || ''} onChanged={refresh} /></div>
+    <div className="mt-5"><DealActivity contractId={deal.id} /><ContractCancellation contractId={deal.id} organizationId={user?.organizationId || ''} onChanged={refresh} /></div>
     {delivered && <div className="mt-5"><DeliveryAcceptance contractId={deal.id} organizationId={user?.organizationId || ''} onChanged={refresh} /></div>}
     <div className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]">
       <section className="space-y-5">

@@ -1,4 +1,16 @@
 export const english = {
+  'environment.label': 'Workspace environment',
+  'environment.unknown':
+    'Environment unconfirmed — confirm this workspace with the operator before entering live trade or personal data.',
+  'environment.development':
+    'Development environment — test work only; do not use for live trades.',
+  'environment.test': 'Test environment — do not use for live trades or personal data.',
+  'environment.demo': 'Demo environment — do not use for live trades or personal data.',
+  'environment.staging':
+    'Staging environment — pre-release testing; do not use for live trades or personal data.',
+  'environment.production':
+    'Production environment — check the intended recipient and trade before submitting.',
+
   'title.home': 'Your sourcing workspace',
   'title.source-new': 'Create a sourcing brief',
   'title.source-compare': 'Compare verified supply',
@@ -134,6 +146,19 @@ export const english = {
 } as const;
 
 export const french: Record<keyof typeof english, string> = {
+  'environment.label': 'Environnement de travail',
+  'environment.unknown':
+    'Environnement non confirmé — vérifiez cet espace avec l’opérateur avant de saisir des données commerciales réelles ou personnelles.',
+  'environment.development':
+    'Environnement de développement — essais uniquement ; aucune transaction réelle.',
+  'environment.test': 'Environnement de test — aucune transaction réelle ni donnée personnelle.',
+  'environment.demo':
+    'Environnement de démonstration — aucune transaction réelle ni donnée personnelle.',
+  'environment.staging':
+    'Environnement de préproduction — essais avant publication ; aucune transaction réelle ni donnée personnelle.',
+  'environment.production':
+    'Environnement de production — vérifiez le destinataire et la transaction avant de soumettre.',
+
   'title.home': 'Votre espace d’approvisionnement',
   'title.source-new': 'Créer une demande',
   'title.source-compare': 'Comparer les offres disponibles',
