@@ -27,6 +27,9 @@ test('privileged review preserves evidence uncertainty and binds confirmation to
           email: 'target@example.test',
           organization_name: 'Platform',
           active: true,
+          verification_status: 'verified',
+          access_suspended_at: null,
+          organization_suspended_at: null,
           created_at: '2025-01-01',
           last_retained_activity_at: null,
           activityFinding: 'unknown',
@@ -57,14 +60,36 @@ test('privileged review preserves evidence uncertainty and binds confirmation to
   await expect(
     page.getByRole('heading', { name: 'Privileged access review', exact: true, level: 2 }),
   ).toBeVisible();
-  await expect(page.getByText('No retained evidence', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Record review receipt' })).toBeDisabled();
+  const accountRow = page.getByRole('row').filter({
+    has: page.getByRole('cell', { name: /target@example\.test/ }),
+  });
+  await expect(accountRow).toHaveCount(1);
+  // The cell contains the finding and timestamp explanation separated by a br.
+  // Assert the actual table cell, not an exact standalone text node.
+  const activityCell = accountRow.getByRole('cell').filter({ hasText: 'No retained evidence' });
+  await expect(activityCell).toBeVisible();
+  await expect(activityCell).toContainText('unknown');
+  await expect(accountRow.getByRole('cell', { name: 'Not suspended', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Record review receipt', exact: true }),
+  ).toBeDisabled();
   await page
     .getByLabel('Review reason and follow-up')
     .fill('Investigate unknown activity with account owner');
-  await page.getByRole('checkbox').check();
-  await page.getByRole('button', { name: 'Record review receipt' }).click();
+  await page
+    .getByRole('checkbox', {
+      name: 'I reviewed the complete snapshot and retained the findings.',
+      exact: true,
+    })
+    .check();
+  await page.getByRole('button', { name: 'Record review receipt', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('reload and review again');
-  expect(posted?.expectedSnapshotHash).toBe(report.snapshotHash);
-  await expect(page.getByRole('button', { name: 'Record review receipt' })).toHaveCount(0);
+  expect(posted).toMatchObject({
+    expectedSnapshotHash: report.snapshotHash,
+    confirmed: true,
+    reason: 'Investigate unknown activity with account owner',
+  });
+  await expect(
+    page.getByRole('button', { name: 'Record review receipt', exact: true }),
+  ).toHaveCount(0);
 });
