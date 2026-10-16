@@ -53,6 +53,8 @@ async function fixture(page: Page, mode: 'normal' | 'malformed' | 'blocked' = 'n
     const request = route.request();
     const url = new URL(request.url());
     if (request.method() !== 'GET') mutations.push(`${request.method()} ${url.pathname}`);
+    if (request.method() === 'GET' && url.pathname === '/api/health/live')
+      return route.fulfill({ json: { status: 'ok', environment: 'test' } });
     if (url.pathname === '/api/me')
       return route.fulfill({
         json: {
