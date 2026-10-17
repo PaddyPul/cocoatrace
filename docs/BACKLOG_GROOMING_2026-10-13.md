@@ -209,3 +209,7 @@ Founder accepts ARC-004/006 full release and merge:140/343 (40.8%). ARC-008/RCL-
 ## Recorded recall tabletop candidate — 2026-10-17
 
 Founder accepts ARC-008/RCL-010 full release and merge:142/343 (41.4%). Three linked targets RCL-008/RCL-013/INV-010 now exercise partial stock, commingled genealogy and distributed material against independent expected recipients and non-overlapping physical quantity partitions. Current-commit reports include elapsed times, completeness and unresolved acknowledgement/contact counts; old reports are invalidated before release/CI integration. Native runtime evidence remains pending. Acceptance yields145/343 (42.3%); core11/28 and provider-inclusive11/40 unchanged. This is synthetic tabletop evidence, not customer inbox delivery or hosted recall response acceptance.
+
+## Pilot journey and adapter contract candidate — 2026-10-17
+
+Founder accepts RCL-008/RCL-013/INV-010 full release and merge:145/343 (42.3%). QLT-010/012/014 target complete supplier publishing journeys, delivery-exception/recall recovery browser cases and maintained current adapter contracts. Actual browser/native release acceptance remains pending. Acceptance yields148/343 (43.1%); core11/28 and provider-inclusive11/40 unchanged. Future provider adapters require their own contracts when introduced; these tests do not establish unsupported product features or hosted capacity.

@@ -315,3 +315,8 @@ api/test/integration/recallTabletop.integration.test.ts text eol=lf
 scripts/recall-drill*.mjs text eol=lf
 
 scripts/run-release-checks.test.mjs text eol=lf
+
+api/src/testing/adapterContracts.test.ts text eol=lf
+e2e/supplierPublishingJourney.spec.ts text eol=lf
+e2e/deliveryExceptionJourney.spec.ts text eol=lf
+e2e/recallResponseJourney.spec.ts text eol=lf
