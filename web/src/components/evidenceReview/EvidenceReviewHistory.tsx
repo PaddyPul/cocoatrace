@@ -178,7 +178,7 @@ export default function EvidenceReviewHistory({
             <p>No document decision recorded. This is not approval.</p>
           )}
           {reviewer && user?.permissions.includes('*') && (
-            <div role="group" aria-label="Document decision" className="space-y-3">
+            <div role="group" aria-label="Record a document review" className="space-y-3">
               <label htmlFor={`${labelId}-decision`}>Document decision</label>
               <select
                 id={`${labelId}-decision`}

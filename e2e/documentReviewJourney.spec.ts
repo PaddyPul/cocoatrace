@@ -65,7 +65,9 @@ test('retained supplier document receives a real rejected review with a visible 
     await reviewer.goto(`/evidence/review?id=${proof.id}`);
     await openProof(reviewer);
     const panel = reviewer.getByRole('region', { name: 'Document review history', exact: true });
-    await panel.getByLabel('Document decision', { exact: true }).selectOption('rejected');
+    await panel
+      .getByRole('combobox', { name: 'Document decision', exact: true })
+      .selectOption('rejected');
     await panel
       .getByLabel('Document review reason', { exact: true })
       .fill('Please provide the signed weighing record.');
