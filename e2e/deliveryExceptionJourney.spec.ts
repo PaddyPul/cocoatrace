@@ -164,9 +164,30 @@ test('damaged delivery stays committed through supplier resolution and buyer app
     await inspection(buyer)
       .getByLabel('Inspected quantity received (kg)', { exact: true })
       .fill('4');
+    // A matching quantity and checkbox alone must explain the missing note.
+    await inspection(buyer)
+      .getByLabel('I inspected the full contract quantity and accept its condition.', {
+        exact: true,
+      })
+      .check();
+    await expect(
+      inspection(buyer).getByRole('button', { name: 'Accept full delivery', exact: true }),
+    ).toBeDisabled();
+    await expect(
+      inspection(buyer)
+        .getByRole('form', { name: 'Accept inspected delivery', exact: true })
+        .getByRole('status'),
+    ).toContainText('Add an inspection note of at least 10 characters');
+    await inspection(buyer).getByLabel('Inspection note', { exact: true }).fill('  checked  ');
+    await expect(
+      inspection(buyer).getByRole('button', { name: 'Accept full delivery', exact: true }),
+    ).toBeDisabled();
     await inspection(buyer)
       .getByLabel('Inspection note', { exact: true })
       .fill('Replacement goods inspected and full quantity accepted in good condition');
+    await expect(
+      inspection(buyer).getByRole('button', { name: 'Accept full delivery', exact: true }),
+    ).toBeEnabled();
     await inspection(buyer)
       .getByLabel('I inspected the full contract quantity and accept its condition.', {
         exact: true,

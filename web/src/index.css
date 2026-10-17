@@ -36,7 +36,7 @@
   .form-input:focus { @apply border-brand-400 bg-surface-darker; }
   .form-select { @apply form-input appearance-none cursor-pointer; }
 
-  .table-wrap { @apply bg-surface border border-border rounded-2xl overflow-x-auto mb-6 shadow-sm shadow-black/10; }
+  .table-wrap { @apply bg-surface border border-border rounded-2xl overflow-x-auto p-4 sm:p-5 mb-6 shadow-sm shadow-black/10; }
   table { @apply w-full border-collapse; }
   th { @apply bg-black/10 text-left px-4 py-3 text-[9px] text-text-muted uppercase tracking-[0.14em] border-b border-border font-bold whitespace-nowrap; }
   td { @apply px-4 py-3.5 border-b border-border text-xs text-text-secondary; }

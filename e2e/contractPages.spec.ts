@@ -196,3 +196,30 @@ test('buyer home uses active aggregate and links latest active deal without load
   await action.click();
   await expect(page).toHaveURL(new RegExp('/deal-room/' + later + '$'));
 });
+
+for (const width of [1280, 390]) {
+  test(`rounded register keeps text inside padded edges at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await fixture(page);
+    await page.goto('/contracts');
+    const wrapper = page.locator('.table-wrap');
+    await expect(wrapper.getByRole('table')).toBeVisible();
+    const layout = await wrapper.evaluate((element) => {
+      const style = getComputedStyle(element);
+      const outer = element.getBoundingClientRect();
+      const text = element.querySelector('p')!.getBoundingClientRect();
+      return {
+        paddingLeft: parseFloat(style.paddingLeft),
+        paddingTop: parseFloat(style.paddingTop),
+        overflow: style.overflowX,
+        left: text.left - outer.left,
+        top: text.top - outer.top,
+      };
+    });
+    expect(layout.paddingLeft).toBeGreaterThanOrEqual(16);
+    expect(layout.paddingTop).toBeGreaterThanOrEqual(16);
+    expect(layout.left).toBeGreaterThanOrEqual(16);
+    expect(layout.top).toBeGreaterThanOrEqual(16);
+    expect(layout.overflow).toBe('auto');
+  });
+}

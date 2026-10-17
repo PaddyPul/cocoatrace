@@ -337,3 +337,10 @@ web/src/pages/EvidenceReviewPage.tsx text eol=lf
 e2e/documentReview.spec.ts text eol=lf
 e2e/documentReviewJourney.spec.ts text eol=lf
 api/src/migrations/048_evidence_review_history.ts text eol=lf
+
+web/src/components/delivery/DeliveryAcceptance.tsx text eol=lf
+
+web/src/components/fees/FeeStatement.tsx text eol=lf
+e2e/platformFeeJourney.spec.ts text eol=lf
+
+e2e/feeCollectionStatus.spec.ts text eol=lf

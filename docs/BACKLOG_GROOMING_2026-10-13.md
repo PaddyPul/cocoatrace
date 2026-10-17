@@ -1,4 +1,4 @@
-# BetterTrade backlog reconciliation — 13 October 2026
+# BetterTrade backlog reconciliation ÔÇö 13 October 2026
 
 This review reconciles named backlog rows and pilot gates against current source, tests, accepted delivery checkpoints and the founder's completion of the operations correction workflow at 13:59 UTC. Author source baseline: `602620e07fad58bcd3d85dd5b04e6d6d42dd4f75`. Founder commit hashes and independent CI URLs are not supplied; acceptance remains founder-reported. Hosted resources, real inbox receipt, customer enrollment and legal/commercial approval cannot be inferred from local tests.
 
@@ -8,10 +8,10 @@ The live files are DELIVERY_BACKLOG.md and pilot-gates.json. Criterion-level cha
 
 | Scope | Before grooming | After grooming | Remaining |
 | --- | --- | --- | --- |
-| Full named roadmap | 78/342 — 22.8% | **88/343 — 25.7%** | 71 partial; 184 open |
-| Core buyer/supplier pilot | 10/28 — 35.7% | **11/28 — 39.3%** | 11 partial; 4 blocked; 2 open |
-| Provider launch including core | 10/40 — 25.0% | **11/40 — 27.5%** | 11 partial; 4 blocked; 14 open |
-| Additional logistics-provider gates | 0/12 — 0% | **0/12 — 0%** | All 12 open |
+| Full named roadmap | 78/342 ÔÇö 22.8% | **88/343 ÔÇö 25.7%** | 71 partial; 184 open |
+| Core buyer/supplier pilot | 10/28 ÔÇö 35.7% | **11/28 ÔÇö 39.3%** | 11 partial; 4 blocked; 2 open |
+| Provider launch including core | 10/40 ÔÇö 25.0% | **11/40 ÔÇö 27.5%** | 11 partial; 4 blocked; 14 open |
+| Additional logistics-provider gates | 0/12 ÔÇö 0% | **0/12 ÔÇö 0%** | All 12 open |
 
 Ten overlooked completions and eighteen open-to-partial corrections are bookkeeping reconciliation, not newly delivered features. One explicit streaming-efficiency follow-up, PER-007, changes the full-roadmap denominator from 342 to 343. The core/provider gate denominators are unchanged.
 
@@ -94,42 +94,42 @@ Use `npm run backlog:progress` for current totals. Keep accepted implementation 
 The terminal-email recovery slice is now implemented on the feature branch; see [the handoff](releases/TERMINAL_EMAIL_RECOVERY_WINDOWS.md) for actual tests and remaining release gates. The snapshot above remains the historical grooming baseline. Broad operations items and CORE-workers remain partial; no completion counts or hosted/founder acceptance are inferred from the new candidate.
 
 
-## Subsequent candidate acceptance — 2026-10-13, 17:49 UTC
+## Subsequent candidate acceptance ÔÇö 2026-10-13, 17:49 UTC
 
 Founder reports full release checks passed and terminal-email recovery merged, including the listings-summary correction. The candidate pending status above is superseded. The original grooming snapshot remains historical; broad operations gates still lack complete queue/failure monitoring, external alerts and hosted drills, so no full-item completion is added. Next: bounded queue-backlog and incident visibility. No founder SHA, CI link or main pull is inferred.
 
 
-## Queue observation candidate — 2026-10-13
+## Queue observation candidate ÔÇö 2026-10-13
 
 The next bounded queue-backlog/incident slice is implemented, with actual validation in releases/OPERATIONS_BACKLOG_WINDOWS.md. It adds no full-item closures; broader monitoring, external alerts and hosted acceptance still keep operations gates partial. Terminal-email release/merge acceptance above remains separate from this candidate.
 
 
-## Subsequent checkpoint — 2026-10-14
+## Subsequent checkpoint ÔÇö 2026-10-14
 
 The founder reported the queue-backlog workflow done on 2026-10-13 after correction/push/merge/pull instructions. The delivery backlog and CORE-workers now record that slice as founder accepted. Opt-in durable operator alerts are the next candidate, with default-off configuration and separate native/external acceptance. OPS-006/OPS-010/ARC-014 remain partial. Real external inbox delivery, a named incident owner, reviewed terminal-operator-alert recovery, independent monitoring and hosted drills are still required. No full-row completion or percentage increase is taken: roadmap 88/343 (25.7%), core 11/28 (39.3%), provider-inclusive 11/40 (27.5%).
 
 
-## Subsequent checkpoint — operator alerts and reviewed recovery, 2026-10-14
+## Subsequent checkpoint ÔÇö operator alerts and reviewed recovery, 2026-10-14
 
 The founder reports the operator-alert workflow done. That default-off engineering slice is now recorded as founder accepted, without claiming externally verified CI, inbox delivery or hosted incident ownership. The next candidate adds reviewed terminal-operator-alert recovery using fresh assurance, locked current eligibility and atomic audit, with no full-item completion credit. OPS-006/OPS-010/ARC-014 and related gates remain partial. Counts remain roadmap 88/343 (25.7%), core 11/28 (39.3%), provider-inclusive 11/40 (27.5%). After this candidate is accepted, prioritize the authorization/resource evidence matrix; deployment and incident-owner evidence remain distinct.
 
 
-## Subsequent checkpoint — authorization entry-point evidence, 2026-10-14
+## Subsequent checkpoint ÔÇö authorization entry-point evidence, 2026-10-14
 
 The founder confirms reviewed operator-alert recovery release/merge/pull at 12:19 UTC; record that slice as accepted. The next candidate maps all 195 explicit entry points, links existing policy/resource-family regressions, checks 178 credential boundaries and supplies 155 native no-permission cases. SEC-006 and QLT-002 move from open to IN PROGRESS without fractional completion credit. Universal resource/foreign-ID/role-union/suspension acceptance and hosted security remain open. Closed-item totals remain 88/343 (25.7%), core 11/28 (39.3%), provider-inclusive 11/40 (27.5%). The older grooming table remains its dated baseline snapshot.
 
 
-## Subsequent checkpoint — paired private resource reads, 2026-10-14
+## Subsequent checkpoint ÔÇö paired private resource reads, 2026-10-14
 
 The founder reports authorization-register release/merge/pull complete at 13:58 UTC after a transient Chromium navigation failure. Entry coverage is now accepted. The next candidate groups farm/plot, batch, certificate and holding privacy/role tests with uniform foreign/absent 404, post-guard UUID validation, one scoped read snapshot and a no-store session default. SEC-006/QLT-002/ARC-011 remain partial; broader action/field/relationship/deployment evidence is not inferred. Full-item/gate counts remain 88/343 (25.7%), 11/28 (39.3%), 11/40 (27.5%).
 
 
-## Source resource boundary acceptance — 2026-10-14 18:54 UTC
+## Source resource boundary acceptance ÔÇö 2026-10-14 18:54 UTC
 
 Founder supplied successful focused MFA/source-collection runs, an exact-commit full release pass and push for `f74f290f3bb0c72762adf19fb4b958a3fee77352`, followed by main fast-forward to `606da5bd0`. Record the source/plot/batch/certificate/holding slice as accepted, superseding its earlier pending native status. No independent CI URL or hosted acceptance is inferred. SEC-006/QLT-002/ARC-011 remain IN PROGRESS for other resource/action/field boundaries. The next batch addresses contract/payment/shipment reads and party-specific writes. No full-row completion credit: roadmap 88/343 (25.7%), core 11/28 (39.3%), provider-inclusive 11/40 (27.5%).
 
 
-## Trade resource boundary candidate — 2026-10-14
+## Trade resource boundary candidate ÔÇö 2026-10-14
 
 Contract/payment/shipment direct reads are scoped to current buyer/seller parties before hydration, with matching foreign/absent 404 and post-guard UUID checks. Linked detail/action data shares a bounded snapshot; oversized child arrays fail explicitly. New payment regressions cover wildcard callers' party constraints and unchanged state/audit on denials; transport regressions preserve all eleven Incoterm responsibility rules. See releases/TRADE_RESOURCE_BOUNDARIES_WINDOWS.md and security/TRADE_RESOURCE_BOUNDARIES_2026-10-14.md. No migration or dependency changes. Author static/unit verification is distinct from pending founder native/browser release. SEC-006/QLT-002/ARC-011 remain IN PROGRESS; no percentage increase for a partial item. Field-level evidence/fee/admin/provenance review and hosted operational/security proof remain open.
 
@@ -144,7 +144,7 @@ Founder reports trade-boundary release/merge complete; slice accepted without in
 Founder reports security/architecture release pass and merge/pull completed. Mark SEC-009/015 and ARC-016/017 complete: 92/343 (26.8%). SEC-019 remains partial; core/provider counts unchanged. Exact founder SHA and external CI URL not supplied in this acknowledgement. Next coherent batch combines pending-offer lifecycle, explicit external negotiation, customer limitations and release/deprecation conventions.
 
 
-## Six-outcome offer/pilot candidate — 2026-10-14
+## Six-outcome offer/pilot candidate ÔÇö 2026-10-14
 
 TRD-010/011/012 plus GOV-007/009/010 are supplied in one closure candidate. Current accepted total92/343 (26.8%); all six accepted yields98/343 (28.6%). No partial credit or hosted-gate completion is taken. UI and native regressions accompany the payment/stock-safe offer transitions; policy publication is distinct from operating a production release. Review releases/OFFER_LIFECYCLE_CLOSURE_WINDOWS.md and its PR description before acceptance.
 
@@ -156,7 +156,7 @@ Corrected offer release passed and merged per founder; six rows close to98/343. 
 
 ## 2026-10-15 16:32 UTC integrity acceptance and decision reconciliation
 
-Corrected integrity release accepted per founder:106/343. Four technical decision rows DEC-002/003/004/006 reconcile to accepted ADR004–007:110/343 (32.1%). Target ARC-009/UX-009/ENV-016 after integrated acceptance gives113/343 (32.9%). ENV-014 implementation has honest incomplete-stamp semantics and no hosted readback evidence; keep partial. Core/provider counts unchanged. No reset executed. See releases/ARCHITECTURE_RELEASE_CLOSURE_WINDOWS.md.
+Corrected integrity release accepted per founder:106/343. Four technical decision rows DEC-002/003/004/006 reconcile to accepted ADR004ÔÇô007:110/343 (32.1%). Target ARC-009/UX-009/ENV-016 after integrated acceptance gives113/343 (32.9%). ENV-014 implementation has honest incomplete-stamp semantics and no hosted readback evidence; keep partial. Core/provider counts unchanged. No reset executed. See releases/ARCHITECTURE_RELEASE_CLOSURE_WINDOWS.md.
 
 ## 2026-10-15 request and deployment guardrails sprint
 
@@ -182,42 +182,54 @@ Founder accepts corrected team administration and privileged review: IDN-016/017
 
 Founder accepts corrected supply/demand lifecycle: TRD-018/020 close;127/343 (37.0%). PRD-013/015 target129/343 (37.6%) after full candidate release/review/merge. Device-local saved filters must be account/workspace isolated; support reports must be private, idempotent, bounded and attributable without invented external-response guarantees. Core11/28 and provider-inclusive11/40 unchanged.
 
-## Agreement and notification wave — 2026-10-16
+## Agreement and notification wave ÔÇö 2026-10-16
 
 Founder accepts corrected saved filters/support release and merge: PRD-013/015 complete, 129/343 (37.6%). TRD-015 and PRD-007 are in progress together; acceptance would yield131/343 (38.2%). Core11/28 and provider-inclusive11/40 unchanged. Payment terms remain separately confirmed; acknowledgements are not legal signatures. Current notices are not a historical event archive or outbound email delivery.
 
-## Transport awareness closure candidate — 2026-10-16
+## Transport awareness closure candidate ÔÇö 2026-10-16
 
 Founder accepts corrected agreement/notification full release and merge: TRD-015 and PRD-007 complete,131/343 (38.2%). LOG-008/010 are in progress together: exception awareness acknowledgement and ETA/delay/overdue arrival notices. Two whole-item targets yield133/343 (38.8%) only after runtime release, review and merge. Incoterm authority, payment gates and legal risk transfer remain unchanged; core11/28 and provider-inclusive11/40 unchanged.
 
-## Pilot evidence and fixture reliability — 2026-10-17
+## Pilot evidence and fixture reliability ÔÇö 2026-10-17
 
 Founder accepts corrected LOG-008/010 full release and merge:133/343 (38.8%). QLT-018, INV-004 and INV-005 are combined closure targets: reusable disposable-database fixtures adopted by critical native suites, a source-backed architecture/security overview and maintained current-versus-roadmap matrix checked in CI/release. Acceptance yields136/343 (39.7%). Hosted isolation, independent security review and customer/valuation evidence remain open; core11/28 and provider-inclusive11/40 unchanged.
 
-## Transport transitions and cookie-write route coverage — 2026-10-17
+## Transport transitions and cookie-write route coverage ÔÇö 2026-10-17
 
 Founder accepts QLT-018/INV-004/INV-005 full release and merge:136/343 (39.7%). ARC-007 and SEC-007 are combined targets: named typed shipment transitions alongside existing delivery use cases, and global origin regression coverage across all registered mutating endpoints. Acceptance yields138/343 (40.2%); broad controller extraction, complete resource matrix and hosted ingress remain open. Core11/28 and provider-inclusive11/40 unchanged.
 
-## Evidence and payment boundary closure — 2026-10-17
+## Evidence and payment boundary closure ÔÇö 2026-10-17
 
 Founder accepts ARC-007/SEC-007 full release and merge:138/343 (40.2%). Audit confirms payment terms, installments, documents/security and issue use cases already reside in domain modules; remaining payment-request creation and legacy HTTP bridge plus evidence download policy/SQL/lifecycle separation are the focused gaps. ARC-004/006 are candidate closure targets; acceptance yields140/343 (40.8%). Broad controller extraction, resource matrix and hosted/file-capacity work stay open. Core11/28 and provider-inclusive11/40 unchanged.
 
-## Recall workflow and authority candidate — 2026-10-17
+## Recall workflow and authority candidate ÔÇö 2026-10-17
 
 Founder accepts ARC-004/006 full release and merge:140/343 (40.8%). ARC-008/RCL-010 target recall use-case/repository boundaries and an explicit investigation/activation/resolution authority matrix, including participant-only actions. Existing permission vocabulary, trace/stock holds, proof gates and durable outbox semantics remain unchanged. No new separation-of-duty guarantee. Acceptance yields142/343 (41.4%); core11/28 and provider-inclusive11/40 unchanged. Hosted capacity and independent review remain open.
 
-## Recorded recall tabletop candidate — 2026-10-17
+## Recorded recall tabletop candidate ÔÇö 2026-10-17
 
 Founder accepts ARC-008/RCL-010 full release and merge:142/343 (41.4%). Three linked targets RCL-008/RCL-013/INV-010 now exercise partial stock, commingled genealogy and distributed material against independent expected recipients and non-overlapping physical quantity partitions. Current-commit reports include elapsed times, completeness and unresolved acknowledgement/contact counts; old reports are invalidated before release/CI integration. Native runtime evidence remains pending. Acceptance yields145/343 (42.3%); core11/28 and provider-inclusive11/40 unchanged. This is synthetic tabletop evidence, not customer inbox delivery or hosted recall response acceptance.
 
-## Pilot journey and adapter contract candidate — 2026-10-17
+## Pilot journey and adapter contract candidate ÔÇö 2026-10-17
 
 Founder accepts RCL-008/RCL-013/INV-010 full release and merge:145/343 (42.3%). QLT-010/012/014 target complete supplier publishing journeys, delivery-exception/recall recovery browser cases and maintained current adapter contracts. Actual browser/native release acceptance remains pending. Acceptance yields148/343 (43.1%); core11/28 and provider-inclusive11/40 unchanged. Future provider adapters require their own contracts when introduced; these tests do not establish unsupported product features or hosted capacity.
 
-## Capacity evidence candidate — 2026-10-17
+## Capacity evidence candidate ÔÇö 2026-10-17
 
-Founder accepts QLT-010/012/014 full release and merge:148/343 (43.1%). PER-004/QLT-016/OPS-014 target six measured local HTTP/PostgreSQL workloads and32 source-bound capacity defaults/ceilings. One hundred samples/workload at concurrency4, provisional p95≤2s/p99≤5s thresholds, explicit failures, hardware/data context and independent write/audit/inventory invariants must pass at runtime. Acceptance yields151/343 (44.0%); core11/28 and provider-inclusive11/40 unchanged. This is a declared local regression baseline, not hosted capacity, multi-instance proof or a customer SLA.
+Founder accepts QLT-010/012/014 full release and merge:148/343 (43.1%). PER-004/QLT-016/OPS-014 target six measured local HTTP/PostgreSQL workloads and32 source-bound capacity defaults/ceilings. One hundred samples/workload at concurrency4, provisional p95Ôëñ2s/p99Ôëñ5s thresholds, explicit failures, hardware/data context and independent write/audit/inventory invariants must pass at runtime. Acceptance yields151/343 (44.0%); core11/28 and provider-inclusive11/40 unchanged. This is a declared local regression baseline, not hosted capacity, multi-instance proof or a customer SLA.
 
 ## 2026-10-17 document review candidate
 
 Founder accepts capacity bundle and correction after full release and merge: PER-004, QLT-016 and OPS-014 complete,151/343 (44.0%). Local measurements are not hosted SLO evidence. UPL-009/UPL-011 remain in progress pending this candidate release; acceptance would yield153/343 (44.6%). DAT-003/DAT-010 and hosted pilot gates remain open.
+
+## 2026-10-17 delivery acceptance guidance
+
+Founder reports document review/history and corrections full release and merge accepted. UPL-009/UPL-011 complete:153/343 (44.6%). Delivery acceptance correction makes the existing note, quantity and confirmation requirements visible; no extra backlog completion credit.
+
+## 2026-10-17 agreed fee enforcement follow-up
+
+Fee collection enforcement is next after acceptance of the current delivery/fee presentation bundle. PAY-011/PAY-012 remain open: versioned new-trade terms, verified pre-dispatch fee payment, audited credit exceptions, cancellation/refund rules and overdue restrictions on new business. Preserve ongoing trade and safety actions. No implementation or completion credit is claimed.
+
+## 2026-10-17 shared register and dashboard correction
+
+Correct shared padding across all 12 table-container usages and show Completed/Cancelled for terminal dashboard actions. Fee collection remains independent of goods completion. Runtime acceptance of this correction remains pending. Completion remains 153/343 (44.6%).

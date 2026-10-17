@@ -12,7 +12,13 @@ export function downloadJson(name: string, value: unknown) {
   link.click();
   URL.revokeObjectURL(url);
 }
-export default function FeeStatement({ contractId }: { contractId: string }) {
+export default function FeeStatement({
+  contractId,
+  contractStatus,
+}: {
+  contractId: string;
+  contractStatus?: string;
+}) {
   const { user, canDo } = useAuthCtx();
   const admin = canDo('finance.manage');
   const [data, setData] = useState<Statement | null>(null),
@@ -31,6 +37,7 @@ export default function FeeStatement({ contractId }: { contractId: string }) {
       setCurrency(value.fee.currency);
       setError('');
     } catch (e) {
+      setData(null);
       setError(e instanceof Error ? e.message : 'Could not load fee statement');
     }
   }, [contractId]);
@@ -41,7 +48,7 @@ export default function FeeStatement({ contractId }: { contractId: string }) {
     };
     window.addEventListener('focus', refresh);
     return () => window.removeEventListener('focus', refresh);
-  }, [load]);
+  }, [load, contractStatus]);
   const run = async (work: () => Promise<unknown>) => {
     setBusy(true);
     setError('');
@@ -70,12 +77,38 @@ export default function FeeStatement({ contractId }: { contractId: string }) {
     f.contract_status === 'settled' &&
     /[1-9]/.test(f.amount_total);
   const canSubmit = payer && (canDo('offer.respond') || canDo('offer.create'));
+  const zeroFee = !!f && !/[1-9]/.test(f.amount_total);
+  const collectionLabel = !f
+    ? ''
+    : f.amount_matches === false || f.payer_matches === false || !f.payer_organization_id
+      ? 'Fee collection needs platform finance review'
+      : zeroFee
+        ? 'No fee payment required'
+        : f.status === 'paid'
+          ? f.receipt_verified
+            ? 'Platform fee collected — receipt verified'
+            : 'Recorded paid — receipt verification needs finance review'
+          : f.status === 'written_off'
+            ? 'Fee written off — no collection recorded'
+            : f.status === 'void'
+              ? 'Fee void — no payment due'
+              : pending
+                ? 'Fee payment reported — receipt not yet verified'
+                : f.status === 'invoiced'
+                  ? 'Platform fee outstanding — collection not verified'
+                  : f.status === 'estimated' && f.contract_status !== 'settled'
+                    ? 'Fee estimate — payable when the trade completes'
+                    : 'Fee collection status needs platform finance review';
+
   return (
     <section
       aria-label="Platform fee statement"
       className="rounded-2xl border border-border bg-surface p-5 space-y-3"
     >
       <h3 className="text-sm font-semibold">Platform fee statement</h3>
+      <button type="button" className="btn btn-sm" disabled={busy} onClick={() => void load()}>
+        Refresh fee status
+      </button>
       {error && (
         <p role="alert" className="text-red-400 text-xs">
           {error}
@@ -84,10 +117,42 @@ export default function FeeStatement({ contractId }: { contractId: string }) {
       {!data && !error && <p role="status">Loading fee statement…</p>}
       {data && f && (
         <>
+          <div
+            role="status"
+            aria-label="Fee collection status"
+            className="rounded-xl border border-border p-3 space-y-2"
+          >
+            <strong className="text-sm">{collectionLabel}</strong>
+            <p className="text-xs">
+              Fee payer:{' '}
+              {f.fee_payer === 'seller'
+                ? f.seller_name
+                : f.fee_payer === 'buyer'
+                  ? f.buyer_name
+                  : f.fee_payer}{' '}
+              ({f.fee_payer}).
+            </p>
+            <p className="text-xs">
+              Due at trade completion, after goods payment and buyer delivery acceptance. A
+              completed trade or a fee statement does not mean the fee was collected. No automatic
+              deduction or debit is made.
+            </p>
+            {f.status === 'invoiced' && !zeroFee && (
+              <p className="text-xs">
+                {payer
+                  ? 'Your organization must pay this fee separately.'
+                  : 'The recorded payer must pay this fee separately; the buyer goods payment does not collect it.'}{' '}
+                {pending
+                  ? 'Platform finance must verify the external receipt before marking it paid.'
+                  : 'The payer should obtain confirmed payment instructions from platform finance, pay externally, then submit the fee payment reference.'}
+              </p>
+            )}
+          </div>
+
           <p className="text-xs">{data.statementNumber}</p>
           <p className="text-sm">
-            {fmtMoney(Number(f.amount_total), f.currency, f.currency_minor_units)} · {f.fee_payer} pays · {f.rate_bps / 100}
-            % · {f.status.split('_').join(' ')}
+            {fmtMoney(Number(f.amount_total), f.currency, f.currency_minor_units)} · {f.fee_payer}{' '}
+            pays · {f.rate_bps / 100}% · {f.status.split('_').join(' ')}
           </p>
           <p className="text-xs text-text-muted">
             This statement uses its recorded rate and payer. New trades record them at acceptance.
