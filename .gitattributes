@@ -309,3 +309,9 @@ api/src/testing/evidencePaymentArchitecture.test.ts text eol=lf
 api/src/modules/recall/*.ts text eol=lf
 api/src/testing/recallArchitecture.test.ts text eol=lf
 api/test/integration/recallRoles.integration.test.ts text eol=lf
+
+api/src/testing/recallDrill*.ts text eol=lf
+api/test/integration/recallTabletop.integration.test.ts text eol=lf
+scripts/recall-drill*.mjs text eol=lf
+
+scripts/run-release-checks.test.mjs text eol=lf

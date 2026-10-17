@@ -205,3 +205,7 @@ Founder accepts ARC-007/SEC-007 full release and merge:138/343 (40.2%). Audit co
 ## Recall workflow and authority candidate — 2026-10-17
 
 Founder accepts ARC-004/006 full release and merge:140/343 (40.8%). ARC-008/RCL-010 target recall use-case/repository boundaries and an explicit investigation/activation/resolution authority matrix, including participant-only actions. Existing permission vocabulary, trace/stock holds, proof gates and durable outbox semantics remain unchanged. No new separation-of-duty guarantee. Acceptance yields142/343 (41.4%); core11/28 and provider-inclusive11/40 unchanged. Hosted capacity and independent review remain open.
+
+## Recorded recall tabletop candidate — 2026-10-17
+
+Founder accepts ARC-008/RCL-010 full release and merge:142/343 (41.4%). Three linked targets RCL-008/RCL-013/INV-010 now exercise partial stock, commingled genealogy and distributed material against independent expected recipients and non-overlapping physical quantity partitions. Current-commit reports include elapsed times, completeness and unresolved acknowledgement/contact counts; old reports are invalidated before release/CI integration. Native runtime evidence remains pending. Acceptance yields145/343 (42.3%); core11/28 and provider-inclusive11/40 unchanged. This is synthetic tabletop evidence, not customer inbox delivery or hosted recall response acceptance.

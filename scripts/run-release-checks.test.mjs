@@ -144,8 +144,35 @@ test('workspace filter isolation and support context gate release before applica
   assert.deepEqual(releaseChecks[index][1], ['run', 'test:workspace-tools']);
 });
 
- test('current capability evidence gates runtime acceptance', () => {
- const index=releaseChecks.findIndex(check=>check[0]==='Pilot architecture and capability evidence');
- assert.ok(index>=0 && index<releaseChecks.findIndex(check=>check[0]==='API unit tests'));
- assert.deepEqual(releaseChecks[index][1],['run','check:pilot-evidence']);
+test('current capability evidence gates runtime acceptance', () => {
+  const index = releaseChecks.findIndex(
+    (check) => check[0] === 'Pilot architecture and capability evidence',
+  );
+  assert.ok(
+    index >= 0 && index < releaseChecks.findIndex((check) => check[0] === 'API unit tests'),
+  );
+  assert.deepEqual(releaseChecks[index][1], ['run', 'check:pilot-evidence']);
+});
+
+test('fresh recorded recall evidence is required after native integration and before browser acceptance', () => {
+  const names = releaseChecks.map((check) => check[0]);
+  const invalidate = names.indexOf('Invalidate previous recall drill evidence');
+  const native = names.indexOf('Database/storage/scanner integration');
+  const recorded = names.indexOf('Recorded recall tabletop evidence');
+  assert.ok(
+    invalidate >= 0 &&
+      invalidate < native &&
+      native < recorded &&
+      recorded < names.indexOf('Browser journeys'),
+  );
+  assert.deepEqual(releaseChecks[recorded][1], ['run', 'check:recall-drill']);
+  const contract = names.indexOf('Recall drill evidence contracts');
+  assert.ok(contract >= 0 && contract < native);
+  assert.deepEqual(releaseChecks[invalidate][1], [
+    '--import',
+    'tsx',
+    'scripts/recall-drill.mjs',
+    '--invalidate',
+  ]);
+  assert.equal(releaseChecks[invalidate][2], true);
 });
