@@ -1,3 +1,5 @@
+import { paymentStateAfterAgreement } from './requestPolicy';
+export { paymentStateAfterAgreement } from './requestPolicy';
 import { requireSameCurrency, requireSamePrecision } from '../../services/tradeMoney';
 import type { PoolClient } from 'pg';
 import { AppError, ConflictError } from '../../errors';
@@ -62,17 +64,6 @@ async function lockTerms(
   if (['cancelled', 'settled'].includes(contract.status))
     throw new ConflictError('Closed contracts cannot change payment terms');
   return { contract, payment };
-}
-
-export function paymentStateAfterAgreement(plan: PaymentPlan): string {
-  const states: Record<PaymentPlan, string> = {
-    pay_before_dispatch: 'payment_due',
-    deposit_balance: 'payment_due',
-    bank_secured: 'awaiting_security',
-    documentary_collection: 'awaiting_documents',
-    pay_after_delivery: 'awaiting_delivery',
-  };
-  return states[plan];
 }
 
 /** The route validates commercial inputs before invoking this use case. */
