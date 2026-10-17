@@ -87,7 +87,7 @@ export async function reviewPage(
     await assertOperator(client, actor);
     const rows = (
       await client.query(
-        `SELECT ${projection} FROM evidence_items e WHERE review_status=$1 AND superseded_by_evidence_id IS NULL AND uploader_organization_id<>$2 AND ($3::uuid IS NULL OR id<$3) AND ($5::uuid IS NULL OR id=$5) ORDER BY id DESC LIMIT $4`,
+        `SELECT ${projection} FROM evidence_items e WHERE (review_status=$1 OR ($1='pending' AND review_status='submitted')) AND superseded_by_evidence_id IS NULL AND uploader_organization_id<>$2 AND ($3::uuid IS NULL OR id<$3) AND ($5::uuid IS NULL OR id=$5) ORDER BY id DESC LIMIT $4`,
         [
           input.status,
           actor.organizationId,
@@ -274,7 +274,7 @@ export async function replace(
       next.replaces_evidence_id ||
       next.superseded_by_evidence_id ||
       old.replaces_evidence_id === next.id ||
-      next.review_status !== 'pending' ||
+      !['pending', 'submitted'].includes(String(next.review_status)) ||
       Number(next.review_revision) !== 0 ||
       next.linked_entity_id !== old.linked_entity_id ||
       next.linked_entity_type !== old.linked_entity_type ||
@@ -290,7 +290,7 @@ export async function replace(
     );
     const updated = (
       await client.query(
-        'UPDATE evidence_items SET replaces_evidence_id=$2,review_revision=review_revision+1 WHERE id=$1 RETURNING *',
+        "UPDATE evidence_items SET replaces_evidence_id=$2,review_status='pending',review_revision=review_revision+1 WHERE id=$1 RETURNING *",
         [next.id, id],
       )
     ).rows[0];

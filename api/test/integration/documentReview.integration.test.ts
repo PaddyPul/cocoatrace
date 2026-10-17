@@ -130,6 +130,13 @@ describe('independent document review and explicit evidence versions', () => {
     const supply = await createSupply(owner, { quantityKg: 10 });
     const id = await evidence(owner, supply.batchId);
     const admin = await reviewer();
+    await query("UPDATE evidence_items SET review_status='submitted' WHERE id=$1", [id]);
+    const queue = await request(app)
+      .get('/evidence/review/page')
+      .query({ status: 'pending', id })
+      .set(auth(admin));
+    expect(queue.status, JSON.stringify(queue.body)).toBe(200);
+    expect(queue.body.items.map((row: { id: string }) => row.id)).toEqual([id]);
     const key = `evidence/${config.environment}/${crypto.randomUUID()}`;
     const bytes = Buffer.from('%PDF-1.4 review proof');
     await evidenceStorage().put(key, bytes, 'application/pdf');
@@ -172,6 +179,7 @@ describe('independent document review and explicit evidence versions', () => {
     const supply = await createSupply(owner, { quantityKg: 10 });
     const old = await evidence(owner, supply.batchId);
     const next = await evidence(owner, supply.batchId);
+    await query("UPDATE evidence_items SET review_status='submitted' WHERE id=$1", [next]);
     const original = (await query('SELECT sha256_hash FROM evidence_items WHERE id=$1', [old]))
       .rows[0].sha256_hash;
     const before = await detail(owner, old);
