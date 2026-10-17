@@ -37,12 +37,16 @@ export type CreateEvidenceUploadIntent = {
   claimDescription?: string;
 };
 
-async function requireDocumentRole(
+export async function requireDocumentRole(
   actor: JwtPayload,
-  input: CreateEvidenceUploadIntent,
+  input: Pick<CreateEvidenceUploadIntent, 'linkedEntityType' | 'linkedEntityId' | 'type'>,
+  execute: (
+    sql: string,
+    params?: unknown[],
+  ) => Promise<{ rows: Record<string, unknown>[] }> = query,
 ): Promise<void> {
   if (input.linkedEntityType !== 'contract') return;
-  const { rows } = await query(
+  const { rows } = await execute(
     `SELECT seller_organization_id,buyer_organization_id FROM sales_contracts
       WHERE id=$1 AND (seller_organization_id=$2 OR buyer_organization_id=$2)`,
     [input.linkedEntityId, actor.organizationId],

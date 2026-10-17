@@ -6,6 +6,8 @@ export interface Evidence {
   linked_entity_type: string;
   linked_entity_id: string;
   review_status: string;
+  superseded_by_evidence_id?: string | null;
+  replaces_evidence_id?: string | null;
   file_size_bytes?: number;
   mime_type?: string;
   detected_mime_type?: string;

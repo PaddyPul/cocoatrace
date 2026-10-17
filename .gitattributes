@@ -326,3 +326,14 @@ api/src/testing/capacityPolicy*.ts text eol=lf
 api/test/integration/pilotLoad.integration.test.ts text eol=lf
 scripts/pilot-load*.mjs text eol=lf
 docs/performance/capacity-policy.json text eol=lf
+
+api/src/modules/documentReview/** text eol=lf
+api/src/routes/documentReview.ts text eol=lf
+api/test/integration/documentReview.integration.test.ts text eol=lf
+api/test/integration/evidenceVersionBoundary.integration.test.ts text eol=lf
+web/src/api/evidenceReview.ts text eol=lf
+web/src/components/evidenceReview/**x text eol=lf
+web/src/pages/EvidenceReviewPage.tsx text eol=lf
+e2e/documentReview.spec.ts text eol=lf
+e2e/documentReviewJourney.spec.ts text eol=lf
+api/src/migrations/048_evidence_review_history.ts text eol=lf

@@ -1,5 +1,15 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/modules/documentReview/**/*.ts',
+  'api/src/routes/documentReview.ts',
+  'api/test/integration/documentReview.integration.test.ts',
+  'api/test/integration/evidenceVersionBoundary.integration.test.ts',
+  'web/src/api/evidenceReview.ts',
+  'web/src/components/evidenceReview/**/*.tsx',
+  'web/src/pages/EvidenceReviewPage.tsx',
+  'e2e/documentReview.spec.ts',
+  'e2e/documentReviewJourney.spec.ts',
+
   'api/src/testing/pilotLoadReport*.ts',
   'api/src/testing/capacityPolicy*.ts',
   'api/test/integration/pilotLoad.integration.test.ts',

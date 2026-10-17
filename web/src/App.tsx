@@ -24,6 +24,7 @@ const HoldingsPage = lazy(() => import('./pages/InventoryPage'));
 const ContractsPage = lazy(() => import('./pages/ContractRecordsPage'));
 const ShipmentsPage = lazy(() => import('./pages/ShipmentRecordsPage'));
 const PaymentsPage = lazy(() => import('./pages/PaymentRecordsPage'));
+const EvidenceReviewPage = lazy(() => import('./pages/EvidenceReviewPage'));
 const EvidencePage = lazy(() => import('./pages/EvidenceRecordsPage'));
 const AuditPage = lazy(() => import('./pages/AuditRecordsPage'));
 const CertsPage = lazy(() => import('./components/catalog/CertificateRecordsPage'));
@@ -132,6 +133,7 @@ export default function App() {
           <Route path="/payments" element={<ProtectedRoute><PaymentsPage /></ProtectedRoute>} />
           <Route path="/payments/:id" element={<ProtectedRoute><PaymentDetailPage /></ProtectedRoute>} />
           <Route path="/evidence/contribute" element={<ProtectedRoute><EvidenceContributionPage /></ProtectedRoute>} />
+          <Route path="/evidence/review" element={<ProtectedRoute><EvidenceReviewPage /></ProtectedRoute>} />
           <Route path="/evidence" element={<ProtectedRoute><EvidencePage /></ProtectedRoute>} />
           <Route path="/recalls" element={<ProtectedRoute><RecallCenterPage /></ProtectedRoute>} />
           <Route path="/audit" element={<ProtectedRoute><AuditPage /></ProtectedRoute>} />

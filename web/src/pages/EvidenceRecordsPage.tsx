@@ -1,3 +1,4 @@
+import EvidenceReviewHistory from '../components/evidenceReview/EvidenceReviewHistory';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { evidence } from '../api';
@@ -11,6 +12,7 @@ export default function EvidenceRecordsPage() {
   const { canDo } = useAuthCtx();
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const [historyId, setHistoryId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const entityType = params.get('entityType'),
     entityId = params.get('entityId');
@@ -37,6 +39,11 @@ export default function EvidenceRecordsPage() {
           <p className="text-xs text-text-muted">
             {page.items.length} {page.items.length === 1 ? 'file' : 'files'} on this page
           </p>
+          {canDo('*') && (
+            <button className="btn btn-sm" onClick={() => navigate('/evidence/review')}>
+              Document review queue
+            </button>
+          )}
           {canDo('evidence.upload') && (
             <button
               className="btn btn-sm btn-primary"
@@ -75,6 +82,7 @@ export default function EvidenceRecordsPage() {
                 <th>Review</th>
                 <th>Scan</th>
                 <th>Uploaded</th>
+                <th>History</th>
               </tr>
             </thead>
             <tbody>
@@ -89,10 +97,19 @@ export default function EvidenceRecordsPage() {
                     {item.linked_entity_type}/{item.linked_entity_id.slice(0, 8)}…
                   </td>
                   <td>
-                    <StatusBadge status={item.review_status} />
+                    {item.superseded_by_evidence_id ? (
+                      'Replaced'
+                    ) : (
+                      <StatusBadge status={item.review_status} />
+                    )}
                   </td>
                   <td>{(item.malware_scan_status || 'Unknown').replace(/_/g, ' ')}</td>
                   <td className="text-[11px]">{new Date(item.created_at).toLocaleDateString()}</td>
+                  <td>
+                    <button className="btn btn-sm" onClick={() => setHistoryId(item.id)}>
+                      History and replacement
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -106,6 +123,14 @@ export default function EvidenceRecordsPage() {
           </p>
         )}
         <PageNavigation label="evidence" page={page} />
+        {historyId && (
+          <EvidenceReviewHistory
+            key={historyId}
+            evidenceId={historyId}
+            onClose={() => setHistoryId(null)}
+            onChanged={page.refresh}
+          />
+        )}
       </section>
     </Layout>
   );

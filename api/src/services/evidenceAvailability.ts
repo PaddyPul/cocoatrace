@@ -17,6 +17,7 @@ const fields = [
   'malware_scan_status',
   'review_status',
   'malware_scanned_at',
+  'superseded_by_evidence_id',
 ];
 export function evidenceAvailabilityProjection(alias = ''): string {
   const key = alias ? `${alias}.storage_key` : 'evidence_items.storage_key';
@@ -27,7 +28,10 @@ export function evidenceAvailabilityProjection(alias = ''): string {
 }
 export function evidenceAvailabilityUsableSql(alias = ''): string {
   const key = alias ? `${alias}.storage_key` : 'evidence_items.storage_key';
-  return `NOT EXISTS(SELECT 1 FROM evidence_object_cleanup cleanup WHERE cleanup.object_key=${key} AND cleanup.state<>'retained')`;
+  const superseded = alias
+    ? `${alias}.superseded_by_evidence_id`
+    : 'evidence_items.superseded_by_evidence_id';
+  return `${superseded} IS NULL AND NOT EXISTS(SELECT 1 FROM evidence_object_cleanup cleanup WHERE cleanup.object_key=${key} AND cleanup.state<>'retained')`;
 }
 export function evidenceAvailabilityFingerprint(row: Record<string, unknown>): string {
   return JSON.stringify([...fields, 'cleanup_state'].map((field) => row[field] ?? null));
@@ -66,6 +70,7 @@ export async function preflightEvidence(
       while (!stopped && next < rows.length) {
         const row = rows[next++];
         if (
+          row.superseded_by_evidence_id != null ||
           typeof row.storage_key !== 'string' ||
           !row.storage_key ||
           !['legacy', 'retained'].includes(String(row.cleanup_state))

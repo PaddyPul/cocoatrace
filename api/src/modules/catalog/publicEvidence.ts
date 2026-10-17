@@ -4,6 +4,7 @@ import { type Execute, literal, pageResult, parsePage, text, withCatalogRead } f
 
 // Public approval requires the latest independent review, valid bytes and a clean scan.
 const eligibility = `e.linked_entity_type='batch' AND e.linked_entity_id=$1::uuid
+ AND e.superseded_by_evidence_id IS NULL
  AND e.review_status='approved' AND e.validation_status='validated' AND e.malware_scan_status='clean'
  AND EXISTS(SELECT 1 FROM LATERAL (
  SELECT tr.status,tr.expires_at,tr.reviewer_user_id,tr.reviewer_organization_id FROM trust_claim_reviews tr

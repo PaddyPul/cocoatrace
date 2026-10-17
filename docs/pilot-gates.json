@@ -1,5 +1,5 @@
 {
-  "reviewedAt": "2026-10-16",
+  "reviewedAt": "2026-10-17",
   "method": "Equal gate count, no partial credit. Provider launch also requires every core gate. This is closure evidence, not a safety probability or valuation measure.",
   "gates": [
     {
