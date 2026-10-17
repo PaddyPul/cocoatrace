@@ -221,3 +221,7 @@ Founder accepts QLT-010/012/014 full release and merge:148/343 (43.1%). PER-004/
 ## 2026-10-17 document review candidate
 
 Founder accepts capacity bundle and correction after full release and merge: PER-004, QLT-016 and OPS-014 complete,151/343 (44.0%). Local measurements are not hosted SLO evidence. UPL-009/UPL-011 remain in progress pending this candidate release; acceptance would yield153/343 (44.6%). DAT-003/DAT-010 and hosted pilot gates remain open.
+
+## 2026-10-17 delivery acceptance guidance
+
+Founder reports document review/history and corrections full release and merge accepted. UPL-009/UPL-011 complete:153/343 (44.6%). Delivery acceptance correction makes the existing note, quantity and confirmation requirements visible; no extra backlog completion credit.

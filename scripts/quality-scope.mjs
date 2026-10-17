@@ -1,5 +1,9 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'e2e/feeCollectionStatus.spec.ts',
+  'web/src/components/fees/FeeStatement.tsx',
+  'e2e/platformFeeJourney.spec.ts',
+  'web/src/components/delivery/DeliveryAcceptance.tsx',
   'api/src/modules/documentReview/**/*.ts',
   'api/src/routes/documentReview.ts',
   'api/test/integration/documentReview.integration.test.ts',
