@@ -32,6 +32,7 @@ export default tseslint.config(
   },
   {
     files: [
+      'api/src/modules/recall/{lifecycle,notifications,activationRepository,notificationRepository,response,responseRepository,responseModel,policy}{,.test}.ts',
       'api/src/modules/support/**/*.ts',
       'api/src/modules/agreements/**/*.ts',
       'api/src/modules/transportTiming/**/*.ts',

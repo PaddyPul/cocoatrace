@@ -1,5 +1,8 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/modules/recall/{lifecycle,notifications,activationRepository,notificationRepository,response,responseRepository,responseModel,policy}{,.test}.ts',
+  'api/src/testing/recallArchitecture.test.ts',
+  'api/test/integration/recallRoles.integration.test.ts',
   'api/src/modules/evidenceWorkflow/**/*.ts',
   'api/src/controllers/evidenceController.ts',
   'api/src/controllers/paymentController.ts',
