@@ -1,5 +1,9 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/testing/adapterContracts.test.ts',
+  'e2e/supplierPublishingJourney.spec.ts',
+  'e2e/deliveryExceptionJourney.spec.ts',
+  'e2e/recallResponseJourney.spec.ts',
   'api/src/testing/recallDrill*.ts',
   'api/test/integration/recallTabletop.integration.test.ts',
   'scripts/recall-drill*.mjs',
