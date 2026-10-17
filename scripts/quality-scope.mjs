@@ -1,5 +1,9 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/modules/evidenceWorkflow/**/*.ts',
+  'api/src/controllers/evidenceController.ts',
+  'api/src/controllers/paymentController.ts',
+  'api/src/testing/evidencePaymentArchitecture.test.ts',
   'api/src/modules/transportWorkflow/**/*.ts',
   'api/src/controllers/shipmentController.ts',
   'api/src/testing/transportArchitecture.test.ts',

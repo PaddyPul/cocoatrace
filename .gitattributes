@@ -300,3 +300,8 @@ api/src/modules/transportWorkflow/**/*.ts text eol=lf
 api/src/controllers/shipmentController.ts text eol=lf
 api/src/testing/transportArchitecture.test.ts text eol=lf
 api/src/testing/cookieWriteOrigins.test.ts text eol=lf
+
+api/src/modules/evidenceWorkflow/**/*.ts text eol=lf
+api/src/controllers/evidenceController.ts text eol=lf
+api/src/controllers/paymentController.ts text eol=lf
+api/src/testing/evidencePaymentArchitecture.test.ts text eol=lf

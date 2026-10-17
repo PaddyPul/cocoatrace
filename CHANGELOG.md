@@ -1,5 +1,12 @@
 # Changelog
 
+## Evidence and payment boundaries — 2026-10-17
+
+- Separate private evidence download policy, metadata repository, storage and response lifecycle while retaining tenant admission and release rules.
+- Finish payment-request creation/use-case ownership alongside existing payment-plan, installment, security/document and issue modules.
+- Reconcile accepted transport/security wave; two new targets remain pending runtime release/review/merge.
+
+
 ## Transport transitions and cookie-write boundaries — 2026-10-17
 
 - Extract shipment arrangement/progression into typed named workflow modules, preserving Incoterm, payment, recall, timing and settlement rules.

@@ -197,3 +197,7 @@ Founder accepts corrected LOG-008/010 full release and merge:133/343 (38.8%). QL
 ## Transport transitions and cookie-write route coverage — 2026-10-17
 
 Founder accepts QLT-018/INV-004/INV-005 full release and merge:136/343 (39.7%). ARC-007 and SEC-007 are combined targets: named typed shipment transitions alongside existing delivery use cases, and global origin regression coverage across all registered mutating endpoints. Acceptance yields138/343 (40.2%); broad controller extraction, complete resource matrix and hosted ingress remain open. Core11/28 and provider-inclusive11/40 unchanged.
+
+## Evidence and payment boundary closure — 2026-10-17
+
+Founder accepts ARC-007/SEC-007 full release and merge:138/343 (40.2%). Audit confirms payment terms, installments, documents/security and issue use cases already reside in domain modules; remaining payment-request creation and legacy HTTP bridge plus evidence download policy/SQL/lifecycle separation are the focused gaps. ARC-004/006 are candidate closure targets; acceptance yields140/343 (40.8%). Broad controller extraction, resource matrix and hosted/file-capacity work stay open. Core11/28 and provider-inclusive11/40 unchanged.
