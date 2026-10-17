@@ -309,6 +309,22 @@
         "api/test/integration/notificationCenter.integration.test.ts"
       ],
       "remaining": "Native/browser runtime acceptance pending; universal resource matrix and hosted deployment remain separately tracked."
+    },
+    "api/src/modules/transportTiming/routes.ts": {
+      "scope": "Current contract-party shipment readers only; reviewed timing updates require current Incoterm coordinator and shipment.update, live transactional session/grants/assurance and optimistic revision. Existing arrangement ETA follows shared timing write policy.",
+      "evidence": [
+        "api/src/modules/transportTiming/repository.ts",
+        "api/test/integration/transportTiming.integration.test.ts"
+      ],
+      "remaining": "Native/browser runtime release pending; universal resource matrix and hosted operations remain separately tracked."
+    },
+    "api/src/modules/dispatchAcknowledgement/routes.ts": {
+      "scope": "Current contract-party shipment readers only; only buyer with shipment.update can acknowledge a current seller exception hash. Live session/grants/assurance, immutable idempotent receipt and atomic audit. No seller self-ack or wildcard foreign bypass.",
+      "evidence": [
+        "api/src/modules/dispatchAcknowledgement/repository.ts",
+        "api/test/integration/dispatchAcknowledgement.integration.test.ts"
+      ],
+      "remaining": "Native/browser runtime release pending; universal resource matrix and hosted operations remain separately tracked."
     }
   },
   "routes": [
@@ -2192,6 +2208,44 @@
     },
     {
       "method": "GET",
+      "path": "/shipments/:id/dispatch-acknowledgement",
+      "source": "api/src/modules/dispatchAcknowledgement/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "shipment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/shipments/:id/timing",
+      "source": "api/src/modules/transportTiming/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "shipment.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
       "path": "/shipments/page",
       "source": "api/src/routes/shipments.ts",
       "guards": [
@@ -4019,6 +4073,27 @@
     },
     {
       "method": "POST",
+      "path": "/shipments/:id/dispatch-acknowledgement",
+      "source": "api/src/modules/dispatchAcknowledgement/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "shipment.read"
+          ]
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
       "path": "/shipments/:id/milestones",
       "source": "api/src/routes/shipments.ts",
       "guards": [
@@ -4034,6 +4109,27 @@
       ],
       "entryControls": [],
       "handler": "shipmentController.recordMilestone",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/shipments/:id/timing",
+      "source": "api/src/modules/transportTiming/routes.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "shipment.update"
+          ]
+        }
+      ],
+      "entryControls": [
+        "sensitiveActionLimit"
+      ],
+      "handler": "inline",
       "authentication": "session"
     },
     {

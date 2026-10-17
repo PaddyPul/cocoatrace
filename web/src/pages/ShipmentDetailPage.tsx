@@ -1,3 +1,5 @@
+import TransportTiming from '../components/transport/TransportTiming';
+import DispatchAcknowledgement from '../components/transport/DispatchAcknowledgement';
 import { safeExternalHttpsUrl } from '../security/externalUrls';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -65,7 +67,6 @@ export default function ShipmentDetailPage() {
       transportDocumentReference: s.transport_document_reference || '', trackingUrl: s.tracking_url || '',
       vesselName: s.vessel_name || '', containerReference: s.container_reference || '',
       originLocation: s.origin_port || '', destinationLocation: s.destination_port || '',
-      etaArrival: s.eta_arrival ? String(s.eta_arrival).slice(0, 10) : '',
     });
     setDetailsError(''); setShowDetails(true);
   };
@@ -105,6 +106,7 @@ export default function ShipmentDetailPage() {
   return <Layout currentPage="shipments" actions={<button className="btn btn-sm" onClick={() => navigate('/shipments')}><ArrowLeft size={14} /> Back</button>}>
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-5">
+        <TransportTiming shipmentId={s.id} /><DispatchAcknowledgement shipmentId={s.id} />
         <div className="bg-brand-500/10 border border-brand-500/30 rounded p-4 text-xs leading-5">
           <div className="font-semibold text-brand-400">Buyer–seller managed transport</div>{['FAS','FOB','CFR','CIF'].includes(s.incoterm) && !['unspecified','sea','inland_waterway'].includes(s.transport_mode) && <p className="text-amber-400">This Incoterm is for sea or inland-waterway carriage. Review the contract and mode before using it for this route.</p>}
           <div className="text-text-muted">{s.transport_coordinator_name} coordinates transport under {s.incoterm}. External providers do not need a BetterTrade account; Departure and arrival are reports from the coordinating party, not independently verified carrier events. Destination receipt is separate from inspection and acceptance.</div>
@@ -155,7 +157,7 @@ export default function ShipmentDetailPage() {
       <Input label="Document reference" value={details.transportDocumentReference} onChange={(value) => setDetails({ ...details, transportDocumentReference: value })} /><Input label="Tracking URL" value={details.trackingUrl} onChange={(value) => setDetails({ ...details, trackingUrl: value })} />
       <Input label="Origin" value={details.originLocation} onChange={(value) => setDetails({ ...details, originLocation: value })} /><Input label="Destination" value={details.destinationLocation} onChange={(value) => setDetails({ ...details, destinationLocation: value })} />
       <Input label="Vessel / vehicle (optional)" value={details.vesselName} onChange={(value) => setDetails({ ...details, vesselName: value })} /><Input label="Container / equipment (optional)" value={details.containerReference} onChange={(value) => setDetails({ ...details, containerReference: value })} />
-      <div className="col-span-2"><label className="form-label">Estimated arrival</label><input type="date" className="form-input" value={details.etaArrival} onChange={(e) => setDetails({ ...details, etaArrival: e.target.value })} /></div></div>
+      <p className="col-span-2 text-xs text-text-muted">Review estimated arrival and delay reasons in Shipment timing.</p></div>
       <ErrorBox message={detailsError} /><Buttons busy={detailsLoading} onCancel={() => setShowDetails(false)} onConfirm={saveDetails} label="Save arrangement" />
     </div></Modal>}
 

@@ -1,3 +1,4 @@
+import { writeTiming, lockTimingActor } from '../modules/transportTiming/write';
 import { privateShipmentDetail } from '../modules/transport/privateShipmentDetail';
 import {legacyShipments} from '../modules/catalog/shipments';
 import {withCatalogRead} from '../modules/catalog/paging';
@@ -31,17 +32,19 @@ export async function updateShipmentDetails(req: Request, res: Response): Promis
   const {
     serviceProviderName, bookingReference, transportMode, transportDocumentType,
     transportDocumentReference, trackingUrl, vesselName, containerReference,
-    originLocation, destinationLocation, etaArrival,
+    originLocation, destinationLocation, etaArrival, delayReason, timingRevision,
   } = req.body;
   const client = await getClient();
   try {
     await client.query('BEGIN');
+    if (etaArrival) await lockTimingActor(client, req.user!);
     await lockRecallBoundary(client);
     const selected = await client.query(`SELECT c.status,c.incoterm,c.seller_organization_id,c.buyer_organization_id,sh.transport_coordinator_organization_id FROM sales_contracts c JOIN shipments sh ON sh.contract_id=c.id WHERE sh.id=$1 AND sh.transport_coordinator_organization_id=$2 FOR UPDATE OF c`, [id, req.user!.organizationId]);
     if (!selected.rows[0] || !canArrange(selected.rows[0], req.user!.organizationId)) { await client.query('ROLLBACK'); res.status(403).json({error:'Only the assigned contract party may edit this arrangement',code:'TRANSPORT_ACTION_FORBIDDEN'}); return; }
     if (selected.rows[0]?.status === 'cancelled') {
       await client.query('ROLLBACK'); res.status(409).json({ error: 'This trade has been cancelled' }); return;
     }
+  if (etaArrival) await writeTiming(client, req.user!, id, etaArrival, delayReason, timingRevision);
   const { rows } = await client.query(
     `UPDATE shipments sh SET
        service_provider_name=COALESCE($1, service_provider_name),
@@ -54,7 +57,7 @@ export async function updateShipmentDetails(req: Request, res: Response): Promis
        container_reference=COALESCE($8, container_reference),
        origin_port=COALESCE($9, origin_port),
        destination_port=COALESCE($10, destination_port),
-       eta_arrival=COALESCE($11, eta_arrival),
+       eta_arrival=CASE WHEN $11::date IS NULL THEN eta_arrival ELSE eta_arrival END,
        bill_of_lading_number=CASE WHEN $4='bill_of_lading' THEN COALESCE($5, bill_of_lading_number) ELSE bill_of_lading_number END,
        current_milestone=CASE WHEN current_milestone='planning' AND ($1 IS NOT NULL OR $2 IS NOT NULL) THEN 'booked' ELSE current_milestone END
      FROM sales_contracts c

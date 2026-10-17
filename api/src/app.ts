@@ -42,6 +42,8 @@ import listingLifecycleRoutes from './modules/listingLifecycle/routes';
 import supportRoutes from './modules/support/routes';
 import agreementRoutes from './modules/agreements/routes';
 import notificationRoutes from './modules/notifications/routes';
+import transportTimingRoutes from './modules/transportTiming/routes';
+import dispatchAcknowledgementRoutes from './modules/dispatchAcknowledgement/routes';
 import organizationAccessRoutes from './modules/organizationAccess';
 
 const app = express();
@@ -133,6 +135,8 @@ app.use(listingLifecycleRoutes);
 app.use(supportRoutes);
 app.use(agreementRoutes);
 app.use(notificationRoutes);
+app.use(transportTimingRoutes);
+app.use(dispatchAcknowledgementRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });

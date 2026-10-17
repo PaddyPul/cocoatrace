@@ -188,6 +188,14 @@
     {
       "path": "api/src/migrations/045_notification_reads.ts",
       "sha256": "62bb6a21fda9f82dcd5e5ca09867b00117dcb62aec2e73ccbdf6649cc6873da1"
+    },
+    {
+      "path": "api/src/migrations/046_transport_timing.ts",
+      "sha256": "1c59815b9ef75bfc3b40ef8d554667e11ddd0c283656b5d14ff8f2eac752020e"
+    },
+    {
+      "path": "api/src/migrations/047_dispatch_acknowledgements.ts",
+      "sha256": "3c515a3628c7d1e21daba13c2670b0df2752668a4d5bd899f52c4183f482605b"
     }
   ]
 }

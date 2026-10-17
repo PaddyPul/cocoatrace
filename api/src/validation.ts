@@ -199,6 +199,8 @@ export const updateShipmentDetailsSchema = z.object({
   originLocation: z.string().trim().min(1).optional(),
   destinationLocation: z.string().trim().min(1).optional(),
   etaArrival: z.string().optional(),
+  delayReason: z.string().trim().min(3).max(1000).optional(),
+  timingRevision: z.number().int().min(0).optional(),
 }).refine((value) => Object.values(value).some(Boolean), 'Provide at least one transport detail');
 
 export const createPaymentRequestSchema = z.object({

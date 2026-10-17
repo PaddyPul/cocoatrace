@@ -2,7 +2,7 @@ import type { PoolClient } from 'pg';
 import { AppError, NotFoundError } from '../../errors';
 import type { AuthenticatedActor } from '../../services/authSessionService';
 import { inDatabaseTransaction } from '../../services/databaseTransaction';
-import { loadTradeActions } from '../../services/tradeActionRepository';
+import { currentNotificationActions } from './currentActions';
 import { assertMutationAssurance } from '../mfa/assurance';
 import { lockAccessDecisions } from '../mfa/reviewers';
 import { cursorOffset, hash, notice, pageInput } from './policy';
@@ -27,7 +27,7 @@ async function liveActor(client: PoolClient, actor: AuthenticatedActor) {
   return { ...actor, permissions: grants.map((row) => String(row.permission)) };
 }
 async function snapshot(client: PoolClient, actor: AuthenticatedActor) {
-  const actions = await loadTradeActions(actor, undefined, client.query.bind(client), 1000);
+  const actions = await currentNotificationActions(actor, client.query.bind(client));
   if (actions.length > 1000)
     throw new AppError(
       'Current notifications exceed the supported scope',
