@@ -116,10 +116,13 @@ describe('real PostgreSQL trading inventory integrity', () => {
     expect(remaining.holding_id).toBe(s.holdingId);
     expect(Number(remaining.available_quantity_kg)).toBe(6);
     expect(remaining).toMatchObject({ active: true, price_per_kg: '5.0000', currency: 'EUR', incoterm: 'FOB', origin_location: 'Tema', destination_location: 'Rotterdam' });
-    const marketplace = await request(app).get('/listings').set('Authorization', `Bearer ${buyer.token}`);
-    expect(marketplace.status).toBe(200);
-    expect(marketplace.body.find((item: { id: string }) => item.id === remaining.id)).toMatchObject({ available_quantity_kg: '6.000', active: true });
-    expect(marketplace.body.some((item: { id: string }) => item.id === originalId)).toBe(false);
+    const marketplace = await request(app).get('/listings/page').query({id:remaining.id}).set('Authorization', `Bearer ${buyer.token}`);
+    expect(marketplace.status,JSON.stringify(marketplace.body)).toBe(200);
+    expect(marketplace.body.items).toHaveLength(1);
+    expect(marketplace.body.items[0]).toMatchObject({ id:remaining.id, available_quantity_kg: '6.000', active: true });
+    const retired = await request(app).get('/listings/page').query({id:originalId}).set('Authorization', `Bearer ${buyer.token}`);
+    expect(retired.status,JSON.stringify(retired.body)).toBe(200);
+    expect(retired.body.items).toEqual([]);
     const original = (await query('SELECT holding_id,active,available_quantity_kg FROM listings WHERE id=$1', [originalId])).rows[0];
     expect(original.active).toBe(false);
     expect(original.holding_id).toBe(accepted.body.contract.holding_id);

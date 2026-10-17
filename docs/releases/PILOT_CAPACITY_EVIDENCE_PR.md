@@ -20,6 +20,7 @@ Release acceptance now records a reproducible local PostgreSQL/HTTP capacity bas
 - Seed1,005listings,100provenance metadata rows and a200lot/199edge graph; independently verify page scope, actionable offer decisions, provenance completeness state, trace quantities and exact offer/audit/inventory invariants.
 - Record current Git SHA, host/data context, concurrency, sample counts, nearest-rank p50/p95/p99/max, error counts and invariant outcomes in a bounded sanitized report.
 - Reject missing/stale/over-budget evidence. Invalidate prior output before native integration; check fresh output after and archive CI summaries for30days.
+- Retire only the load suite’s uniquely owned public listings after measurement, including failure paths. Marketplace regressions use exact paged IDs or the explicit complete/overflow legacy contract, so unrelated supply cannot invalidate their assertions.
 - Source-check32 database/storage/upload/scanner/trace defaults and ceilings without importing runtime configuration or executing expressions. Declare provisional p95≤2s/p99≤5s regression targets separately from results.
 
 ## Security and data review
@@ -46,7 +47,7 @@ Release acceptance now records a reproducible local PostgreSQL/HTTP capacity bas
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: Author:1423 API unit tests, workspace API/web/browser types, strict compilation of the native load suite, quality, API/web builds, report contracts3 and release-runner17 passed.222-route register, pilot evidence/backlog/risk/branding and migration integrity passed. No runtime throughput/latency result exists on this author host. Exact-commit Docker/native load report, full release and required CI remain pending; update with actual report SHA/date and observed p95/p99 after execution. Existing browser gates remain mandatory; no new UI scenario is claimed.
+- Evidence/results: Author:1423 API unit tests, workspace API/web/browser types, strict compilation of the native load suite, quality, API/web builds, report contracts3 and release-runner17 passed.222-route register, pilot evidence/backlog/risk/branding and migration integrity passed. No runtime throughput/latency result exists on this author host. Founder Windows candidate measurements: all six workloads100samples/concurrency4, zero errors, maximum observed p95 105.61ms and p99 155.04ms. Those load-only results do not establish a full release pass; corrected candidate runtime acceptance remains pending. Strict compilation of all three affected native suites passes. Exact-commit Docker/native load report, full release and required CI remain pending; update with actual report SHA/date and observed p95/p99 after execution. Existing browser gates remain mandatory; no new UI scenario is claimed.
 
 ## Product and operations
 

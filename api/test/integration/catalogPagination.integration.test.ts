@@ -82,9 +82,19 @@ describe('inventory/marketplace pages and aggregate totals',()=>{
       expect(heldTotals.own_count).toBe(0);
       expect(heldTotals.count).toBe(supplyTotals.count-1005);
       const visible=await get('/listings');
-      expect(visible.status,JSON.stringify(visible.body)).toBe(200);
-      expect(visible.body.some((row:{batch_id:string})=>row.batch_id===own.batch)).toBe(false);
-      expect(foreign.listings.every(listing=>visible.body.some((row:{id:string})=>row.id===listing.id))).toBe(true);
+      // Other suites may legitimately leave public supply. A legacy response is
+      // complete or explicit overflow, never a silently truncated first page.
+      if (heldTotals.count <= 1000) {
+        expect(visible.status,JSON.stringify(visible.body)).toBe(200);
+        expect(visible.body.some((row:{batch_id:string})=>row.batch_id===own.batch)).toBe(false);
+        expect(foreign.listings.every(listing=>visible.body.some((row:{id:string})=>row.id===listing.id))).toBe(true);
+      } else {
+        expect(visible.status,JSON.stringify(visible.body)).toBe(422);
+        expect(visible.body.code).toBe('CATALOG_READ_LIMIT');
+      }
+      expect(await pageItems('/listings/page',{id:offPage.id})).toEqual([]);
+      for (const listing of foreign.listings)
+        expect((await pageItems('/listings/page',{id:listing.id})).map((row:{id:string})=>row.id)).toEqual([listing.id]);
     } finally {await query('DELETE FROM recall_affected_batches WHERE recall_id=$1',[hidden]);await query('DELETE FROM recall_notices WHERE id=$1',[hidden]);}
     await query("UPDATE batch_holdings SET status='committed' WHERE id=$1",[later.id]);
     expect(await pageItems('/holdings/page',{available:'true',search:later.id})).toEqual([]);

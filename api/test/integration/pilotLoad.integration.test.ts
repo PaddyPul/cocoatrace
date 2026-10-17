@@ -372,10 +372,24 @@ afterAll(async () => {
     fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
     assertPilotLoadReport(report, candidate, targets);
   } finally {
-    if (server)
-      await new Promise<void>((resolve, reject) =>
-        server!.close((error) => (error ? reject(error) : resolve())),
-      );
-    await pool.end();
+    try {
+      if (server)
+        await new Promise<void>((resolve, reject) =>
+          server!.close((error) => (error ? reject(error) : resolve())),
+        );
+    } finally {
+      try {
+        requireDisposableTestDatabase(process.env.TEST_DATABASE_URL || process.env.DATABASE_URL);
+        // Public marketplace fixtures must not leak into later suites. Keep their
+        // audited history but retire only this suite's uniquely owned listings.
+        if (seller?.organizationId && holdingId)
+          await query(
+            'UPDATE listings SET active=FALSE WHERE seller_organization_id=$1 AND holding_id=$2',
+            [seller.organizationId, holdingId],
+          );
+      } finally {
+        await pool.end();
+      }
+    }
   }
 }, 30_000);
