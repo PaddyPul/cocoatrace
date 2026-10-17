@@ -1,5 +1,10 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/testing/pilotLoadReport*.ts',
+  'api/src/testing/capacityPolicy*.ts',
+  'api/test/integration/pilotLoad.integration.test.ts',
+  'scripts/pilot-load*.mjs',
+  'docs/performance/capacity-policy.json',
   'api/src/testing/adapterContracts.test.ts',
   'e2e/supplierPublishingJourney.spec.ts',
   'e2e/deliveryExceptionJourney.spec.ts',

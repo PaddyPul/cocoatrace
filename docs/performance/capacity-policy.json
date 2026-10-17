@@ -1,0 +1,407 @@
+{
+  "schemaVersion": 1,
+  "status": "source-checked policy; workload measurement required",
+  "budgets": [
+    {
+      "id": "database_pool_max.default",
+      "kind": "configured-default",
+      "value": 10,
+      "unit": "connections",
+      "scope": "per API process",
+      "source": "api/src/config/env.ts",
+      "selector": {
+        "type": "schema-call",
+        "name": "DATABASE_POOL_MAX",
+        "method": "default"
+      }
+    },
+    {
+      "id": "database_pool_max.max",
+      "kind": "configuration-ceiling",
+      "value": 100,
+      "unit": "connections",
+      "scope": "per API process",
+      "source": "api/src/config/env.ts",
+      "selector": {
+        "type": "schema-call",
+        "name": "DATABASE_POOL_MAX",
+        "method": "max"
+      }
+    },
+    {
+      "id": "evidence_max_file_bytes.default",
+      "kind": "configured-default",
+      "value": 10485760,
+      "unit": "bytes",
+      "scope": "per transfer attempt",
+      "source": "api/src/config/env.ts",
+      "selector": {
+        "type": "schema-call",
+        "name": "EVIDENCE_MAX_FILE_BYTES",
+        "method": "default"
+      }
+    },
+    {
+      "id": "evidence_max_file_bytes.max",
+      "kind": "configuration-ceiling",
+      "value": 104857600,
+      "unit": "bytes",
+      "scope": "per transfer attempt",
+      "source": "api/src/config/env.ts",
+      "selector": {
+        "type": "schema-call",
+        "name": "EVIDENCE_MAX_FILE_BYTES",
+        "method": "max"
+      }
+    },
+    {
+      "id": "evidence_organization_quota_bytes.default",
+      "kind": "configured-default",
+      "value": 1073741824,
+      "unit": "bytes",
+      "scope": "per organization",
+      "source": "api/src/config/env.ts",
+      "selector": {
+        "type": "schema-call",
+        "name": "EVIDENCE_ORGANIZATION_QUOTA_BYTES",
+        "method": "default"
+      }
+    },
+    {
+      "id": "evidence_storage_timeout_ms.default",
+      "kind": "configured-default",
+      "value": 15000,
+      "unit": "ms",
+      "scope": "per transfer attempt",
+      "source": "api/src/config/env.ts",
+      "selector": {
+        "type": "schema-call",
+        "name": "EVIDENCE_STORAGE_TIMEOUT_MS",
+        "method": "default"
+      }
+    },
+    {
+      "id": "evidence_storage_timeout_ms.max",
+      "kind": "configuration-ceiling",
+      "value": 120000,
+      "unit": "ms",
+      "scope": "per transfer attempt",
+      "source": "api/src/config/env.ts",
+      "selector": {
+        "type": "schema-call",
+        "name": "EVIDENCE_STORAGE_TIMEOUT_MS",
+        "method": "max"
+      }
+    },
+    {
+      "id": "evidence_scanner_timeout_ms.default",
+      "kind": "configured-default",
+      "value": 15000,
+      "unit": "ms",
+      "scope": "per transfer attempt",
+      "source": "api/src/config/env.ts",
+      "selector": {
+        "type": "schema-call",
+        "name": "EVIDENCE_SCANNER_TIMEOUT_MS",
+        "method": "default"
+      }
+    },
+    {
+      "id": "evidence_scanner_timeout_ms.max",
+      "kind": "configuration-ceiling",
+      "value": 120000,
+      "unit": "ms",
+      "scope": "per transfer attempt",
+      "source": "api/src/config/env.ts",
+      "selector": {
+        "type": "schema-call",
+        "name": "EVIDENCE_SCANNER_TIMEOUT_MS",
+        "method": "max"
+      }
+    },
+    {
+      "id": "evidence_scanner_retries.default",
+      "kind": "configured-default",
+      "value": 2,
+      "unit": "retries",
+      "scope": "per transfer attempt",
+      "source": "api/src/config/env.ts",
+      "selector": {
+        "type": "schema-call",
+        "name": "EVIDENCE_SCANNER_RETRIES",
+        "method": "default"
+      }
+    },
+    {
+      "id": "evidence_scanner_retries.max",
+      "kind": "configuration-ceiling",
+      "value": 5,
+      "unit": "retries",
+      "scope": "per transfer attempt",
+      "source": "api/src/config/env.ts",
+      "selector": {
+        "type": "schema-call",
+        "name": "EVIDENCE_SCANNER_RETRIES",
+        "method": "max"
+      }
+    },
+    {
+      "id": "evidence_global_transfer_limit",
+      "kind": "hard-cap",
+      "value": 4,
+      "unit": "transfers",
+      "scope": "per API process",
+      "source": "api/src/modules/security/evidenceConcurrency.ts",
+      "selector": {
+        "type": "declaration",
+        "name": "EVIDENCE_GLOBAL_TRANSFER_LIMIT"
+      }
+    },
+    {
+      "id": "evidence_tenant_transfer_limit",
+      "kind": "hard-cap",
+      "value": 2,
+      "unit": "transfers",
+      "scope": "per organization per API process",
+      "source": "api/src/modules/security/evidenceConcurrency.ts",
+      "selector": {
+        "type": "declaration",
+        "name": "EVIDENCE_TENANT_TRANSFER_LIMIT"
+      }
+    },
+    {
+      "id": "trace.lots",
+      "kind": "hard-cap",
+      "value": 2000,
+      "unit": "units",
+      "scope": "per trace operation",
+      "source": "api/src/modules/trace/limits.ts",
+      "selector": {
+        "type": "property",
+        "name": "lots"
+      }
+    },
+    {
+      "id": "trace.edges",
+      "kind": "hard-cap",
+      "value": 8000,
+      "unit": "units",
+      "scope": "per trace operation",
+      "source": "api/src/modules/trace/limits.ts",
+      "selector": {
+        "type": "property",
+        "name": "edges"
+      }
+    },
+    {
+      "id": "trace.distributions",
+      "kind": "hard-cap",
+      "value": 8000,
+      "unit": "units",
+      "scope": "per trace operation",
+      "source": "api/src/modules/trace/limits.ts",
+      "selector": {
+        "type": "property",
+        "name": "distributions"
+      }
+    },
+    {
+      "id": "trace.seeds",
+      "kind": "hard-cap",
+      "value": 100,
+      "unit": "units",
+      "scope": "per trace operation",
+      "source": "api/src/modules/trace/limits.ts",
+      "selector": {
+        "type": "property",
+        "name": "seeds"
+      }
+    },
+    {
+      "id": "trace.depth",
+      "kind": "hard-cap",
+      "value": 128,
+      "unit": "units",
+      "scope": "per trace operation",
+      "source": "api/src/modules/trace/limits.ts",
+      "selector": {
+        "type": "property",
+        "name": "depth"
+      }
+    },
+    {
+      "id": "trace.work",
+      "kind": "hard-cap",
+      "value": 200000,
+      "unit": "units",
+      "scope": "per trace operation",
+      "source": "api/src/modules/trace/limits.ts",
+      "selector": {
+        "type": "property",
+        "name": "work"
+      }
+    },
+    {
+      "id": "trace.calculationMs",
+      "kind": "hard-cap",
+      "value": 250,
+      "unit": "ms",
+      "scope": "per trace operation",
+      "source": "api/src/modules/trace/limits.ts",
+      "selector": {
+        "type": "property",
+        "name": "calculationMs"
+      }
+    },
+    {
+      "id": "trace.databaseMs",
+      "kind": "hard-cap",
+      "value": 5000,
+      "unit": "ms",
+      "scope": "per trace operation",
+      "source": "api/src/modules/trace/limits.ts",
+      "selector": {
+        "type": "property",
+        "name": "databaseMs"
+      }
+    },
+    {
+      "id": "trace.activationMs",
+      "kind": "hard-cap",
+      "value": 10000,
+      "unit": "ms",
+      "scope": "per trace operation",
+      "source": "api/src/modules/trace/limits.ts",
+      "selector": {
+        "type": "property",
+        "name": "activationMs"
+      }
+    },
+    {
+      "id": "trace.statementMs",
+      "kind": "hard-cap",
+      "value": 2000,
+      "unit": "ms",
+      "scope": "per trace operation",
+      "source": "api/src/modules/trace/limits.ts",
+      "selector": {
+        "type": "property",
+        "name": "statementMs"
+      }
+    },
+    {
+      "id": "database.idleTimeoutMillis",
+      "kind": "hard-cap",
+      "value": 30000,
+      "unit": "ms",
+      "scope": "per pool connection",
+      "source": "api/src/db.ts",
+      "selector": {
+        "type": "property",
+        "name": "idleTimeoutMillis"
+      }
+    },
+    {
+      "id": "database.connectionTimeoutMillis",
+      "kind": "hard-cap",
+      "value": 5000,
+      "unit": "ms",
+      "scope": "per pool connection",
+      "source": "api/src/db.ts",
+      "selector": {
+        "type": "property",
+        "name": "connectionTimeoutMillis"
+      }
+    },
+    {
+      "id": "catalog.page.default",
+      "kind": "configured-default",
+      "value": 50,
+      "unit": "records",
+      "scope": "per page",
+      "source": "api/src/modules/catalog/paging.ts",
+      "selector": {
+        "type": "string-number",
+        "text": "50"
+      }
+    },
+    {
+      "id": "catalog.page.maximum",
+      "kind": "hard-cap",
+      "value": 100,
+      "unit": "records",
+      "scope": "per page",
+      "source": "api/src/modules/catalog/paging.ts",
+      "selector": {
+        "type": "comparison",
+        "left": "Number(limit)"
+      }
+    },
+    {
+      "id": "catalog.statement",
+      "kind": "hard-cap",
+      "value": 2000,
+      "unit": "ms",
+      "scope": "per SQL statement",
+      "source": "api/src/modules/catalog/paging.ts",
+      "selector": {
+        "type": "statement-timeout"
+      }
+    },
+    {
+      "id": "catalog.elapsed",
+      "kind": "hard-cap",
+      "value": 5000,
+      "unit": "ms",
+      "scope": "per catalog read; checked between queries",
+      "source": "api/src/modules/catalog/paging.ts",
+      "selector": {
+        "type": "comparison",
+        "left": "performance.now() - started"
+      }
+    },
+    {
+      "id": "catalog.linkedRows",
+      "kind": "hard-cap",
+      "value": 5000,
+      "unit": "records",
+      "scope": "per SQL result",
+      "source": "api/src/modules/catalog/paging.ts",
+      "selector": {
+        "type": "comparison",
+        "left": "result.rows.length"
+      }
+    },
+    {
+      "id": "scanner.scannerResponseLimit",
+      "kind": "hard-cap",
+      "value": 8192,
+      "unit": "bytes",
+      "scope": "per scanner response/frame",
+      "source": "api/src/services/evidenceMalwareScanner.ts",
+      "selector": {
+        "type": "declaration",
+        "name": "scannerResponseLimit"
+      }
+    },
+    {
+      "id": "scanner.scannerFrameSize",
+      "kind": "hard-cap",
+      "value": 65536,
+      "unit": "bytes",
+      "scope": "per scanner response/frame",
+      "source": "api/src/services/evidenceMalwareScanner.ts",
+      "selector": {
+        "type": "declaration",
+        "name": "scannerFrameSize"
+      }
+    }
+  ],
+  "loadTargets": {
+    "sampleCount": 100,
+    "concurrency": 4,
+    "p95Ms": 2000,
+    "p99Ms": 5000,
+    "classification": "provisional-engineering-target"
+  }
+}

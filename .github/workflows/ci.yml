@@ -33,6 +33,7 @@ jobs:
       - run: npm run test:web-boundaries
       - run: npm run test:workspace-tools
       - run: npm run test:recall-drill
+      - run: npm run test:pilot-load
       - run: node --test scripts/check-dependencies.test.mjs scripts/build-metadata.test.mjs
       - run: npm run check:dependencies
       - uses: actions/upload-artifact@v4
@@ -101,8 +102,17 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node --import tsx scripts/recall-drill.mjs --invalidate
+      - run: node --import tsx scripts/pilot-load.mjs --invalidate
       - name: Test PostgreSQL, private S3 storage and ClamAV adapters
         run: npm run test:integration:docker
+      - run: npm run check:pilot-load
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pilot-load-summary
+          path: pilot-load-test-results/summary.json
+          if-no-files-found: warn
+          retention-days: 30
       - run: npm run check:recall-drill
       - uses: actions/upload-artifact@v4
         if: always()

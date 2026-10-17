@@ -320,3 +320,9 @@ api/src/testing/adapterContracts.test.ts text eol=lf
 e2e/supplierPublishingJourney.spec.ts text eol=lf
 e2e/deliveryExceptionJourney.spec.ts text eol=lf
 e2e/recallResponseJourney.spec.ts text eol=lf
+
+api/src/testing/pilotLoadReport*.ts text eol=lf
+api/src/testing/capacityPolicy*.ts text eol=lf
+api/test/integration/pilotLoad.integration.test.ts text eol=lf
+scripts/pilot-load*.mjs text eol=lf
+docs/performance/capacity-policy.json text eol=lf

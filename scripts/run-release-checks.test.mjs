@@ -176,3 +176,15 @@ test('fresh recorded recall evidence is required after native integration and be
   ]);
   assert.equal(releaseChecks[invalidate][2], true);
 });
+
+test('pilot load evidence is invalidated before native execution and must pass afterward', () => {
+  const names = releaseChecks.map((c) => c[0]);
+  const initial = names.indexOf('Invalidate previous pilot load evidence'),
+    native = names.indexOf('Database/storage/scanner integration'),
+    final = names.indexOf('Recorded pilot load evidence');
+  assert.ok(
+    initial >= 0 && initial < native && native < final && final < names.indexOf('Browser journeys'),
+  );
+  assert.deepEqual(releaseChecks[final][1], ['run', 'check:pilot-load']);
+  assert.ok(names.indexOf('Pilot load evidence contracts') >= 0);
+});
