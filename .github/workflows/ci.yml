@@ -32,6 +32,7 @@ jobs:
       - run: npm run test:locale
       - run: npm run test:web-boundaries
       - run: npm run test:workspace-tools
+      - run: npm run test:recall-drill
       - run: node --test scripts/check-dependencies.test.mjs scripts/build-metadata.test.mjs
       - run: npm run check:dependencies
       - uses: actions/upload-artifact@v4
@@ -99,8 +100,17 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: node --import tsx scripts/recall-drill.mjs --invalidate
       - name: Test PostgreSQL, private S3 storage and ClamAV adapters
         run: npm run test:integration:docker
+      - run: npm run check:recall-drill
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: recall-tabletop-summary
+          path: recall-drill-test-results/summary.json
+          if-no-files-found: warn
+          retention-days: 30
 
   browser-identity:
     runs-on: ubuntu-latest

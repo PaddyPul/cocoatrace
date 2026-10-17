@@ -57,7 +57,9 @@
     "check:web-budget": "node scripts/check-web-budget.mjs && node --test scripts/check-web-budget.test.mjs",
     "check:branding": "node scripts/check-branding.mjs && node --test scripts/check-branding.test.mjs",
     "test:workspace-tools": "node --import tsx --test scripts/saved-filters.test.mjs scripts/support-context.test.mjs",
-    "check:pilot-evidence": "node scripts/pilot-evidence.mjs && node --test scripts/pilot-evidence.test.mjs"
+    "check:pilot-evidence": "node scripts/pilot-evidence.mjs && node --test scripts/pilot-evidence.test.mjs",
+    "check:recall-drill": "node --import tsx scripts/recall-drill.mjs",
+    "test:recall-drill": "node --import tsx --test scripts/recall-drill.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
