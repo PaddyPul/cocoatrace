@@ -42,7 +42,7 @@ async function publish(page: Page, holdingId: string, quantity: string) {
   const saved = page.waitForResponse(
     (r) => new URL(r.url()).pathname === '/api/listings' && r.request().method() === 'POST',
   );
-  await page.getByRole('button', { name: 'Publish supply', exact: true }).click();
+  await page.getByRole('main').getByRole('button', { name: 'Publish supply', exact: true }).click();
   const response = await saved;
   expect(response.status()).toBe(201);
   const listing = await response.json();
