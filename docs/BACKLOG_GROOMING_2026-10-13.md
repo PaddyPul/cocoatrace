@@ -213,3 +213,7 @@ Founder accepts ARC-008/RCL-010 full release and merge:142/343 (41.4%). Three li
 ## Pilot journey and adapter contract candidate — 2026-10-17
 
 Founder accepts RCL-008/RCL-013/INV-010 full release and merge:145/343 (42.3%). QLT-010/012/014 target complete supplier publishing journeys, delivery-exception/recall recovery browser cases and maintained current adapter contracts. Actual browser/native release acceptance remains pending. Acceptance yields148/343 (43.1%); core11/28 and provider-inclusive11/40 unchanged. Future provider adapters require their own contracts when introduced; these tests do not establish unsupported product features or hosted capacity.
+
+## Capacity evidence candidate — 2026-10-17
+
+Founder accepts QLT-010/012/014 full release and merge:148/343 (43.1%). PER-004/QLT-016/OPS-014 target six measured local HTTP/PostgreSQL workloads and32 source-bound capacity defaults/ceilings. One hundred samples/workload at concurrency4, provisional p95≤2s/p99≤5s thresholds, explicit failures, hardware/data context and independent write/audit/inventory invariants must pass at runtime. Acceptance yields151/343 (44.0%); core11/28 and provider-inclusive11/40 unchanged. This is a declared local regression baseline, not hosted capacity, multi-instance proof or a customer SLA.
