@@ -2,13 +2,15 @@
 
 Reviewed 2026-10-06. Incremental modular monolith; no rewrite. Related ARC-*, PER-*, SAF-*, SVC-* and QLT-*.
 
-## Measured source baseline
+## Historical source baseline — 2026-10-06
 
-Current source inspection: DataPages.tsx 722 lines across unrelated resource pages; publicProductController.ts 360 lines; web types.ts 502 lines; web api.ts 374 lines; recall response module 341 lines; emailSender.ts 338 lines; delivery workflow 324 lines. Controller query-call search finds approximately 226 calls; contractController now has 9, down from the older 47-call baseline. Approximately 224 textual `any` tokens were found (heuristic, includes comments/tests, not a semantic type audit). Production JS was about 636 kB raw/164 kB gzip in the last local build, without route splitting. These are audit indicators, not code-quality or performance pass/fail scores.
+Historical source inspection (not a current capacity or source-size measurement): DataPages.tsx 722 lines across unrelated resource pages; publicProductController.ts 360 lines; web types.ts 502 lines; web api.ts 374 lines; recall response module 341 lines; emailSender.ts 338 lines; delivery workflow 324 lines. Controller query-call search finds approximately 226 calls; contractController now has 9, down from the older 47-call baseline. Approximately 224 textual `any` tokens were found (heuristic, includes comments/tests, not a semantic type audit). Production JS was about 636 kB raw/164 kB gzip in the last local build, without route splitting. These are audit indicators, not code-quality or performance pass/fail scores.
 
 Implemented seams include organizationAccess service/repository/policy, authoritative auth sessions, private evidence storage/scanner adapters, trading offers/transaction/reconciliation, payments terms/installments/issues/reminders, delivery acceptance, cancellation, fee ledger and recall lifecycle/safety/response. ESLint/format/script contracts, unit tests, PostgreSQL and browser journeys now exist. Older statements that no automated gates exist are obsolete.
 
-Remaining smells: mixed HTTP/SQL/policy in controllers; generic API defaults to `any`; one central frontend client/type collection; duplicate Dashboard/DealRoom next-action decisions; incomplete adoption of scoped policies; recursive/unbounded graph work; unbounded list queries; overloaded pages and inconsistent source/conventional empty states. File size is a signal—split by responsibility, not arbitrary line count.
+Current accepted follow-up: feature clients, shared next-action policy and route splitting have replaced several historical seams below; see [current overview](investor/ARCHITECTURE_SECURITY_OVERVIEW.md). The transport/security candidate extracts shipment arrangement/progression into typed workflow modules alongside existing delivery use cases. Broad controller/query cleanup remains open.
+
+Remaining smells in unreviewed legacy paths: mixed HTTP/SQL/policy in controllers; generic API defaults to `any`; one central frontend client/type collection; remaining adoption gaps beyond the accepted shared Dashboard/DealRoom next-action source; incomplete adoption of scoped policies; recursive/unbounded graph work; unbounded list queries; overloaded pages and inconsistent source/conventional empty states. File size is a signal—split by responsibility, not arbitrary line count.
 
 ## Module boundaries
 

@@ -35,6 +35,7 @@ export default tseslint.config(
       'api/src/modules/support/**/*.ts',
       'api/src/modules/agreements/**/*.ts',
       'api/src/modules/transportTiming/**/*.ts',
+      'api/src/modules/transportWorkflow/**/*.ts',
       'api/src/modules/dispatchAcknowledgement/**/*.ts',
       'api/src/modules/notifications/**/*.ts',
       'api/src/modules/listingLifecycle/**/*.ts',

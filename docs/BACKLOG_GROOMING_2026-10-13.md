@@ -193,3 +193,7 @@ Founder accepts corrected agreement/notification full release and merge: TRD-015
 ## Pilot evidence and fixture reliability — 2026-10-17
 
 Founder accepts corrected LOG-008/010 full release and merge:133/343 (38.8%). QLT-018, INV-004 and INV-005 are combined closure targets: reusable disposable-database fixtures adopted by critical native suites, a source-backed architecture/security overview and maintained current-versus-roadmap matrix checked in CI/release. Acceptance yields136/343 (39.7%). Hosted isolation, independent security review and customer/valuation evidence remain open; core11/28 and provider-inclusive11/40 unchanged.
+
+## Transport transitions and cookie-write route coverage — 2026-10-17
+
+Founder accepts QLT-018/INV-004/INV-005 full release and merge:136/343 (39.7%). ARC-007 and SEC-007 are combined targets: named typed shipment transitions alongside existing delivery use cases, and global origin regression coverage across all registered mutating endpoints. Acceptance yields138/343 (40.2%); broad controller extraction, complete resource matrix and hosted ingress remain open. Core11/28 and provider-inclusive11/40 unchanged.
