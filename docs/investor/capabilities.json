@@ -1,0 +1,222 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-10-17",
+  "scope": "Repository capabilities and founder-reported local release acceptance; hosted operation and external validation are separate.",
+  "capabilities": [
+    {
+      "id": "identity",
+      "title": "Invite-only buyer/supplier identity",
+      "status": "current",
+      "backlog": ["IDN-002", "IDN-004"],
+      "evidence": ["api/src/routes/auth.ts", "e2e/identity.spec.ts"],
+      "limits": "Captured local identity-email journeys accepted; external hosted inbox operation remains separate."
+    },
+    {
+      "id": "privileged-access",
+      "title": "Passkeys, recovery and team controls",
+      "status": "current",
+      "backlog": ["IDN-016", "IDN-017", "IDN-019"],
+      "evidence": ["api/src/modules/mfa/assurance.ts", "api/src/modules/teamMembers/repository.ts"],
+      "limits": "Live permissions and reviewed recovery; this is not an independent penetration-test certificate."
+    },
+    {
+      "id": "inventory",
+      "title": "Reservation and quantity conservation",
+      "status": "current",
+      "backlog": ["TRD-001", "TRD-008", "TRD-009"],
+      "evidence": [
+        "api/src/modules/trading/offers.ts",
+        "api/test/integration/tradingIntegrity.integration.test.ts"
+      ],
+      "limits": "Transactional stock invariants and concurrency regressions; physical quantity remains a party record."
+    },
+    {
+      "id": "offer-lifecycle",
+      "title": "Offer withdrawal, rejection and external negotiation boundary",
+      "status": "current",
+      "backlog": ["TRD-010", "TRD-011", "TRD-012"],
+      "evidence": ["api/src/modules/trading/offers.ts", "web/src/pages/OffersPage.tsx"],
+      "limits": "Recorded offers do not provide an in-app counteroffer negotiation engine."
+    },
+    {
+      "id": "agreements",
+      "title": "Versioned bilateral base-record acknowledgement",
+      "status": "current",
+      "backlog": ["TRD-015", "TRD-016"],
+      "evidence": [
+        "api/src/modules/agreements/repository.ts",
+        "web/src/components/trading/AgreementAcceptance.tsx"
+      ],
+      "limits": "Base commercial acknowledgement excludes separately confirmed payment terms; not a legal signature."
+    },
+    {
+      "id": "payment-gates",
+      "title": "Five manual payment-plan journeys and dispatch gates",
+      "status": "current",
+      "backlog": ["PAY-001", "PAY-003"],
+      "evidence": [
+        "api/src/services/paymentProtection.ts",
+        "api/test/integration/paymentWorkflow.integration.test.ts"
+      ],
+      "limits": "Buyer submits and seller verifies; platform does not hold or move funds, provide escrow or authenticate banks."
+    },
+    {
+      "id": "currency",
+      "title": "Exact recorded money versus broader currency policy",
+      "status": "partial",
+      "backlog": ["CUR-001", "CUR-002", "CUR-003"],
+      "evidence": ["api/src/services/paymentProtection.ts", "docs/DELIVERY_BACKLOG.md"],
+      "limits": "Exact arithmetic is implemented; corridor currencies, conversion and settlement approval are not universal."
+    },
+    {
+      "id": "transport",
+      "title": "Incoterm authority, timing and exception awareness",
+      "status": "current",
+      "backlog": ["LOG-001", "LOG-002", "LOG-008", "LOG-010"],
+      "evidence": [
+        "api/src/modules/transport/responsibilities.ts",
+        "api/src/modules/transportTiming/repository.ts",
+        "api/src/modules/dispatchAcknowledgement/repository.ts"
+      ],
+      "limits": "All eleven product terms govern recording roles; no carrier verification, legal risk-transfer determination or external delivery guarantee."
+    },
+    {
+      "id": "delivery",
+      "title": "Buyer delivery acceptance and disputed-settlement hold",
+      "status": "current",
+      "backlog": ["LOG-005", "LOG-007"],
+      "evidence": [
+        "api/src/modules/delivery/workflow.ts",
+        "api/test/integration/deliveryAcceptance.integration.test.ts"
+      ],
+      "limits": "Partial settlement, refunds, paid cancellation and returned inventory remain separate work."
+    },
+    {
+      "id": "recall-holds",
+      "title": "Recall trading holds and guarded resolution",
+      "status": "current",
+      "backlog": ["RCL-001", "RCL-002", "RCL-006"],
+      "evidence": [
+        "api/src/modules/recall/safety.ts",
+        "api/test/integration/recallSafety.integration.test.ts"
+      ],
+      "limits": "Recall closure does not automatically release retained or disposed inventory."
+    },
+    {
+      "id": "recall-operations",
+      "title": "Recall recipients, response and recovery operations",
+      "status": "partial",
+      "backlog": ["RCL-003", "RCL-004", "RCL-005"],
+      "evidence": ["api/src/modules/recall/safety.ts", "docs/runbooks/RECALL_RESPONSE.md"],
+      "limits": "External nonmembers, automated response deadlines and separate physical disposition operation remain incomplete."
+    },
+    {
+      "id": "trust",
+      "title": "Evidence-backed current trust presentation",
+      "status": "partial",
+      "backlog": ["DAT-003", "DAT-007", "DAT-008", "DAT-009"],
+      "evidence": ["api/src/modules/trust/assessment.ts", "docs/DELIVERY_BACKLOG.md"],
+      "limits": "Declaration is distinct from independent review; general assurance workflows and proactive revocation protection remain open."
+    },
+    {
+      "id": "private-evidence",
+      "title": "Private evidence storage, scanning and authorization",
+      "status": "current",
+      "backlog": ["QLT-004"],
+      "evidence": [
+        "api/src/controllers/evidenceController.ts",
+        "api/test/integration/multiTenantApi.integration.test.ts"
+      ],
+      "limits": "Local/S3-compatible storage and scanner exercised; independent hosted access review remains separate."
+    },
+    {
+      "id": "private-notices",
+      "title": "Private current-state notification center",
+      "status": "current",
+      "backlog": ["PRD-007"],
+      "evidence": [
+        "api/src/modules/notifications/repository.ts",
+        "web/src/pages/NotificationsPage.tsx"
+      ],
+      "limits": "Current bounded feed with read receipts; not complete historical inbox or guaranteed outbound email."
+    },
+    {
+      "id": "support-presets",
+      "title": "Contextual support references and saved filters",
+      "status": "current",
+      "backlog": ["PRD-013", "PRD-015"],
+      "evidence": ["api/src/modules/support/repository.ts", "web/src/pages/SupportPage.tsx"],
+      "limits": "Presets are device-local per account/workspace; support does not promise staffed response times."
+    },
+    {
+      "id": "large-workspaces",
+      "title": "Pagination, bounded exports and capacity",
+      "status": "partial",
+      "backlog": ["PER-001", "ARC-024"],
+      "evidence": [
+        "api/src/modules/catalog/paging.ts",
+        "api/src/modules/notifications/currentActions.ts"
+      ],
+      "limits": "Explicit bounds avoid silently incomplete reports; measured hosted capacity and universal collection adoption remain open."
+    },
+    {
+      "id": "language",
+      "title": "English/French language foundation",
+      "status": "partial",
+      "backlog": ["LNG-001", "LNG-002", "LNG-003"],
+      "evidence": ["web/src/i18n/catalogs.ts", "scripts/locale.test.mjs"],
+      "limits": "Shell translation does not mean every trade flow or email is fully translated or reviewed."
+    },
+    {
+      "id": "hosted-pilot",
+      "title": "Isolated secure staging and production",
+      "status": "planned",
+      "backlog": ["ENV-004", "ENV-005", "ENV-006"],
+      "evidence": ["docs/pilot-gates.json", "docs/runbooks/FREE_STAGING_PLAN.md"],
+      "limits": "Local release acceptance is not proof of provisioned hosted isolation, HTTPS, secrets or recovery operation."
+    },
+    {
+      "id": "security-review",
+      "title": "Complete authorization and independent security review",
+      "status": "partial",
+      "backlog": ["SEC-006", "QLT-002"],
+      "evidence": [
+        "docs/security/route-authorization.json",
+        "docs/security/AUTHORIZATION_MATRIX.md"
+      ],
+      "limits": "Checked entry guards and negative resource tests do not prove the universal role/resource/field matrix."
+    },
+    {
+      "id": "outbound-lifecycle",
+      "title": "Complete lifecycle email coverage",
+      "status": "partial",
+      "backlog": ["PRD-008"],
+      "evidence": ["docs/DELIVERY_BACKLOG.md", "api/src/modules/payments/reminders.ts"],
+      "limits": "Identity, reminder and recall delivery exist; full trade-event coverage and external delivery acceptance remain open."
+    },
+    {
+      "id": "regional-trade",
+      "title": "Approved domestic and regional trade corridors",
+      "status": "planned",
+      "backlog": ["GEO-001", "GEO-002"],
+      "evidence": ["docs/BETTERTRADE_PILOT_PLAN.md", "docs/BETTERTRADE_SERVICE_MARKETPLACE.md"],
+      "limits": "General product records do not establish jurisdictional, customs or commodity compliance."
+    },
+    {
+      "id": "provider-marketplace",
+      "title": "Verified logistics-provider discovery and fulfillment marketplace",
+      "status": "planned",
+      "backlog": ["LOG-012"],
+      "evidence": ["docs/BETTERTRADE_SERVICE_MARKETPLACE.md"],
+      "limits": "Manual buyer/seller arrangements work; registered verified providers, selection, grants and adapters are roadmap work."
+    },
+    {
+      "id": "pilot-traction",
+      "title": "Independent pilot use and fundraising evidence",
+      "status": "planned",
+      "backlog": ["INV-006", "INV-007", "INV-009", "INV-016"],
+      "evidence": ["docs/DELIVERY_BACKLOG.md", "docs/pilot-gates.json"],
+      "limits": "No customer commitments, repeated usage or valuation are inferred from implementation or backlog completion."
+    }
+  ]
+}

@@ -1,92 +1,35 @@
-import bcrypt from 'bcryptjs';
-import crypto from 'node:crypto';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import app from '../../src/app';
 import { pool, query } from '../../src/db';
 import { requireDisposableTestDatabase } from '../../src/testing/databaseSafety';
 
-type Actor = { organizationId: string; token: string; userId: string };
-type Supply = { batchId: string; holdingId: string };
+import {
+  createActor,
+  createSupply,
+  createListing,
+  createOffer,
+  createContract,
+  createShipment,
+  type FixtureActor as Actor,
+} from './support/fixtures';
 let seller: Actor;
 let buyer: Actor;
 let outsider: Actor;
-
-async function actor(type: 'exporter' | 'importer'): Promise<Actor> {
-  const suffix = crypto.randomUUID();
-  const organization = await query(
-    "INSERT INTO organizations(name,type,jurisdiction,verification_status) VALUES($1,$2,'GH','verified') RETURNING id",
-    [`Trading ${suffix}`, type],
-  );
-  const email = `trade-${suffix}@integration.test`;
-  const password = 'TradingRegressionPassword123!';
-  const user = await query(
-    'INSERT INTO users(organization_id,email,password_hash,name) VALUES($1,$2,$3,$4) RETURNING id',
-    [organization.rows[0].id, email, await bcrypt.hash(password, 4), 'Trading Regression'],
-  );
-  const role = await query('INSERT INTO roles(name,permissions) VALUES($1,$2) RETURNING id', [
-    `trading-${suffix}`,
-    [
-      'batch.create',
-      'holding.read',
-      'holding.create',
-      'custody.transfer.request',
-      'custody.transfer.accept',
-      'listing.read',
-      'listing.create',
-      'offer.create',
-      'offer.respond',
-      'contract.read',
-      'shipment.read',
-      'shipment.update',
-    ],
-  ]);
-  await query('INSERT INTO user_roles(user_id,role_id) VALUES($1,$2)', [
-    user.rows[0].id,
-    role.rows[0].id,
-  ]);
-  const login = await request(app).post('/auth/login').send({ email, password });
-  expect(login.status).toBe(200);
-  return {
-    organizationId: organization.rows[0].id,
-    token: login.body.accessToken,
-    userId: user.rows[0].id,
-  };
-}
-
-async function supply(quantity = 1000, allocate = true): Promise<Supply> {
-  const batch = await query(
-    "INSERT INTO harvest_batches(crop,harvest_date,quantity_kg,current_holder_id,source_mode,source_name,source_country) VALUES('shea nuts',CURRENT_DATE,$1,$2,'direct_inventory','Regression Source','GH') RETURNING id",
-    [quantity, seller.organizationId],
-  );
-  if (!allocate) return { batchId: batch.rows[0].id, holdingId: '' };
-  const holding = await query(
-    'INSERT INTO batch_holdings(batch_id,holder_organization_id,quantity_kg) VALUES($1,$2,$3) RETURNING id',
-    [batch.rows[0].id, seller.organizationId, quantity],
-  );
-  return { batchId: batch.rows[0].id, holdingId: holding.rows[0].id };
-}
-
-async function listing(s: Supply, quantity = 1000): Promise<string> {
-  const result = await query(
-    "INSERT INTO listings(seller_organization_id,holding_id,available_quantity_kg,price_per_kg,currency,incoterm,origin_location,destination_location) VALUES($1,$2,$3,5,'EUR','FOB','Tema','Rotterdam') RETURNING id",
-    [seller.organizationId, s.holdingId, quantity],
-  );
-  return result.rows[0].id;
-}
-
-async function offer(listingId: string, quantity = 600, expired = false): Promise<string> {
-  const result = await query(
-    "INSERT INTO trade_offers(listing_id,buyer_organization_id,quantity_kg,offered_price_per_kg,currency,valid_until) VALUES($1,$2,$3,5,'EUR',$4) RETURNING id",
-    [
-      listingId,
-      buyer.organizationId,
-      quantity,
-      new Date(Date.now() + (expired ? -86400000 : 86400000)),
-    ],
-  );
-  return result.rows[0].id;
-}
+const permissions = [
+  'batch.create',
+  'holding.read',
+  'holding.create',
+  'custody.transfer.request',
+  'custody.transfer.accept',
+  'listing.read',
+  'listing.create',
+  'offer.create',
+  'offer.respond',
+  'contract.read',
+  'shipment.read',
+  'shipment.update',
+];
 
 let contractId: string;
 beforeEach(async () => {
@@ -95,19 +38,21 @@ beforeEach(async () => {
 });
 beforeAll(async () => {
   requireDisposableTestDatabase(process.env.TEST_DATABASE_URL || process.env.DATABASE_URL);
-  seller = await actor('exporter');
-  buyer = await actor('importer');
-  outsider = await actor('importer');
-  const stock = await supply();
-  const listingId = await listing(stock);
-  const offerId = await offer(listingId);
-  contractId = (
-    await query(
-      `INSERT INTO sales_contracts(listing_id,offer_id,seller_organization_id,buyer_organization_id,holding_id,quantity_kg,price_per_kg,currency,incoterm)
-    VALUES($1,$2,$3,$4,$5,600,5,'EUR','FOB') RETURNING id`,
-      [listingId, offerId, seller.organizationId, buyer.organizationId, stock.holdingId],
-    )
-  ).rows[0].id;
+  seller = await createActor({ type: 'exporter', permissions });
+  buyer = await createActor({ type: 'importer', permissions });
+  outsider = await createActor({ type: 'importer', permissions });
+  const stock = await createSupply(seller, { quantityKg: 1000 });
+  const terms = { quantityKg: 1000, pricePerKg: 5, currency: 'EUR', incoterm: 'FOB' } as const;
+  const listingId = await createListing(seller, stock, {
+    ...terms,
+    origin: 'Tema',
+    destination: 'Rotterdam',
+  });
+  const offerId = await createOffer(buyer, listingId, { ...terms, quantityKg: 600 });
+  contractId = await createContract(seller, buyer, stock, listingId, offerId, {
+    ...terms,
+    quantityKg: 600,
+  });
 });
 afterAll(async () => {
   await pool.end();
@@ -123,12 +68,10 @@ const update = (revision: number, date = '2020-01-01', who = buyer) =>
     reason: 'Provider revised arrival estimate',
   });
 beforeAll(async () => {
-  shipmentId = (
-    await query(
-      "INSERT INTO shipments(contract_id,transport_coordinator_organization_id,current_milestone) VALUES($1,$2,'planning') RETURNING id",
-      [contractId, buyer.organizationId],
-    )
-  ).rows[0].id;
+  shipmentId = await createShipment(contractId, {
+    coordinatorOrganizationId: buyer.organizationId,
+    milestone: 'planning',
+  });
 });
 describe('reviewed transport timing', () => {
   it('isolates contract parties and the Incoterm coordinator', async () => {

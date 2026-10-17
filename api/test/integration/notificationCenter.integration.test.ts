@@ -1,74 +1,33 @@
-import bcrypt from 'bcryptjs';
-import crypto from 'node:crypto';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest';
 import app from '../../src/app';
 import { pool, query } from '../../src/db';
 import { requireDisposableTestDatabase } from '../../src/testing/databaseSafety';
-let owner: { org: string; token: string },
-  buyer: { org: string; token: string },
-  listing: string,
-  pending: string;
-async function actor() {
-  const tag = crypto.randomUUID(),
-    email = `expiry-${tag}@integration.test`;
-  const org = (
-    await query(
-      "INSERT INTO organizations(name,type,jurisdiction,verification_status) VALUES($1,'exporter','GH','verified') RETURNING id",
-      [tag],
-    )
-  ).rows[0].id;
-  const user = (
-    await query(
-      'INSERT INTO users(organization_id,email,password_hash,name) VALUES($1,$2,$3,$4) RETURNING id',
-      [org, email, await bcrypt.hash('ExpiryReview123!', 4), 'Expiry reviewer'],
-    )
-  ).rows[0].id;
-  const role = (
-    await query('INSERT INTO roles(name,permissions) VALUES($1,$2) RETURNING id', [
-      `expiry-${tag}`,
-      ['listing.read', 'listing.create', 'offer.create', 'offer.respond'],
-    ])
-  ).rows[0].id;
-  await query('INSERT INTO user_roles(user_id,role_id) VALUES($1,$2)', [user, role]);
-  const response = await request(app)
-    .post('/auth/login')
-    .send({ email, password: 'ExpiryReview123!' });
-  expect(response.status, JSON.stringify(response.body)).toBe(200);
-  return { org, token: response.body.accessToken };
-}
+import {
+  createActor,
+  createSupply,
+  createListing,
+  createOffer,
+  type FixtureActor,
+} from './support/fixtures';
+let owner: FixtureActor, buyer: FixtureActor, listing: string, pending: string;
 beforeEach(async () => {
   requireDisposableTestDatabase(process.env.TEST_DATABASE_URL || process.env.DATABASE_URL);
   await query('TRUNCATE auth_rate_limits');
 });
 beforeAll(async () => {
   requireDisposableTestDatabase(process.env.TEST_DATABASE_URL || process.env.DATABASE_URL);
-  owner = await actor();
-  buyer = await actor();
-  const batch = (
-    await query(
-      "INSERT INTO harvest_batches(crop,harvest_date,quantity_kg,current_holder_id,source_mode,source_name,source_country) VALUES('peanut',CURRENT_DATE,100,$1,'direct_inventory','Expiry stock','GH') RETURNING id",
-      [owner.org],
-    )
-  ).rows[0].id;
-  const holding = (
-    await query(
-      'INSERT INTO batch_holdings(batch_id,holder_organization_id,quantity_kg) VALUES($1,$2,100) RETURNING id',
-      [batch, owner.org],
-    )
-  ).rows[0].id;
-  listing = (
-    await query(
-      "INSERT INTO listings(seller_organization_id,holding_id,available_quantity_kg,price_per_kg,currency,origin_location,destination_location,expires_at) VALUES($1,$2,50,10,'EUR','Tamale','Rotterdam',clock_timestamp()+INTERVAL '1 day') RETURNING id",
-      [owner.org, holding],
-    )
-  ).rows[0].id;
-  pending = (
-    await query(
-      "INSERT INTO trade_offers(listing_id,buyer_organization_id,quantity_kg,offered_price_per_kg,currency,valid_until) VALUES($1,$2,1,10,'EUR',NOW()+INTERVAL '1 day') RETURNING id",
-      [listing, buyer.org],
-    )
-  ).rows[0].id;
+  const permissions = ['listing.read', 'listing.create', 'offer.create', 'offer.respond'];
+  owner = await createActor({ type: 'exporter', permissions });
+  buyer = await createActor({ type: 'importer', permissions });
+  const stock = await createSupply(owner, { quantityKg: 100, crop: 'peanut' });
+  const terms = { quantityKg: 50, pricePerKg: 10, currency: 'EUR', incoterm: 'CIF' } as const;
+  listing = await createListing(owner, stock, {
+    ...terms,
+    origin: 'Tamale',
+    destination: 'Rotterdam',
+  });
+  pending = await createOffer(buyer, listing, { ...terms, quantityKg: 1 });
 });
 afterAll(async () => {
   await pool.end();

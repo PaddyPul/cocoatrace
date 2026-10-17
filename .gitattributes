@@ -289,3 +289,9 @@ web/src/components/transport/TransportTiming.tsx text eol=lf
 web/src/components/transport/DispatchAcknowledgement.tsx text eol=lf
 e2e/transportTiming.spec.ts text eol=lf
 e2e/dispatchAcknowledgement.spec.ts text eol=lf
+
+scripts/pilot-evidence.mjs text eol=lf
+scripts/pilot-evidence.test.mjs text eol=lf
+docs/investor/capabilities.json text eol=lf
+api/test/integration/support/fixtures.ts text eol=lf
+api/test/integration/fixtureBuilders.integration.test.ts text eol=lf

@@ -1,5 +1,10 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'scripts/pilot-evidence.mjs',
+  'scripts/pilot-evidence.test.mjs',
+  'docs/investor/capabilities.json',
+  'api/test/integration/support/fixtures.ts',
+  'api/test/integration/fixtureBuilders.integration.test.ts',
   'api/src/modules/transportTiming/**/*.ts',
   'api/src/modules/dispatchAcknowledgement/**/*.ts',
   'api/test/integration/transportTiming.integration.test.ts',

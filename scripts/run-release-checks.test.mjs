@@ -143,3 +143,9 @@ test('workspace filter isolation and support context gate release before applica
   );
   assert.deepEqual(releaseChecks[index][1], ['run', 'test:workspace-tools']);
 });
+
+ test('current capability evidence gates runtime acceptance', () => {
+ const index=releaseChecks.findIndex(check=>check[0]==='Pilot architecture and capability evidence');
+ assert.ok(index>=0 && index<releaseChecks.findIndex(check=>check[0]==='API unit tests'));
+ assert.deepEqual(releaseChecks[index][1],['run','check:pilot-evidence']);
+});
