@@ -305,3 +305,7 @@ api/src/modules/evidenceWorkflow/**/*.ts text eol=lf
 api/src/controllers/evidenceController.ts text eol=lf
 api/src/controllers/paymentController.ts text eol=lf
 api/src/testing/evidencePaymentArchitecture.test.ts text eol=lf
+
+api/src/modules/recall/*.ts text eol=lf
+api/src/testing/recallArchitecture.test.ts text eol=lf
+api/test/integration/recallRoles.integration.test.ts text eol=lf

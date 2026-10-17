@@ -1,34 +1,24 @@
 import type { PoolClient } from 'pg';
-import { query } from '../../db';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../errors';
-import { inTradeTransaction, recordTradeAudit, TradeActor } from '../trading/transaction';
+import { inTradeTransaction, recordTradeAudit } from '../trading/transaction';
 import { lockRecallBoundary } from './safety';
 import { queueRecallEmails } from './notifications';
 
 import {
   assertWorkflowEvidenceLimit,
-  evidenceAvailabilityProjection,
-  evidenceAvailabilityUsableSql,
   preflightEvidence,
 } from '../../services/evidenceAvailability';
 
-type Actor = TradeActor & { permissions: string[] };
-const manages = (actor: Actor, notice: any) =>
-  actor.permissions.some((p) => p === '*' || p === 'recall.manage.all') ||
-  (notice.initiated_by_organization_id === actor.organizationId &&
-    actor.permissions.includes('recall.manage'));
-async function noticeFor(actor: Actor, id: string, client?: PoolClient) {
-  const run = client ? client.query.bind(client) : query;
+import type { RecallActor as Actor, RecallNotice } from './responseModel';
+import { canManageRecall, hasNetworkRecallAuthority } from './policy';
+import * as repository from './responseRepository';
+async function noticeFor(actor: Actor, id: string, client: PoolClient) {
   const notice = (
-    await run(
-      `SELECT notice.* FROM recall_notices notice WHERE notice.id=$1 AND
-    ($2::boolean OR notice.initiated_by_organization_id=$3 OR EXISTS(SELECT 1 FROM recall_participants p WHERE p.recall_id=notice.id AND p.organization_id=$3)) ${client ? 'FOR UPDATE' : ''}`,
-      [
-        id,
-        actor.permissions.some((p) => p === '*' || p === 'recall.manage.all'),
-        actor.organizationId,
-      ],
-    )
+    await repository.loadNotice(client, [
+      id,
+      hasNetworkRecallAuthority(actor),
+      actor.organizationId,
+    ])
   ).rows[0];
   if (!notice) throw new NotFoundError('Recall');
   return notice;
@@ -37,7 +27,7 @@ export { recallResponseRead as recallResponse } from '../catalog/recallResponseR
 async function mutate<T>(
   actor: Actor,
   id: string,
-  work: (client: PoolClient, notice: any) => Promise<T>,
+  work: (client: PoolClient, notice: RecallNotice) => Promise<T>,
 ) {
   return inTradeTransaction(async (client) => {
     await lockRecallBoundary(client);
@@ -50,12 +40,7 @@ async function mutate<T>(
 export async function acknowledgeRecall(actor: Actor, id: string, note: string) {
   return mutate(actor, id, async (client) => {
     const row = (
-      await client.query(
-        `UPDATE recall_participants SET acknowledged_at=COALESCE(acknowledged_at,NOW()),
-      acknowledged_by_user_id=COALESCE(acknowledged_by_user_id,$3),acknowledgement_note=COALESCE(acknowledgement_note,$4)
-      WHERE recall_id=$1 AND organization_id=$2 RETURNING *`,
-        [id, actor.organizationId, actor.id, note],
-      )
+      await repository.acknowledgeParticipant(client, [id, actor.organizationId, actor.id, note])
     ).rows[0];
     if (!row) throw new ForbiddenError('Only affected organizations can acknowledge this notice');
     await recordTradeAudit(client, actor, 'recall.acknowledge', 'recall_notice', id, {
@@ -73,14 +58,10 @@ export async function contactRecallParticipant(
   note: string,
 ) {
   return mutate(actor, id, async (client, notice) => {
-    if (!manages(actor, notice))
+    if (!canManageRecall(actor, notice))
       throw new ForbiddenError('Only this recall manager can record contact attempts');
     const row = (
-      await client.query(
-        `UPDATE recall_participants SET contact_status=$3,contact_note=$4,contact_updated_by_user_id=$5,contact_updated_at=NOW()
-      WHERE recall_id=$1 AND organization_id=$2 RETURNING *`,
-        [id, orgId, status, note, actor.id],
-      )
+      await repository.updateParticipantContact(client, [id, orgId, status, note, actor.id])
     ).rows[0];
     if (!row) throw new NotFoundError('Recall participant');
     await recordTradeAudit(client, actor, 'recall.contact', 'recall_notice', id, {
@@ -107,13 +88,7 @@ export async function recordRecallRecovery(
   input: RecoveryInput,
 ) {
   return mutate(actor, id, async (client) => {
-    const holding = (
-      await client.query(
-        `SELECT h.* FROM batch_holdings h JOIN recall_safety_holds hold ON hold.entity_id=h.id AND hold.entity_type='holding'
-      WHERE hold.recall_id=$1 AND h.id=$2 AND h.status<>'transferred' FOR UPDATE OF h`,
-        [id, holdingId],
-      )
-    ).rows[0];
+    const holding = (await repository.loadAffectedHolding(client, [id, holdingId])).rows[0];
     if (!holding) throw new NotFoundError('Affected inventory');
     if (holding.holder_organization_id !== actor.organizationId)
       throw new ForbiddenError('Only the inventory holder can record its physical outcome');
@@ -123,7 +98,7 @@ export async function recordRecallRecovery(
       input.destroyedKg,
       input.correctedKg,
       input.releasedKg,
-    ];
+    ] as const;
     if (
       values.some(
         (value) =>
@@ -140,19 +115,9 @@ export async function recordRecallRecovery(
       values.reduce((sum, value) => sum + toGrams(value), 0) > toGrams(Number(holding.quantity_kg))
     )
       throw new ValidationError('Recorded quantities exceed this holding');
-    const previous =
-      (
-        await client.query(
-          'SELECT * FROM recall_recovery_records WHERE recall_id=$1 AND holding_id=$2',
-          [id, holdingId],
-        )
-      ).rows[0] || null;
+    const previous = (await repository.loadRecovery(client, [id, holdingId])).rows[0] || null;
     const row = (
-      await client.query(
-        `INSERT INTO recall_recovery_records(recall_id,holding_id,quarantined_kg,returned_kg,destroyed_kg,corrected_kg,released_kg,note,recorded_by_user_id)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(recall_id,holding_id) DO UPDATE SET quarantined_kg=$3,returned_kg=$4,destroyed_kg=$5,corrected_kg=$6,released_kg=$7,note=$8,recorded_by_user_id=$9,updated_at=NOW() RETURNING *`,
-        [id, holdingId, ...values, input.note, actor.id],
-      )
+      await repository.saveRecovery(client, [id, holdingId, ...values, input.note, actor.id])
     ).rows[0];
     await recordTradeAudit(client, actor, 'recall.recovery', 'recall_notice', id, {
       holdingId,
@@ -176,60 +141,30 @@ export async function resolveRecallResponse(
   const availability = await preflightEvidence(
     async (execute) =>
       (
-        await execute(
-          `SELECT ${evidenceAvailabilityProjection('e')}
-    FROM evidence_items e JOIN recall_notices notice ON notice.id=e.linked_entity_id AND e.linked_entity_type='recall'
-    WHERE notice.id=$2 AND notice.status='active' AND e.id=ANY($1::uuid[])
-    AND ($3::boolean OR (notice.initiated_by_organization_id=$4 AND $5::boolean))
-    AND e.validation_status='validated' AND e.malware_scan_status='clean' AND e.review_status<>'rejected'
-    AND e.storage_key IS NOT NULL AND ${evidenceAvailabilityUsableSql('e')}
-    ORDER BY e.id DESC LIMIT 65`,
-          [
-            selectedIds,
-            id,
-            actor.permissions.some(
-              (permission) => permission === '*' || permission === 'recall.manage.all',
-            ),
-            actor.organizationId,
-            actor.permissions.includes('recall.manage'),
-          ],
-        )
+        await repository.loadResolutionCandidates(execute, [
+          selectedIds,
+          id,
+          hasNetworkRecallAuthority(actor),
+          actor.organizationId,
+          actor.permissions.includes('recall.manage'),
+        ])
       ).rows,
   );
   return mutate(actor, id, async (client, notice) => {
-    if (!manages(actor, notice))
+    if (!canManageRecall(actor, notice))
       throw new ForbiddenError('Only this recall manager can resolve it');
-    const proof = (
-      await client.query(
-        `SELECT ${evidenceAvailabilityProjection()} FROM evidence_items WHERE id=ANY($1::uuid[]) AND linked_entity_type='recall' AND linked_entity_id=$2
-      AND validation_status='validated' AND malware_scan_status='clean' AND review_status<>'rejected'
-      AND storage_key IS NOT NULL AND ${evidenceAvailabilityUsableSql()} ORDER BY id DESC LIMIT 65 FOR SHARE`,
-        [selectedIds, id],
-      )
-    ).rows;
+    const proof = (await repository.lockResolutionProof(client, [selectedIds, id])).rows;
     assertWorkflowEvidenceLimit(proof);
     if (proof.length !== selectedIds.length || proof.some((row) => !availability.available(row)))
       throw new ValidationError(
         'Resolution requires available, clean, non-rejected evidence attached to this exact recall',
       );
-    const missingAck = (
-      await client.query(
-        'SELECT 1 FROM recall_participants WHERE recall_id=$1 AND acknowledged_at IS NULL LIMIT 1',
-        [id],
-      )
-    ).rows.length;
+    const missingAck = (await repository.loadMissingAcknowledgement(client, [id])).rows.length;
     if (missingAck)
       throw new ConflictError(
         'Every affected organization must acknowledge the notice before resolution',
       );
-    const inventory = (
-      await client.query(
-        `SELECT h.quantity_kg,recovery.* FROM recall_safety_holds hold JOIN batch_holdings h ON h.id=hold.entity_id
-      LEFT JOIN recall_recovery_records recovery ON recovery.recall_id=hold.recall_id AND recovery.holding_id=h.id
-      WHERE hold.recall_id=$1 AND hold.entity_type='holding' AND h.status<>'transferred' AND h.quantity_kg>0`,
-        [id],
-      )
-    ).rows;
+    const inventory = (await repository.loadResolutionInventory(client, [id])).rows;
     for (const row of inventory) {
       const values = [
         'quarantined_kg',
@@ -247,25 +182,10 @@ export async function resolveRecallResponse(
           'All current inventory must be fully accounted for with no quantity left in quarantine',
         );
     }
-    await client.query(
-      `UPDATE recall_safety_holds hold SET released_at=NOW() FROM batch_holdings h
-      LEFT JOIN recall_recovery_records recovery ON recovery.holding_id=h.id AND recovery.recall_id=$1
-      WHERE hold.recall_id=$1 AND hold.entity_type='holding' AND hold.entity_id=h.id AND hold.released_at IS NULL
-        AND (h.status='transferred' OR h.quantity_kg=0 OR (recovery.returned_kg=0 AND recovery.destroyed_kg=0 AND recovery.quarantined_kg=0))`,
-      [id],
-    );
-    await client.query(
-      `UPDATE recall_safety_holds hold SET released_at=NOW() FROM material_lots lot
-      WHERE hold.recall_id=$1 AND hold.entity_type='lot' AND hold.entity_id=lot.id AND hold.released_at IS NULL
-      AND NOT EXISTS(SELECT 1 FROM recall_safety_holds remaining JOIN batch_holdings h ON h.id=remaining.entity_id
-        WHERE remaining.recall_id=$1 AND remaining.entity_type='holding' AND remaining.released_at IS NULL AND h.batch_id=lot.batch_id)`,
-      [id],
-    );
+    await repository.releaseAccountedHoldingHolds(client, [id]);
+    await repository.releaseAccountedLotHolds(client, [id]);
     const updated = (
-      await client.query(
-        `UPDATE recall_notices SET status='resolved',resolved_at=NOW(),resolved_by_user_id=$2,resolution_reason=$3,resolution_evidence_ids=$4 WHERE id=$1 RETURNING *`,
-        [id, actor.id, reason, [...new Set(evidenceIds)]],
-      )
+      await repository.resolveNotice(client, [id, actor.id, reason, [...new Set(evidenceIds)]])
     ).rows[0];
     await recordTradeAudit(client, actor, 'recall.resolve', 'recall_notice', id, {
       reason,

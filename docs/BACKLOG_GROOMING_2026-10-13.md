@@ -201,3 +201,7 @@ Founder accepts QLT-018/INV-004/INV-005 full release and merge:136/343 (39.7%). 
 ## Evidence and payment boundary closure — 2026-10-17
 
 Founder accepts ARC-007/SEC-007 full release and merge:138/343 (40.2%). Audit confirms payment terms, installments, documents/security and issue use cases already reside in domain modules; remaining payment-request creation and legacy HTTP bridge plus evidence download policy/SQL/lifecycle separation are the focused gaps. ARC-004/006 are candidate closure targets; acceptance yields140/343 (40.8%). Broad controller extraction, resource matrix and hosted/file-capacity work stay open. Core11/28 and provider-inclusive11/40 unchanged.
+
+## Recall workflow and authority candidate — 2026-10-17
+
+Founder accepts ARC-004/006 full release and merge:140/343 (40.8%). ARC-008/RCL-010 target recall use-case/repository boundaries and an explicit investigation/activation/resolution authority matrix, including participant-only actions. Existing permission vocabulary, trace/stock holds, proof gates and durable outbox semantics remain unchanged. No new separation-of-duty guarantee. Acceptance yields142/343 (41.4%); core11/28 and provider-inclusive11/40 unchanged. Hosted capacity and independent review remain open.
