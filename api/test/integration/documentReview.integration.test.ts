@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import app from '../../src/app';
+import { config } from '../../src/config/env';
 import { evidenceStorage } from '../../src/services/evidenceStorage';
 import { pool, query } from '../../src/db';
 import { authenticator } from '../../src/testing/webauthnFixture';
@@ -129,7 +130,7 @@ describe('independent document review and explicit evidence versions', () => {
     const supply = await createSupply(owner, { quantityKg: 10 });
     const id = await evidence(owner, supply.batchId);
     const admin = await reviewer();
-    const key = `document-review/${crypto.randomUUID()}.pdf`;
+    const key = `evidence/${config.environment}/${crypto.randomUUID()}`;
     const bytes = Buffer.from('%PDF-1.4 review proof');
     await evidenceStorage().put(key, bytes, 'application/pdf');
     await query(
