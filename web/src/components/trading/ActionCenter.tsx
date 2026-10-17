@@ -73,7 +73,13 @@ export function ActionCenter({
             >
               <span className="text-sm font-semibold">{item.title}</span>
               <span className="text-xs">
-                {item.requiresAction ? 'Your action' : 'In progress'}
+                {item.kind === 'complete'
+                  ? item.id.endsWith(':cancelled')
+                    ? 'Cancelled'
+                    : 'Completed'
+                  : item.requiresAction
+                    ? 'Your action'
+                    : 'In progress'}
                 {item.paymentDueState === 'overdue' ? ' · Payment overdue' : ''}
               </span>
               <span className="text-xs text-text-muted">{item.description}</span>

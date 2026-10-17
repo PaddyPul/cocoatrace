@@ -24,8 +24,13 @@ for (const role of ['buyer', 'supplier']) {
     await page.route('**/api/**', async (route) => {
       const path = new URL(route.request().url()).pathname;
       const actions = Array.from({ length: 5 }, (_, index) => ({
-        id: `action-${index}`,
-        kind: 'waiting',
+        id:
+          index === 0
+            ? 'deal:done:complete'
+            : index === 1
+              ? 'deal:stopped:cancelled'
+              : `action-${index}`,
+        kind: index < 2 ? 'complete' : 'waiting',
         priority: index,
         requiresAction: index === 4,
         title: `Recorded trade ${index}`,
@@ -51,9 +56,9 @@ for (const role of ['buyer', 'supplier']) {
               : path === '/api/contracts/summary'
                 ? {
                     count: 5,
-                    active_count: 5,
-                    settled_count: 0,
-                    cancelled_count: 0,
+                    active_count: 3,
+                    settled_count: 1,
+                    cancelled_count: 1,
                     latest_active_id: null,
                   }
                 : path === '/api/offers/summary'
@@ -78,6 +83,18 @@ for (const role of ['buyer', 'supplier']) {
     await page.goto('/home');
     const centre = page.getByRole('region', { name: 'Trade action centre', exact: true });
     await expect(centre.getByTestId('dashboard-trade-action')).toHaveCount(5);
+    const completed = centre.locator('[data-action-id="deal:done:complete"]');
+    await expect(completed.getByText('Completed', { exact: true })).toBeVisible();
+    await expect(completed.getByText('In progress', { exact: true })).toHaveCount(0);
+    await expect(
+      centre
+        .locator('[data-action-id="deal:stopped:cancelled"]')
+        .getByText('Cancelled', { exact: true }),
+    ).toBeVisible();
+    await expect(
+      centre.locator('[data-action-id="action-2"]').getByText('In progress', { exact: true }),
+    ).toBeVisible();
+
     await centre.getByRole('button', { name: 'Action required (1)', exact: true }).click();
     await expect(centre.getByTestId('dashboard-trade-action')).toHaveCount(1);
     await expect(centre.getByText('Recorded trade 4', { exact: true })).toBeVisible();
