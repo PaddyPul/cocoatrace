@@ -56,7 +56,8 @@
     "check:risks": "node scripts/risk-register.mjs && node --test scripts/risk-register.test.mjs",
     "check:web-budget": "node scripts/check-web-budget.mjs && node --test scripts/check-web-budget.test.mjs",
     "check:branding": "node scripts/check-branding.mjs && node --test scripts/check-branding.test.mjs",
-    "test:workspace-tools": "node --import tsx --test scripts/saved-filters.test.mjs scripts/support-context.test.mjs"
+    "test:workspace-tools": "node --import tsx --test scripts/saved-filters.test.mjs scripts/support-context.test.mjs",
+    "check:pilot-evidence": "node scripts/pilot-evidence.mjs && node --test scripts/pilot-evidence.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

@@ -189,3 +189,7 @@ Founder accepts corrected saved filters/support release and merge: PRD-013/015 c
 ## Transport awareness closure candidate — 2026-10-16
 
 Founder accepts corrected agreement/notification full release and merge: TRD-015 and PRD-007 complete,131/343 (38.2%). LOG-008/010 are in progress together: exception awareness acknowledgement and ETA/delay/overdue arrival notices. Two whole-item targets yield133/343 (38.8%) only after runtime release, review and merge. Incoterm authority, payment gates and legal risk transfer remain unchanged; core11/28 and provider-inclusive11/40 unchanged.
+
+## Pilot evidence and fixture reliability — 2026-10-17
+
+Founder accepts corrected LOG-008/010 full release and merge:133/343 (38.8%). QLT-018, INV-004 and INV-005 are combined closure targets: reusable disposable-database fixtures adopted by critical native suites, a source-backed architecture/security overview and maintained current-versus-roadmap matrix checked in CI/release. Acceptance yields136/343 (39.7%). Hosted isolation, independent security review and customer/valuation evidence remain open; core11/28 and provider-inclusive11/40 unchanged.

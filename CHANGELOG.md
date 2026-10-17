@@ -1,5 +1,12 @@
 # Changelog
 
+## Pilot evidence and native fixture reliability — 2026-10-17
+
+- Add guarded typed native fixture builders with real sessions and adopt them across transport timing, exception awareness and current notification regressions.
+- Publish source-backed architecture/security and a generated23-capability current/roadmap matrix, checked in CI/release for evidence and acceptance drift.
+- Reconcile founder-accepted transport wave; three new targets remain pending runtime release/review/merge. No production business behavior changes.
+
+
 ## Transport awareness — 2026-10-16
 
 - Record explicit buyer awareness of seller exceptional dispatch, without waiving payment obligations or changing fulfilment gates.
