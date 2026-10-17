@@ -8,7 +8,7 @@
       "status": "partial",
       "title": "Current release passes every gate on the candidate commit",
       "backlog": ["QLT-001", "SEC-014", "LNG-001"],
-      "evidence": "Founder reports corrected transport awareness full release and merge accepted 2026-10-17. Pilot evidence/fixture candidate requires its own full release and required CI. Hosted candidate evidence and CI archive remain unverified; gate stays partial."
+      "evidence": "Founder reports pilot evidence/fixture full release and merge accepted 2026-10-17. Transport/security boundary candidate requires its own full release and required CI. Hosted candidate evidence and CI archive remain unverified; gate stays partial."
     },
     {
       "id": "CORE-isolation",

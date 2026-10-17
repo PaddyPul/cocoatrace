@@ -1,5 +1,12 @@
 # Changelog
 
+## Transport transitions and cookie-write boundaries — 2026-10-17
+
+- Extract shipment arrangement/progression into typed named workflow modules, preserving Incoterm, payment, recall, timing and settlement rules.
+- Exercise the global cookie-write origin boundary across every registered mutating route.
+- Reconcile accepted pilot evidence/fixture wave; transport/security targets remain pending runtime release/review/merge.
+
+
 ## Pilot evidence and native fixture reliability — 2026-10-17
 
 - Add guarded typed native fixture builders with real sessions and adopt them across transport timing, exception awareness and current notification regressions.

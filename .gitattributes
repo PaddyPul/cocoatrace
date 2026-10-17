@@ -295,3 +295,8 @@ scripts/pilot-evidence.test.mjs text eol=lf
 docs/investor/capabilities.json text eol=lf
 api/test/integration/support/fixtures.ts text eol=lf
 api/test/integration/fixtureBuilders.integration.test.ts text eol=lf
+
+api/src/modules/transportWorkflow/**/*.ts text eol=lf
+api/src/controllers/shipmentController.ts text eol=lf
+api/src/testing/transportArchitecture.test.ts text eol=lf
+api/src/testing/cookieWriteOrigins.test.ts text eol=lf
