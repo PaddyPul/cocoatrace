@@ -325,6 +325,14 @@
         "api/test/integration/dispatchAcknowledgement.integration.test.ts"
       ],
       "remaining": "Native/browser runtime release pending; universal resource matrix and hosted operations remain separately tracked."
+    },
+    "api/src/routes/documentReview.ts": {
+      "scope": "Platform wildcard independent reviewers with live fresh assurance; uploader replacement requires current entity access and upload grant. History requires current private resource access. Generic approval creates no public trust claim.",
+      "evidence": [
+        "api/src/modules/documentReview/service.ts",
+        "api/test/integration/documentReview.integration.test.ts"
+      ],
+      "remaining": "Hosted verification and claim-specific organic/origin/EUDR assessment remain separate."
     }
   },
   "routes": [
@@ -979,6 +987,25 @@
     },
     {
       "method": "GET",
+      "path": "/evidence/:id/review",
+      "source": "api/src/routes/documentReview.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "evidence.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
       "path": "/evidence/page",
       "source": "api/src/routes/evidence.ts",
       "guards": [
@@ -1013,6 +1040,25 @@
       ],
       "entryControls": [],
       "handler": "listEvidenceOptions",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/evidence/review/page",
+      "source": "api/src/routes/documentReview.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
       "authentication": "session"
     },
     {
@@ -3348,6 +3394,44 @@
       ],
       "entryControls": [],
       "handler": "contractController.confirmPaymentTerms",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/evidence/:id/replacement",
+      "source": "api/src/routes/documentReview.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "evidence.upload"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/evidence/:id/review",
+      "source": "api/src/routes/documentReview.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
       "authentication": "session"
     },
     {

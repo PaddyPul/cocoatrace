@@ -28,6 +28,7 @@ const proof = {
   review_status: 'approved',
   malware_scanned_at: new Date('2026-10-12T00:00:00Z'),
   cleanup_state: 'retained',
+  superseded_by_evidence_id: null,
 };
 beforeEach(() => {
   vi.resetAllMocks();
@@ -87,6 +88,16 @@ describe('request-local evidence availability preflight', () => {
     expect(mocks.exists).toHaveBeenCalledTimes(1);
     expect(evidenceAvailabilityProjection('e')).toContain('AS cleanup_state');
     expect(evidenceAvailabilityUsableSql('e')).toContain("cleanup.state<>'retained'");
+  });
+  it('rejects superseded proof without provider work and invalidates an earlier current snapshot', async () => {
+    const current = await preflightEvidence(async () => [proof]);
+    const superseded = { ...proof, superseded_by_evidence_id: 'replacement' };
+    expect(current.available(superseded)).toBe(false);
+    mocks.exists.mockClear();
+    const stale = await preflightEvidence(async () => [superseded]);
+    expect(stale.available(superseded)).toBe(false);
+    expect(mocks.exists).not.toHaveBeenCalled();
+    expect(evidenceAvailabilityUsableSql('e')).toContain('e.superseded_by_evidence_id IS NULL');
   });
   it('fails a complete candidate overflow before making any provider request', async () => {
     const cache = await preflightEvidence(async () =>

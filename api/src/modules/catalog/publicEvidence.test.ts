@@ -66,6 +66,8 @@ describe('public reviewed evidence boundary', () => {
     const execute = executor();
     await publicEvidencePage(execute, 'published');
     const sql = execute.mock.calls[1][0];
+    expect(sql).toContain('e.superseded_by_evidence_id IS NULL');
+    expect(execute.mock.calls[2][0]).toContain('e.superseded_by_evidence_id IS NULL');
     expect(sql).toContain("validation_status='validated'");
     expect(sql).toContain("malware_scan_status='clean'");
     expect(sql).toContain('ORDER BY tr.reviewed_at DESC');

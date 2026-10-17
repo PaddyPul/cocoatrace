@@ -217,3 +217,7 @@ Founder accepts RCL-008/RCL-013/INV-010 full release and merge:145/343 (42.3%). 
 ## Capacity evidence candidate — 2026-10-17
 
 Founder accepts QLT-010/012/014 full release and merge:148/343 (43.1%). PER-004/QLT-016/OPS-014 target six measured local HTTP/PostgreSQL workloads and32 source-bound capacity defaults/ceilings. One hundred samples/workload at concurrency4, provisional p95≤2s/p99≤5s thresholds, explicit failures, hardware/data context and independent write/audit/inventory invariants must pass at runtime. Acceptance yields151/343 (44.0%); core11/28 and provider-inclusive11/40 unchanged. This is a declared local regression baseline, not hosted capacity, multi-instance proof or a customer SLA.
+
+## 2026-10-17 document review candidate
+
+Founder accepts capacity bundle and correction after full release and merge: PER-004, QLT-016 and OPS-014 complete,151/343 (44.0%). Local measurements are not hosted SLO evidence. UPL-009/UPL-011 remain in progress pending this candidate release; acceptance would yield153/343 (44.6%). DAT-003/DAT-010 and hosted pilot gates remain open.
