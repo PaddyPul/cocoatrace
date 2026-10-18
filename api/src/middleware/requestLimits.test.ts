@@ -56,6 +56,7 @@ describe('global ingress budgets', () => {
     expect(response.body).toEqual({
       error: 'Query string is too large',
       code: 'REQUEST_QUERY_TOO_LARGE',
+      requestId: response.headers['x-request-id'],
     });
   });
   it('rejects oversized JSON with a generic request code, without echoing the body', async () => {
@@ -75,6 +76,7 @@ describe('global ingress budgets', () => {
     expect(response.body).toEqual({
       error: 'Malformed JSON request body',
       code: 'REQUEST_JSON_INVALID',
+      requestId: response.headers['x-request-id'],
     });
   });
   it('keeps the signed evidence capability boundary ahead of JSON parsing', async () => {

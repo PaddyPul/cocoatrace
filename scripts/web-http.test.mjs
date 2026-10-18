@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { api, getToken, setAuthToken } from '../web/src/api/http.ts';
+import { api, ApiError, getToken, setAuthToken } from '../web/src/api/http.ts';
 import * as compatibility from '../web/src/api.ts';
 import { auth } from '../web/src/api/identity.ts';
 import { evidence } from '../web/src/api/evidence.ts';
@@ -127,4 +127,65 @@ test('evidence download reads the latest shared bearer token after feature extra
       return new Response('', { status: 403 });
     };
     await assert.rejects(evidence.download('doc', 'proof.pdf'), /Could not download document/);
+  }));
+
+test('structured error metadata survives without retrying a rejected financial write', () =>
+  environment(async () => {
+    let calls = 0;
+    globalThis.fetch = async () => {
+      calls++;
+      return Response.json(
+        { error: 'Review the current fee receipt', code: 'FEE_TERMS_STALE', requestId: 'body-id' },
+        { status: 409, headers: { 'x-request-id': 'trace-123', 'retry-after': '30' } },
+      );
+    };
+    await assert.rejects(
+      api('POST', '/contracts/example/fee/submit', { reference: 'reviewed' }),
+      (error) => {
+        assert.ok(error instanceof ApiError);
+        assert.equal(error.message, 'Review the current fee receipt');
+        assert.equal(error.code, 'FEE_TERMS_STALE');
+        assert.equal(error.status, 409);
+        assert.equal(error.requestId, 'trace-123');
+        assert.equal(error.retryAfter, '30');
+        return true;
+      },
+    );
+    assert.equal(calls, 1);
+  }));
+
+test('malformed validation envelopes cannot crash error rendering', () =>
+  environment(async () => {
+    for (const body of [
+      null,
+      [],
+      { error: { secret: 'not text' }, details: 'bad' },
+      { error: 'Invalid input', details: [null, 1, {}, { message: 'Choose a quantity' }] },
+    ]) {
+      globalThis.fetch = async () => Response.json(body, { status: 400 });
+      await assert.rejects(api('POST', '/example', {}), (error) => {
+        assert.ok(error instanceof ApiError);
+        assert.equal(error.status, 400);
+        assert.equal(error.code, 'HTTP_400');
+        assert.doesNotMatch(error.message, /secret|TypeError|map is not/);
+        return true;
+      });
+    }
+  }));
+
+test('offline failures use a stable code and never automatically replay writes', () =>
+  environment(async () => {
+    let calls = 0;
+    globalThis.fetch = async () => {
+      calls++;
+      throw new TypeError('Failed to fetch');
+    };
+    await assert.rejects(api('POST', '/example', {}), (error) => {
+      assert.ok(error instanceof ApiError);
+      assert.equal(error.code, 'NETWORK_ERROR');
+      assert.equal(error.status, 0);
+      assert.match(error.message, /connection/i);
+      return true;
+    });
+    assert.equal(calls, 1);
   }));

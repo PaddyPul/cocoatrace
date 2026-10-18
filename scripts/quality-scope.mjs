@@ -1,5 +1,19 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'web/src/components/shared/UnsavedChangesDialog.tsx',
+  'api/src/middleware/errorEnvelope.test.ts',
+  'api/src/middleware/errorEnvelope.ts',
+  'api/test/integration/errorEnvelope.integration.test.ts',
+  'e2e/unsavedChanges.spec.ts',
+  'web/src/App.tsx',
+  'web/src/api/errors.ts',
+  'web/src/api/http.ts',
+  'web/src/components/shared/UnsavedChanges.tsx',
+  'web/src/pages/DirectInventoryPage.tsx',
+  'web/src/pages/OnboardingPage.tsx',
+  'web/src/pages/PublishSupplyPage.tsx',
+  'web/src/pages/SourcingBriefPage.tsx',
+
   'api/src/modules/feeRefunds/**/*.ts',
   'api/src/modules/feeStatementDelivery/**/*.ts',
   'api/src/routes/feeRefunds.ts',

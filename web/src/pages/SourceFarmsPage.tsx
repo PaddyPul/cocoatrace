@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../components/shared/UnsavedChanges';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { farms as farmsApi } from '../api';
@@ -40,6 +41,14 @@ export default function FarmsPage() {
   const [plotLoading, setPlotLoading] = useState(false);
   const [plotError, setPlotError] = useState('');
   const [completedFarmId, setCompletedFarmId] = useState<string | null>(null);
+
+  useUnsavedChanges(
+    Boolean(
+      (showCreate && (cfName || cfRegion || cfDistrict || cfCommunity || cfTraceId)) ||
+        (showPlot && (plotCode || plotArea || plotCrops !== 'cocoa' || plotGpsLat || plotGpsLng)),
+    ),
+    'Farm and plot entry',
+  );
 
   const handleCreateFarm = async () => {
     if (!cfName || !cfRegion || !cfDistrict) {

@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../components/shared/UnsavedChanges';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { batches as batchesApi } from '../api';
@@ -36,6 +37,14 @@ export default function BatchesPage() {
   const [cbLoading, setCbLoading] = useState(false);
   const [cbError, setCbError] = useState('');
   const [createdBatchId, setCreatedBatchId] = useState<string | null>(null);
+
+  useUnsavedChanges(
+    Boolean(
+      showCreate &&
+        (cbFarmId || cbCrop !== 'cocoa' || cbHarvestDate || cbQty || cbMoisture || cbGrade),
+    ),
+    'Harvest batch',
+  );
 
   const handleCreateBatch = async () => {
     if (!cbFarmId || !cbHarvestDate || !cbQty || cbQty <= 0) {
