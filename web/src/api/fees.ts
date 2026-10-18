@@ -1,10 +1,13 @@
 import { api } from './http';
 
 export interface FeeStatement {
+  refundSupported?: boolean;
+  statementDeliverySupported?: boolean;
   statementNumber: string;
   taxNotice: string;
   documentType: string;
   fee: {
+    refund_status?: 'requested' | 'sent' | 'confirmed' | 'rejected' | null;
     receipt_verified: boolean;
     amount_matches: boolean;
     payer_matches: boolean;
@@ -28,6 +31,13 @@ export interface FeeStatement {
 }
 
 export interface FeeReconciliation {
+  confirmedRefundTotals?: {
+    currency: string;
+    currency_minor_units: number;
+    count: number;
+    amount_total: string;
+  }[];
+  netCollectedTotals?: { currency: string; currency_minor_units: number; amount_total: string }[];
   ok: boolean;
   issues: { code: string; fee_id: string | null; contract_id: string }[];
   totals: {

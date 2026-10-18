@@ -204,6 +204,14 @@
     {
       "path": "api/src/migrations/049_fee_collection_enforcement.ts",
       "sha256": "4a20f77252142ec285732399f641425c6f7e41df551d249d3fbbd4c5ef812b1d"
+    },
+    {
+      "path": "api/src/migrations/050_platform_fee_refunds.ts",
+      "sha256": "934c735857e73e2cc3baed16183faa28a97f18e2c7a8ad0b6960ac245d22a4f0"
+    },
+    {
+      "path": "api/src/migrations/051_fee_statement_delivery.ts",
+      "sha256": "a1cee49fe2066516c4e5262d5228e77ec8e50347c7cf5c4debf1322d2e75e338"
     }
   ]
 }

@@ -1,3 +1,5 @@
+import { decimalUnits } from '../../services/tradeMoney';
+import { feeRefundFingerprint } from '../feeRefunds/service';
 import type { PoolClient } from 'pg';
 export interface FeeIssue {
   code: string;
@@ -12,7 +14,7 @@ export async function reconcileFees(client: Pick<PoolClient, 'query'>) {
     SELECT 'FEE_MISSING_FOR_CONTRACT' code,NULL::uuid fee_id,c.id contract_id FROM sales_contracts c WHERE NOT EXISTS(SELECT 1 FROM platform_fee_invoices f WHERE f.contract_id=c.id)
     UNION ALL SELECT 'FEE_AMOUNT_OR_CURRENCY_MISMATCH' code,id fee_id,contract_id FROM facts WHERE currency<>contract_currency OR currency_minor_units<>contract_minor_units OR amount_total<>round(quantity_kg*price_per_kg*rate_bps/10000::numeric,currency_minor_units)
     UNION ALL SELECT 'FEE_PAYER_MISMATCH',id,contract_id FROM facts WHERE payer_organization_id IS DISTINCT FROM CASE fee_payer WHEN 'seller' THEN seller_organization_id WHEN 'buyer' THEN buyer_organization_id ELSE NULL END OR payer_organization_id IS NULL
-    UNION ALL SELECT 'FEE_COMPLETION_STATE_MISMATCH',id,contract_id FROM facts WHERE (contract_status='settled' AND status='estimated') OR (policy_version<>'seller-predispatch-v3' AND status IN('invoiced','paid','written_off') AND contract_status<>'settled') OR (contract_status='cancelled' AND status<>'void') OR (status='void' AND contract_status<>'cancelled')
+    UNION ALL SELECT 'FEE_COMPLETION_STATE_MISMATCH',id,contract_id FROM facts WHERE (contract_status='settled' AND status='estimated') OR (policy_version<>'seller-predispatch-v3' AND status IN('invoiced','paid','written_off') AND contract_status<>'settled' AND NOT (contract_status='cancelled' AND status='paid' AND EXISTS(SELECT 1 FROM fee_refund_requests r WHERE r.fee_id=facts.id AND r.status='confirmed' AND r.amount=facts.amount_total AND r.currency=facts.currency AND r.payer_organization_id=facts.payer_organization_id))) OR (contract_status='cancelled' AND status<>'void' AND NOT (status='paid' AND EXISTS(SELECT 1 FROM fee_refund_requests r WHERE r.fee_id=facts.id AND r.status='confirmed' AND r.amount=facts.amount_total AND r.currency=facts.currency AND r.payer_organization_id=facts.payer_organization_id))) OR (status='void' AND contract_status<>'cancelled')
     UNION ALL SELECT 'FEE_PAID_WITHOUT_VERIFIED_RECEIPT',id,contract_id FROM facts f WHERE status='paid' AND (paid_at IS NULL OR verified_by_user_id IS NULL OR platform_receipt_reference IS NULL OR (SELECT COUNT(*) FROM platform_fee_submissions s WHERE s.fee_id=f.id AND s.status='verified')<>1)
     UNION ALL SELECT 'FEE_VERIFIED_SUBMISSION_STATE_MISMATCH',f.id,f.contract_id FROM facts f WHERE f.status<>'paid' AND EXISTS(SELECT 1 FROM platform_fee_submissions s WHERE s.fee_id=f.id AND s.status='verified')
     UNION ALL SELECT 'FEE_WRITE_OFF_WITHOUT_AUDIT_FIELDS',id,contract_id FROM facts WHERE status='written_off' AND (written_off_at IS NULL OR verified_by_user_id IS NULL OR length(trim(write_off_reason))<10 OR write_off_reason IS NULL)
@@ -35,16 +37,59 @@ export async function reconcileFees(client: Pick<PoolClient, 'query'>) {
       `SELECT id,contract_id,payer_organization_id,fee_payer,rate_bps,amount_total::text,currency,currency_minor_units,status,policy_version,tax_status,due_at,invoiced_at,paid_at,platform_receipt_reference,verified_by_user_id,written_off_at,write_off_reason FROM platform_fee_invoices ORDER BY created_at,id`,
     )
   ).rows;
+  const refunds = (
+    await client.query(
+      `SELECT r.*,f.contract_id FROM fee_refund_requests r JOIN platform_fee_invoices f ON f.id=r.fee_id WHERE r.status='confirmed' ORDER BY r.created_at,r.id`,
+    )
+  ).rows;
+  for (const refund of refunds) {
+    const fee = statements.find((row) => row.id === refund.fee_id);
+    if (
+      !fee ||
+      fee.status !== 'paid' ||
+      !fee.paid_at ||
+      !fee.verified_by_user_id ||
+      !fee.platform_receipt_reference ||
+      refund.snapshot_fingerprint !== feeRefundFingerprint(fee) ||
+      refund.currency !== fee.currency ||
+      decimalUnits(String(refund.amount), Number(fee.currency_minor_units)) !==
+        decimalUnits(String(fee.amount_total), Number(fee.currency_minor_units)) ||
+      refund.payer_organization_id !== fee.payer_organization_id ||
+      !refund.sent_by ||
+      !refund.external_reference ||
+      !refund.sent_at ||
+      !refund.confirmed_by ||
+      !refund.confirmed_at
+    )
+      issues.push({
+        code: 'FEE_REFUND_RECEIPT_MISMATCH',
+        fee_id: refund.fee_id,
+        contract_id: refund.contract_id,
+      });
+  }
+  const confirmedRefundTotals = (
+    await client.query(
+      `SELECT f.currency,f.currency_minor_units,COUNT(*)::int count,SUM(r.amount)::text amount_total FROM fee_refund_requests r JOIN platform_fee_invoices f ON f.id=r.fee_id WHERE r.status='confirmed' GROUP BY f.currency,f.currency_minor_units ORDER BY f.currency,f.currency_minor_units`,
+    )
+  ).rows;
+  const netCollectedTotals = (
+    await client.query(
+      `SELECT f.currency,f.currency_minor_units,SUM(f.amount_total-COALESCE(r.amount,0))::text amount_total FROM platform_fee_invoices f LEFT JOIN fee_refund_requests r ON r.fee_id=f.id AND r.status='confirmed' WHERE f.status='paid' GROUP BY f.currency,f.currency_minor_units ORDER BY f.currency,f.currency_minor_units`,
+    )
+  ).rows;
   return {
     ok: issues.length === 0,
     issues,
     totals,
     statements,
+    confirmedRefundTotals,
+    netCollectedTotals,
     limitations: [
       'Amounts use snapshotted currency precision: whole yen for new JPY trades; existing records retain their recorded two-decimal meaning.',
       'No exchange conversion or mixed-currency grand total.',
       'Receipt verification is a platform attestation, not bank API reconciliation.',
       'Tax treatment is not configured.',
+      'Paid totals preserve original gross receipts; confirmed refunds and net collected totals are separate external-payment attestations.',
     ],
   };
 }

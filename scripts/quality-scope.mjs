@@ -1,5 +1,18 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/modules/feeRefunds/**/*.ts',
+  'api/src/modules/feeStatementDelivery/**/*.ts',
+  'api/src/routes/feeRefunds.ts',
+  'api/test/integration/feeRefunds.integration.test.ts',
+  'api/test/integration/feeStatementDelivery.integration.test.ts',
+  'web/src/api/feeRefunds.ts',
+  'web/src/api/fees.ts',
+  'web/src/pages/PlatformFeesPage.tsx',
+  'web/src/api/feeStatementDelivery.ts',
+  'web/src/components/fees/FeeRefunds.tsx',
+  'web/src/components/fees/FeeStatementDelivery.tsx',
+  'e2e/feeRefunds.spec.ts',
+
   'api/src/modules/feeEnforcement/**/*.ts',
   'api/src/routes/feeEnforcement.ts',
   'api/test/integration/feeEnforcement.integration.test.ts',

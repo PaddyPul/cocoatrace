@@ -123,7 +123,8 @@
       "scope": "Contract-party fee statement/submission; finance permission plus current finance authority for review/write-off. Fee accounting does not grant access to unrelated trades.",
       "evidence": [
         "api/src/controllers/feeController.ts",
-        "api/test/integration/platformFees.integration.test.ts"
+        "api/test/integration/platformFees.integration.test.ts",
+        "api/test/integration/feeStatementDelivery.integration.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
@@ -341,6 +342,14 @@
         "api/test/integration/feeEnforcement.integration.test.ts"
       ],
       "remaining": "Runtime release and hosted payment-channel/refund operations remain required; no automatic debit or provider reconciliation is claimed."
+    },
+    "api/src/routes/feeRefunds.ts": {
+      "scope": "Current contract parties read sanitized refund status; recorded payer requests and confirms full external receipt. Independent platform finance with fresh passkey assurance records or rejects refund. Contract locks, exact paid snapshot and unstarted-trade guards apply to every transition.",
+      "evidence": [
+        "api/src/modules/feeRefunds/service.ts",
+        "api/test/integration/feeRefunds.integration.test.ts"
+      ],
+      "remaining": "Native and browser acceptance must pass on the release candidate; bank execution and goods refunds are outside this workflow."
     }
   },
   "routes": [
@@ -919,6 +928,26 @@
     },
     {
       "method": "GET",
+      "path": "/contracts/:id/fee/refund",
+      "source": "api/src/routes/feeRefunds.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "any",
+          "permissions": [
+            "contract.read",
+            "finance.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
       "path": "/contracts/:id/fee/statement",
       "source": "api/src/routes/fees.ts",
       "guards": [
@@ -935,6 +964,26 @@
       ],
       "entryControls": [],
       "handler": "controller.download",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/contracts/:id/fee/statement-delivery",
+      "source": "api/src/routes/fees.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "any",
+          "permissions": [
+            "contract.read",
+            "finance.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
       "authentication": "session"
     },
     {
@@ -3333,6 +3382,102 @@
         {
           "kind": "all",
           "permissions": [
+            "finance.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/fee/refund/confirm",
+      "source": "api/src/routes/feeRefunds.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "offer.respond"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/fee/refund/reject",
+      "source": "api/src/routes/feeRefunds.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "finance.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/fee/refund/request",
+      "source": "api/src/routes/feeRefunds.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "offer.respond"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/fee/refund/send",
+      "source": "api/src/routes/feeRefunds.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "finance.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/fee/statement-delivery",
+      "source": "api/src/routes/fees.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "any",
+          "permissions": [
+            "contract.read",
             "finance.manage"
           ]
         }

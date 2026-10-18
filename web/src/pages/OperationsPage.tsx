@@ -18,15 +18,22 @@ type Job = {
   consecutive_failures: number;
 };
 type Ticket = { id: string; last_error_code: string | null; attempts: number };
-type EmailQueue = 'payment_reminder' | 'recall' | 'operator_alert';
+type EmailQueue = 'payment_reminder' | 'recall' | 'fee_statement' | 'operator_alert';
 type EmailTicket = Ticket & { retryable: boolean };
 type Selection = Ticket & { queue: 'cleanup' | EmailQueue };
 const emailNames = {
   payment_reminder: 'Payment reminder',
   recall: 'Recall',
+  fee_statement: 'Fee statement',
   operator_alert: 'Operator alert',
 };
-const names = ['evidence_scan', 'evidence_cleanup', 'payment_reminders', 'recall_email'];
+const names = [
+  'evidence_scan',
+  'evidence_cleanup',
+  'payment_reminders',
+  'recall_email',
+  'fee_statement_email',
+];
 const unsafe = ['LIVE_EVIDENCE_REFERENCE', 'INVALID_OBJECT_KEY', 'STORAGE_PROVIDER_MISMATCH'];
 function record(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -39,7 +46,7 @@ function statuses(value: unknown): value is { healthy: boolean; jobs: Job[] } {
     !record(value) ||
     typeof value.healthy !== 'boolean' ||
     !Array.isArray(value.jobs) ||
-    value.jobs.length > 4
+    value.jobs.length > names.length
   )
     return false;
   const seen = new Set<string>();
@@ -65,7 +72,7 @@ function statuses(value: unknown): value is { healthy: boolean; jobs: Job[] } {
       return true;
     }) &&
     (!value.healthy ||
-      (value.jobs.length === 4 &&
+      (value.jobs.length === names.length &&
         value.jobs.every(
           (row) =>
             record(row) &&
@@ -172,7 +179,7 @@ export default function OperationsPage() {
     const current = ++version.current;
     setLoading(true);
     try {
-      const [status, queue, payment, recall, observation, alerts, operatorAlerts] =
+      const [status, queue, payment, recall, observation, alerts, operatorAlerts, feeStatements] =
         await Promise.all([
           api<unknown>('GET', '/operations/status'),
           api<unknown>('GET', '/operations/cleanup/dead'),
@@ -181,12 +188,14 @@ export default function OperationsPage() {
           api<unknown>('GET', '/operations/backlog'),
           api<unknown>('GET', '/operations/alerts'),
           api<unknown>('GET', '/operations/alerts/dead'),
+          api<unknown>('GET', '/operations/email/fee_statement/dead'),
         ]);
       if (
         !statuses(status) ||
         !tickets(queue) ||
         !tickets(payment, true) ||
         !tickets(recall, true) ||
+        !tickets(feeStatements, true) ||
         !tickets(operatorAlerts, true) ||
         !validBacklog(observation) ||
         !alertsValid(alerts)
@@ -197,7 +206,12 @@ export default function OperationsPage() {
         setBacklog(observation);
         setAlertStatus(alerts);
         setDead(queue);
-        setEmails({ payment_reminder: payment, recall, operator_alert: operatorAlerts });
+        setEmails({
+          payment_reminder: payment,
+          recall,
+          fee_statement: feeStatements,
+          operator_alert: operatorAlerts,
+        });
         setError('');
       }
     } catch {

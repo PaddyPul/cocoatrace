@@ -1,3 +1,4 @@
+import { hasConfirmedFeeRefund } from '../feeRefunds/service';
 import type { PoolClient } from 'pg';
 import { ConflictError, NotFoundError, ForbiddenError, ValidationError } from '../../errors';
 import { inTradeTransaction, recordTradeAudit, type TradeActor } from '../trading/transaction';
@@ -73,7 +74,11 @@ async function facts(client: PoolClient, c: Contract): Promise<CancellationFacts
       [c.id],
     )
   ).rows[0];
-  return { status: c.status, ...row };
+  return {
+    status: c.status,
+    ...row,
+    feeActivity: row.feeActivity && !(await hasConfirmedFeeRefund(client, c.id)),
+  };
 }
 async function history(client: PoolClient, id: string) {
   return (

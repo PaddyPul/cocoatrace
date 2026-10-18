@@ -1,3 +1,4 @@
+import { assertNoFeeRefundHold } from '../feeRefunds/boundary';
 import {
   evidenceAvailabilityProjection,
   evidenceAvailabilityUsableSql,
@@ -38,6 +39,7 @@ export async function submitPayment(
   });
   return inTradeTransaction(async (client) => {
     const { contract, payment } = await lockPayment(client, actor, id, 'buyer', !legacyRequest);
+    await assertNoFeeRefundHold(client, contract.id);
     requireAgreed(contract);
     await assertNoActivePaymentIssue(client, payment.id);
     const item = (
@@ -130,6 +132,7 @@ export async function confirmReceipt(actor: TradeActor, id: string) {
   );
   return inTradeTransaction(async (client) => {
     const { contract, payment } = await lockPayment(client, actor, id, 'seller', true);
+    await assertNoFeeRefundHold(client, contract.id);
     requireAgreed(contract);
     await assertNoActivePaymentIssue(client, payment.id);
     const item = (

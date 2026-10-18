@@ -1,3 +1,4 @@
+import { assertNoFeeRefundHold } from '../feeRefunds/boundary';
 import { documentsCanBePresentedAt } from './documentPolicy';
 import { activatePaymentInstallments } from './dueDates';
 import {
@@ -95,6 +96,7 @@ export async function submitSecurity(
 ) {
   return inTradeTransaction(async (client) => {
     const { contract, payment } = await lockPayment(client, actor, id, 'buyer');
+    await assertNoFeeRefundHold(client, contract.id);
     requireAgreed(contract);
     await assertNoActivePaymentIssue(client, payment.id);
     if (contract.payment_plan !== 'bank_secured')
@@ -120,6 +122,7 @@ export async function submitSecurity(
 export async function confirmSecurity(actor: TradeActor, id: string) {
   return inTradeTransaction(async (client) => {
     const { contract, payment } = await lockPayment(client, actor, id, 'seller');
+    await assertNoFeeRefundHold(client, contract.id);
     requireAgreed(contract);
     await assertNoActivePaymentIssue(client, payment.id);
     if (contract.payment_plan !== 'bank_secured')
