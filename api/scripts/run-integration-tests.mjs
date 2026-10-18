@@ -36,7 +36,7 @@ try {
     composeStarted = true;
     if (!npmCli) throw new Error('npm_execpath is unavailable. Run this command through npm.');
     const integrationEnvironment = {
-        ...process.env, TEST_DATABASE_URL: testDatabaseUrl,
+        ...process.env, DATABASE_URL: testDatabaseUrl, TEST_DATABASE_URL: testDatabaseUrl,
         EVIDENCE_STORAGE_DRIVER: 's3', EVIDENCE_STORAGE_ENDPOINT: `http://127.0.0.1:${storagePort}`,
         EVIDENCE_STORAGE_REGION: 'us-east-1', EVIDENCE_STORAGE_BUCKET: 'cocoatrace-test-evidence',
         EVIDENCE_STORAGE_ACCESS_KEY: 'cocoa_test_access', EVIDENCE_STORAGE_SECRET_KEY: 'cocoa_test_secret_key',
