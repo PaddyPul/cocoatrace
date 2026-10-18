@@ -23,7 +23,6 @@ export default function UnsavedChangesDialog({
       className="rounded-2xl border border-border bg-surface text-text p-6 max-w-md w-[calc(100%-2rem)] backdrop:bg-black/60"
       onCancel={(event) => {
         event.preventDefault();
-        dialog.current?.close();
         onStay();
       }}
     >
@@ -35,15 +34,7 @@ export default function UnsavedChangesDialog({
         draft. No draft is sent or stored by this prompt.
       </p>
       <div className="flex flex-wrap gap-3">
-        <button
-          ref={stay}
-          type="button"
-          className="btn"
-          onClick={() => {
-            dialog.current?.close();
-            onStay();
-          }}
-        >
+        <button ref={stay} type="button" className="btn" onClick={onStay}>
           Stay and keep editing
         </button>
         <button type="button" className="btn btn-danger" onClick={onLeave}>

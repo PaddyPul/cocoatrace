@@ -103,14 +103,21 @@ test('browser back uses the same stay and leave decision', async ({ page }) => {
     .click();
   await expect(page.getByLabel('Commodity or material', { exact: true })).toBeVisible();
   await page.getByLabel('Commodity or material', { exact: true }).fill('Back navigation draft');
-  await page.evaluate(() => window.history.back());
   const dialog = page.getByRole('dialog', { name: 'Leave unsaved changes?', exact: true });
-  await expect(dialog).toBeVisible();
-  await dialog.getByRole('button', { name: 'Stay and keep editing' }).click();
-  await expect(page.getByLabel('Commodity or material', { exact: true })).toHaveValue(
-    'Back navigation draft',
-  );
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await page.evaluate(() => window.history.back());
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Stay and keep editing' }).click();
+    // A blocked POP first restores browser history asynchronously. Wait for
+    // the completed Stay decision before another independent Back action.
+    await expect(dialog).not.toBeVisible();
+    await expect(page).toHaveURL(/\/inventory\/new$/);
+    await expect(page.getByLabel('Commodity or material', { exact: true })).toHaveValue(
+      'Back navigation draft',
+    );
+  }
   await page.evaluate(() => window.history.back());
+  await expect(dialog).toBeVisible();
   await dialog.getByRole('button', { name: 'Leave and discard changes' }).click();
   await expect(page).not.toHaveURL(/\/inventory\/new/);
 });
