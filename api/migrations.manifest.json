@@ -200,6 +200,10 @@
     {
       "path": "api/src/migrations/048_evidence_review_history.ts",
       "sha256": "e6c1e555d834dac381583670a093c22a4999c2c55cc250d96eb6eb8b95b88321"
+    },
+    {
+      "path": "api/src/migrations/049_fee_collection_enforcement.ts",
+      "sha256": "4a20f77252142ec285732399f641425c6f7e41df551d249d3fbbd4c5ef812b1d"
     }
   ]
 }

@@ -344,3 +344,11 @@ web/src/components/fees/FeeStatement.tsx text eol=lf
 e2e/platformFeeJourney.spec.ts text eol=lf
 
 e2e/feeCollectionStatus.spec.ts text eol=lf
+
+api/src/modules/feeEnforcement/** text eol=lf
+api/src/routes/feeEnforcement.ts text eol=lf
+api/test/integration/feeEnforcement.integration.test.ts text eol=lf
+web/src/api/feeEnforcement.ts text eol=lf
+web/src/components/fees/FeeEnforcement.tsx text eol=lf
+e2e/feeEnforcement.spec.ts text eol=lf
+api/src/migrations/049_fee_collection_enforcement.ts text eol=lf

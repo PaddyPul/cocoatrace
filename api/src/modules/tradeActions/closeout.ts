@@ -76,6 +76,35 @@ export function closeoutActions({
     });
     return actions;
   }
+  if (
+    seller &&
+    deal.fee_policy_version === 'seller-predispatch-v3' &&
+    deal.payment_terms_status === 'agreed' &&
+    ['planning', 'booked', 'requested', 'accepted', 'cargo_ready', 'export_cleared'].includes(
+      deal.current_milestone || 'planning',
+    ) &&
+    (!deal.fee_terms_accepted ||
+      (deal.fee_status === 'invoiced' && Number(deal.fee_amount) > 0 && !deal.fee_credit_active))
+  ) {
+    return [
+      {
+        id: `deal:${deal.id}:fee`,
+        kind: 'payment',
+        priority: 14,
+        requiresAction: !deal.fee_payment_submitted,
+        title: !deal.fee_terms_accepted
+          ? 'Review platform fee terms before dispatch'
+          : deal.fee_payment_submitted
+            ? 'Platform fee awaiting receipt verification'
+            : 'Pay the platform fee before dispatch',
+        description:
+          'The recorded new-trade fee must have seller consent and verified receipt or active platform finance credit before dispatch. Goods payment is separate.',
+        actionLabel: 'Review fee requirements',
+        actionPath: room,
+        contractId: deal.id,
+      },
+    ];
+  }
   if (deal.delivery_discrepancy_status) {
     const actor = deal.delivery_discrepancy_status === 'open' ? seller : buyer;
     actions.push({

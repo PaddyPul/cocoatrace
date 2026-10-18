@@ -36,12 +36,12 @@ try {
     composeStarted = true;
     if (!npmCli) throw new Error('npm_execpath is unavailable. Run this command through npm.');
     const integrationEnvironment = {
-        ...process.env, TEST_DATABASE_URL: testDatabaseUrl,
+        ...process.env, DATABASE_URL: testDatabaseUrl, TEST_DATABASE_URL: testDatabaseUrl,
         EVIDENCE_STORAGE_DRIVER: 's3', EVIDENCE_STORAGE_ENDPOINT: `http://127.0.0.1:${storagePort}`,
         EVIDENCE_STORAGE_REGION: 'us-east-1', EVIDENCE_STORAGE_BUCKET: 'cocoatrace-test-evidence',
         EVIDENCE_STORAGE_ACCESS_KEY: 'cocoa_test_access', EVIDENCE_STORAGE_SECRET_KEY: 'cocoa_test_secret_key',
         EVIDENCE_STORAGE_AUTO_CREATE_BUCKET: 'true', EVIDENCE_UPLOAD_SIGNING_SECRET: 'integration-evidence-signing-secret-32-chars',
-        APP_ENV: 'test', NODE_ENV: 'test', OPERATIONS_ALERTS_ENABLED: 'false', OPERATIONS_ALERT_RECIPIENT_USER_IDS: '', EVIDENCE_STORAGE_TIMEOUT_MS: '15000',
+        APP_ENV: 'test', NODE_ENV: 'test', TEST_LEGACY_FEE_POLICY: 'true', OPERATIONS_ALERTS_ENABLED: 'false', OPERATIONS_ALERT_RECIPIENT_USER_IDS: '', EVIDENCE_STORAGE_TIMEOUT_MS: '15000',
         EVIDENCE_MAX_FILE_BYTES: '512', EVIDENCE_ORGANIZATION_QUOTA_BYTES: '700',
         EVIDENCE_SCANNER_DRIVER: 'clamav', EVIDENCE_SCANNER_HOST: '127.0.0.1',
         EVIDENCE_SCANNER_PORT: scannerPort, EVIDENCE_SCANNER_TIMEOUT_MS: '30000', EVIDENCE_SCANNER_RETRIES: '1',

@@ -1,3 +1,4 @@
+import FeeEnforcement from './FeeEnforcement';
 import { useCallback, useEffect, useState } from 'react';
 import { platformFees, type FeeStatement as Statement } from '../../api';
 import { useAuthCtx } from '../auth/AuthProvider';
@@ -74,7 +75,9 @@ export default function FeeStatement({
     f.amount_matches !== false &&
     f.payer_matches !== false &&
     !!f.payer_organization_id &&
-    f.contract_status === 'settled' &&
+    (f.policy_version === 'seller-predispatch-v3'
+      ? f.contract_status !== 'cancelled'
+      : f.contract_status === 'settled') &&
     /[1-9]/.test(f.amount_total);
   const canSubmit = payer && (canDo('offer.respond') || canDo('offer.create'));
   const zeroFee = !!f && !/[1-9]/.test(f.amount_total);
@@ -97,7 +100,9 @@ export default function FeeStatement({
                 : f.status === 'invoiced'
                   ? 'Platform fee outstanding — collection not verified'
                   : f.status === 'estimated' && f.contract_status !== 'settled'
-                    ? 'Fee estimate — payable when the trade completes'
+                    ? f.policy_version === 'seller-predispatch-v3'
+                      ? 'Fee terms require seller agreement before payment and dispatch'
+                      : 'Fee estimate — payable when the trade completes'
                     : 'Fee collection status needs platform finance review';
 
   return (
@@ -133,8 +138,10 @@ export default function FeeStatement({
               ({f.fee_payer}).
             </p>
             <p className="text-xs">
-              Due at trade completion, after goods payment and buyer delivery acceptance. A
-              completed trade or a fee statement does not mean the fee was collected. No automatic
+              {f.policy_version === 'seller-predispatch-v3'
+                ? 'For this new trade, the seller accepts the recorded fee terms and pays before dispatch. Verified platform receipt, an active finance credit exception or an audited finance write-off is required.'
+                : 'Due at trade completion, after goods payment and buyer delivery acceptance.'}{' '}
+              A completed trade or a fee statement does not mean the fee was collected. No automatic
               deduction or debit is made.
             </p>
             {f.status === 'invoiced' && !zeroFee && (
@@ -149,6 +156,9 @@ export default function FeeStatement({
             )}
           </div>
 
+          {f.policy_version === 'seller-predispatch-v3' && (
+            <FeeEnforcement contractId={contractId} onChanged={() => void load()} />
+          )}
           <p className="text-xs">{data.statementNumber}</p>
           <p className="text-sm">
             {fmtMoney(Number(f.amount_total), f.currency, f.currency_minor_units)} · {f.fee_payer}{' '}
@@ -156,8 +166,10 @@ export default function FeeStatement({
           </p>
           <p className="text-xs text-text-muted">
             This statement uses its recorded rate and payer. New trades record them at acceptance.
-            The fee becomes due after the trade completes. Platform fee collection is separate from
-            the buyer’s goods payment.
+            {f.policy_version === 'seller-predispatch-v3'
+              ? 'This trade uses pre-dispatch fee collection after explicit seller agreement.'
+              : 'The fee becomes due after the trade completes.'}{' '}
+            Platform fee collection is separate from the buyer’s goods payment.
           </p>
           <p className="text-xs text-text-muted">{data.taxNotice}</p>
           {(f.amount_matches === false ||
@@ -167,7 +179,11 @@ export default function FeeStatement({
           )}
           {f.due_at && <p className="text-xs">Due since {new Date(f.due_at).toLocaleString()}</p>}
           {f.status === 'estimated' && (
-            <p role="status">Estimated fee. No fee payment is due yet.</p>
+            <p role="status">
+              {f.policy_version === 'seller-predispatch-v3'
+                ? 'Accept the recorded fee terms to make payment due before dispatch.'
+                : 'Estimated fee. No fee payment is due yet.'}
+            </p>
           )}
           {f.status === 'void' && (
             <p role="status">Fee voided with the unstarted cancellation. No fee payment is due.</p>

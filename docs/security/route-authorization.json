@@ -333,6 +333,14 @@
         "api/test/integration/documentReview.integration.test.ts"
       ],
       "remaining": "Hosted verification and claim-specific organic/origin/EUDR assessment remain separate."
+    },
+    "api/src/routes/feeEnforcement.ts": {
+      "scope": "Current contract parties can read versioned fee terms. Only the current payer with live commercial permission can consent. Independent platform finance requires live verified roles/session and a real recent passkey to grant/revoke credit. Dispatch separately enforces consent, snapshot integrity and receipt/credit.",
+      "evidence": [
+        "api/src/modules/feeEnforcement/service.ts",
+        "api/test/integration/feeEnforcement.integration.test.ts"
+      ],
+      "remaining": "Runtime release and hosted payment-channel/refund operations remain required; no automatic debit or provider reconciliation is claimed."
     }
   },
   "routes": [
@@ -887,6 +895,26 @@
       ],
       "entryControls": [],
       "handler": "controller.get",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
+      "path": "/contracts/:id/fee/enforcement",
+      "source": "api/src/routes/feeEnforcement.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "any",
+          "permissions": [
+            "contract.read",
+            "finance.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
       "authentication": "session"
     },
     {
@@ -3296,6 +3324,25 @@
     },
     {
       "method": "POST",
+      "path": "/contracts/:id/fee/credit",
+      "source": "api/src/routes/feeEnforcement.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "finance.manage"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
       "path": "/contracts/:id/fee/submissions/:submissionId/review",
       "source": "api/src/routes/fees.ts",
       "guards": [
@@ -3337,6 +3384,25 @@
       ],
       "entryControls": [],
       "handler": "controller.submit",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/contracts/:id/fee/terms",
+      "source": "api/src/routes/feeEnforcement.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "offer.respond"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
       "authentication": "session"
     },
     {

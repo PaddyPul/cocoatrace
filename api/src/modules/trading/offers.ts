@@ -1,3 +1,4 @@
+import { assertNoOverdueFees } from '../feeEnforcement/service';
 import { assertListingCurrent } from '../listingLifecycle/policy';
 import { requireTradeCurrency, requireSameCurrency, tradeTotal, tradeMinorUnits } from '../../services/tradeMoney';
 import { config } from '../../config/env';
@@ -38,6 +39,7 @@ function requireSeller(actor: TradeActor, offer: QueryResultRow, holding: QueryR
 
 export async function acceptTradeOffer(actor: TradeActor, offerId: string, quotedRateBps?: number) {
   return inTradeTransaction(async (client) => {
+    await assertNoOverdueFees(client, [actor.organizationId]);
     await lockRecallBoundary(client);
     const { offer, holding } = await lockOfferInventory(client, offerId);
     requireSeller(actor, offer, holding);
@@ -117,6 +119,7 @@ export async function createTradeOffer(actor: TradeActor, listingId: string, inp
     throw new ValidationError('Offer quantity must use at most three decimal places');
   }
   return inTradeTransaction(async (client) => {
+    await assertNoOverdueFees(client, [actor.organizationId]);
     await lockRecallBoundary(client);
     const found = await client.query('SELECT holding_id FROM listings WHERE id=$1', [listingId]);
     if (!found.rows[0]) throw new NotFoundError('Listing');

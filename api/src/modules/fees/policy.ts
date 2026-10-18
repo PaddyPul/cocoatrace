@@ -8,14 +8,21 @@ export function textInput(value: string, minimum: number, label: string): string
 }
 export function requireCollectible(fee: {
   status: string;
+  policy_version?: string;
   contract_status: string;
   amount_total: string;
   payer_organization_id: string | null;
   amount_matches?: boolean;
   payer_matches?: boolean;
 }) {
-  if (fee.status !== 'invoiced' || fee.contract_status !== 'settled')
-    throw new ConflictError('The fee is collectible only after trade completion');
+  if (
+    fee.status !== 'invoiced' ||
+    (fee.policy_version !== 'seller-predispatch-v3' && fee.contract_status !== 'settled') ||
+    ['cancelled'].includes(fee.contract_status)
+  )
+    throw new ConflictError(
+      'The fee is not collectible under its recorded policy and contract state',
+    );
   if (fee.amount_matches === false || fee.payer_matches === false)
     throw new ConflictError(
       'The fee snapshot does not reconcile with its contract; platform finance must review it',

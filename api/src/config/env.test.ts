@@ -208,3 +208,13 @@ describe('environment configuration', () => {
     expect(()=>parseConfig({...deployedBase,APP_ENV:'staging',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:id,SMTP_TLS_REJECT_UNAUTHORIZED:'false'})).toThrow(/SMTP_TLS_REJECT_UNAUTHORIZED/);
   });
  });
+
+describe('legacy fee compatibility fixture isolation', () => {
+  it('enforces the new policy by default and permits legacy fixtures only in disposable test configuration', () => {
+    expect(parseConfig({APP_ENV:'development'}).testLegacyFeePolicy).toBe(false);
+    expect(parseConfig({APP_ENV:'test',DATABASE_URL:'postgresql://test:test@localhost/cocoatrace_test',TEST_LEGACY_FEE_POLICY:'true'}).testLegacyFeePolicy).toBe(true);
+    expect(() => parseConfig({APP_ENV:'development',TEST_LEGACY_FEE_POLICY:'true'})).toThrow();
+    expect(() => parseConfig({APP_ENV:'test',DATABASE_URL:'postgresql://test:test@localhost/business',TEST_LEGACY_FEE_POLICY:'true'})).toThrow();
+    expect(() => parseConfig({...deployedBase,APP_ENV:'production',TEST_LEGACY_FEE_POLICY:'true'})).toThrow();
+  });
+});
