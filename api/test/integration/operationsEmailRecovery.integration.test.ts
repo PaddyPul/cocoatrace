@@ -260,11 +260,13 @@ describe.each(queues)('%s reviewed email recovery', (queue) => {
     },
   );
   it('refuses terminal records carrying a lease or recorded submission', async () => {
-    for (const assignment of [
-      'sent_at=NOW()',
-      'lease_token=gen_random_uuid()',
-      "lease_expires_at=NOW()+INTERVAL '1 minute'",
-    ]) {
+    // The fee queue enforces paired lease fields; older queues can also
+    // contain a lone token or expiry, which recovery must still refuse.
+    const leases =
+      queue === 'fee_statement'
+        ? ["lease_token=gen_random_uuid(),lease_expires_at=NOW()+INTERVAL '1 minute'"]
+        : ['lease_token=gen_random_uuid()', "lease_expires_at=NOW()+INTERVAL '1 minute'"];
+    for (const assignment of ['sent_at=NOW()', ...leases]) {
       const id = await terminal(queue);
       await query(`UPDATE ${emailOutboxes[queue]} SET ${assignment} WHERE id=$1`, [id]);
       expect((await retry(queue, id)).status).toBe(409);
