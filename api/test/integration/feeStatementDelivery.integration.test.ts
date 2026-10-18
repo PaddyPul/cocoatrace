@@ -159,7 +159,7 @@ describe('durable authenticated commercial fee statement notices', () => {
       ).rows[0],
     ).toEqual({ status: 'failed', last_error: 'SMTP_SUBMISSION_FAILED', attempts: 1 });
     await query(
-      "UPDATE fee_statement_email_outbox SET status='sending',lease_token=uuid_generate_v4(),lease_expires_at=NOW()-INTERVAL '1 second' WHERE fee_id=$1",
+      "UPDATE fee_statement_email_outbox SET status='sending',lease_token=gen_random_uuid(),lease_expires_at=NOW()-INTERVAL '1 second' WHERE fee_id=$1",
       [f.fee],
     );
     const messages: EmailMessage[] = [];
