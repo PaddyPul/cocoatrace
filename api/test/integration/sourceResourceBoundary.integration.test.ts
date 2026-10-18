@@ -1,3 +1,4 @@
+import { expectIdenticalNotFound } from './support/errorAssertions';
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import request from 'supertest';
@@ -144,7 +145,7 @@ describe.each(['a', 'b'] as const)('%s paired private source boundaries', (key) 
         absent = await read(url(resource, crypto.randomUUID()), own);
       expect(denied.status, JSON.stringify(denied.body)).toBe(404);
       expect(absent.status).toBe(404);
-      expect(denied.body).toEqual(absent.body);
+      expectIdenticalNotFound(denied, absent);
       expect(denied.headers['cache-control']).toBe('no-store');
       expect(JSON.stringify(denied.body)).not.toMatch(/Private|9\.4123|0\.8123|PRIVATE-/);
     },

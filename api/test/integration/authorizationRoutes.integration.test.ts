@@ -1,3 +1,4 @@
+import { expectIdenticalNotFound } from './support/errorAssertions';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -133,7 +134,7 @@ describe('live-session permission gates across the reviewed route register', () 
       ),
     );
     expect(results.map((row) => row.status)).toEqual([404, 404]);
-    expect(results[0].body).toEqual(results[1].body);
+    expectIdenticalNotFound(results[0], results[1]);
     expect(JSON.stringify(results[0].body)).not.toContain('Private foreign boundary recall');
   });
   it('permission failures create no business mutation audit for the denied actor', async () => {

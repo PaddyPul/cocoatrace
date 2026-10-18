@@ -1,3 +1,5 @@
+import { ApiError, responseCode, responseError } from './errors';
+export { ApiError } from './errors';
 export const API_BASE = '/api';
 
 export type CatalogPage<T> = { items: T[]; hasMore: boolean; nextCursor: string | null };
@@ -31,17 +33,29 @@ export async function api<T = any>(
   } else if (body && isForm) {
     opts.body = body;
   }
-  const res = await fetch(API_BASE + path, opts);
+  let res: Response;
+  try {
+    res = await fetch(API_BASE + path, opts);
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') throw error;
+    throw new ApiError(
+      'Connection unavailable. Check your connection and retry.',
+      0,
+      'NETWORK_ERROR',
+    );
+  }
   // Invalid login credentials are a form error, not an expired workspace
   // session. Redirecting here reloads the form and hides the useful error.
   if (res.status === 401 && path !== '/auth/login') {
     token = null;
     localStorage.removeItem('ct_token');
     localStorage.removeItem('ct_user');
+    if (typeof window.dispatchEvent === 'function')
+      window.dispatchEvent(new Event('ct:security-navigation'));
     window.location.href = '/login';
-    throw new Error('Session expired');
+    throw new ApiError('Session expired', 401, 'AUTHENTICATION_ERROR');
   }
-  let data: any;
+  let data: unknown;
   try {
     data = await res.json();
   } catch {
@@ -49,7 +63,7 @@ export async function api<T = any>(
   }
   if (
     res.status === 403 &&
-    data?.code === 'MFA_STEP_UP_REQUIRED' &&
+    responseCode(data) === 'MFA_STEP_UP_REQUIRED' &&
     !mfaRetry &&
     !path.startsWith('/auth/mfa')
   ) {
@@ -57,15 +71,16 @@ export async function api<T = any>(
     await verifyPasskey();
     return api<T>(method, path, body, isForm, true);
   }
-  if (res.status === 403 && data?.code === 'MFA_REQUIRED' && !path.startsWith('/auth/mfa')) {
+  if (
+    res.status === 403 &&
+    responseCode(data) === 'MFA_REQUIRED' &&
+    !path.startsWith('/auth/mfa')
+  ) {
+    if (typeof window.dispatchEvent === 'function')
+      window.dispatchEvent(new Event('ct:security-navigation'));
     window.location.assign('/account/passkeys');
-    throw new Error('Passkey verification required');
+    throw new ApiError('Passkey verification required', 403, 'MFA_REQUIRED');
   }
-  if (!res.ok) {
-    const msg = data?.details
-      ? `${data.error}: ${data.details.map((d: any) => d.message).join('; ')}`
-      : data?.error || `HTTP ${res.status}`;
-    throw new Error(msg);
-  }
-  return data;
+  if (!res.ok) throw responseError(res, data);
+  return data as T;
 }

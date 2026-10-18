@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../components/shared/UnsavedChanges';
 import { useCallback, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { evidence, EvidenceRecordOption } from '../api';
@@ -37,6 +38,19 @@ export default function EvidenceContributionPage() {
   const [purpose, setPurpose] = useState('origin_document');
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<File>();
+  const [savedDraft, setSavedDraft] = useState('');
+  const draftSnapshot = JSON.stringify([
+    recordId,
+    purpose,
+    description,
+    file?.name || '',
+    file?.size || 0,
+    file?.lastModified || 0,
+  ]);
+  const clearUnsaved = useUnsavedChanges(
+    Boolean((description || file) && draftSnapshot !== savedDraft),
+    'Evidence contribution',
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -62,6 +76,8 @@ export default function EvidenceContributionPage() {
       setSuccess(
         `Evidence attached to ${selected.label}. Uploading does not approve the claim; scanning and review status remain separate.`,
       );
+      setSavedDraft(JSON.stringify([recordId, purpose, description, '', 0, 0]));
+      clearUnsaved();
       setFile(undefined);
     } catch (failure) {
       setError(

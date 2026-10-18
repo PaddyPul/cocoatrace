@@ -1,3 +1,4 @@
+import { expectIdenticalNotFound } from './support/errorAssertions';
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import request from 'supertest';
@@ -225,7 +226,7 @@ describe('payment plans, protected documents and atomic retries', () => {
     expect((await post(`/payment-installments/${id}/submit`, outsider, { transactionReference: 'OTHER-TENANT' })).status).toBe(404);
     const foreign = await get(`/payment-requests/${d.paymentId}`, outsider);
     const absent = await get(`/payment-requests/${crypto.randomUUID()}`, outsider);
-    expect(foreign.status).toBe(404); expect(foreign.body).toEqual(absent.body);
+    expect(foreign.status).toBe(404); expectIdenticalNotFound(foreign, absent);
     expect(foreign.headers['cache-control']).toBe('no-store');
   });
 
@@ -239,7 +240,7 @@ describe('payment plans, protected documents and atomic retries', () => {
       }
       const denied=await get(resource,outsider);
       const absent=await get(resource.replace(/[^/]+$/,crypto.randomUUID()),outsider);
-      expect(denied.status).toBe(404); expect(absent.status).toBe(404); expect(denied.body).toEqual(absent.body);
+      expect(denied.status).toBe(404); expect(absent.status).toBe(404); expectIdenticalNotFound(denied, absent);
       expect(denied.headers['cache-control']).toBe('no-store');
       expect((await get(resource.replace(/[^/]+$/,'invalid-id'),outsider)).status).toBe(400);
     }

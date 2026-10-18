@@ -1,14 +1,17 @@
-import { TraceIncompleteError } from './modules/trace/limits';
 import 'express-async-errors';
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
 import logger, { requestLogSerializer } from './logger';
-import { AppError } from './errors';
+import { apiErrorHandler, errorEnvelope } from './middleware/errorEnvelope';
 import { verifyBrowserOrigin } from './middleware/security';
 import { config } from './config/env';
-import { createQueryBudget, isEvidenceContentRequest, requestLimits } from './middleware/requestLimits';
+import {
+  createQueryBudget,
+  isEvidenceContentRequest,
+  requestLimits,
+} from './middleware/requestLimits';
 import { evidenceStorage } from './services/evidenceStorage';
 import { evidenceMalwareScanner } from './services/evidenceMalwareScanner';
 import { assignRequestId, requestLogContext } from './requestContext';
@@ -62,6 +65,7 @@ app.use(
     customProps: (req) => requestLogContext(req),
   }),
 );
+app.use(errorEnvelope);
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: config.webUrl, credentials: true }));
 app.use(queryBudget);
@@ -69,8 +73,7 @@ const jsonParser = express.json({ limit: requestLimits.jsonBytes });
 app.use((req, res, next) => {
   // Signed upload bodies must pass capability validation/admission first,
   // including clients that claim application/json rather than a file MIME.
-  if (isEvidenceContentRequest(req.method, req.path))
-    return next();
+  if (isEvidenceContentRequest(req.method, req.path)) return next();
   jsonParser(req, res, next);
 });
 app.use(verifyBrowserOrigin);
@@ -148,36 +151,6 @@ app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
-  if ((err as Error & { type?: string }).type === 'entity.too.large') {
-    res.status(413).json({
-      error: isEvidenceContentRequest(req.method, req.path)
-        ? 'Request body exceeds the configured evidence file limit'
-        : 'JSON request body exceeds the 100 KiB limit',
-      code: isEvidenceContentRequest(req.method, req.path)
-        ? 'EVIDENCE_FILE_TOO_LARGE'
-        : 'REQUEST_BODY_TOO_LARGE',
-    });
-    return;
-  }
-  if ((err as Error & { type?: string }).type === 'entity.parse.failed') {
-    res.status(400).json({ error: 'Malformed JSON request body', code: 'REQUEST_JSON_INVALID' });
-    return;
-  }
-  if (err instanceof AppError) {
-    logger.warn({ err, path: req.path, method: req.method }, 'Operational error');
-    res.status(err.statusCode).json({
-      error: err.message,
-      code: err.code,
-      ...(err instanceof TraceIncompleteError ? { analysis: err.analysis } : {}),
-    });
-    return;
-  }
-
-  logger.error({ err, path: req.path, method: req.method }, 'Unhandled error');
-  res.status(500).json({
-    error: config.isDeployed ? 'Internal server error' : err.message,
-  });
-});
+app.use(apiErrorHandler);
 
 export default app;

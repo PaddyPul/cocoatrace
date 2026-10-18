@@ -9,3 +9,7 @@ PAY-011 remains partial: the accepted versioned seller consent, pre-dispatch rec
 The combined bundle also improves OPS monitoring/recovery evidence for the fee email queue without closing broader hosted operational acceptance. No automatic retrospective email blast is run for existing statements; an authorized explicit request is available.
 
 Author verification covers code/unit/static checks only. Native PostgreSQL/storage/SMTP/browser and complete release acceptance run on the founder's disposable test infrastructure.
+
+## Founder acceptance — 13:23 UTC
+
+Founder reports full release checks passed and the combined billing recovery branch merged, including native fixture corrections. PAY-012 is now complete: 154/343 (44.9%). This supersedes candidate/pending status above. PAY-011, LEG-010 and hosted operational/inbox requirements remain open as scoped above. Exact founder commit and independent CI URL were not supplied.
