@@ -381,3 +381,4 @@ api/src/middleware/errorEnvelope.test.ts text eol=lf
 api/test/integration/errorEnvelope.integration.test.ts text eol=lf
 e2e/unsavedChanges.spec.ts text eol=lf
 web/src/components/shared/UnsavedChangesDialog.tsx text eol=lf
+api/test/integration/support/errorAssertions.ts text eol=lf

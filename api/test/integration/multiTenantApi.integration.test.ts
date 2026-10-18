@@ -264,7 +264,7 @@ describe('real PostgreSQL multi-tenant API boundary', () => {
         .get(`/farms/${otherTenant.farmId}`)
         .set('Authorization', `Bearer ${actor.token}`);
       expect(response.status).toBe(404);
-      expect(response.body).toEqual({ error: 'Farm not found' });
+      expect(response.body).toEqual({ error: 'Farm not found', code: 'NOT_FOUND', requestId: response.headers['x-request-id'] });
     },
   );
 

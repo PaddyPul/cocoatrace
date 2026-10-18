@@ -1,3 +1,4 @@
+import { expectIdenticalNotFound } from './support/errorAssertions';
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import request from 'supertest';
@@ -120,7 +121,7 @@ describe('all Incoterms enforce physical action responsibilities at the API',()=
   const foreign=await get(`/shipments/${d.shipmentId}`,outsider);
   const absent=await get(`/shipments/${crypto.randomUUID()}`,outsider);
   expect(foreign.status,JSON.stringify(foreign.body)).toBe(404);
-  expect(absent.status).toBe(404);expect(foreign.body).toEqual(absent.body);
+  expect(absent.status).toBe(404);expectIdenticalNotFound(foreign, absent);
   expect(foreign.headers['cache-control']).toBe('no-store');
   for(const principal of [seller,buyer]) {
    const detail=await get(`/shipments/${d.shipmentId}`,principal);

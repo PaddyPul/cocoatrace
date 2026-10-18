@@ -1,5 +1,6 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/test/integration/support/errorAssertions.ts',
   'web/src/components/shared/UnsavedChangesDialog.tsx',
   'api/src/middleware/errorEnvelope.test.ts',
   'api/src/middleware/errorEnvelope.ts',
