@@ -1,4 +1,4 @@
-import { useUnsavedChanges } from '../components/shared/UnsavedChanges';
+import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { farms as farmsApi } from '../api';
@@ -49,6 +49,34 @@ export default function FarmsPage() {
     ),
     'Farm and plot entry',
   );
+
+  const discardFarm = useDiscardChanges(
+    Boolean(cfName || cfRegion || cfDistrict || cfCommunity || cfTraceId),
+  );
+  const discardPlot = useDiscardChanges(
+    Boolean(plotCode || plotArea || plotCrops !== 'cocoa' || plotGpsLat || plotGpsLng),
+  );
+  const closeFarm = () =>
+    discardFarm(() => {
+      setShowCreate(false);
+      setCfName('');
+      setCfRegion('');
+      setCfDistrict('');
+      setCfCommunity('');
+      setCfTraceId('');
+      setCfError('');
+    });
+  const closePlot = (skip = false) =>
+    discardPlot(() => {
+      setShowPlot(false);
+      setPlotCode('');
+      setPlotArea(0);
+      setPlotCrops('cocoa');
+      setPlotGpsLat('');
+      setPlotGpsLng('');
+      setPlotError('');
+      if (skip) setCreatedFarmId(null);
+    });
 
   const handleCreateFarm = async () => {
     if (!cfName || !cfRegion || !cfDistrict) {
@@ -221,13 +249,13 @@ export default function FarmsPage() {
       </div>
 
       {showCreate && (
-        <div className="modal-overlay" onClick={() => !cfLoading && setShowCreate(false)}>
+        <div className="modal-overlay" onClick={() => !cfLoading && closeFarm()}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="modal-title">Create Farm</div>
               </div>
-              <button className="btn btn-sm" onClick={() => setShowCreate(false)}>
+              <button className="btn btn-sm" onClick={closeFarm}>
                 <X size={14} />
               </button>
             </div>
@@ -270,7 +298,7 @@ export default function FarmsPage() {
               <div className="flex gap-2 pt-1">
                 <button
                   className="btn flex-1 justify-center"
-                  onClick={() => setShowCreate(false)}
+                  onClick={closeFarm}
                   disabled={cfLoading}
                 >
                   Cancel
@@ -324,13 +352,13 @@ export default function FarmsPage() {
       )}
 
       {showPlot && createdFarmId && (
-        <div className="modal-overlay" onClick={() => !plotLoading && setShowPlot(false)}>
+        <div className="modal-overlay" onClick={() => !plotLoading && closePlot()}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="modal-title">Add Plot</div>
               </div>
-              <button className="btn btn-sm" onClick={() => setShowPlot(false)}>
+              <button className="btn btn-sm" onClick={() => closePlot()}>
                 <X size={14} />
               </button>
             </div>
@@ -382,8 +410,7 @@ export default function FarmsPage() {
                 <button
                   className="btn flex-1 justify-center"
                   onClick={() => {
-                    setShowPlot(false);
-                    setCreatedFarmId(null);
+                    closePlot(true);
                   }}
                   disabled={plotLoading}
                 >

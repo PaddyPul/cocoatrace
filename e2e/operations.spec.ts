@@ -252,6 +252,22 @@ test('operator reviews a safe retry, preserves explanation during refresh and se
   await dialog
     .getByLabel('Recovery explanation', { exact: true })
     .fill('Provider outage investigated and corrected');
+  await dialog.getByRole('button', { name: 'Cancel recovery', exact: true }).click();
+  const discardReview = page.getByRole('dialog', { name: 'Discard unsaved changes?', exact: true });
+  await discardReview.getByRole('button', { name: 'Stay and keep editing', exact: true }).click();
+  await expect(discardReview).toHaveCount(0);
+  await expect(dialog.getByLabel('Recovery explanation', { exact: true })).toHaveValue(
+    'Provider outage investigated and corrected',
+  );
+  await dialog.getByRole('button', { name: 'Cancel recovery', exact: true }).click();
+  await discardReview.getByRole('button', { name: 'Discard changes', exact: true }).click();
+  await expect(discardReview).toHaveCount(0);
+  await expect(dialog).toHaveCount(0);
+  await monitor.getByRole('button', { name: 'Review cleanup retry', exact: true }).click();
+  await expect(dialog.getByLabel('Recovery explanation', { exact: true })).toHaveValue('');
+  await dialog
+    .getByLabel('Recovery explanation', { exact: true })
+    .fill('Provider outage investigated and corrected');
   await expect(dialog).toBeVisible();
   await expect(
     dialog.getByRole('textbox', { name: 'Recovery explanation', exact: true }),

@@ -66,6 +66,17 @@ test('supplier reviews expiry and retains reason after renewal failure', async (
   await page.getByRole('button', { name: 'Confirm renewal' }).click();
   await expect(page.getByRole('alert')).toContainText('Insufficient current inventory');
   await expect(page.getByLabel('Renewal reason')).toHaveValue('Stock reviewed with warehouse');
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  const discard = page.getByRole('dialog', { name: 'Discard unsaved changes?', exact: true });
+  await discard.getByRole('button', { name: 'Stay and keep editing' }).click();
+  await expect(page.getByLabel('Renewal reason', { exact: true })).toHaveValue(
+    'Stock reviewed with warehouse',
+  );
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await discard.getByRole('button', { name: 'Discard changes', exact: true }).click();
+  await expect(page.getByLabel('Renewal reason', { exact: true })).not.toBeVisible();
+  await page.getByRole('button', { name: 'Review and renew', exact: true }).click();
+  await expect(page.getByLabel('Renewal reason', { exact: true })).toHaveValue('');
   expect(calls).toBe(1);
 });
 

@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../components/shared/UnsavedChanges';
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
@@ -39,6 +40,7 @@ export default function AccessReviewPage() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [notice, setNotice] = useState('');
+  useUnsavedChanges(Boolean(reason || confirmed), 'Privileged access review');
   async function load() {
     setReport(null);
     setConfirmed(false);

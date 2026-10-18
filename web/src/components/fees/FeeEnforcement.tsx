@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../shared/UnsavedChanges';
 import { useCallback, useEffect, useId, useState } from 'react';
 import { feeEnforcement, type FeeEnforcementState } from '../../api/feeEnforcement';
 import { useAuthCtx } from '../auth/AuthProvider';
@@ -18,6 +19,7 @@ export default function FeeEnforcement({
   const [reason, setReason] = useState('');
   const [until, setUntil] = useState('');
   const [reviewed, setReviewed] = useState(false);
+  useUnsavedChanges(Boolean(accepted || reason || until || reviewed), 'Fee collection review');
   const load = useCallback(async () => {
     try {
       setData(await feeEnforcement.read(contractId));
@@ -37,6 +39,8 @@ export default function FeeEnforcement({
     setError('');
     try {
       await work();
+      setReason('');
+      setUntil('');
       await load();
       onChanged?.();
     } catch (e) {

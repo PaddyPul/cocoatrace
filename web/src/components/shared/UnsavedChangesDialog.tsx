@@ -3,9 +3,11 @@ import { useLayoutEffect, useRef } from 'react';
 export default function UnsavedChangesDialog({
   onStay,
   onLeave,
+  local = false,
 }: {
   onStay: () => void;
   onLeave: () => void;
+  local?: boolean;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const stay = useRef<HTMLButtonElement>(null);
@@ -27,7 +29,7 @@ export default function UnsavedChangesDialog({
       }}
     >
       <h2 id="unsaved-navigation-title" className="text-lg font-semibold">
-        Leave unsaved changes?
+        {local ? 'Discard unsaved changes?' : 'Leave unsaved changes?'}
       </h2>
       <p id="unsaved-navigation-description" className="my-4 text-sm">
         Your changes have not been saved. Stay to continue editing, or leave and discard the current
@@ -38,7 +40,7 @@ export default function UnsavedChangesDialog({
           Stay and keep editing
         </button>
         <button type="button" className="btn btn-danger" onClick={onLeave}>
-          Leave and discard changes
+          {local ? 'Discard changes' : 'Leave and discard changes'}
         </button>
       </div>
     </dialog>

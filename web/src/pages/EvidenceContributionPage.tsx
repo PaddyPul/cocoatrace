@@ -1,5 +1,5 @@
-import { useUnsavedChanges } from '../components/shared/UnsavedChanges';
-import { useCallback, useState } from 'react';
+import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
+import { useCallback, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { evidence, EvidenceRecordOption } from '../api';
 import { useAuthCtx } from '../components/auth/AuthProvider';
@@ -47,19 +47,22 @@ export default function EvidenceContributionPage() {
     file?.size || 0,
     file?.lastModified || 0,
   ]);
-  const clearUnsaved = useUnsavedChanges(
-    Boolean((description || file) && draftSnapshot !== savedDraft),
-    'Evidence contribution',
-  );
+  const dirty = Boolean((description || file) && draftSnapshot !== savedDraft);
+  const discard = useDiscardChanges(dirty);
+  const discardRef = useRef(discard);
+  discardRef.current = discard;
+  const clearUnsaved = useUnsavedChanges(dirty, 'Evidence contribution');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const chooseRecord = useCallback((record: EvidenceRecordOption | null) => {
-    setSelected(record);
-    setDescription('');
-    setFile(undefined);
-    setError('');
-    setSuccess('');
+    discardRef.current(() => {
+      setSelected(record);
+      setDescription('');
+      setFile(undefined);
+      setError('');
+      setSuccess('');
+    });
   }, []);
   const upload = async () => {
     if (!selected || !ready || !file || !description.trim() || busy) return;
@@ -112,9 +115,16 @@ export default function EvidenceContributionPage() {
                   className="form-select mt-2"
                   value={kind}
                   onChange={(event) => {
-                    chooseRecord(null);
-                    setReady(false);
-                    setKind(event.target.value as RecordKind);
+                    const nextKind = event.target.value as RecordKind;
+                    discard(() => {
+                      setSelected(null);
+                      setDescription('');
+                      setFile(undefined);
+                      setError('');
+                      setSuccess('');
+                      setReady(false);
+                      setKind(nextKind);
+                    });
                   }}
                 >
                   {kinds.map((value) => (

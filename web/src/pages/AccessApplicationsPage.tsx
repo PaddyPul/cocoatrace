@@ -1,3 +1,4 @@
+import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Building2, Check, ClipboardCopy, ShieldCheck, X } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
@@ -106,6 +107,8 @@ function AccessReview() {
   const visible = page.items;
   const loading = page.loading;
 
+  useUnsavedChanges(Boolean(selected && reason), 'Access application review');
+  const discard = useDiscardChanges(Boolean(selected && reason));
   const decide = async (decision: 'approve' | 'reject') => {
     if (!selected) return;
     if (decision === 'reject' && !reason.trim()) {
@@ -276,8 +279,10 @@ function AccessReview() {
                   <button
                     className="btn btn-sm btn-primary"
                     onClick={() => {
-                      setSelected(row);
-                      setReason('');
+                      discard(() => {
+                        setSelected(row);
+                        setReason('');
+                      });
                       setError('');
                     }}
                   >
@@ -328,7 +333,16 @@ function AccessReview() {
         <PageNavigation page={page} label="applications" />
       </section>
       {selected && (
-        <div className="modal-overlay" onClick={() => !busy && setSelected(null)}>
+        <div
+          className="modal-overlay"
+          onClick={() =>
+            !busy &&
+            discard(() => {
+              setSelected(null);
+              setReason('');
+            })
+          }
+        >
           <div
             role="dialog"
             aria-modal="true"
@@ -347,7 +361,16 @@ function AccessReview() {
                   {selected.adminEmail})
                 </p>
               </div>
-              <button className="btn btn-sm" onClick={() => setSelected(null)} aria-label="Close">
+              <button
+                className="btn btn-sm"
+                onClick={() =>
+                  discard(() => {
+                    setSelected(null);
+                    setReason('');
+                  })
+                }
+                aria-label="Close"
+              >
                 <X size={14} />
               </button>
             </div>

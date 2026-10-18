@@ -1,3 +1,4 @@
+import { useUnsavedChanges, useDiscardChanges } from '../shared/UnsavedChanges';
 import { useState } from 'react';
 import type { Listing } from '../../domains/marketplace/types';
 import { listings } from '../../api';
@@ -15,6 +16,15 @@ export default function ListingLifecycle({
     [days, setDays] = useState(30),
     [busy, setBusy] = useState(false),
     [error, setError] = useState('');
+  const dirty = open && (reason !== '' || days !== 30);
+  const clearUnsaved = useUnsavedChanges(dirty, 'Listing renewal');
+  const discard = useDiscardChanges(dirty);
+  const close = () =>
+    discard(() => {
+      setOpen(false);
+      setReason('');
+      setDays(30);
+    });
   const expired = !!listing.expires_at && new Date(listing.expires_at).getTime() <= Date.now();
   async function renew() {
     setBusy(true);
@@ -24,6 +34,9 @@ export default function ListingLifecycle({
         expiresAt: new Date(Date.now() + days * 86400000).toISOString(),
         reason,
       });
+      clearUnsaved();
+      setReason('');
+      setDays(30);
       setOpen(false);
       onRenew();
     } catch (e) {
@@ -39,7 +52,7 @@ export default function ListingLifecycle({
         {listing.expires_at ? ` · ${new Date(listing.expires_at).toLocaleString()}` : ''}
       </p>
       {owner && listing.active !== false && !listing.activeRecall && (
-        <button className="btn btn-sm" onClick={() => setOpen(!open)}>
+        <button className="btn btn-sm" onClick={() => (open ? close() : setOpen(true))}>
           Review and renew
         </button>
       )}
@@ -84,7 +97,7 @@ export default function ListingLifecycle({
           >
             {busy ? 'Renewing…' : 'Confirm renewal'}
           </button>
-          <button className="btn ml-2" disabled={busy} onClick={() => setOpen(false)}>
+          <button className="btn ml-2" disabled={busy} onClick={close}>
             Cancel
           </button>
         </div>

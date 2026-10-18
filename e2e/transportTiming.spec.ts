@@ -116,6 +116,17 @@ test('reviewed arrival timing retains explanation after conflict and saves a rev
   await expect(panel.getByLabel('Timing change or delay reason', { exact: true })).toHaveValue(
     'Port congestion investigated',
   );
+  await panel.getByRole('button', { name: 'Refresh current timing', exact: true }).click();
+  await expect(panel.getByLabel('Arrival estimate (UTC date)', { exact: true })).toHaveValue(
+    '2030-01-01',
+  );
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  const review = page.getByRole('dialog', { name: 'Leave unsaved changes?', exact: true });
+  await expect(review).toBeVisible();
+  await review.getByRole('button', { name: 'Stay and keep editing', exact: true }).click();
+  await expect(panel.getByLabel('Timing change or delay reason', { exact: true })).toHaveValue(
+    'Port congestion investigated',
+  );
   await panel.getByRole('button', { name: 'Save reviewed timing', exact: true }).click();
   await expect(panel.getByRole('alert')).toContainText('Timing changed');
   await expect(panel.getByLabel('Timing change or delay reason', { exact: true })).toHaveValue(
@@ -123,4 +134,9 @@ test('reviewed arrival timing retains explanation after conflict and saves a rev
   );
   await panel.getByRole('button', { name: 'Save reviewed timing', exact: true }).click();
   await expect(panel).toContainText('Revision 1: 2030-01-01');
+  await page.getByRole('button', { name: 'Back', exact: true }).click();
+  await expect(page).toHaveURL(/\/shipments$/);
+  await expect(
+    page.getByRole('dialog', { name: 'Leave unsaved changes?', exact: true }),
+  ).toHaveCount(0);
 });

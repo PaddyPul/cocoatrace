@@ -1,3 +1,4 @@
+import { useDiscardChanges } from '../shared/UnsavedChanges';
 import { useEffect, useState } from 'react';
 import { recalls } from '../../api';
 import { useAuthCtx } from '../auth/AuthProvider';
@@ -11,6 +12,8 @@ export default function RecallRegister() {
     [status, setStatus] = useState('all'),
     [severity, setSeverity] = useState('all');
   const [openResponseId, setOpenResponseId] = useState<string | null>(null);
+  const [responseDirty, setResponseDirty] = useState(false);
+  const discard = useDiscardChanges(responseDirty);
   const [version, setVersion] = useState(0);
   const page = useCatalogPage(
     recalls.page,
@@ -74,13 +77,19 @@ export default function RecallRegister() {
           maxLength={80}
           className="form-input"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            const value = e.target.value;
+            discard(() => setSearch(value));
+          }}
         />
         <select
           aria-label="Recall status"
           className="form-select"
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          onChange={(e) => {
+            const value = e.target.value;
+            discard(() => setStatus(value));
+          }}
         >
           {['all', 'draft', 'active', 'resolved'].map((value) => (
             <option key={value} value={value}>
@@ -92,7 +101,10 @@ export default function RecallRegister() {
           aria-label="Recall severity"
           className="form-select"
           value={severity}
-          onChange={(e) => setSeverity(e.target.value)}
+          onChange={(e) => {
+            const value = e.target.value;
+            discard(() => setSeverity(value));
+          }}
         >
           {['all', 'advisory', 'warning', 'critical'].map((value) => (
             <option key={value} value={value}>
@@ -104,12 +116,11 @@ export default function RecallRegister() {
           Retry recall notices
         </button>
       </div>
+      {page.error && <p role="alert">Recall notices unavailable. {page.error}</p>}
       {totalError && <p role="alert">{totalError}</p>}
       {page.loading && !items.length ? (
         <p role="status">Loading recalls…</p>
-      ) : page.error ? (
-        <p role="alert">Recall notices unavailable. {page.error}</p>
-      ) : !items.length ? (
+      ) : page.error && !items.length ? null : !items.length ? (
         <p>No permitted recall notices match these filters.</p>
       ) : (
         <div className="space-y-3">
@@ -136,7 +147,11 @@ export default function RecallRegister() {
                 </div>
                 <button
                   className="btn btn-sm"
-                  onClick={() => setOpenResponseId(openResponseId === recall.id ? null : recall.id)}
+                  onClick={() =>
+                    discard(() =>
+                      setOpenResponseId(openResponseId === recall.id ? null : recall.id),
+                    )
+                  }
                 >
                   {openResponseId === recall.id ? 'Close response' : 'Open response'}
                 </button>
@@ -166,6 +181,7 @@ export default function RecallRegister() {
               {openResponseId === recall.id && (
                 <RecallResponsePanel
                   recallId={recall.id}
+                  onDirtyChange={setResponseDirty}
                   onChanged={() => {
                     void refresh();
                   }}
@@ -175,7 +191,14 @@ export default function RecallRegister() {
           ))}
         </div>
       )}
-      <PageNavigation label="recall notices" page={page} />
+      <PageNavigation
+        label="recall notices"
+        page={{
+          ...page,
+          next: () => discard(() => page.next()),
+          previous: () => discard(() => page.previous()),
+        }}
+      />
     </section>
   );
 }
