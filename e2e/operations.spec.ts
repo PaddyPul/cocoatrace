@@ -83,7 +83,7 @@ async function mock(page: Page, admin = true) {
             limit: 1000,
             overdueAfterSeconds: 900,
             needsAttention: true,
-            queues: ['cleanup', 'payment_reminder', 'recall'].map((name) => ({
+            queues: ['cleanup', 'payment_reminder', 'recall', 'fee_statement'].map((name) => ({
               name,
               queued: {
                 count: backlogCapped && name === 'cleanup' ? 1000 : 0,
@@ -112,15 +112,19 @@ async function mock(page: Page, admin = true) {
         ? { healthy: true, jobs: 'missing' }
         : {
             healthy: false,
-            jobs: ['evidence_scan', 'evidence_cleanup', 'payment_reminders', 'recall_email'].map(
-              (name) => ({
-                job_name: name,
-                status: name === 'evidence_cleanup' ? 'failed' : 'succeeded',
-                error_code: name === 'evidence_cleanup' ? 'TERMINAL_WORK_PENDING' : null,
-                last_success_at: new Date().toISOString(),
-                consecutive_failures: name === 'evidence_cleanup' ? 1 : 0,
-              }),
-            ),
+            jobs: [
+              'evidence_scan',
+              'evidence_cleanup',
+              'payment_reminders',
+              'recall_email',
+              'fee_statement_email',
+            ].map((name) => ({
+              job_name: name,
+              status: name === 'evidence_cleanup' ? 'failed' : 'succeeded',
+              error_code: name === 'evidence_cleanup' ? 'TERMINAL_WORK_PENDING' : null,
+              last_success_at: new Date().toISOString(),
+              consecutive_failures: name === 'evidence_cleanup' ? 1 : 0,
+            })),
           };
     } else if (path === '/api/operations/cleanup/dead')
       body = {
@@ -312,6 +316,7 @@ test('ordinary workspace cannot see or operate administrator recovery controls',
 for (const [queue, name] of [
   ['payment_reminder', 'Payment reminder'],
   ['recall', 'Recall'],
+  ['fee_statement', 'Fee statement'],
   ['operator_alert', 'Operator alert'],
 ]) {
   test(`${name} recovery preserves review through conflicts, assurance failure and refresh`, async ({
@@ -420,7 +425,7 @@ test('backlog contract rejects inconsistent counts, incidents and missing queue 
     limit: 1000,
     overdueAfterSeconds: 900,
     needsAttention: false,
-    queues: ['cleanup', 'payment_reminder', 'recall'].map((name) => ({
+    queues: ['cleanup', 'payment_reminder', 'recall', 'fee_statement'].map((name) => ({
       name,
       queued: { count: 0, more: false },
       leased: { count: 0, more: false },

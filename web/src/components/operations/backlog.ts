@@ -2,6 +2,7 @@ export const queueLabels = {
   cleanup: 'Object cleanup',
   payment_reminder: 'Payment reminder email',
   recall: 'Recall email',
+  fee_statement: 'Fee statement email',
 };
 type Count = { count: number; more: boolean };
 export type Backlog = {
@@ -49,7 +50,7 @@ export function validBacklog(value: unknown): value is Backlog {
     value.overdueAfterSeconds !== 900 ||
     typeof value.needsAttention !== 'boolean' ||
     !Array.isArray(value.queues) ||
-    value.queues.length !== 3
+    value.queues.length !== Object.keys(queueLabels).length
   )
     return false;
   const seen = new Set<string>();

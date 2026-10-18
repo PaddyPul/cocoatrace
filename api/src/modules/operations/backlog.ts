@@ -2,7 +2,7 @@ import { withCatalogRead, type Execute } from '../catalog/paging';
 
 export const backlogLimit = 1000;
 export const overdueAfterSeconds = 900;
-export const queueNames = ['cleanup', 'payment_reminder', 'recall'] as const;
+export const queueNames = ['cleanup', 'payment_reminder', 'recall', 'fee_statement'] as const;
 export type QueueName = (typeof queueNames)[number];
 const sources = {
   cleanup: {
@@ -25,6 +25,15 @@ const sources = {
   },
   recall: {
     table: 'recall_email_outbox',
+    state: 'status',
+    pending: "status IN ('queued','failed')",
+    leased: 'sending',
+    terminal: 'failed_terminal',
+    terminalOrder: 'id',
+    leaseOrder: 'lease_expires_at NULLS FIRST,id',
+  },
+  fee_statement: {
+    table: 'fee_statement_email_outbox',
     state: 'status',
     pending: "status IN ('queued','failed')",
     leased: 'sending',

@@ -1,3 +1,5 @@
+import { assertNoFeeRefundHold } from '../feeRefunds/boundary';
+import { enqueueFeeStatement } from '../feeStatementDelivery/service';
 import { createHash } from 'node:crypto';
 import type { PoolClient } from 'pg';
 import type { JwtPayload } from '../../middleware/auth';
@@ -196,6 +198,7 @@ export async function consentFeeTerms(
       currency: row.currency,
       terms: feeTermsText,
     });
+    await enqueueFeeStatement(client, actor, contractId);
     return { accepted: true };
   });
 }
@@ -245,6 +248,7 @@ export async function setFeeCredit(
   });
 }
 export async function assertFeeDispatch(client: PoolClient, contractId: string): Promise<void> {
+  await assertNoFeeRefundHold(client, contractId);
   const row = (
     await client.query(
       `SELECT f.*,t.accepted_fingerprint,t.terms_accepted_at,(t.credit_until>NOW() AND t.credit_granted_by IS NOT NULL AND length(trim(t.credit_reason))>=10) credit_active,

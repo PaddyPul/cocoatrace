@@ -15,6 +15,7 @@ function client(row: Record<string, unknown> | undefined) {
     db: {
       query: async (text: string) => {
         sql.push(text);
+        if (text.includes('FROM fee_refund_requests')) return { rows: [] };
         return { rows: row ? [row] : [] };
       },
     } as unknown as PoolClient,

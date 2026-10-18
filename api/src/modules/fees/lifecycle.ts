@@ -1,4 +1,5 @@
 import type { PoolClient } from 'pg';
+import { enqueueFeeStatement } from '../feeStatementDelivery/service';
 import { recordTradeAudit, type TradeActor } from '../trading/transaction';
 /** Called inside the custody-settlement transaction, after its contract lock. */
 export async function makeFeeDue(
@@ -12,11 +13,13 @@ export async function makeFeeDue(
       [contractId],
     )
   ).rows[0];
-  if (row)
+  if (row) {
     await recordTradeAudit(client, actor, 'fee.statement.due', 'platform_fee_invoice', row.id, {
       contractId,
       amount: row.amount_total,
       currency: row.currency,
       trigger: 'trade_completed',
     });
+    await enqueueFeeStatement(client, actor, contractId);
+  }
 }

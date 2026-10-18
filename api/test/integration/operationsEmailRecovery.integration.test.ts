@@ -1,3 +1,4 @@
+import { processFeeStatementEmails } from '../../src/modules/feeStatementDelivery/service';
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import request from 'supertest';
@@ -54,7 +55,7 @@ async function actor(privileged: boolean): Promise<Actor> {
   return { id, organizationId: org, sessionId: session.actor.sessionId, token: session.token };
 }
 
-const queues: EmailQueue[] = ['payment_reminder', 'recall'];
+const queues: EmailQueue[] = ['payment_reminder', 'recall', 'fee_statement'];
 const explanation = 'SMTP incident investigated and corrected';
 const retry = (
   queue: EmailQueue,
@@ -111,30 +112,40 @@ async function terminal(queue: EmailQueue) {
         [listing, offer, admin.organizationId, ordinary.organizationId, holding],
       )
     ).rows[0].id;
-    const payment = (
-      await query(
-        'INSERT INTO payment_requests(contract_id,requested_by_organization_id,amount_total) VALUES($1,$2,20) RETURNING id',
-        [contract, admin.organizationId],
-      )
-    ).rows[0].id;
-    const installment = (
-      await query(
-        `INSERT INTO payment_installments(payment_request_id,installment_type,sequence_number,amount_due,due_trigger)
+    if (queue === 'fee_statement') {
+      parent = (
+        await query(
+          `INSERT INTO platform_fee_invoices(contract_id,fee_payer,payer_organization_id,policy_version,rate_bps,amount_total,currency,currency_minor_units,status,invoiced_at,due_at)
+        VALUES($1,'seller',$2,'seller-completion-v2',200,1,'EUR',2,'invoiced',NOW(),NOW()) RETURNING id`,
+          [contract, admin.organizationId],
+        )
+      ).rows[0].id;
+    } else {
+      const payment = (
+        await query(
+          'INSERT INTO payment_requests(contract_id,requested_by_organization_id,amount_total) VALUES($1,$2,20) RETURNING id',
+          [contract, admin.organizationId],
+        )
+      ).rows[0].id;
+      const installment = (
+        await query(
+          `INSERT INTO payment_installments(payment_request_id,installment_type,sequence_number,amount_due,due_trigger)
       VALUES($1,'balance',1,20,'delivery') RETURNING id`,
-        [payment],
-      )
-    ).rows[0].id;
-    parent = (
-      await query(
-        `INSERT INTO payment_reminders(payment_request_id,installment_id,recipient_organization_id,reminder_date)
+          [payment],
+        )
+      ).rows[0].id;
+      parent = (
+        await query(
+          `INSERT INTO payment_reminders(payment_request_id,installment_id,recipient_organization_id,reminder_date)
       VALUES($1,$2,$3,CURRENT_DATE) RETURNING id`,
-        [payment, installment, ordinary.organizationId],
-      )
-    ).rows[0].id;
+          [payment, installment, ordinary.organizationId],
+        )
+      ).rows[0].id;
+    }
   }
   return (
     await query(
-      `INSERT INTO ${emailOutboxes[queue]}(${queue === 'recall' ? 'recall_id' : 'reminder_id'},recipient_user_id,status,attempts,last_error${queue === 'recall' ? ',exhausted_at' : ''})
+      `INSERT INTO ${emailOutboxes[queue]}(${queue === 'recall' ? 'recall_id' : queue === 'fee_statement' ? 'fee_id' : 'reminder_id'},recipient_user_id,status,attempts,last_error${queue === 'recall' ? ',exhausted_at' : ''})
     VALUES($1,$2,'failed_terminal',8,'SMTP_SUBMISSION_FAILED'${queue === 'recall' ? ',NOW()' : ''}) RETURNING id`,
       [parent, ordinary.id],
     )
@@ -215,8 +226,14 @@ describe.each(queues)('%s reviewed email recovery', (queue) => {
       recipient_user_id: before.recipient_user_id,
       created_at: before.created_at,
     });
-    expect(after[queue === 'recall' ? 'recall_id' : 'reminder_id']).toBe(
-      before[queue === 'recall' ? 'recall_id' : 'reminder_id'],
+    expect(
+      after[
+        queue === 'recall' ? 'recall_id' : queue === 'fee_statement' ? 'fee_id' : 'reminder_id'
+      ],
+    ).toBe(
+      before[
+        queue === 'recall' ? 'recall_id' : queue === 'fee_statement' ? 'fee_id' : 'reminder_id'
+      ],
     );
     if (queue === 'recall') expect(after.exhausted_at).toBeNull();
     expect(await audits(id)).toMatchObject([
@@ -243,11 +260,13 @@ describe.each(queues)('%s reviewed email recovery', (queue) => {
     },
   );
   it('refuses terminal records carrying a lease or recorded submission', async () => {
-    for (const assignment of [
-      'sent_at=NOW()',
-      'lease_token=gen_random_uuid()',
-      "lease_expires_at=NOW()+INTERVAL '1 minute'",
-    ]) {
+    // The fee queue enforces paired lease fields; older queues can also
+    // contain a lone token or expiry, which recovery must still refuse.
+    const leases =
+      queue === 'fee_statement'
+        ? ["lease_token=gen_random_uuid(),lease_expires_at=NOW()+INTERVAL '1 minute'"]
+        : ['lease_token=gen_random_uuid()', "lease_expires_at=NOW()+INTERVAL '1 minute'"];
+    for (const assignment of ['sent_at=NOW()', ...leases]) {
       const id = await terminal(queue);
       await query(`UPDATE ${emailOutboxes[queue]} SET ${assignment} WHERE id=$1`, [id]);
       expect((await retry(queue, id)).status).toBe(409);
@@ -395,7 +414,9 @@ describe.each(queues)('%s reviewed email recovery', (queue) => {
       expect(JSON.stringify(plan.rows)).toContain(
         queue === 'recall'
           ? 'recall_email_terminal_operator'
-          : 'payment_reminder_terminal_operator',
+          : queue === 'fee_statement'
+            ? 'fee_statement_email_terminal'
+            : 'payment_reminder_terminal_operator',
       );
     } finally {
       await client.query('ROLLBACK');
@@ -415,6 +436,13 @@ describe.each(queues)('%s reviewed email recovery', (queue) => {
       await query('UPDATE users SET active=false WHERE id=$1', [ordinary.id]);
       try {
         await processRecallEmails(sender, 1);
+      } finally {
+        await query('UPDATE users SET active=true WHERE id=$1', [ordinary.id]);
+      }
+    } else if (queue === 'fee_statement') {
+      await query('UPDATE users SET active=false WHERE id=$1', [ordinary.id]);
+      try {
+        await processFeeStatementEmails(sender, 1);
       } finally {
         await query('UPDATE users SET active=true WHERE id=$1', [ordinary.id]);
       }

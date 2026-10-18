@@ -145,7 +145,7 @@ router.post('/operations/cleanup/:id/retry', async (req, res, next) => {
     next(error);
   }
 });
-const emailQueue = z.enum(['payment_reminder', 'recall']);
+const emailQueue = z.enum(['payment_reminder', 'recall', 'fee_statement']);
 router.get('/operations/email/:queue/dead', async (req, res, next) => {
   try {
     const queue = emailQueue.safeParse(req.params.queue);

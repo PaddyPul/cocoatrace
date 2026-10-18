@@ -5,6 +5,7 @@ import logger from '../../logger';
 import { scanPendingEvidence } from '../evidenceMaintenance/scanPending';
 import { runCleanupBatch } from '../evidenceCleanup/worker';
 import { enqueueOverdueReminders, processPaymentReminderEmails } from '../payments/reminders';
+import { processFeeStatementEmails } from '../feeStatementDelivery/service';
 import { processRecallEmails } from '../recall/notifications';
 import { jobErrorCode, runTrackedJob, type Job } from './jobs';
 
@@ -43,6 +44,17 @@ const jobs: Job[] = [
       return { ...result, terminalFailures: terminal.rows[0].n };
     },
   },
+  {
+    name: 'fee_statement_email',
+    run: async () => {
+      if (!config.identityEmailEnabled || config.emailDriver !== 'smtp') return { skipped: 1 };
+      const result = await processFeeStatementEmails(undefined, 20);
+      const terminal = await query(
+        "SELECT EXISTS(SELECT 1 FROM fee_statement_email_outbox WHERE status='failed_terminal')::int n",
+      );
+      return { ...result, terminalFailures: terminal.rows[0].n };
+    },
+  },
 ];
 
 /** Each job has its own loop: a slow scanner cannot prevent reminder delivery. */
@@ -54,7 +66,7 @@ export function startOperationsWorkers(): () => Promise<void> {
     ssl: config.databaseSsl
       ? { rejectUnauthorized: config.databaseSslRejectUnauthorized }
       : undefined,
-    max: 4,
+    max: 5,
     connectionTimeoutMillis: 5_000,
     idleTimeoutMillis: 30_000,
   });
@@ -105,7 +117,11 @@ export function startOperationsWorkers(): () => Promise<void> {
               timers.delete(timer);
               void tick();
             },
-            job.name === 'payment_reminders' || job.name === 'recall_email' ? 15_000 : 60_000,
+            job.name === 'payment_reminders' ||
+              job.name === 'recall_email' ||
+              job.name === 'fee_statement_email'
+              ? 15_000
+              : 60_000,
           );
           timer.unref();
           timers.add(timer);

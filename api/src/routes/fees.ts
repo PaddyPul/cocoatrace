@@ -3,6 +3,10 @@ import { z } from 'zod';
 import { requireAuth, requirePermission, requireAnyPermission } from '../middleware/auth';
 import validate from '../middleware/validate';
 import * as controller from '../controllers/feeController';
+import {
+  requestFeeStatementDelivery,
+  readDeliveryStatus,
+} from '../modules/feeStatementDelivery/service';
 const router = Router();
 const reason = z.string().trim().min(10).max(2000);
 const reference = z.string().trim().min(3).max(200);
@@ -61,5 +65,34 @@ router.post(
   requirePermission('finance.manage'),
   validate(z.object({ reason })),
   controller.writeOff,
+);
+router.get(
+  '/contracts/:id/fee/statement-delivery',
+  requireAuth,
+  requireAnyPermission('contract.read', 'finance.manage'),
+  async (req, res, next) => {
+    try {
+      res.setHeader('Cache-Control', 'no-store');
+      res.json(await readDeliveryStatus(req.user!, z.string().uuid().parse(req.params.id)));
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+router.post(
+  '/contracts/:id/fee/statement-delivery',
+  requireAuth,
+  requireAnyPermission('contract.read', 'finance.manage'),
+  validate(z.object({}).strict()),
+  async (req, res, next) => {
+    try {
+      res.setHeader('Cache-Control', 'no-store');
+      res.json(
+        await requestFeeStatementDelivery(req.user!, z.string().uuid().parse(req.params.id)),
+      );
+    } catch (error) {
+      next(error);
+    }
+  },
 );
 export = router;

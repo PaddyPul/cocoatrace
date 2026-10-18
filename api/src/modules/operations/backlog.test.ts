@@ -57,7 +57,7 @@ describe('bounded queue incident observations', () => {
         'Invalid queue observation',
       );
   });
-  it('uses fixed three bounded metadata-only probes in one read snapshot', async () => {
+  it('uses fixed four bounded metadata-only probes in one read snapshot', async () => {
     const execute = vi.fn().mockResolvedValue({ rows: [empty] });
     const snapshot = await loadQueueBacklog(execute);
     expect(snapshot).toMatchObject({
@@ -70,8 +70,9 @@ describe('bounded queue incident observations', () => {
       'cleanup',
       'payment_reminder',
       'recall',
+      'fee_statement',
     ]);
-    expect(execute).toHaveBeenCalledTimes(3);
+    expect(execute).toHaveBeenCalledTimes(4);
     for (const [sql] of execute.mock.calls) {
       expect(sql.match(/LIMIT 1001/g)).toHaveLength(3);
       expect(sql).not.toMatch(/recipient|object_key|last_error|SELECT \*/);

@@ -61,6 +61,7 @@ export async function retryCleanup(
 export const emailOutboxes = {
   payment_reminder: 'payment_reminder_email_outbox',
   recall: 'recall_email_outbox',
+  fee_statement: 'fee_statement_email_outbox',
 } as const;
 export type EmailQueue = keyof typeof emailOutboxes;
 

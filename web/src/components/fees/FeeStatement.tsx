@@ -1,3 +1,5 @@
+import FeeRefunds from './FeeRefunds';
+import FeeStatementDelivery from './FeeStatementDelivery';
 import FeeEnforcement from './FeeEnforcement';
 import { useCallback, useEffect, useState } from 'react';
 import { platformFees, type FeeStatement as Statement } from '../../api';
@@ -83,27 +85,33 @@ export default function FeeStatement({
   const zeroFee = !!f && !/[1-9]/.test(f.amount_total);
   const collectionLabel = !f
     ? ''
-    : f.amount_matches === false || f.payer_matches === false || !f.payer_organization_id
-      ? 'Fee collection needs platform finance review'
-      : zeroFee
-        ? 'No fee payment required'
-        : f.status === 'paid'
-          ? f.receipt_verified
-            ? 'Platform fee collected — receipt verified'
-            : 'Recorded paid — receipt verification needs finance review'
-          : f.status === 'written_off'
-            ? 'Fee written off — no collection recorded'
-            : f.status === 'void'
-              ? 'Fee void — no payment due'
-              : pending
-                ? 'Fee payment reported — receipt not yet verified'
-                : f.status === 'invoiced'
-                  ? 'Platform fee outstanding — collection not verified'
-                  : f.status === 'estimated' && f.contract_status !== 'settled'
-                    ? f.policy_version === 'seller-predispatch-v3'
-                      ? 'Fee terms require seller agreement before payment and dispatch'
-                      : 'Fee estimate — payable when the trade completes'
-                    : 'Fee collection status needs platform finance review';
+    : f.refund_status === 'confirmed'
+      ? 'Platform fee refunded — payer receipt confirmed; original receipt retained'
+      : f.refund_status === 'sent'
+        ? 'External fee refund recorded — payer receipt pending'
+        : f.refund_status === 'requested'
+          ? 'Platform fee refund requested — finance review pending'
+          : f.amount_matches === false || f.payer_matches === false || !f.payer_organization_id
+            ? 'Fee collection needs platform finance review'
+            : zeroFee
+              ? 'No fee payment required'
+              : f.status === 'paid'
+                ? f.receipt_verified
+                  ? 'Platform fee collected — receipt verified'
+                  : 'Recorded paid — receipt verification needs finance review'
+                : f.status === 'written_off'
+                  ? 'Fee written off — no collection recorded'
+                  : f.status === 'void'
+                    ? 'Fee void — no payment due'
+                    : pending
+                      ? 'Fee payment reported — receipt not yet verified'
+                      : f.status === 'invoiced'
+                        ? 'Platform fee outstanding — collection not verified'
+                        : f.status === 'estimated' && f.contract_status !== 'settled'
+                          ? f.policy_version === 'seller-predispatch-v3'
+                            ? 'Fee terms require seller agreement before payment and dispatch'
+                            : 'Fee estimate — payable when the trade completes'
+                          : 'Fee collection status needs platform finance review';
 
   return (
     <section
@@ -188,13 +196,14 @@ export default function FeeStatement({
           {f.status === 'void' && (
             <p role="status">Fee voided with the unstarted cancellation. No fee payment is due.</p>
           )}
-          {f.status === 'paid' && (
-            <p role="status">
-              {f.receipt_verified
-                ? 'Platform receipt verified.'
-                : 'Fee recorded as paid; platform finance must review its legacy receipt evidence.'}
-            </p>
-          )}
+          {f.status === 'paid' &&
+            !['requested', 'sent', 'confirmed'].includes(f.refund_status || '') && (
+              <p role="status">
+                {f.receipt_verified
+                  ? 'Platform receipt verified.'
+                  : 'Fee recorded as paid; platform finance must review its legacy receipt evidence.'}
+              </p>
+            )}
           {f.status === 'written_off' && (
             <p role="status">
               Fee written off by platform finance. This does not change goods payment or ownership.
@@ -317,6 +326,12 @@ export default function FeeStatement({
                 </button>
               )}
             </div>
+          )}
+          {data.refundSupported && (
+            <FeeRefunds contractId={contractId} onChanged={() => void load()} />
+          )}
+          {data.statementDeliverySupported && (payer || admin) && (
+            <FeeStatementDelivery contractId={contractId} />
           )}
           {data.submissions
             .filter((s) => s.status !== 'submitted')

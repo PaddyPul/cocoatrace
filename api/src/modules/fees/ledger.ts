@@ -9,6 +9,7 @@ export interface FeeActor extends TradeActor {
   permissions: string[];
 }
 export interface FeeRecord {
+  refund_status?: string | null;
   receipt_verified: boolean;
   amount_matches: boolean;
   payer_matches: boolean;
@@ -51,6 +52,7 @@ const projection = `SELECT f.id,f.contract_id,f.fee_payer,f.payer_organization_i
  (f.status='paid' AND f.paid_at IS NOT NULL AND f.verified_by_user_id IS NOT NULL AND f.platform_receipt_reference IS NOT NULL AND EXISTS(SELECT 1 FROM platform_fee_submissions fs WHERE fs.fee_id=f.id AND fs.status='verified')) receipt_verified,
  (f.amount_total=round(c.quantity_kg*c.price_per_kg*f.rate_bps/10000::numeric,f.currency_minor_units) AND f.currency=c.currency AND f.currency_minor_units=c.currency_minor_units) amount_matches,
  (f.payer_organization_id IS NOT DISTINCT FROM CASE f.fee_payer WHEN 'seller' THEN c.seller_organization_id WHEN 'buyer' THEN c.buyer_organization_id ELSE NULL END) payer_matches,
+ (SELECT r.status FROM fee_refund_requests r WHERE r.fee_id=f.id AND r.status<>'rejected' ORDER BY r.created_at DESC,r.id DESC LIMIT 1) refund_status,
  c.seller_organization_id,c.buyer_organization_id,c.status contract_status,c.quantity_kg,c.price_per_kg,s.name seller_name,b.name buyer_name
  FROM platform_fee_invoices f JOIN sales_contracts c ON c.id=f.contract_id JOIN organizations s ON s.id=c.seller_organization_id JOIN organizations b ON b.id=c.buyer_organization_id`;
 async function lockCollectionOrganization(client: PoolClient, contractId: string) {
@@ -96,6 +98,8 @@ export async function statement(actor: FeeActor, contractId: string) {
   return inTradeTransaction(async (client) => {
     const f = await fee(client, actor, contractId);
     return {
+      refundSupported: true,
+      statementDeliverySupported: true,
       fee: f,
       submissions: await submissions(client, f, actor),
       statementNumber: `CT-FEE-${f.id}`,
