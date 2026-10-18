@@ -1,6 +1,12 @@
 import crypto from 'node:crypto';
 import request from 'supertest';
-import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+// This suite exercises both recorded policies in one worker. Keep production
+// configuration frozen; only this suite receives a mutable copy of validated values.
+vi.mock('../../src/config/env', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/config/env')>();
+  return { ...actual, config: { ...actual.config } };
+});
 import app from '../../src/app';
 import { config } from '../../src/config/env';
 import { pool, query } from '../../src/db';
@@ -271,7 +277,7 @@ describe('versioned platform fee collection enforcement', () => {
     const previous = config.testLegacyFeePolicy;
     let accepted;
     try {
-      Reflect.set(config, 'testLegacyFeePolicy', false);
+      expect(Reflect.set(config, 'testLegacyFeePolicy', false)).toBe(true);
       accepted = await request(app).post(`/offers/${offer}/accept`).set(auth(seller)).send({});
     } finally {
       Reflect.set(config, 'testLegacyFeePolicy', previous);
