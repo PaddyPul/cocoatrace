@@ -211,7 +211,7 @@
     },
     {
       "path": "api/src/migrations/051_fee_statement_delivery.ts",
-      "sha256": "a1cee49fe2066516c4e5262d5228e77ec8e50347c7cf5c4debf1322d2e75e338"
+      "sha256": "8e685e934ed4609783965158a1e9a8fda7d735d12ab66d2c1bbf645e7ae7b4cd"
     }
   ]
 }

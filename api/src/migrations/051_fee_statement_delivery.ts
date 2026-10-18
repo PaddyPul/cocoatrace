@@ -3,7 +3,7 @@ export async function up(knex: Knex): Promise<void> {
   await knex.raw(`ALTER TABLE operations_job_status DROP CONSTRAINT operations_job_status_job_name_check;
     ALTER TABLE operations_job_status ADD CONSTRAINT operations_job_status_job_name_check CHECK(job_name IN ('evidence_scan','evidence_cleanup','payment_reminders','recall_email','fee_statement_email'));
     CREATE TABLE fee_statement_email_outbox (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     fee_id UUID NOT NULL REFERENCES platform_fee_invoices(id),
     recipient_user_id UUID NOT NULL REFERENCES users(id),
     status TEXT NOT NULL DEFAULT 'queued' CHECK(status IN ('queued','sending','sent','suppressed','failed','failed_terminal')),
