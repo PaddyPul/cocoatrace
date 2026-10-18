@@ -229,7 +229,15 @@ describe('full external platform fee refund recovery', () => {
       reason: 'Reviewed refund request cannot be supported',
     });
     expect(rejected.status, JSON.stringify(rejected.body)).toBe(200);
-    expect(rejected.body.canRequest).toBe(true);
+    expect(rejected.body.refund.status).toBe('rejected');
+    expect(rejected.body.canRequest).toBe(false);
+    const payerView = await read(f);
+    expect(payerView.status, JSON.stringify(payerView.body)).toBe(200);
+    expect(payerView.body.canRequest).toBe(true);
+    expect(payerView.body.canSend).toBe(false);
+    const buyerView = await read(f, f.buyer);
+    expect(buyerView.status, JSON.stringify(buyerView.body)).toBe(200);
+    expect(buyerView.body.canRequest).toBe(false);
   });
   it('blocks goods payment, dispatch and stale receipt snapshots rather than refunding an active trade', async () => {
     const f = await fixture();
