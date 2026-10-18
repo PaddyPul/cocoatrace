@@ -403,3 +403,61 @@ describe('server-owned overdue trade filtering facts', () => {
     ).toBeUndefined();
   });
 });
+
+describe('new fee dispatch requirements', () => {
+  it('shows fee terms and verification before dispatch without changing historic trades or later delivery actions', () => {
+    const base = deal({
+      payment_terms_status: 'agreed',
+      fee_policy_version: 'seller-predispatch-v3',
+      fee_status: 'estimated',
+      fee_amount: '1.00',
+      fee_terms_accepted: false,
+      current_milestone: 'planning',
+    });
+    expect(
+      buildTradeActions([], [{ ...base, payment_terms_status: 'draft' }], seller)[0].id,
+    ).not.toMatch(/:fee$/);
+    expect(buildTradeActions([], [base], seller)[0].title).toBe(
+      'Review platform fee terms before dispatch',
+    );
+    expect(
+      buildTradeActions(
+        [],
+        [{ ...base, fee_terms_accepted: true, fee_status: 'invoiced' }],
+        seller,
+      )[0].title,
+    ).toBe('Pay the platform fee before dispatch');
+    expect(
+      buildTradeActions(
+        [],
+        [
+          {
+            ...base,
+            fee_terms_accepted: true,
+            fee_status: 'invoiced',
+            fee_payment_submitted: true,
+          },
+        ],
+        seller,
+      )[0].requiresAction,
+    ).toBe(false);
+    expect(
+      buildTradeActions(
+        [],
+        [{ ...base, fee_terms_accepted: true, fee_status: 'invoiced', fee_credit_active: true }],
+        seller,
+      )[0].id,
+    ).not.toMatch(/:fee$/);
+    expect(
+      buildTradeActions(
+        [],
+        [{ ...base, current_milestone: 'delivered', payment_terms_status: 'agreed' }],
+        buyer,
+      )[0].title,
+    ).toBe('Inspect and accept delivered goods');
+    expect(
+      buildTradeActions([], [{ ...base, fee_policy_version: 'seller-completion-v2' }], seller)[0]
+        .id,
+    ).not.toMatch(/:fee$/);
+  });
+});

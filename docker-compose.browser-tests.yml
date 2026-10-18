@@ -36,6 +36,7 @@ services:
       OPERATIONS_ALERTS_ENABLED: "false"
       OPERATIONS_ALERT_RECIPIENT_USER_IDS: ""
       NODE_ENV: test
+      TEST_LEGACY_FEE_POLICY: "true"
       DEMO_MODE: "false"
       BROWSER_TEST_FIXTURES: "true"
       DATABASE_URL: postgresql://browser_test:browser_test@postgres:5432/cocoatrace_browser_test

@@ -1,9 +1,11 @@
+import { lockFeeOrganizations, assertPlatformFinance } from '../feeEnforcement/service';
 import { decimalUnits } from '../../services/tradeMoney';
 import type { PoolClient } from 'pg';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../errors';
 import { inTradeTransaction, recordTradeAudit, type TradeActor } from '../trading/transaction';
 import { requireCollectible, textInput } from './policy';
 export interface FeeActor extends TradeActor {
+  sessionId?: string;
   permissions: string[];
 }
 export interface FeeRecord {
@@ -51,6 +53,16 @@ const projection = `SELECT f.id,f.contract_id,f.fee_payer,f.payer_organization_i
  (f.payer_organization_id IS NOT DISTINCT FROM CASE f.fee_payer WHEN 'seller' THEN c.seller_organization_id WHEN 'buyer' THEN c.buyer_organization_id ELSE NULL END) payer_matches,
  c.seller_organization_id,c.buyer_organization_id,c.status contract_status,c.quantity_kg,c.price_per_kg,s.name seller_name,b.name buyer_name
  FROM platform_fee_invoices f JOIN sales_contracts c ON c.id=f.contract_id JOIN organizations s ON s.id=c.seller_organization_id JOIN organizations b ON b.id=c.buyer_organization_id`;
+async function lockCollectionOrganization(client: PoolClient, contractId: string) {
+  const row = (
+    await client.query(
+      'SELECT payer_organization_id,policy_version FROM platform_fee_invoices WHERE contract_id=$1',
+      [contractId],
+    )
+  ).rows[0];
+  if (row?.policy_version === 'seller-predispatch-v3' && row.payer_organization_id)
+    await lockFeeOrganizations(client, [row.payer_organization_id]);
+}
 async function fee(
   client: PoolClient,
   actor: FeeActor,
@@ -98,6 +110,7 @@ export async function submitFee(actor: FeeActor, contractId: string, reference: 
     throw new ForbiddenError('Commercial permission is required');
   const ref = textInput(reference, 3, 'Payment reference');
   return inTradeTransaction(async (client) => {
+    await lockCollectionOrganization(client, contractId);
     const f = await fee(client, actor, contractId, true);
     if (f.payer_organization_id !== actor.organizationId)
       throw new ForbiddenError('Only the recorded fee payer can submit payment');
@@ -140,7 +153,9 @@ export async function reviewFee(
   )
     throw new ValidationError('Enter the exact received amount and ISO currency');
   return inTradeTransaction(async (client) => {
+    await lockCollectionOrganization(client, contractId);
     const f = await fee(client, actor, contractId, true);
+    if (f.policy_version === 'seller-predispatch-v3') await assertPlatformFinance(client, actor);
     if (input.decision === 'verify') decimalUnits(input.amount, f.currency_minor_units ?? 2);
     if (actor.organizationId === f.payer_organization_id)
       throw new ForbiddenError('The fee payer cannot verify its own receipt');
@@ -225,7 +240,9 @@ export async function writeOffFee(actor: FeeActor, contractId: string, reason: s
   requireAdmin(actor);
   const detail = textInput(reason, 10, 'Write-off reason');
   return inTradeTransaction(async (client) => {
+    await lockCollectionOrganization(client, contractId);
     const f = await fee(client, actor, contractId, true);
+    if (f.policy_version === 'seller-predispatch-v3') await assertPlatformFinance(client, actor);
     if (actor.organizationId === f.payer_organization_id)
       throw new ForbiddenError('The fee payer cannot write off its own debt');
     if (f.status === 'written_off') {

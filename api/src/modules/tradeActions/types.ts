@@ -60,6 +60,9 @@ export type DealFact = {
   seller_name: string;
   buyer_name: string;
   fee_status?: string;
+  fee_policy_version?: string;
+  fee_terms_accepted?: boolean;
+  fee_credit_active?: boolean;
   fee_payer_organization_id?: string;
   fee_amount?: string;
   fee_payment_submitted?: boolean;

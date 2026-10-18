@@ -64,7 +64,7 @@ async function facts(client: PoolClient, c: Contract): Promise<CancellationFacts
     EXISTS(SELECT 1 FROM payment_requests p WHERE p.contract_id=$1 AND (p.security_status NOT IN('not_required','awaiting_submission') OR p.security_submitted_at IS NOT NULL OR p.security_reference IS NOT NULL)) AS "securityActivity",
     NOT EXISTS(SELECT 1 FROM shipments s WHERE s.contract_id=$1) OR EXISTS(SELECT 1 FROM shipments s WHERE s.contract_id=$1 AND (s.current_milestone<>'planning' OR s.service_provider_name IS NOT NULL OR s.booking_reference IS NOT NULL OR s.transport_document_reference IS NOT NULL OR s.dispatch_exception OR EXISTS(SELECT 1 FROM shipment_milestones m WHERE m.shipment_id=s.id AND m.milestone<>'planning'))) AS "transportActivity",
     EXISTS(SELECT 1 FROM payment_issues i JOIN payment_requests p ON p.id=i.payment_request_id WHERE p.contract_id=$1 AND i.status<>'resolved') OR EXISTS(SELECT 1 FROM delivery_discrepancies d WHERE d.contract_id=$1 AND d.status<>'resolved') OR EXISTS(SELECT 1 FROM delivery_acceptances a WHERE a.contract_id=$1) AS "issueActivity",
-    EXISTS(SELECT 1 FROM platform_fee_invoices f WHERE f.contract_id=$1 AND f.status<>'estimated') AS "feeActivity",
+    EXISTS(SELECT 1 FROM platform_fee_invoices f WHERE f.contract_id=$1 AND NOT (f.status='estimated' OR (f.status='invoiced' AND f.policy_version='seller-predispatch-v3' AND NOT EXISTS(SELECT 1 FROM platform_fee_submissions fs WHERE fs.fee_id=f.id)))) AS "feeActivity",
     EXISTS(SELECT 1 FROM batch_holdings h JOIN sales_contracts c ON c.holding_id=h.id WHERE c.id=$1 AND h.status='committed' AND h.holder_organization_id=c.seller_organization_id AND h.quantity_kg=c.quantity_kg
       AND NOT EXISTS(SELECT 1 FROM listings l WHERE l.holding_id=h.id AND l.active)
       AND NOT EXISTS(SELECT 1 FROM custody_transfers t WHERE t.holding_id=h.id AND t.status='requested')
@@ -172,7 +172,7 @@ export async function reviewCancellation(
         [id],
       );
       await client.query(
-        "UPDATE platform_fee_invoices SET status='void' WHERE contract_id=$1 AND status='estimated'",
+        "UPDATE platform_fee_invoices SET status='void' WHERE contract_id=$1 AND (status='estimated' OR (status='invoiced' AND policy_version='seller-predispatch-v3' AND NOT EXISTS(SELECT 1 FROM platform_fee_submissions fs WHERE fs.fee_id=platform_fee_invoices.id)))",
         [id],
       );
     }

@@ -1,3 +1,4 @@
+import { assertFeeDispatch } from '../feeEnforcement/service';
 import { privateShipmentDetail } from '../transport/privateShipmentDetail';
 import { legacyShipments } from '../catalog/shipments';
 import { withCatalogRead } from '../catalog/paging';
@@ -157,6 +158,7 @@ export async function recordMilestone(
       }
     }
     if (crosses) {
+      await assertFeeDispatch(client, s.contract_id);
       const authorization = authorizePaymentDispatch(s, org, exceptionalDispatch);
       if (authorization.kind === 'denied') {
         await client.query('ROLLBACK');

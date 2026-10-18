@@ -59,6 +59,7 @@ export type AppConfig = Readonly<{
   logQueries: boolean;
   logLevel?: string;
   platformFeeBps: number;
+  testLegacyFeePolicy: boolean;
   openAiApiKey?: string;
   openAiModel?: string;
   allowRemoteDemoReset: boolean;
@@ -118,6 +119,7 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
       DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
       LOG_QUERIES: booleanValue.default(false),
       LOG_LEVEL: optionalText,
+      TEST_LEGACY_FEE_POLICY: booleanValue.default(false),
       PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(1000).default(100),
       OPENAI_API_KEY: optionalText,
       OPENAI_MODEL: optionalText,
@@ -193,6 +195,7 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
           message: 'MFA requires HTTPS or localhost',
         });
       }
+      if (values.TEST_LEGACY_FEE_POLICY && (environment !== 'test' || !new URL(values.DATABASE_URL).pathname.includes('test'))) context.addIssue({code:z.ZodIssueCode.custom,path:['TEST_LEGACY_FEE_POLICY'],message:'legacy fee fixtures require a disposable test database and test environment'});
       const deployed = environment === 'staging' || environment === 'production';
       if (deployed && !values.MFA_ENFORCED) {
         context.addIssue({
@@ -415,6 +418,7 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     logQueries: values.LOG_QUERIES,
     logLevel: values.LOG_LEVEL,
     platformFeeBps: values.PLATFORM_FEE_BPS,
+    testLegacyFeePolicy: values.TEST_LEGACY_FEE_POLICY,
     openAiApiKey: values.OPENAI_API_KEY,
     openAiModel: values.OPENAI_MODEL,
     allowRemoteDemoReset: values.COCOATRACE_ALLOW_REMOTE_DEMO_RESET === 'I_UNDERSTAND',

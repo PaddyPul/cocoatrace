@@ -1,6 +1,7 @@
 import { AppError } from '../../errors';
 import { coordinatorParty } from '../transport/responsibilities';
 import { PoolClient, QueryResultRow } from 'pg';
+import { collectionPolicyVersion, enrollFeePolicy } from '../feeEnforcement/service';
 import { feePolicyVersion } from '../fees/policy';
 import { tradeTotal, requireTradeCurrency, tradeMinorUnits } from '../../services/tradeMoney';
 import { config } from '../../config/env';
@@ -31,10 +32,12 @@ export async function createFulfillment(client: PoolClient, actor: TradeActor, o
       VALUES($1,$2,$3,$4,$5,'awaiting_trigger',$6)`,
     [paymentRequest.id, installment.installmentType, installment.sequenceNumber, installment.amountDue, installment.dueTrigger, units]);
   }
+  const activeFeePolicy = config.testLegacyFeePolicy ? feePolicyVersion : collectionPolicyVersion;
   const fee = (await client.query(`INSERT INTO platform_fee_invoices(contract_id,fee_payer,payer_organization_id,policy_version,rate_bps,amount_total,currency,currency_minor_units)
     SELECT id,'seller',seller_organization_id,$3,$2::integer,ROUND(quantity_kg*price_per_kg*$2::integer/10000,currency_minor_units),currency,currency_minor_units FROM sales_contracts WHERE id=$1 RETURNING *`,
-  [contract.id, config.platformFeeBps, feePolicyVersion])).rows[0];
-  await recordTradeAudit(client, actor, 'fee.estimate.create', 'platform_fee_invoice', fee.id, {contractId:contract.id,amount:fee.amount_total,currency:fee.currency,rateBps:fee.rate_bps,policyVersion:feePolicyVersion,currencyMinorUnits:units});
+  [contract.id, config.platformFeeBps, activeFeePolicy])).rows[0];
+  await recordTradeAudit(client, actor, 'fee.estimate.create', 'platform_fee_invoice', fee.id, {contractId:contract.id,amount:fee.amount_total,currency:fee.currency,rateBps:fee.rate_bps,policyVersion:activeFeePolicy,currencyMinorUnits:units});
+  if (!config.testLegacyFeePolicy) await enrollFeePolicy(client, actor, contract.id);
   const coordinator = coordinatorParty(offer.incoterm);
   if (!coordinator) throw new AppError('Review the unsupported Incoterm before accepting this offer',409,'UNSUPPORTED_INCOTERM');
   const buyerArranges = coordinator === 'buyer';

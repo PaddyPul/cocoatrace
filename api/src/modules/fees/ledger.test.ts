@@ -303,3 +303,23 @@ describe('whole-yen verification input', () => {
     expect(legacy.calls.at(-1)?.sql).toBe('COMMIT');
   });
 });
+
+it('permits new pre-dispatch invoices but preserves historical completion-only policy', () => {
+  const fee = {
+    status: 'invoiced',
+    contract_status: 'accepted',
+    amount_total: '1.00',
+    payer_organization_id: 'seller',
+  };
+  expect(() => requireCollectible(fee)).toThrow();
+  expect(() =>
+    requireCollectible({ ...fee, policy_version: 'seller-predispatch-v3' }),
+  ).not.toThrow();
+  expect(() =>
+    requireCollectible({
+      ...fee,
+      policy_version: 'seller-predispatch-v3',
+      contract_status: 'cancelled',
+    }),
+  ).toThrow();
+});
