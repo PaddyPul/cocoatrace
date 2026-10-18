@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../shared/UnsavedChanges';
 import { useCallback, useEffect, useState } from 'react';
 import { contracts, evidence } from '../../api';
 
@@ -44,6 +45,18 @@ export default function DeliveryAcceptance({ contractId, organizationId, onChang
   const [proofNames, setProofNames] = useState<string[]>([]);
   const [resolutionNote, setResolutionNote] = useState('');
   const [acknowledged, setAcknowledged] = useState(false);
+  useUnsavedChanges(
+    Boolean(
+      quantity ||
+        note ||
+        kind !== 'shortage' ||
+        reason ||
+        proofIds.length ||
+        resolutionNote ||
+        acknowledged,
+    ),
+    'Delivery inspection',
+  );
   const refresh = useCallback(async () => {
     const result = await contracts.delivery(contractId);
     setData(result);
@@ -51,12 +64,13 @@ export default function DeliveryAcceptance({ contractId, organizationId, onChang
   useEffect(() => {
     refresh().catch((error) => setError(error.message));
   }, [refresh]);
-  const act = async (action: () => Promise<unknown>, success: string) => {
+  const act = async (action: () => Promise<unknown>, success: string, saved?: () => void) => {
     setBusy(true);
     setError('');
     setMessage('');
     try {
       await action();
+      saved?.();
       await refresh();
       await onChanged();
       setMessage(success);
@@ -227,6 +241,7 @@ export default function DeliveryAcceptance({ contractId, organizationId, onChang
                 act(
                   () => contracts.proposeDeliveryResolution(contractId, resolutionNote.trim()),
                   'Resolution proposed; awaiting buyer approval.',
+                  () => setResolutionNote(''),
                 );
               }}
             >
@@ -286,6 +301,11 @@ export default function DeliveryAcceptance({ contractId, organizationId, onChang
                   note: note.trim(),
                 }),
               'Delivery accepted. Payment and settlement follow the agreed plan.',
+              () => {
+                setQuantity('');
+                setNote('');
+                setAcknowledged(false);
+              },
             );
           }}
         >
@@ -382,6 +402,13 @@ export default function DeliveryAcceptance({ contractId, organizationId, onChang
                     evidenceIds: proofIds,
                   }),
                 'Delivery discrepancy recorded. Settlement is paused pending resolution and buyer acceptance.',
+                () => {
+                  setQuantity('');
+                  setReason('');
+                  setKind('shortage');
+                  setProofIds([]);
+                  setProofNames([]);
+                },
               );
             }}
           >

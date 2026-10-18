@@ -1,3 +1,4 @@
+import { useUnsavedChanges, useDiscardChanges } from '../shared/UnsavedChanges';
 import { useCallback, useEffect, useId, useState } from 'react';
 import { evidence } from '../../api/evidence';
 import { evidenceReview, ReviewDetail } from '../../api/evidenceReview';
@@ -26,6 +27,13 @@ export default function EvidenceReviewHistory({
     [notice, setNotice] = useState(''),
     [file, setFile] = useState<File | null>(null),
     [claim, setClaim] = useState('');
+  useUnsavedChanges(
+    Boolean(reason || decision !== 'approved' || confirmed || file || claim || uploadedId),
+    'Document review or replacement',
+  );
+  const discard = useDiscardChanges(
+    Boolean(reason || decision !== 'approved' || confirmed || file || claim || uploadedId),
+  );
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -62,6 +70,7 @@ export default function EvidenceReviewHistory({
       await evidenceReview.decide(evidenceId, decision, reason, detail.fingerprint);
       setNotice('Document decision recorded. Claim assurance remains separate.');
       setReason('');
+      setDecision('approved');
       await load();
       onChanged?.();
     } catch (e) {
@@ -112,7 +121,7 @@ export default function EvidenceReviewHistory({
     >
       <h2 className="text-lg font-bold">Document review history</h2>
       {onClose && (
-        <button className="btn" onClick={onClose}>
+        <button className="btn" onClick={() => discard(onClose)}>
           Close document history
         </button>
       )}

@@ -111,6 +111,10 @@ test('failed operator review preserves notes and saved status through refresh', 
   await dialog
     .getByRole('button', { name: 'Reload selected request from current page', exact: true })
     .click();
+  const discard = page.getByRole('dialog', { name: 'Discard unsaved changes?', exact: true });
+  await discard.getByRole('button', { name: 'Discard changes', exact: true }).click();
+  await expect(discard).toHaveCount(0);
+  await expect(dialog.getByLabel('New status', { exact: true })).toHaveValue('open');
   await expect(dialog.getByLabel('Review reason and follow-up', { exact: true })).toHaveValue(
     'Investigate and follow up with reporter',
   );

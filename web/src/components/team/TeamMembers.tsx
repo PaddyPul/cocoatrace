@@ -1,3 +1,4 @@
+import { useUnsavedChanges, useDiscardChanges } from '../shared/UnsavedChanges';
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import {
   teamMembers,
@@ -62,6 +63,13 @@ export default function TeamMembers() {
   useEffect(() => {
     void loadRoles();
   }, [loadRoles]);
+  useUnsavedChanges(
+    Boolean(selected && (role || reason || password || confirmation)),
+    'Team member review',
+  );
+  const discard = useDiscardChanges(
+    Boolean(selected && (role || reason || password || confirmation)),
+  );
   const close = () => {
     setSelected(null);
     setPassword('');
@@ -204,14 +212,14 @@ export default function TeamMembers() {
                       <button
                         className="btn btn-sm"
                         disabled={!!denial || !roles.length || busy}
-                        onClick={() => open(member, 'role')}
+                        onClick={() => discard(() => open(member, 'role'))}
                       >
                         Change role
                       </button>
                       <button
                         className="btn btn-sm text-red-300"
                         disabled={!!denial || busy}
-                        onClick={() => open(member, 'deactivate')}
+                        onClick={() => discard(() => open(member, 'deactivate'))}
                       >
                         Deactivate member
                       </button>
@@ -343,7 +351,7 @@ export default function TeamMembers() {
                     ? 'Confirm role change'
                     : 'Confirm deactivation'}
               </button>
-              <button className="btn" type="button" disabled={busy} onClick={close}>
+              <button className="btn" type="button" disabled={busy} onClick={() => discard(close)}>
                 Cancel member change
               </button>
             </div>

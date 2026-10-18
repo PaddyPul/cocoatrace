@@ -1,3 +1,4 @@
+import { ApiError } from '../../api/http';
 import { useCallback, useEffect, useState } from 'react';
 import { CatalogPage } from '../../api';
 import { useAuthCtx } from '../auth/AuthProvider';
@@ -62,7 +63,13 @@ export function useCatalogPage<T>(
         if (active)
           setState((current) => ({
             ...current,
-            items: [],
+            items:
+              options.retainDuringRefresh &&
+              current.key === key &&
+              current.cursors[current.cursors.length - 1] === cursor &&
+              !(error instanceof ApiError && [401, 403, 404].includes(error.status))
+                ? current.items
+                : [],
             next: null,
             loading: false,
             error: error instanceof Error ? error.message : 'Unable to load records',

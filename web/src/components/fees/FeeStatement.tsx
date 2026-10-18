@@ -1,7 +1,8 @@
+import { useUnsavedChanges } from '../shared/UnsavedChanges';
 import FeeRefunds from './FeeRefunds';
 import FeeStatementDelivery from './FeeStatementDelivery';
 import FeeEnforcement from './FeeEnforcement';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { platformFees, type FeeStatement as Statement } from '../../api';
 import { useAuthCtx } from '../auth/AuthProvider';
 import { fmtMoney } from '../shared/helpers';
@@ -32,12 +33,20 @@ export default function FeeStatement({
     [amount, setAmount] = useState(''),
     [currency, setCurrency] = useState(''),
     [reason, setReason] = useState('');
+  const [amountEdited, setAmountEdited] = useState(false);
+  const [currencyEdited, setCurrencyEdited] = useState(false);
+  useUnsavedChanges(
+    Boolean(reference || receipt || reason || amountEdited || currencyEdited),
+    'Platform fee payment',
+  );
+  const edited = useRef({ amountEdited, currencyEdited });
+  edited.current = { amountEdited, currencyEdited };
   const load = useCallback(async () => {
     try {
       const value = await platformFees.statement(contractId);
       setData(value);
-      setAmount(value.fee.amount_total);
-      setCurrency(value.fee.currency);
+      if (!edited.current.amountEdited) setAmount(value.fee.amount_total);
+      if (!edited.current.currencyEdited) setCurrency(value.fee.currency);
       setError('');
     } catch (e) {
       setData(null);
@@ -52,15 +61,13 @@ export default function FeeStatement({
     window.addEventListener('focus', refresh);
     return () => window.removeEventListener('focus', refresh);
   }, [load, contractStatus]);
-  const run = async (work: () => Promise<unknown>) => {
+  const run = async (work: () => Promise<unknown>, saved?: () => void) => {
     setBusy(true);
     setError('');
     try {
       await work();
       await load();
-      setReference('');
-      setReceipt('');
-      setReason('');
+      saved?.();
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Fee action failed';
       await load();
@@ -242,7 +249,12 @@ export default function FeeStatement({
               <button
                 className="btn btn-sm"
                 disabled={busy || [...reference.trim()].length < 3}
-                onClick={() => void run(() => platformFees.submit(contractId, reference))}
+                onClick={() =>
+                  void run(
+                    () => platformFees.submit(contractId, reference),
+                    () => setReference(''),
+                  )
+                }
               >
                 Submit fee payment reference
               </button>
@@ -261,7 +273,10 @@ export default function FeeStatement({
                     className="form-input"
                     inputMode="decimal"
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={(e) => {
+                      setAmount(e.target.value);
+                      setAmountEdited(e.target.value !== data?.fee.amount_total);
+                    }}
                   />
                   <label className="form-label" htmlFor="fee-currency">
                     Received currency
@@ -271,7 +286,10 @@ export default function FeeStatement({
                     className="form-input"
                     maxLength={3}
                     value={currency}
-                    onChange={(e) => setCurrency(e.target.value)}
+                    onChange={(e) => {
+                      setCurrency(e.target.value);
+                      setCurrencyEdited(e.target.value !== data?.fee.currency);
+                    }}
                   />
                   <label className="form-label" htmlFor="fee-receipt">
                     Platform bank receipt reference
@@ -287,8 +305,14 @@ export default function FeeStatement({
                     className="btn btn-sm"
                     disabled={busy || receipt.trim().length < 3}
                     onClick={() =>
-                      void run(() =>
-                        platformFees.verify(contractId, pending.id, amount, currency, receipt),
+                      void run(
+                        () =>
+                          platformFees.verify(contractId, pending.id, amount, currency, receipt),
+                        () => {
+                          setReceipt('');
+                          setAmountEdited(false);
+                          setCurrencyEdited(false);
+                        },
                       )
                     }
                   >
@@ -311,7 +335,10 @@ export default function FeeStatement({
                   className="btn btn-sm"
                   disabled={busy || [...reason.trim()].length < 10}
                   onClick={() =>
-                    void run(() => platformFees.reject(contractId, pending.id, reason))
+                    void run(
+                      () => platformFees.reject(contractId, pending.id, reason),
+                      () => setReason(''),
+                    )
                   }
                 >
                   Reject fee submission
@@ -320,7 +347,12 @@ export default function FeeStatement({
                 <button
                   className="btn btn-sm"
                   disabled={busy || [...reason.trim()].length < 10}
-                  onClick={() => void run(() => platformFees.writeOff(contractId, reason))}
+                  onClick={() =>
+                    void run(
+                      () => platformFees.writeOff(contractId, reason),
+                      () => setReason(''),
+                    )
+                  }
                 >
                   Write off unpaid fee
                 </button>

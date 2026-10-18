@@ -1,3 +1,4 @@
+import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import { useAuthCtx } from '../components/auth/AuthProvider';
@@ -174,6 +175,8 @@ export default function OperationsPage() {
     [saving, setSaving] = useState(false),
     [decisionError, setDecisionError] = useState('');
   const version = useRef(0);
+  useUnsavedChanges(Boolean(selected && reason), 'Operations recovery explanation');
+  const discard = useDiscardChanges(Boolean(selected && reason));
   const refresh = useCallback(async () => {
     if (!allowed) return;
     const current = ++version.current;
@@ -426,8 +429,10 @@ export default function OperationsPage() {
                             className="btn-secondary ml-3"
                             disabled={saving}
                             onClick={() => {
-                              setSelected({ ...item, queue: 'cleanup' });
-                              setReason('');
+                              discard(() => {
+                                setSelected({ ...item, queue: 'cleanup' });
+                                setReason('');
+                              });
                               setDecisionError('');
                             }}
                           >
@@ -465,8 +470,10 @@ export default function OperationsPage() {
                               className="btn-secondary ml-3"
                               disabled={saving}
                               onClick={() => {
-                                setSelected({ ...item, queue });
-                                setReason('');
+                                discard(() => {
+                                  setSelected({ ...item, queue });
+                                  setReason('');
+                                });
                                 setDecisionError('');
                               }}
                             >
@@ -532,7 +539,12 @@ export default function OperationsPage() {
                 </button>
                 <button
                   className="btn-secondary ml-3"
-                  onClick={() => setSelected(null)}
+                  onClick={() =>
+                    discard(() => {
+                      setSelected(null);
+                      setReason('');
+                    })
+                  }
                   disabled={saving}
                 >
                   Cancel recovery

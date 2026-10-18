@@ -1,3 +1,4 @@
+import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import BatchEvidence from '../components/catalog/BatchEvidence';
 import CertificatePicker from '../components/catalog/CertificatePicker';
 import { useState, useEffect } from 'react';
@@ -40,45 +41,108 @@ export default function BatchDetailPage() {
   const [attNotes, setAttNotes] = useState('');
   const [attesting, setAttesting] = useState(false);
   const [attErr, setAttErr] = useState('');
+  const [pushBaseline, setPushBaseline] = useState({ quantity: 0, origin: '', destination: '' });
+  const pushDirty =
+    pqty !== pushBaseline.quantity ||
+    pprice !== 0 ||
+    pcurrency !== 'EUR' ||
+    porigin !== pushBaseline.origin ||
+    pdest !== pushBaseline.destination ||
+    pincoterm !== 'CIF';
+  const attDirty = Boolean(attCertId || attNotes);
+  const clearPushDraft = useUnsavedChanges(
+    showPush && !pushDone && pushDirty,
+    'Batch supply publication',
+  );
+  const clearAttDraft = useUnsavedChanges(showAttest && attDirty, 'Batch attestation');
+  const discardPush = useDiscardChanges(pushDirty);
+  const discardAtt = useDiscardChanges(attDirty);
+  const closePush = () =>
+    discardPush(() => {
+      setShowPush(false);
+      setPqty(pushBaseline.quantity);
+      setPprice(0);
+      setPcurrency('EUR');
+      setPorigin(pushBaseline.origin);
+      setPdest(pushBaseline.destination);
+      setPincoterm('CIF');
+      setPushErr('');
+    });
+  const closeAtt = () =>
+    discardAtt(() => {
+      setShowAttest(false);
+      setAttCertId('');
+      setAttNotes('');
+      setAttErr('');
+    });
 
-  const canAttest = batch ? (batch.organic_claim_status === 'pending_attestation' && canDo('batch.attest')) : false;
+  const canAttest = batch
+    ? batch.organic_claim_status === 'pending_attestation' && canDo('batch.attest')
+    : false;
 
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    batchesApi.get(id)
+    batchesApi
+      .get(id)
       .then((d) => {
         setBatch(d.batch);
+        setPushBaseline({
+          quantity: d.batch.quantity_kg || 0,
+          origin: d.batch.region ? `${d.batch.region}, Ghana` : 'Tema, Ghana',
+          destination: 'Rotterdam, Netherlands',
+        });
         setPqty(d.batch.quantity_kg || 0);
         setPorigin(d.batch.region ? `${d.batch.region}, Ghana` : 'Tema, Ghana');
         setPdest('Rotterdam, Netherlands');
-        productProfilesApi.getForBatch(d.batch.id).then(setProductProfile).catch(() => undefined);
+        productProfilesApi
+          .getForBatch(d.batch.id)
+          .then(setProductProfile)
+          .catch(() => undefined);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [id]);
 
-  useEffect(()=>{setAttCertId('');setShowAttest(false);},[id]);
+  useEffect(() => {
+    setAttCertId('');
+    setShowAttest(false);
+  }, [id]);
 
   const handleAttest = async () => {
-    if (!batch || !attCertId) { setAttErr('Select a certificate'); return; }
-    setAttesting(true); setAttErr('');
+    if (!batch || !attCertId) {
+      setAttErr('Select a certificate');
+      return;
+    }
+    setAttesting(true);
+    setAttErr('');
     try {
       await batchesApi.attest(batch.id, { certificateId: attCertId, notes: attNotes || undefined });
+      clearAttDraft();
+      setAttNotes('');
       setShowAttest(false);
       toast('success', 'Batch attested successfully');
       const d = await batchesApi.get(batch.id);
       setBatch(d.batch);
-    } catch (e: any) { setAttErr(e.message); } finally { setAttesting(false); }
+    } catch (e: any) {
+      setAttErr(e.message);
+    } finally {
+      setAttesting(false);
+    }
   };
 
-  const canPush = batch ? (batch.current_holder_id === user?.organizationId && canDo('batch.create')) : false;
+  const canPush = batch
+    ? batch.current_holder_id === user?.organizationId && canDo('batch.create')
+    : false;
 
   const handleCreateProfile = async () => {
     if (!batch) return;
     setProfileBusy(true);
     try {
-      const farmPart = (batch.farm_name || 'origin').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const farmPart = (batch.farm_name || 'origin')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
       const profile = await productProfilesApi.save({
         batchId: batch.id,
         slug: `${farmPart}-${batch.crop || 'product'}-${batch.id.slice(0, 8)}`,
@@ -89,7 +153,11 @@ export default function BatchDetailPage() {
       });
       setProductProfile(profile);
       toast('success', 'Draft product page created');
-    } catch (e: any) { toast('error', e.message); } finally { setProfileBusy(false); }
+    } catch (e: any) {
+      toast('error', e.message);
+    } finally {
+      setProfileBusy(false);
+    }
   };
 
   const handlePublishProfile = async () => {
@@ -100,30 +168,72 @@ export default function BatchDetailPage() {
       const refreshed = await productProfilesApi.getForBatch(productProfile.batch_id);
       setProductProfile(refreshed);
       toast('success', 'Product page published — QR is live');
-    } catch (e: any) { toast('error', e.message); } finally { setProfileBusy(false); }
+    } catch (e: any) {
+      toast('error', e.message);
+    } finally {
+      setProfileBusy(false);
+    }
   };
 
   const handlePush = async () => {
-    if (!batch || !pqty || pqty <= 0 || !pprice || pprice <= 0) { setPushErr('Quantity and price required'); return; }
-    setPushing(true); setPushErr('');
+    if (!batch || !pqty || pqty <= 0 || !pprice || pprice <= 0) {
+      setPushErr('Quantity and price required');
+      return;
+    }
+    setPushing(true);
+    setPushErr('');
     try {
       const listing = await batchesApi.pushToMarketplace(batch.id, {
-        quantityKg: Number(pqty), pricePerKg: Number(pprice),
-        currency: pcurrency, incoterm: pincoterm,
-        originLocation: porigin, destinationLocation: pdest,
+        quantityKg: Number(pqty),
+        pricePerKg: Number(pprice),
+        currency: pcurrency,
+        incoterm: pincoterm,
+        originLocation: porigin,
+        destinationLocation: pdest,
       });
       setCreatedListingId(listing.id);
+      clearPushDraft();
       setPushDone(true);
       toast('success', 'Batch listed on marketplace');
-    } catch (e: any) { setPushErr(e.message); } finally { setPushing(false); }
+    } catch (e: any) {
+      setPushErr(e.message);
+    } finally {
+      setPushing(false);
+    }
   };
 
-  if (loading) return <Layout currentPage="batch"><SkeletonDetail /></Layout>;
-  if (error || !batch) return <Layout currentPage="batch"><div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{error || 'Batch not found'}</div></Layout>;
+  if (loading)
+    return (
+      <Layout currentPage="batch">
+        <SkeletonDetail />
+      </Layout>
+    );
+  if (error || !batch)
+    return (
+      <Layout currentPage="batch">
+        <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">
+          {error || 'Batch not found'}
+        </div>
+      </Layout>
+    );
 
   return (
-    <Layout currentPage="batch" actions={<button className="btn btn-sm" onClick={() => navigate('/batches')}><ArrowLeft size={14} /> Back</button>}>
-      {canDo('evidence.upload') && <button className="btn mb-4" onClick={()=>navigate(`/evidence/contribute?entityType=batch&entityId=${id}`)}>Add supporting evidence</button>}
+    <Layout
+      currentPage="batch"
+      actions={
+        <button className="btn btn-sm" onClick={() => navigate('/batches')}>
+          <ArrowLeft size={14} /> Back
+        </button>
+      }
+    >
+      {canDo('evidence.upload') && (
+        <button
+          className="btn mb-4"
+          onClick={() => navigate(`/evidence/contribute?entityType=batch&entityId=${id}`)}
+        >
+          Add supporting evidence
+        </button>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-5">
           <div className="bg-surface border border-border rounded overflow-hidden">
@@ -135,23 +245,40 @@ export default function BatchDetailPage() {
               </div>
             </div>
             <div className="p-5">
-              <h1 className="text-xl font-bold text-text-primary mb-1">Batch {batch.id.slice(0, 8)}…</h1>
-              <p className="text-sm text-text-muted">{batch.farm_name || 'Unknown farm'} · {batch.crop}{batch.region ? ` · ${batch.region}` : ''}</p>
+              <h1 className="text-xl font-bold text-text-primary mb-1">
+                Batch {batch.id.slice(0, 8)}…
+              </h1>
+              <p className="text-sm text-text-muted">
+                {batch.farm_name || 'Unknown farm'} · {batch.crop}
+                {batch.region ? ` · ${batch.region}` : ''}
+              </p>
               <div className="grid grid-cols-4 gap-4 mt-4 pt-4 border-t border-border text-xs">
                 <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Harvest Date</div>
+                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
+                    Harvest Date
+                  </div>
                   <div className="font-medium">{fmtDate(batch.harvest_date)}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Quantity</div>
-                  <div className="font-medium font-mono">{(batch.quantity_kg || 0).toLocaleString()} kg</div>
+                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
+                    Quantity
+                  </div>
+                  <div className="font-medium font-mono">
+                    {(batch.quantity_kg || 0).toLocaleString()} kg
+                  </div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Holder</div>
-                  <div className="font-medium">{batch.holder_name || batch.current_holder_id?.slice(0, 8)}</div>
+                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
+                    Holder
+                  </div>
+                  <div className="font-medium">
+                    {batch.holder_name || batch.current_holder_id?.slice(0, 8)}
+                  </div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Crop</div>
+                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
+                    Crop
+                  </div>
                   <div className="font-medium">{batch.crop || 'cocoa'}</div>
                 </div>
               </div>
@@ -160,61 +287,124 @@ export default function BatchDetailPage() {
 
           {batch.att_hash && (
             <div className="bg-surface border border-border rounded p-5">
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Shield size={16} className="text-brand-400" /> Attestation</h3>
+              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                <Shield size={16} className="text-brand-400" /> Attestation
+              </h3>
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Provenance Hash</div>
-                  <div className="font-mono text-[10px] text-text-muted break-all">{batch.att_hash}</div>
+                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
+                    Provenance Hash
+                  </div>
+                  <div className="font-mono text-[10px] text-text-muted break-all">
+                    {batch.att_hash}
+                  </div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Attested At</div>
+                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
+                    Attested At
+                  </div>
                   <div>{batch.attested_at ? fmtDate(batch.attested_at) : '—'}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Certificate</div>
-                  <div>{batch.standard || '—'} {batch.cert_standard ? `(${batch.cert_standard})` : ''}</div>
+                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
+                    Certificate
+                  </div>
+                  <div>
+                    {batch.standard || '—'} {batch.cert_standard ? `(${batch.cert_standard})` : ''}
+                  </div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Valid Until</div>
+                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
+                    Valid Until
+                  </div>
                   <div>{batch.cert_valid_to ? fmtDate(batch.cert_valid_to) : '—'}</div>
                 </div>
               </div>
             </div>
           )}
 
-          <BatchEvidence key={id} batchId={id!}/>
+          <BatchEvidence key={id} batchId={id!} />
         </div>
 
         <div className="space-y-4">
           <div className="bg-surface border border-border rounded p-5">
-            <div className="flex items-center gap-2 text-sm font-semibold"><QrCode size={16} className="text-brand-400" /> Public product page</div>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <QrCode size={16} className="text-brand-400" /> Public product page
+            </div>
             {productProfile ? (
               <div className="mt-4">
                 {productProfile.visibility === 'published' ? (
                   <>
                     <div className="rounded bg-white p-3 mx-auto w-fit">
-                      <img className="h-36 w-36" src={`/api${productProfile.qrSvgUrl}`} alt={`QR code for ${productProfile.display_name}`} />
+                      <img
+                        className="h-36 w-36"
+                        src={`/api${productProfile.qrSvgUrl}`}
+                        alt={`QR code for ${productProfile.display_name}`}
+                      />
                     </div>
-                    <div className="mt-3 text-center"><span className="badge badge-green">Live</span><p className="mt-2 text-xs text-text-muted font-mono">{productProfile.lot_code}</p></div>
-                    <button className="btn w-full justify-center mt-3" onClick={() => window.open(`/p/${encodeURIComponent(productProfile.slug)}`, '_blank', 'noopener,noreferrer')}><ExternalLink size={13} /> View scanned experience</button>
+                    <div className="mt-3 text-center">
+                      <span className="badge badge-green">Live</span>
+                      <p className="mt-2 text-xs text-text-muted font-mono">
+                        {productProfile.lot_code}
+                      </p>
+                    </div>
+                    <button
+                      className="btn w-full justify-center mt-3"
+                      onClick={() =>
+                        window.open(
+                          `/p/${encodeURIComponent(productProfile.slug)}`,
+                          '_blank',
+                          'noopener,noreferrer',
+                        )
+                      }
+                    >
+                      <ExternalLink size={13} /> View scanned experience
+                    </button>
                   </>
                 ) : (
                   <>
-                    <p className="mt-3 text-xs text-text-muted">Draft ready for review. Publishing activates the permanent QR destination.</p>
-                    <button className="btn btn-primary w-full justify-center mt-3" onClick={handlePublishProfile} disabled={profileBusy}>{profileBusy ? 'Publishing…' : 'Publish & activate QR'}</button>
+                    <p className="mt-3 text-xs text-text-muted">
+                      Draft ready for review. Publishing activates the permanent QR destination.
+                    </p>
+                    <button
+                      className="btn btn-primary w-full justify-center mt-3"
+                      onClick={handlePublishProfile}
+                      disabled={profileBusy}
+                    >
+                      {profileBusy ? 'Publishing…' : 'Publish & activate QR'}
+                    </button>
                   </>
                 )}
               </div>
             ) : canPush ? (
-              <><p className="mt-3 text-xs text-text-muted">Create a stable, public identity for this lot. The QR will always open its latest journey and safety status.</p><button className="btn btn-primary w-full justify-center mt-3" onClick={handleCreateProfile} disabled={profileBusy}>{profileBusy ? 'Creating…' : 'Create product page'}</button></>
-            ) : <p className="mt-3 text-xs text-text-muted">No public product page has been published for this batch.</p>}
+              <>
+                <p className="mt-3 text-xs text-text-muted">
+                  Create a stable, public identity for this lot. The QR will always open its latest
+                  journey and safety status.
+                </p>
+                <button
+                  className="btn btn-primary w-full justify-center mt-3"
+                  onClick={handleCreateProfile}
+                  disabled={profileBusy}
+                >
+                  {profileBusy ? 'Creating…' : 'Create product page'}
+                </button>
+              </>
+            ) : (
+              <p className="mt-3 text-xs text-text-muted">
+                No public product page has been published for this batch.
+              </p>
+            )}
           </div>
 
           <div className="bg-surface border border-border rounded p-5 sticky top-6">
             <div className="text-xs text-text-muted uppercase tracking-wider mb-3">Actions</div>
 
             {canPush && !showPush && !pushDone && (
-              <button className="btn btn-primary w-full justify-center mb-2" onClick={() => setShowPush(true)}>
+              <button
+                className="btn btn-primary w-full justify-center mb-2"
+                onClick={() => setShowPush(true)}
+              >
                 List on Marketplace
               </button>
             )}
@@ -223,7 +413,10 @@ export default function BatchDetailPage() {
               <div className="text-center py-4">
                 <div className="text-2xl mb-2">🎉</div>
                 <div className="text-sm font-semibold text-brand-400 mb-1">Listed!</div>
-                <button className="btn btn-sm mt-2" onClick={() => navigate(`/marketplace?published=${createdListingId}`)}>
+                <button
+                  className="btn btn-sm mt-2"
+                  onClick={() => navigate(`/marketplace?published=${createdListingId}`)}
+                >
                   View Marketplace <ChevronRight size={14} />
                 </button>
               </div>
@@ -234,34 +427,87 @@ export default function BatchDetailPage() {
                 <h4 className="text-xs font-semibold">Create Listing</h4>
                 <div>
                   <label className="form-label">Quantity (kg)</label>
-                  <input type="number" className="form-input" value={pqty} onChange={(e) => setPqty(Number(e.target.value))} max={batch.quantity_kg} />
+                  <input
+                    type="number"
+                    className="form-input"
+                    value={pqty}
+                    onChange={(e) => setPqty(Number(e.target.value))}
+                    max={batch.quantity_kg}
+                  />
                 </div>
                 <div>
                   <label className="form-label">Price per kg (€)</label>
-                  <select aria-label="Supply currency" className="form-select mb-2" value={pcurrency} onChange={e => setPcurrency(e.target.value)}>{['EUR','USD','GHS','GBP','JPY'].map(code => <option key={code}>{code}</option>)}</select><input type="number" step="0.0001" className="form-input" value={pprice} onChange={(e) => setPprice(Number(e.target.value))} />
+                  <select
+                    aria-label="Supply currency"
+                    className="form-select mb-2"
+                    value={pcurrency}
+                    onChange={(e) => setPcurrency(e.target.value)}
+                  >
+                    {['EUR', 'USD', 'GHS', 'GBP', 'JPY'].map((code) => (
+                      <option key={code}>{code}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    className="form-input"
+                    value={pprice}
+                    onChange={(e) => setPprice(Number(e.target.value))}
+                  />
                 </div>
                 <div>
                   <label className="form-label">Origin</label>
-                  <input className="form-input" value={porigin} onChange={(e) => setPorigin(e.target.value)} />
+                  <input
+                    className="form-input"
+                    value={porigin}
+                    onChange={(e) => setPorigin(e.target.value)}
+                  />
                 </div>
                 <div>
                   <label className="form-label">Destination</label>
-                  <input className="form-input" value={pdest} onChange={(e) => setPdest(e.target.value)} />
+                  <input
+                    className="form-input"
+                    value={pdest}
+                    onChange={(e) => setPdest(e.target.value)}
+                  />
                 </div>
                 <div>
                   <label className="form-label">Incoterm</label>
-                  <select className="form-select" value={pincoterm} onChange={(e) => setPincoterm(e.target.value)}>
-                    <option>CIF</option><option>FOB</option><option>EXW</option><option>DDP</option>
+                  <select
+                    className="form-select"
+                    value={pincoterm}
+                    onChange={(e) => setPincoterm(e.target.value)}
+                  >
+                    <option>CIF</option>
+                    <option>FOB</option>
+                    <option>EXW</option>
+                    <option>DDP</option>
                   </select>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-border text-sm">
                   <span className="text-text-muted">Value</span>
-                  <span className="font-bold font-mono text-brand-400">{pcurrency} {(pqty * pprice).toLocaleString()}</span>
+                  <span className="font-bold font-mono text-brand-400">
+                    {pcurrency} {(pqty * pprice).toLocaleString()}
+                  </span>
                 </div>
-                {pushErr && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{pushErr}</div>}
+                {pushErr && (
+                  <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">
+                    {pushErr}
+                  </div>
+                )}
                 <div className="flex gap-2">
-                  <button className="btn flex-1 justify-center" onClick={() => setShowPush(false)} disabled={pushing}>Cancel</button>
-                  <button className="btn btn-primary flex-1 justify-center" onClick={handlePush} disabled={pushing || !pqty || !pprice}>
+                  <button
+                    className="btn flex-1 justify-center"
+                    onClick={closePush}
+                    disabled={pushing}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-primary flex-1 justify-center"
+                    onClick={handlePush}
+                    disabled={pushing || !pqty || !pprice}
+                  >
                     {pushing ? 'Creating…' : 'Create Listing'}
                   </button>
                 </div>
@@ -270,12 +516,20 @@ export default function BatchDetailPage() {
 
             {!canPush && !showPush && !pushDone && (
               <p className="text-xs text-text-muted text-center py-3">
-                {batch.current_holder_id === user?.organizationId ? 'You hold this batch' : `Holder: ${batch.holder_name || 'Other organization'}`}
+                {batch.current_holder_id === user?.organizationId
+                  ? 'You hold this batch'
+                  : `Holder: ${batch.holder_name || 'Other organization'}`}
               </p>
             )}
 
             {canAttest && !showAttest && (
-              <button className="btn btn-primary w-full justify-center mb-2" onClick={() => {setAttCertId('');setShowAttest(true);}}>
+              <button
+                className="btn btn-primary w-full justify-center mb-2"
+                onClick={() => {
+                  setAttCertId('');
+                  setShowAttest(true);
+                }}
+              >
                 <Shield size={14} /> Attest Batch
               </button>
             )}
@@ -285,23 +539,60 @@ export default function BatchDetailPage() {
                 <h4 className="text-xs font-semibold">Attest Batch</h4>
                 <div>
                   <label className="form-label">Certificate</label>
-                  {batch.farm_id && canDo('certificate.read') ? <CertificatePicker key={batch.farm_id} farmId={batch.farm_id} value={attCertId} disabled={attesting} onChange={certificate=>setAttCertId(certificate?.id||'')} /> : <p role="alert">Certificate selection requires an accessible source farm and certificate records.</p>}
+                  {batch.farm_id && canDo('certificate.read') ? (
+                    <CertificatePicker
+                      key={batch.farm_id}
+                      farmId={batch.farm_id}
+                      value={attCertId}
+                      disabled={attesting}
+                      onChange={(certificate) => setAttCertId(certificate?.id || '')}
+                    />
+                  ) : (
+                    <p role="alert">
+                      Certificate selection requires an accessible source farm and certificate
+                      records.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="form-label">Notes (optional)</label>
-                  <input className="form-input" value={attNotes} onChange={(e) => setAttNotes(e.target.value)} placeholder="e.g. Visual inspection passed" />
+                  <input
+                    className="form-input"
+                    value={attNotes}
+                    onChange={(e) => setAttNotes(e.target.value)}
+                    placeholder="e.g. Visual inspection passed"
+                  />
                 </div>
-                {attErr && <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">{attErr}</div>}
+                {attErr && (
+                  <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">
+                    {attErr}
+                  </div>
+                )}
                 <div className="flex gap-2">
-                  <button className="btn flex-1 justify-center" onClick={() => { setShowAttest(false); setAttCertId(''); setAttErr(''); }} disabled={attesting}>Cancel</button>
-                  <button className="btn btn-primary flex-1 justify-center" onClick={handleAttest} disabled={attesting || !attCertId}>
+                  <button
+                    className="btn flex-1 justify-center"
+                    onClick={closeAtt}
+                    disabled={attesting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-primary flex-1 justify-center"
+                    onClick={handleAttest}
+                    disabled={attesting || !attCertId}
+                  >
                     {attesting ? 'Attesting…' : 'Confirm Attestation'}
                   </button>
                 </div>
               </div>
             )}
 
-            <button className="btn w-full justify-center mt-3 text-xs" onClick={() => navigate(`/farms/${batch.farm_id}`)}>View Farm →</button>
+            <button
+              className="btn w-full justify-center mt-3 text-xs"
+              onClick={() => navigate(`/farms/${batch.farm_id}`)}
+            >
+              View Farm →
+            </button>
           </div>
         </div>
       </div>

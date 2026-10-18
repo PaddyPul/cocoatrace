@@ -1,3 +1,4 @@
+import { useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useState } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
@@ -8,6 +9,7 @@ import EvidenceReviewHistory from '../components/evidenceReview/EvidenceReviewHi
 import { evidenceReview } from '../api/evidenceReview';
 export default function EvidenceReviewPage() {
   const { user } = useAuthCtx();
+  const discard = useDiscardChanges();
   const [params] = useSearchParams();
   const evidenceId = params.get('id');
   const [selected, setSelected] = useState('');
@@ -59,7 +61,12 @@ export default function EvidenceReviewPage() {
                     <td>{row.file_name}</td>
                     <td>{row.review_status}</td>
                     <td>
-                      <button className="btn" onClick={() => setSelected(row.id)}>
+                      <button
+                        className="btn"
+                        onClick={() => {
+                          if (row.id !== selected) discard(() => setSelected(row.id));
+                        }}
+                      >
                         Review {row.file_name}
                       </button>
                     </td>
@@ -73,7 +80,7 @@ export default function EvidenceReviewPage() {
         <PageNavigation page={page} label="review queue" />
         {selected && (
           <>
-            <button className="btn" onClick={() => setSelected('')}>
+            <button className="btn" onClick={() => discard(() => setSelected(''))}>
               Close document review
             </button>
             <EvidenceReviewHistory evidenceId={selected} reviewer onChanged={page.refresh} />

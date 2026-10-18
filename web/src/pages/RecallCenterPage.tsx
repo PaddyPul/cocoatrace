@@ -1,10 +1,15 @@
+import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useEffect, useState } from 'react';
 import { AlertTriangle, ArrowRight, GitBranch, PackagePlus, Plus, Sprout, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import RecallRegister from '../components/catalog/RecallRegister';
 import Layout from '../components/layout/Layout';
 import { recalls as recallsApi, traceability } from '../api';
-import type { MaterialLot, RecallImpactResult, TraceBackResult } from '../domains/traceability/types';
+import type {
+  MaterialLot,
+  RecallImpactResult,
+  TraceBackResult,
+} from '../domains/traceability/types';
 import { useToast } from '../components/shared/ToastProvider';
 import { useAuthCtx } from '../components/auth/AuthProvider';
 
@@ -15,7 +20,7 @@ export default function RecallCenterPage() {
   const canManageRecalls = canDo('recall.manage');
   const canInvestigate = canDo('batch.read');
   const [traceError, setTraceError] = useState('');
-  const [recallVersion,setRecallVersion]=useState(0);
+  const [recallVersion, setRecallVersion] = useState(0);
   const [lots, setLots] = useState<MaterialLot[]>([]);
   const [lotLoading, setLotLoading] = useState(true);
   const [lotSearchDraft, setLotSearchDraft] = useState('');
@@ -29,7 +34,9 @@ export default function RecallCenterPage() {
   const [referenceCode, setReferenceCode] = useState('');
   const [title, setTitle] = useState('');
   const [reason, setReason] = useState('');
-  const [instructions, setInstructions] = useState('Stop distribution and hold the affected lot. Contact the issuing organization for instructions.');
+  const [instructions, setInstructions] = useState(
+    'Stop distribution and hold the affected lot. Contact the issuing organization for instructions.',
+  );
   const [severity, setSeverity] = useState<'advisory' | 'warning' | 'critical'>('warning');
   const [recallLotId, setRecallLotId] = useState('');
   const [recallQuantity, setRecallQuantity] = useState('');
@@ -40,24 +47,73 @@ export default function RecallCenterPage() {
   const [traceResult, setTraceResult] = useState<TraceBackResult | RecallImpactResult | null>(null);
   const selectedLot = lots.find((lot) => lot.id === selectedLotId);
 
-  const refresh=()=>setRecallVersion(value=>value+1);
+  const dirty =
+    showCreate &&
+    (referenceCode !== '' ||
+      title !== '' ||
+      reason !== '' ||
+      recallQuantity !== '' ||
+      recallLotId !== (lots[0]?.id || '') ||
+      severity !== 'warning' ||
+      instructions !==
+        'Stop distribution and hold the affected lot. Contact the issuing organization for instructions.');
+  const clearUnsaved = useUnsavedChanges(dirty, 'Recall activation');
+  const discard = useDiscardChanges(dirty);
+  const closeCreate = () => {
+    if (!busy)
+      discard(() => {
+        setShowCreate(false);
+        setReferenceCode('');
+        setTitle('');
+        setReason('');
+        setRecallQuantity('');
+        setSeverity('warning');
+        setInstructions(
+          'Stop distribution and hold the affected lot. Contact the issuing organization for instructions.',
+        );
+      });
+  };
+  const refresh = () => setRecallVersion((value) => value + 1);
 
-  useEffect(() => { setLotCursors([undefined]); setLotSearch(''); setLotSearchDraft(''); }, [user?.id]);
+  useEffect(() => {
+    setLotCursors([undefined]);
+    setLotSearch('');
+    setLotSearchDraft('');
+  }, [user?.id]);
 
   useEffect(() => {
     let active = true;
-    setLotLoading(true); setTraceError(''); setLots([]); setSelectedLotId(''); setRecallLotId(''); setTraceResult(null); setLotNextCursor(null);
-    setTraceQuantity(''); setRecallQuantity('');
-    if (!canInvestigate) { setLotLoading(false); return; }
-    traceability.listLotPage(lotSearch, lotCursors[lotCursors.length - 1])
-      .then(page => {
+    setLotLoading(true);
+    setTraceError('');
+    setLots([]);
+    setSelectedLotId('');
+    setRecallLotId('');
+    setTraceResult(null);
+    setLotNextCursor(null);
+    setTraceQuantity('');
+    setRecallQuantity('');
+    if (!canInvestigate) {
+      setLotLoading(false);
+      return;
+    }
+    traceability
+      .listLotPage(lotSearch, lotCursors[lotCursors.length - 1])
+      .then((page) => {
         if (!active) return;
-        setLots(page.items); setLotNextCursor(page.nextCursor);
-        setSelectedLotId(page.items[0]?.id || ''); setRecallLotId(page.items[0]?.id || '');
+        setLots(page.items);
+        setLotNextCursor(page.nextCursor);
+        setSelectedLotId(page.items[0]?.id || '');
+        setRecallLotId(page.items[0]?.id || '');
       })
-      .catch(err => { if (active) setTraceError(err.message); })
-      .finally(() => { if (active) setLotLoading(false); });
-    return () => { active = false; };
+      .catch((err) => {
+        if (active) setTraceError(err.message);
+      })
+      .finally(() => {
+        if (active) setLotLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [canInvestigate, lotSearch, lotCursors, lotRefresh, user?.id]);
 
   const calculateTrace = async () => {
@@ -68,12 +124,20 @@ export default function RecallCenterPage() {
       setError('Trace quantity must be a positive number.');
       return;
     }
-    setTraceBusy(true); setError(''); setTraceResult(null);
+    setTraceBusy(true);
+    setError('');
+    setTraceResult(null);
     try {
-      setTraceResult(traceMode === 'trace-back'
-        ? await traceability.traceBack(selectedLotId, quantity)
-        : await traceability.traceForward(selectedLotId, quantity));
-    } catch (err: any) { setError(err.message); } finally { setTraceBusy(false); }
+      setTraceResult(
+        traceMode === 'trace-back'
+          ? await traceability.traceBack(selectedLotId, quantity)
+          : await traceability.traceForward(selectedLotId, quantity),
+      );
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setTraceBusy(false);
+    }
   };
 
   const create = async () => {
@@ -86,71 +150,514 @@ export default function RecallCenterPage() {
       setError('Suspect quantity must be a positive number.');
       return;
     }
-    setBusy(true); setError('');
+    setBusy(true);
+    setError('');
     try {
-      await recallsApi.create({ referenceCode, title, reason, instructions, severity, lots: [{ lotId: recallLotId, quantityKg: quantity }] });
-      setShowCreate(false); setReferenceCode(''); setTitle(''); setReason(''); setRecallQuantity('');
+      await recallsApi.create({
+        referenceCode,
+        title,
+        reason,
+        instructions,
+        severity,
+        lots: [{ lotId: recallLotId, quantityKg: quantity }],
+      });
+      clearUnsaved();
+      setSeverity('warning');
+      setInstructions(
+        'Stop distribution and hold the affected lot. Contact the issuing organization for instructions.',
+      );
+      setShowCreate(false);
+      setReferenceCode('');
+      setTitle('');
+      setReason('');
+      setRecallQuantity('');
       toast('success', 'Recall activated — affected material is on hold');
       await refresh();
-      setLotRefresh(value => value + 1);
-    } catch (err: any) { setError(err.message); } finally { setBusy(false); }
+      setLotRefresh((value) => value + 1);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
-  return <Layout currentPage="recalls" actions={canManageRecalls ? <button className="btn btn-sm btn-danger" disabled={!lots.length} onClick={() => { setError(''); setShowCreate(true); }}><Plus size={13} /> Activate recall</button> : <span className="badge badge-blue">{canInvestigate ? 'Investigation access' : 'Recall response access'}</span>}>
-    <div className="mb-5 rounded border border-yellow-500/20 bg-yellow-500/5 p-4 text-xs text-yellow-200">
-      <div className="flex items-start gap-3"><AlertTriangle size={18} className="shrink-0 text-yellow-400" /><div><strong className="block text-sm text-yellow-300">Investigate first. Activate with confidence.</strong><p className="mt-1 text-text-secondary">Trace any lot backward to its sources or forward to every descendant and recipient. {canManageRecalls ? 'When the scope is verified, activate a notice that immediately updates affected product profiles and blocks offers, dispatch and custody transfers for affected material.' : canInvestigate ? 'Your role has investigation access; an authorized recall manager controls public notices.' : 'Respond to notices affecting your organization; an authorized recall manager controls public notices.'}</p></div></div>
-    </div>
-    <section className="mb-5 rounded border border-border bg-surface p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex items-center gap-2 text-sm font-semibold"><GitBranch size={16} className="text-brand-400" /> Lot genealogy calculator</div><p className="mt-1 text-xs text-text-secondary">Calculate exact declared mass flow backward to source lots or forward to every descendant and recipient.</p></div><span className="badge badge-blue">quantity-aware</span></div>
-      {traceError && <p className="mt-3 text-xs text-amber-300">Genealogy records are unavailable: {traceError}. Recall responses remain available below.</p>}
-      {canInvestigate && <form className="mt-4 flex flex-wrap gap-2" onSubmit={event => { event.preventDefault(); if (lotLoading || traceBusy) return; setLotCursors([undefined]); setLotSearch(lotSearchDraft.trim()); }}>
-        <input aria-label="Search trace lots" className="form-input flex-1" maxLength={80} value={lotSearchDraft} onChange={event => setLotSearchDraft(event.target.value)} placeholder="Search lot code, material or exact lot ID" />
-        <button className="btn btn-secondary" disabled={lotLoading || traceBusy}>Search lots</button>
-        <button type="button" className="btn btn-secondary" disabled={lotLoading || traceBusy || lotCursors.length === 1} onClick={() => setLotCursors(current => current.slice(0, -1))}>Previous lots</button>
-        <button type="button" className="btn btn-secondary" disabled={lotLoading || traceBusy || !lotNextCursor} onClick={() => { if (lotNextCursor) setLotCursors(current => [...current, lotNextCursor]); }}>Next lots</button>
-        <span className="self-center text-xs text-text-secondary" role="status">Page {lotCursors.length} · {lots.length} lots on this page</span>
-      </form>}
-      {lotLoading ? <div className="loading"><div className="spinner" />Loading connected material records…</div> : !canInvestigate ? <p className="mt-4 text-xs text-text-secondary">Your role can respond to affected recall notices below. Genealogy investigation requires additional access.</p> : lots.length ? <><div className="mt-4 grid gap-3 md:grid-cols-[160px_1fr_180px_auto]">
-        <select aria-label="Trace direction" disabled={traceBusy} className="form-select" value={traceMode} onChange={(event) => { setTraceMode(event.target.value as typeof traceMode); setTraceResult(null); }}><option value="trace-forward">Trace forward</option><option value="trace-back">Trace back</option></select>
-        <select aria-label="Trace lot" disabled={traceBusy} className="form-select" value={selectedLotId} onChange={(event) => { setSelectedLotId(event.target.value); setTraceResult(null); }}><option value="">Select a lot…</option>{lots.map((lot) => <option key={lot.id} value={lot.id}>{lot.lotCode} · {lot.productName} · {Number(lot.quantityKg).toLocaleString()} kg{lot.sourceLabel ? ` · ${lot.sourceLabel}` : ''}</option>)}</select>
-        <input aria-label="Trace quantity" disabled={traceBusy} className="form-input" inputMode="decimal" placeholder="Quantity (full lot)" value={traceQuantity} onChange={(event) => { setTraceQuantity(event.target.value); setTraceResult(null); }} />
-        <button className="btn btn-primary justify-center" disabled={!selectedLotId || traceBusy} onClick={calculateTrace}>{traceBusy ? 'Calculating…' : 'Calculate'}</button>
+  return (
+    <Layout
+      currentPage="recalls"
+      actions={
+        canManageRecalls ? (
+          <button
+            className="btn btn-sm btn-danger"
+            disabled={!lots.length}
+            onClick={() => {
+              setError('');
+              setShowCreate(true);
+            }}
+          >
+            <Plus size={13} /> Activate recall
+          </button>
+        ) : (
+          <span className="badge badge-blue">
+            {canInvestigate ? 'Investigation access' : 'Recall response access'}
+          </span>
+        )
+      }
+    >
+      <div className="mb-5 rounded border border-yellow-500/20 bg-yellow-500/5 p-4 text-xs text-yellow-200">
+        <div className="flex items-start gap-3">
+          <AlertTriangle size={18} className="shrink-0 text-yellow-400" />
+          <div>
+            <strong className="block text-sm text-yellow-300">
+              Investigate first. Activate with confidence.
+            </strong>
+            <p className="mt-1 text-text-secondary">
+              Trace any lot backward to its sources or forward to every descendant and recipient.{' '}
+              {canManageRecalls
+                ? 'When the scope is verified, activate a notice that immediately updates affected product profiles and blocks offers, dispatch and custody transfers for affected material.'
+                : canInvestigate
+                  ? 'Your role has investigation access; an authorized recall manager controls public notices.'
+                  : 'Respond to notices affecting your organization; an authorized recall manager controls public notices.'}
+            </p>
+          </div>
+        </div>
       </div>
-      {selectedLot && <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface-darker p-4 text-xs"><span className="badge badge-green">Live workspace record</span><span><strong>{selectedLot.lotCode}</strong> was created from {selectedLot.sourceMode === 'direct_inventory' ? 'conventional inventory' : selectedLot.batchId ? 'a recorded source batch' : 'a transformation event'}.</span><span className="text-text-muted">{selectedLot.downstreamLotCount || 0} downstream lot links · {selectedLot.distributionCount || 0} recorded deliveries</span></div>}
-      {traceResult && <div className="mt-5 border-t border-border pt-4">
-        <div className="mb-3 flex flex-wrap gap-2 text-[10px]"><span className={`badge ${traceResult.exactness === 'declared' ? 'badge-green' : 'badge-amber'}`}>{traceResult.exactness} allocations</span>{traceResult.warnings.map((warning) => <span key={warning} className="badge badge-amber">{warning}</span>)}</div>
-        {traceResult.direction === 'trace-forward' ? <>
-          <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4">{[
-            ['Impacted lots', traceResult.totals.impactedLotCount],
-            ['Terminal recall', `${traceResult.totals.leafRecallQuantityKg.toLocaleString()} kg`],
-            ['Already distributed', `${traceResult.totals.distributedRecallQuantityKg.toLocaleString()} kg`],
-            ['Recipients', traceResult.totals.recipientCount],
-          ].map(([label, value]) => <div key={label} className="rounded-sm bg-surface-darker p-3"><div className="text-[10px] uppercase tracking-wide text-text-muted">{label}</div><div className="mt-1 text-sm font-semibold">{value}</div></div>)}</div>
-          <div className="overflow-x-auto"><table className="data-table"><thead><tr><th>Impacted lot</th><th>Type</th><th>Suspect-equivalent</th><th>Recall quantity</th><th>Depth</th></tr></thead><tbody>{traceResult.impactedLots.map((lot) => <tr key={lot.id}><td><div className="font-mono text-xs">{lot.lotCode}</div><div className="text-[10px] text-text-muted">{lot.productName}</div></td><td>{lot.lotType}</td><td>{Number(lot.sourceEquivalentKg).toLocaleString()} kg <span className="text-text-muted">({lot.sourceEquivalentPercent}%)</span></td><td className="font-semibold text-yellow-300">{Number(lot.recallQuantityKg).toLocaleString()} kg</td><td>{lot.relationshipDepth}</td></tr>)}</tbody></table></div>
-          {traceResult.recipients.length > 0 && <div className="mt-4"><div className="form-label">Trace-forward recipients</div><div className="grid gap-2 md:grid-cols-2">{traceResult.recipients.map((recipient) => <div key={recipient.organizationId} className="rounded-sm border border-border p-3 text-xs"><strong>{recipient.name}</strong><div className="mt-1 text-text-muted">{recipient.recallQuantityKg.toLocaleString()} kg across {recipient.distributionCount} distribution{recipient.distributionCount === 1 ? '' : 's'}</div></div>)}</div></div>}
-        </> : <>
-          <div className="mb-3 text-xs text-text-secondary">To produce <strong>{traceResult.queryQuantityKg.toLocaleString()} kg</strong> of {traceResult.targetLot.lotCode}, these source quantities are required:</div>
-          <div className="overflow-x-auto"><table className="data-table"><thead><tr><th>Source lot</th><th>Product</th><th>Required quantity</th><th>Share of source lot</th><th>Confidence</th></tr></thead><tbody>{traceResult.sourceLots.map((lot) => <tr key={lot.id}><td className="font-mono text-xs">{lot.lotCode}</td><td>{lot.productName}</td><td className="font-semibold">{Number(lot.quantityRequiredKg).toLocaleString()} kg</td><td>{lot.percentOfLot}%</td><td>{lot.allocationConfidence}</td></tr>)}</tbody></table></div>
-        </>}
-        <details className="mt-4 text-[10px] text-text-muted"><summary className="cursor-pointer">Recorded allocation assumptions</summary><ul className="mt-2 list-disc space-y-1 pl-5">{traceResult.assumptions.map((assumption) => <li key={assumption}>{assumption}</li>)}</ul></details>
-      </div>}</> : traceError ? <p role="alert" className="mt-4 text-xs text-amber-300">Lot search failed. Retry Search lots; no empty-workspace conclusion is available.</p> : lotCursors.length > 1 && !lotSearch ? <p className="mt-4 text-xs text-text-secondary">No lots remain on this page. Choose Previous lots or search again.</p> : lotSearch ? <p className="mt-4 text-xs text-text-secondary">No permitted lots match this search. Change the search to try again.</p> : <div className="mt-5 rounded-2xl border border-dashed border-border p-8 text-center"><GitBranch size={28} className="mx-auto text-text-muted" /><h3 className="mt-4 text-base font-semibold">No traceable material records yet</h3><p className="mx-auto mt-2 max-w-xl text-xs leading-5 text-text-muted">Trace & Recall starts from inventory created by your organization or received through a completed trade. Create material first; BetterTrade will generate its source lot automatically.</p><div className="mt-5 flex flex-wrap justify-center gap-2">{canDo('listing.create') ? <><button className="btn btn-primary" onClick={() => navigate('/farms')}><Sprout size={14} />Organic / origin-verified</button><button className="btn" onClick={() => navigate('/inventory/new')}><PackagePlus size={14} />Conventional inventory</button></> : <button className="btn btn-primary" onClick={() => navigate(canDo('offer.create') ? '/source/new' : '/home')}>Continue to workspace <ArrowRight size={14} /></button>}</div></div>}
-    </section>
-    {error && !showCreate && <div role="alert" className="mb-4 rounded-sm border border-red-500/30 bg-red-900/10 px-3 py-2 text-xs text-red-400">{error}</div>}
-    <RecallRegister key={recallVersion} />
+      <section className="mb-5 rounded border border-border bg-surface p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <GitBranch size={16} className="text-brand-400" /> Lot genealogy calculator
+            </div>
+            <p className="mt-1 text-xs text-text-secondary">
+              Calculate exact declared mass flow backward to source lots or forward to every
+              descendant and recipient.
+            </p>
+          </div>
+          <span className="badge badge-blue">quantity-aware</span>
+        </div>
+        {traceError && (
+          <p className="mt-3 text-xs text-amber-300">
+            Genealogy records are unavailable: {traceError}. Recall responses remain available
+            below.
+          </p>
+        )}
+        {canInvestigate && (
+          <form
+            className="mt-4 flex flex-wrap gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (lotLoading || traceBusy) return;
+              setLotCursors([undefined]);
+              setLotSearch(lotSearchDraft.trim());
+            }}
+          >
+            <input
+              aria-label="Search trace lots"
+              className="form-input flex-1"
+              maxLength={80}
+              value={lotSearchDraft}
+              onChange={(event) => setLotSearchDraft(event.target.value)}
+              placeholder="Search lot code, material or exact lot ID"
+            />
+            <button className="btn btn-secondary" disabled={lotLoading || traceBusy}>
+              Search lots
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={lotLoading || traceBusy || lotCursors.length === 1}
+              onClick={() => setLotCursors((current) => current.slice(0, -1))}
+            >
+              Previous lots
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={lotLoading || traceBusy || !lotNextCursor}
+              onClick={() => {
+                if (lotNextCursor) setLotCursors((current) => [...current, lotNextCursor]);
+              }}
+            >
+              Next lots
+            </button>
+            <span className="self-center text-xs text-text-secondary" role="status">
+              Page {lotCursors.length} · {lots.length} lots on this page
+            </span>
+          </form>
+        )}
+        {lotLoading ? (
+          <div className="loading">
+            <div className="spinner" />
+            Loading connected material records…
+          </div>
+        ) : !canInvestigate ? (
+          <p className="mt-4 text-xs text-text-secondary">
+            Your role can respond to affected recall notices below. Genealogy investigation requires
+            additional access.
+          </p>
+        ) : lots.length ? (
+          <>
+            <div className="mt-4 grid gap-3 md:grid-cols-[160px_1fr_180px_auto]">
+              <select
+                aria-label="Trace direction"
+                disabled={traceBusy}
+                className="form-select"
+                value={traceMode}
+                onChange={(event) => {
+                  setTraceMode(event.target.value as typeof traceMode);
+                  setTraceResult(null);
+                }}
+              >
+                <option value="trace-forward">Trace forward</option>
+                <option value="trace-back">Trace back</option>
+              </select>
+              <select
+                aria-label="Trace lot"
+                disabled={traceBusy}
+                className="form-select"
+                value={selectedLotId}
+                onChange={(event) => {
+                  setSelectedLotId(event.target.value);
+                  setTraceResult(null);
+                }}
+              >
+                <option value="">Select a lot…</option>
+                {lots.map((lot) => (
+                  <option key={lot.id} value={lot.id}>
+                    {lot.lotCode} · {lot.productName} · {Number(lot.quantityKg).toLocaleString()} kg
+                    {lot.sourceLabel ? ` · ${lot.sourceLabel}` : ''}
+                  </option>
+                ))}
+              </select>
+              <input
+                aria-label="Trace quantity"
+                disabled={traceBusy}
+                className="form-input"
+                inputMode="decimal"
+                placeholder="Quantity (full lot)"
+                value={traceQuantity}
+                onChange={(event) => {
+                  setTraceQuantity(event.target.value);
+                  setTraceResult(null);
+                }}
+              />
+              <button
+                className="btn btn-primary justify-center"
+                disabled={!selectedLotId || traceBusy}
+                onClick={calculateTrace}
+              >
+                {traceBusy ? 'Calculating…' : 'Calculate'}
+              </button>
+            </div>
+            {selectedLot && (
+              <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface-darker p-4 text-xs">
+                <span className="badge badge-green">Live workspace record</span>
+                <span>
+                  <strong>{selectedLot.lotCode}</strong> was created from{' '}
+                  {selectedLot.sourceMode === 'direct_inventory'
+                    ? 'conventional inventory'
+                    : selectedLot.batchId
+                      ? 'a recorded source batch'
+                      : 'a transformation event'}
+                  .
+                </span>
+                <span className="text-text-muted">
+                  {selectedLot.downstreamLotCount || 0} downstream lot links ·{' '}
+                  {selectedLot.distributionCount || 0} recorded deliveries
+                </span>
+              </div>
+            )}
+            {traceResult && (
+              <div className="mt-5 border-t border-border pt-4">
+                <div className="mb-3 flex flex-wrap gap-2 text-[10px]">
+                  <span
+                    className={`badge ${traceResult.exactness === 'declared' ? 'badge-green' : 'badge-amber'}`}
+                  >
+                    {traceResult.exactness} allocations
+                  </span>
+                  {traceResult.warnings.map((warning) => (
+                    <span key={warning} className="badge badge-amber">
+                      {warning}
+                    </span>
+                  ))}
+                </div>
+                {traceResult.direction === 'trace-forward' ? (
+                  <>
+                    <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+                      {[
+                        ['Impacted lots', traceResult.totals.impactedLotCount],
+                        [
+                          'Terminal recall',
+                          `${traceResult.totals.leafRecallQuantityKg.toLocaleString()} kg`,
+                        ],
+                        [
+                          'Already distributed',
+                          `${traceResult.totals.distributedRecallQuantityKg.toLocaleString()} kg`,
+                        ],
+                        ['Recipients', traceResult.totals.recipientCount],
+                      ].map(([label, value]) => (
+                        <div key={label} className="rounded-sm bg-surface-darker p-3">
+                          <div className="text-[10px] uppercase tracking-wide text-text-muted">
+                            {label}
+                          </div>
+                          <div className="mt-1 text-sm font-semibold">{value}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>Impacted lot</th>
+                            <th>Type</th>
+                            <th>Suspect-equivalent</th>
+                            <th>Recall quantity</th>
+                            <th>Depth</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {traceResult.impactedLots.map((lot) => (
+                            <tr key={lot.id}>
+                              <td>
+                                <div className="font-mono text-xs">{lot.lotCode}</div>
+                                <div className="text-[10px] text-text-muted">{lot.productName}</div>
+                              </td>
+                              <td>{lot.lotType}</td>
+                              <td>
+                                {Number(lot.sourceEquivalentKg).toLocaleString()} kg{' '}
+                                <span className="text-text-muted">
+                                  ({lot.sourceEquivalentPercent}%)
+                                </span>
+                              </td>
+                              <td className="font-semibold text-yellow-300">
+                                {Number(lot.recallQuantityKg).toLocaleString()} kg
+                              </td>
+                              <td>{lot.relationshipDepth}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {traceResult.recipients.length > 0 && (
+                      <div className="mt-4">
+                        <div className="form-label">Trace-forward recipients</div>
+                        <div className="grid gap-2 md:grid-cols-2">
+                          {traceResult.recipients.map((recipient) => (
+                            <div
+                              key={recipient.organizationId}
+                              className="rounded-sm border border-border p-3 text-xs"
+                            >
+                              <strong>{recipient.name}</strong>
+                              <div className="mt-1 text-text-muted">
+                                {recipient.recallQuantityKg.toLocaleString()} kg across{' '}
+                                {recipient.distributionCount} distribution
+                                {recipient.distributionCount === 1 ? '' : 's'}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="mb-3 text-xs text-text-secondary">
+                      To produce <strong>{traceResult.queryQuantityKg.toLocaleString()} kg</strong>{' '}
+                      of {traceResult.targetLot.lotCode}, these source quantities are required:
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>Source lot</th>
+                            <th>Product</th>
+                            <th>Required quantity</th>
+                            <th>Share of source lot</th>
+                            <th>Confidence</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {traceResult.sourceLots.map((lot) => (
+                            <tr key={lot.id}>
+                              <td className="font-mono text-xs">{lot.lotCode}</td>
+                              <td>{lot.productName}</td>
+                              <td className="font-semibold">
+                                {Number(lot.quantityRequiredKg).toLocaleString()} kg
+                              </td>
+                              <td>{lot.percentOfLot}%</td>
+                              <td>{lot.allocationConfidence}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+                <details className="mt-4 text-[10px] text-text-muted">
+                  <summary className="cursor-pointer">Recorded allocation assumptions</summary>
+                  <ul className="mt-2 list-disc space-y-1 pl-5">
+                    {traceResult.assumptions.map((assumption) => (
+                      <li key={assumption}>{assumption}</li>
+                    ))}
+                  </ul>
+                </details>
+              </div>
+            )}
+          </>
+        ) : traceError ? (
+          <p role="alert" className="mt-4 text-xs text-amber-300">
+            Lot search failed. Retry Search lots; no empty-workspace conclusion is available.
+          </p>
+        ) : lotCursors.length > 1 && !lotSearch ? (
+          <p className="mt-4 text-xs text-text-secondary">
+            No lots remain on this page. Choose Previous lots or search again.
+          </p>
+        ) : lotSearch ? (
+          <p className="mt-4 text-xs text-text-secondary">
+            No permitted lots match this search. Change the search to try again.
+          </p>
+        ) : (
+          <div className="mt-5 rounded-2xl border border-dashed border-border p-8 text-center">
+            <GitBranch size={28} className="mx-auto text-text-muted" />
+            <h3 className="mt-4 text-base font-semibold">No traceable material records yet</h3>
+            <p className="mx-auto mt-2 max-w-xl text-xs leading-5 text-text-muted">
+              Trace & Recall starts from inventory created by your organization or received through
+              a completed trade. Create material first; BetterTrade will generate its source lot
+              automatically.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {canDo('listing.create') ? (
+                <>
+                  <button className="btn btn-primary" onClick={() => navigate('/farms')}>
+                    <Sprout size={14} />
+                    Organic / origin-verified
+                  </button>
+                  <button className="btn" onClick={() => navigate('/inventory/new')}>
+                    <PackagePlus size={14} />
+                    Conventional inventory
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => navigate(canDo('offer.create') ? '/source/new' : '/home')}
+                >
+                  Continue to workspace <ArrowRight size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
+      {error && !showCreate && (
+        <div
+          role="alert"
+          className="mb-4 rounded-sm border border-red-500/30 bg-red-900/10 px-3 py-2 text-xs text-red-400"
+        >
+          {error}
+        </div>
+      )}
+      <RecallRegister key={recallVersion} />
 
-    {showCreate && <div className="modal-overlay" onClick={() => !busy && setShowCreate(false)}><div className="modal" onClick={(event) => event.stopPropagation()}>
-      <div className="mb-5 flex items-start justify-between"><div><div className="modal-title">Activate recall</div><p className="modal-sub mb-0">This change updates public product pages and puts affected material on hold. Existing trades remain recorded; unsafe movement is blocked.</p></div><button className="btn btn-sm" onClick={() => setShowCreate(false)}><X size={14} /></button></div>
-      <div className="space-y-3">
-        <input className="form-input" placeholder="Reference code *" value={referenceCode} onChange={(event) => setReferenceCode(event.target.value)} />
-        <input className="form-input" placeholder="Public notice title *" value={title} onChange={(event) => setTitle(event.target.value)} />
-        <textarea className="form-input min-h-20" placeholder="Reason *" value={reason} onChange={(event) => setReason(event.target.value)} />
-        <textarea className="form-input min-h-24" placeholder="Consumer/operator instructions *" value={instructions} onChange={(event) => setInstructions(event.target.value)} />
-        <select className="form-select" value={severity} onChange={(event) => setSeverity(event.target.value as typeof severity)}><option value="advisory">Advisory</option><option value="warning">Warning</option><option value="critical">Critical</option></select>
-        <div><div className="form-label">Suspect lot *</div><select className="form-select" value={recallLotId} onChange={(event) => setRecallLotId(event.target.value)}><option value="">Select a lot…</option>{lots.map((lot) => <option key={lot.id} value={lot.id}>{lot.lotCode} · {lot.productName} · {Number(lot.quantityKg).toLocaleString()} kg</option>)}</select></div>
-        <div><div className="form-label">Suspect quantity (kg)</div><input className="form-input" inputMode="decimal" placeholder="Leave blank for the full lot" value={recallQuantity} onChange={(event) => setRecallQuantity(event.target.value)} /><p className="mt-1 text-[10px] text-text-muted">The server recalculates every descendant. Any commingled descendant is recalled in full while suspect-equivalent mass remains separately recorded.</p></div>
-        {error && <div className="rounded-sm border border-red-500/30 bg-red-900/10 px-3 py-2 text-xs text-red-400">{error}</div>}
-        <div className="flex gap-2 pt-2"><button className="btn flex-1 justify-center" onClick={() => setShowCreate(false)} disabled={busy}>Cancel</button><button className="btn btn-danger flex-1 justify-center" onClick={create} disabled={busy}>{busy ? 'Activating…' : 'Activate recall'}</button></div>
-      </div>
-    </div></div>}
-  </Layout>;
+      {showCreate && (
+        <div className="modal-overlay" onClick={closeCreate}>
+          <div className="modal" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-5 flex items-start justify-between">
+              <div>
+                <div className="modal-title">Activate recall</div>
+                <p className="modal-sub mb-0">
+                  This change updates public product pages and puts affected material on hold.
+                  Existing trades remain recorded; unsafe movement is blocked.
+                </p>
+              </div>
+              <button className="btn btn-sm" onClick={closeCreate}>
+                <X size={14} />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <input
+                className="form-input"
+                placeholder="Reference code *"
+                value={referenceCode}
+                onChange={(event) => setReferenceCode(event.target.value)}
+              />
+              <input
+                className="form-input"
+                placeholder="Public notice title *"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+              />
+              <textarea
+                className="form-input min-h-20"
+                placeholder="Reason *"
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+              />
+              <textarea
+                className="form-input min-h-24"
+                placeholder="Consumer/operator instructions *"
+                value={instructions}
+                onChange={(event) => setInstructions(event.target.value)}
+              />
+              <select
+                className="form-select"
+                value={severity}
+                onChange={(event) => setSeverity(event.target.value as typeof severity)}
+              >
+                <option value="advisory">Advisory</option>
+                <option value="warning">Warning</option>
+                <option value="critical">Critical</option>
+              </select>
+              <div>
+                <div className="form-label">Suspect lot *</div>
+                <select
+                  className="form-select"
+                  value={recallLotId}
+                  onChange={(event) => setRecallLotId(event.target.value)}
+                >
+                  <option value="">Select a lot…</option>
+                  {lots.map((lot) => (
+                    <option key={lot.id} value={lot.id}>
+                      {lot.lotCode} · {lot.productName} · {Number(lot.quantityKg).toLocaleString()}{' '}
+                      kg
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <div className="form-label">Suspect quantity (kg)</div>
+                <input
+                  className="form-input"
+                  inputMode="decimal"
+                  placeholder="Leave blank for the full lot"
+                  value={recallQuantity}
+                  onChange={(event) => setRecallQuantity(event.target.value)}
+                />
+                <p className="mt-1 text-[10px] text-text-muted">
+                  The server recalculates every descendant. Any commingled descendant is recalled in
+                  full while suspect-equivalent mass remains separately recorded.
+                </p>
+              </div>
+              {error && (
+                <div className="rounded-sm border border-red-500/30 bg-red-900/10 px-3 py-2 text-xs text-red-400">
+                  {error}
+                </div>
+              )}
+              <div className="flex gap-2 pt-2">
+                <button className="btn flex-1 justify-center" onClick={closeCreate} disabled={busy}>
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-danger flex-1 justify-center"
+                  onClick={create}
+                  disabled={busy}
+                >
+                  {busy ? 'Activating…' : 'Activate recall'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </Layout>
+  );
 }

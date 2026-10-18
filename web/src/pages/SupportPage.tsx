@@ -1,3 +1,4 @@
+import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useEffect, useRef, useState } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
@@ -42,6 +43,15 @@ function SupportWorkspace({ admin }: { admin: boolean }) {
     [reason, setReason] = useState(''),
     [reviewError, setReviewError] = useState(''),
     [reviewBusy, setReviewBusy] = useState(false);
+  const contextBaseline = useRef(context);
+  const reviewDirty = Boolean(selected && (reason || status !== selected.status));
+  useUnsavedChanges(
+    Boolean(
+      subject || description || pending || reviewDirty || context !== contextBaseline.current,
+    ),
+    'Support request or review',
+  );
+  const discard = useDiscardChanges(reviewDirty);
   const generation = useRef(0);
   async function load(cursor?: string) {
     const version = ++generation.current;
@@ -84,6 +94,7 @@ function SupportWorkspace({ admin }: { admin: boolean }) {
     setError('');
     try {
       const result = await support.create(body);
+      contextBaseline.current = context;
       setSaved(result);
       setPending(null);
       setSubject('');
@@ -189,12 +200,15 @@ function SupportWorkspace({ admin }: { admin: boolean }) {
               type="checkbox"
               checked={operator}
               onChange={(e) => {
-                generation.current++;
-                setHistory(null);
-                setHistoryError('');
-                setSelected(null);
-                setReason('');
-                setOperator(e.target.checked);
+                const checked = e.target.checked;
+                discard(() => {
+                  generation.current++;
+                  setHistory(null);
+                  setHistoryError('');
+                  setSelected(null);
+                  setReason('');
+                  setOperator(checked);
+                });
               }}
             />{' '}
             Operator review queue
@@ -234,10 +248,12 @@ function SupportWorkspace({ admin }: { admin: boolean }) {
                   <button
                     className="btn"
                     onClick={() => {
-                      setSelected(row);
-                      setStatus(row.status);
-                      setReason('');
-                      setReviewError('');
+                      discard(() => {
+                        setSelected(row);
+                        setStatus(row.status);
+                        setReason('');
+                        setReviewError('');
+                      });
                     }}
                   >
                     Review {row.reference}
@@ -307,9 +323,11 @@ function SupportWorkspace({ admin }: { admin: boolean }) {
                 onClick={() => {
                   const fresh = history?.items.find((row) => row.id === selected.id);
                   if (fresh) {
-                    setSelected(fresh);
-                    setStatus(fresh.status);
-                    setReviewError('');
+                    discard(() => {
+                      setSelected(fresh);
+                      setStatus(fresh.status);
+                      setReviewError('');
+                    });
                   }
                 }}
               >
@@ -322,7 +340,12 @@ function SupportWorkspace({ admin }: { admin: boolean }) {
                 type="button"
                 className="btn"
                 disabled={reviewBusy}
-                onClick={() => setSelected(null)}
+                onClick={() =>
+                  discard(() => {
+                    setSelected(null);
+                    setReason('');
+                  })
+                }
               >
                 Close review
               </button>

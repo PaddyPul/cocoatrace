@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../components/shared/UnsavedChanges';
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Clock3, Copy, MailPlus, Users } from 'lucide-react';
 import Layout from '../components/layout/Layout';
@@ -96,6 +97,7 @@ export default function PilotTeamPage() {
     };
   }, [loadTotals]);
   const [email, setEmail] = useState('');
+  const clearInvitationDraft = useUnsavedChanges(Boolean(email), 'Team invitation');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [created, setCreated] = useState<InvitationResult | null>(null);
@@ -116,6 +118,7 @@ export default function PilotTeamPage() {
       setSearch(email);
       setStatus('');
       setEmail('');
+      clearInvitationDraft();
       await load();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Invitation action failed.');

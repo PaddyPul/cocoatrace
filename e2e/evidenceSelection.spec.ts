@@ -149,6 +149,15 @@ test('off-page deep link uses exact authorized lookup and changing record kind c
   ).toBe(true);
   await page.getByLabel('Evidence explanation', { exact: true }).fill('Old source explanation');
   await page.getByLabel('Evidence record type', { exact: true }).selectOption('contract');
+  const discard = page.getByRole('dialog', { name: 'Discard unsaved changes?', exact: true });
+  await expect(discard).toBeVisible();
+  await discard.getByRole('button', { name: 'Stay and keep editing', exact: true }).click();
+  await expect(page.getByLabel('Evidence explanation', { exact: true })).toHaveValue(
+    'Old source explanation',
+  );
+  await page.getByLabel('Evidence record type', { exact: true }).selectOption('contract');
+  await discard.getByRole('button', { name: 'Discard changes', exact: true }).click();
+  await expect(discard).not.toBeVisible();
   await expect(page.getByTestId('evidence-context')).toHaveCount(0);
   await page.getByLabel('Evidence record', { exact: true }).selectOption(first);
   await expect(page.getByLabel('Evidence explanation', { exact: true })).toHaveValue('');

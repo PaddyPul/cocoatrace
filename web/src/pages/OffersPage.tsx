@@ -1,3 +1,4 @@
+import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import SavedFilterControls from '../components/savedFilters/SavedFilterControls';
 import ExternalNegotiationNotice from '../components/trading/ExternalNegotiationNotice';
 import { useCatalogPage } from '../components/catalog/useCatalogPage';
@@ -83,6 +84,16 @@ export default function OffersPage() {
   const [confirmReject, setConfirmReject] = useState<string | null>(null);
   const [confirmWithdraw, setConfirmWithdraw] = useState<string | null>(null);
   const [processing, setProcessing] = useState('');
+  const dirty = confirmReject !== null && rejectionReason !== '';
+  const clearUnsaved = useUnsavedChanges(dirty, 'Offer rejection');
+  const discard = useDiscardChanges(dirty);
+  const closeReject = () => {
+    if (!processing)
+      discard(() => {
+        setConfirmReject(null);
+        setRejectionReason('');
+      });
+  };
 
   const handleAccept = async (offerId: string) => {
     setProcessing(offerId);
@@ -105,6 +116,7 @@ export default function OffersPage() {
     setProcessing(offerId);
     try {
       await offersApi.reject(offerId, rejectionReason.trim());
+      clearUnsaved();
       setConfirmReject(null);
       setRejectionReason('');
       toast('info', 'Offer rejected.');
@@ -417,11 +429,7 @@ export default function OffersPage() {
               onChange={(event) => setRejectionReason(event.target.value)}
             />
             <div className="mt-4 flex gap-2">
-              <button
-                className="btn"
-                disabled={!!processing}
-                onClick={() => setConfirmReject(null)}
-              >
+              <button className="btn" disabled={!!processing} onClick={closeReject}>
                 Cancel
               </button>
               <button

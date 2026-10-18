@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../shared/UnsavedChanges';
 import { useEffect, useState } from 'react';
 import { api } from '../../api/http';
 import type { SourcingRequest } from '../../domains/marketplace/types';
@@ -24,6 +25,10 @@ export default function SourcingCloseout({
     [confirmed, setConfirmed] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState('');
+  const clearUnsaved = useUnsavedChanges(
+    !record && (reason !== '' || contract !== '' || status !== 'closed' || confirmed),
+    'Sourcing closeout',
+  );
   useEffect(() => {
     let active = true;
     setLoaded(false);
@@ -60,6 +65,11 @@ export default function SourcingCloseout({
         confirmed,
         ...(status === 'awarded' ? { contractId: contract.trim() } : {}),
       });
+      clearUnsaved();
+      setReason('');
+      setContract('');
+      setConfirmed(false);
+      setStatus('closed');
       onClosed({ ...request, ...row });
       setRetry((value) => value + 1);
     } catch (err: unknown) {

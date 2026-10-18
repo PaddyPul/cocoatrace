@@ -148,6 +148,8 @@ test('finance credit conflict preserves explanation and requires renewed review'
   await grant.click();
   await expect(region).toContainText('Temporary credit exception active');
   expect(actions[1].body.expectedRevision).toBe(0);
+  await expect(reason).toHaveValue('');
+  await reason.fill('The provider recovered and temporary credit is no longer required');
   await checked.check();
   await region.getByRole('button', { name: 'Revoke fee credit', exact: true }).click();
   await expect(region).toContainText('Platform fee receipt not verified');

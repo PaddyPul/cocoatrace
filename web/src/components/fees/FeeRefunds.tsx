@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../shared/UnsavedChanges';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { feeRefunds, type FeeRefundState } from '../../api/feeRefunds';
 
@@ -15,6 +16,7 @@ export default function FeeRefunds({
   const [reason, setReason] = useState('');
   const [reference, setReference] = useState('');
   const [reviewed, setReviewed] = useState(false);
+  useUnsavedChanges(Boolean(reason || reference || reviewed), 'Fee refund review');
   const requestKey = useRef(crypto.randomUUID());
   const load = useCallback(async () => {
     setReviewed(false);

@@ -1,4 +1,5 @@
-import { useEffect, useId, useState } from 'react';
+import { useUnsavedChanges } from '../shared/UnsavedChanges';
+import { useEffect, useId, useRef, useState } from 'react';
 import { api } from '../../api/http';
 type Timing = {
   shipmentId: string;
@@ -17,6 +18,11 @@ export default function TransportTiming({ shipmentId }: { shipmentId: string }) 
     [reason, setReason] = useState(''),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false);
+  const baseline = useRef('');
+  const dirty = Boolean(reason || (opened && eta !== baseline.current));
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+  useUnsavedChanges(dirty, 'Transport timing');
   useEffect(() => {
     setData(null);
     setOpened(false);
@@ -30,7 +36,10 @@ export default function TransportTiming({ shipmentId }: { shipmentId: string }) 
     try {
       const value = await api<Timing>('GET', `/shipments/${shipmentId}/timing`);
       setData(value);
-      setEta(value.etaArrival ?? '');
+      if (!dirtyRef.current) {
+        baseline.current = value.etaArrival ?? '';
+        setEta(baseline.current);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Timing unavailable');
     } finally {
@@ -48,6 +57,8 @@ export default function TransportTiming({ shipmentId }: { shipmentId: string }) 
         reason,
       });
       setData(next);
+      baseline.current = next.etaArrival ?? '';
+      setEta(baseline.current);
       setReason('');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Timing update failed');

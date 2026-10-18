@@ -1,3 +1,4 @@
+import { useUnsavedChanges, useDiscardChanges } from '../shared/UnsavedChanges';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { certificates as certApi } from '../../api';
@@ -76,6 +77,30 @@ export default function CertificateRecordsPage() {
   const [iAccred, setIAccred] = useState('');
   const [iLoading, setILoading] = useState(false);
   const [iError, setIError] = useState('');
+  const issueDirty = Boolean(
+    ifarmId ||
+      iStandard !== 'EU_ORGANIC' ||
+      iCropScope !== 'cocoa' ||
+      iValidFrom ||
+      iValidTo ||
+      iAuthority ||
+      iAccred,
+  );
+  const clearIssueDraft = useUnsavedChanges(showIssue && issueDirty, 'Certificate issuance');
+  const discardIssue = useDiscardChanges(issueDirty);
+  const closeIssue = () =>
+    discardIssue(() => {
+      setShowIssue(false);
+      setSelectedIssueFarm(null);
+      setIfarmId('');
+      setIStandard('EU_ORGANIC');
+      setICropScope('cocoa');
+      setIValidFrom('');
+      setIValidTo('');
+      setIAuthority('');
+      setIAccred('');
+      setIError('');
+    });
 
   const handleIssue = async () => {
     if (!ifarmId || !iValidFrom || !iValidTo || !iAuthority || !iAccred) {
@@ -96,7 +121,11 @@ export default function CertificateRecordsPage() {
         issuingAuthority: iAuthority,
         accreditationReference: iAccred,
       });
+      clearIssueDraft();
       setShowIssue(false);
+      setSelectedIssueFarm(null);
+      setIStandard('EU_ORGANIC');
+      setICropScope('cocoa');
       setIfarmId('');
       setIValidFrom('');
       setIValidTo('');
@@ -281,13 +310,13 @@ export default function CertificateRecordsPage() {
       <PageNavigation page={page} label="certificates" />
       {/* Issue Certificate Modal */}
       {showIssue && (
-        <div className="modal-overlay" onClick={() => !iLoading && setShowIssue(false)}>
+        <div className="modal-overlay" onClick={() => !iLoading && closeIssue()}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="modal-title">Issue Certificate</div>
               </div>
-              <button className="btn btn-sm" onClick={() => setShowIssue(false)}>
+              <button className="btn btn-sm" onClick={closeIssue}>
                 <X size={14} />
               </button>
             </div>
@@ -372,7 +401,7 @@ export default function CertificateRecordsPage() {
               <div className="flex gap-2 pt-1">
                 <button
                   className="btn flex-1 justify-center"
-                  onClick={() => setShowIssue(false)}
+                  onClick={closeIssue}
                   disabled={iLoading}
                 >
                   Cancel

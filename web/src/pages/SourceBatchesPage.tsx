@@ -1,4 +1,4 @@
-import { useUnsavedChanges } from '../components/shared/UnsavedChanges';
+import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { batches as batchesApi } from '../api';
@@ -45,6 +45,21 @@ export default function BatchesPage() {
     ),
     'Harvest batch',
   );
+
+  const discardBatch = useDiscardChanges(
+    Boolean(cbFarmId || cbCrop !== 'cocoa' || cbHarvestDate || cbQty || cbMoisture || cbGrade),
+  );
+  const closeBatch = () =>
+    discardBatch(() => {
+      setShowCreate(false);
+      setCbFarmId('');
+      setCbCrop('cocoa');
+      setCbHarvestDate('');
+      setCbQty(0);
+      setCbMoisture('');
+      setCbGrade('');
+      setCbError('');
+    });
 
   const handleCreateBatch = async () => {
     if (!cbFarmId || !cbHarvestDate || !cbQty || cbQty <= 0) {
@@ -192,13 +207,13 @@ export default function BatchesPage() {
 
       {/* Create Batch Modal */}
       {showCreate && (
-        <div className="modal-overlay" onClick={() => !cbLoading && setShowCreate(false)}>
+        <div className="modal-overlay" onClick={() => !cbLoading && closeBatch()}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="modal-title">Create Batch</div>
               </div>
-              <button className="btn btn-sm" onClick={() => setShowCreate(false)}>
+              <button className="btn btn-sm" onClick={closeBatch}>
                 <X size={14} />
               </button>
             </div>
@@ -250,7 +265,7 @@ export default function BatchesPage() {
               <div className="flex gap-2 pt-1">
                 <button
                   className="btn flex-1 justify-center"
-                  onClick={() => setShowCreate(false)}
+                  onClick={closeBatch}
                   disabled={cbLoading}
                 >
                   Cancel
