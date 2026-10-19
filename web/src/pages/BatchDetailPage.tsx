@@ -1,5 +1,6 @@
 import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import BatchEvidence from '../components/catalog/BatchEvidence';
+import ConfirmDialog from '../components/shared/ConfirmDialog';
 import CertificatePicker from '../components/catalog/CertificatePicker';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -23,6 +24,8 @@ export default function BatchDetailPage() {
   const [error, setError] = useState('');
   const [productProfile, setProductProfile] = useState<ProductProfile | null>(null);
   const [profileBusy, setProfileBusy] = useState(false);
+  const [publicationReview, setPublicationReview] = useState<ProductProfile | null>(null);
+  const [publicationError, setPublicationError] = useState('');
 
   const [showPush, setShowPush] = useState(false);
   const [pqty, setPqty] = useState(0);
@@ -161,14 +164,17 @@ export default function BatchDetailPage() {
   };
 
   const handlePublishProfile = async () => {
-    if (!productProfile) return;
+    if (!publicationReview || profileBusy) return;
     setProfileBusy(true);
+    setPublicationError('');
     try {
-      await productProfilesApi.publish(productProfile.id);
-      const refreshed = await productProfilesApi.getForBatch(productProfile.batch_id);
+      await productProfilesApi.publish(publicationReview.id);
+      setPublicationReview(null);
+      const refreshed = await productProfilesApi.getForBatch(publicationReview.batch_id);
       setProductProfile(refreshed);
       toast('success', 'Product page published — QR is live');
     } catch (e: any) {
+      setPublicationError(e.message);
       toast('error', e.message);
     } finally {
       setProfileBusy(false);
@@ -368,7 +374,10 @@ export default function BatchDetailPage() {
                     </p>
                     <button
                       className="btn btn-primary w-full justify-center mt-3"
-                      onClick={handlePublishProfile}
+                      onClick={() => {
+                        setPublicationError('');
+                        setPublicationReview(productProfile);
+                      }}
                       disabled={profileBusy}
                     >
                       {profileBusy ? 'Publishing…' : 'Publish & activate QR'}
@@ -596,6 +605,22 @@ export default function BatchDetailPage() {
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        open={publicationReview !== null}
+        title="Review public product publication"
+        message={
+          publicationReview
+            ? `Publish ${publicationReview.display_name} (${publicationReview.lot_code}) at /p/${publicationReview.slug}? This activates its permanent public QR destination and exposes the permitted product, origin, journey and safety information to anyone with the link. Public presentation does not establish independent certification. Check the draft before confirming.`
+            : ''
+        }
+        confirmLabel="Confirm public publication"
+        loading={profileBusy}
+        error={publicationError}
+        onConfirm={() => void handlePublishProfile()}
+        onCancel={() => {
+          if (!profileBusy) setPublicationReview(null);
+        }}
+      />
     </Layout>
   );
 }

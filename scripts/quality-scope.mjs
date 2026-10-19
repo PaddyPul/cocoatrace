@@ -1,5 +1,12 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'web/src/pages/PlatformRolePage.tsx',
+  'web/src/content/platformRole.ts',
+  'web/src/components/shared/PlatformRoleNotice.tsx',
+  'scripts/customer-claims.test.mjs',
+  'scripts/platform-role.test.mjs',
+  'scripts/critical-regressions.test.mjs',
+  'scripts/critical-regressions.mjs',
   'web/src/pages/DealRoomPage.tsx',
   'scripts/status-presentation.test.mjs',
   'web/src/components/shared/helpers.tsx',

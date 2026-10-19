@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { contracts, payments } from '../../api';
 import PaymentProof from '../payments/PaymentProof';
+import ConfirmDialog from '../shared/ConfirmDialog';
 import type { TradeAction } from './TradeAction';
 import { tradeActionPresentation } from '../shared/statusPresentation';
 
@@ -24,6 +25,14 @@ export default function DealNextAction({
   const [reference, setReference] = useState('');
   const [proof, setProof] = useState<string>();
   const [busy, setBusy] = useState(false);
+  const [review, setReview] = useState<{
+    title: string;
+    message: string;
+    key: string;
+    operation: () => Promise<unknown>;
+    success: string;
+  } | null>(null);
+  const [reviewError, setReviewError] = useState('');
   const submit = async (key: string, mutation: () => Promise<unknown>, message: string) => {
     setBusy(true);
     try {
@@ -55,11 +64,13 @@ export default function DealNextAction({
             className="btn btn-primary"
             disabled={busy}
             onClick={() =>
-              submit(
-                'terms',
-                () => contracts.confirmPaymentTerms(contractId),
-                'Payment terms confirmed',
-              )
+              setReview({
+                title: 'Review payment terms confirmation',
+                message: `Contract ${contractId}. ${action.description} Confirm that you reviewed the proposed payment protection and instalment terms. This records your agreement; it does not transfer or verify funds.`,
+                key: 'terms',
+                operation: () => contracts.confirmPaymentTerms(contractId),
+                success: 'Payment terms confirmed',
+              })
             }
           >
             Confirm terms
@@ -109,11 +120,13 @@ export default function DealNextAction({
                 className="btn btn-primary"
                 disabled={busy}
                 onClick={() =>
-                  submit(
-                    'verify',
-                    () => payments.confirmInstallment(installmentId),
-                    'Funds marked as received',
-                  )
+                  setReview({
+                    title: 'Review funds receipt',
+                    message: `Contract ${contractId}; instalment ${installmentId}; buyer reference ${submittedReference || 'not recorded'}. ${action.description} Confirm only after independently checking actual receipt in your bank account. This records verified goods-payment receipt and may advance trade clearance; a buyer reference alone is not proof.`,
+                    key: 'verify',
+                    operation: () => payments.confirmInstallment(installmentId),
+                    success: 'Funds marked as received',
+                  })
                 }
               >
                 Confirm funds received
@@ -180,6 +193,43 @@ export default function DealNextAction({
           {control}
         </div>
       </div>
+      <ConfirmDialog
+        open={review !== null}
+        title={review?.title || 'Review trade action'}
+        message={review?.message || ''}
+        confirmLabel={
+          review?.key === 'terms' ? 'Confirm reviewed terms' : 'Confirm verified receipt'
+        }
+        loading={busy}
+        error={reviewError}
+        onCancel={() => {
+          if (!busy) {
+            setReview(null);
+            setReviewError('');
+          }
+        }}
+        onConfirm={() => {
+          if (!review || busy) return;
+          setReviewError('');
+          let completed = false;
+          void submit(
+            review.key,
+            async () => {
+              try {
+                const result = await review.operation();
+                completed = true;
+                return result;
+              } catch (error) {
+                setReviewError(error instanceof Error ? error.message : 'Trade action failed');
+                throw error;
+              }
+            },
+            review.success,
+          ).then(() => {
+            if (completed) setReview(null);
+          });
+        }}
+      />
     </section>
   );
 }

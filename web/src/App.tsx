@@ -10,11 +10,14 @@ import {
 } from 'react-router-dom';
 import { AuthProvider, useAuthCtx } from './components/auth/AuthProvider';
 import ErrorBoundary from './components/shared/ErrorBoundary';
-import { ToastProvider } from './components/shared/ToastProvider';
+const ToastProvider = lazy(() =>
+  import('./components/shared/ToastProvider').then((module) => ({ default: module.ToastProvider })),
+);
 import { webConfig } from './config';
 const EnvironmentNotice = lazy(() => import('./components/environment/EnvironmentNotice'));
 
 const UnsavedChangesProvider = lazy(() => import('./components/shared/UnsavedChanges'));
+const PlatformRolePage = lazy(() => import('./pages/PlatformRolePage'));
 const PilotLimitationsPage = lazy(() => import('./pages/PilotLimitationsPage'));
 const EvidenceContributionPage = lazy(() => import('./pages/EvidenceContributionPage'));
 const PasskeysPage = lazy(() => import('./pages/PasskeysPage'));
@@ -193,6 +196,7 @@ function AppShell() {
                           </PublicRoute>
                         }
                       />
+                      <Route path="/platform-role" element={<PlatformRolePage />} />
                       <Route
                         path="/p/:slug"
                         element={

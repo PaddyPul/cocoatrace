@@ -1,8 +1,16 @@
+import { platformRole } from './platformRole';
+
 /** Versioned customer-facing release notes. Update alongside every pilot release. */
 export const pilotLimitations = {
-  version: '2026-10-14.1',
-  updatedAt: '14 October 2026',
+  version: '2026-10-19.1',
+  updatedAt: '19 October 2026',
   sections: [
+    {
+      title: 'The platform coordinates records; independent parties remain responsible',
+      detail: platformRole.statement,
+      action:
+        'Read the platform responsibilities and limits. Verify the relevant certification, payment, transport, customs and legal requirements with the responsible provider or authority.',
+    },
     {
       title: 'Negotiation happens outside BetterTrade',
       detail:

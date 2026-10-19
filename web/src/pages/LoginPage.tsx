@@ -20,7 +20,7 @@ const QUICK_USERS = [
 
 const VALUE_POINTS = [
   { icon: Search, title: 'Source directly from verified supply', copy: 'Match a buyer requirement to commercial terms and proof in one place.' },
-  { icon: Route, title: 'Keep field identity through every change', copy: 'Follow material through blending, repacking, shipment and sale.' },
+  { icon: Route, title: 'Follow the recorded supply journey', copy: 'Follow recorded source, custody, shipment and sale records.' },
   { icon: ShieldCheck, title: 'Respond with precision', copy: 'Know which lots, quantities and recipients are actually affected.' },
 ];
 

@@ -1,3 +1,4 @@
+import PlatformRoleNotice from '../components/shared/PlatformRoleNotice';
 import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import TransportTiming from '../components/transport/TransportTiming';
 import DispatchAcknowledgement from '../components/transport/DispatchAcknowledgement';
@@ -251,6 +252,7 @@ export default function ShipmentDetailPage() {
               is separate from inspection and acceptance.
             </div>
           </div>
+          <PlatformRoleNotice />
           <div className="border border-border rounded p-4 text-xs leading-5">
             <div className="font-semibold">Recorded payment conditions</div>
             <div className="text-text-muted">

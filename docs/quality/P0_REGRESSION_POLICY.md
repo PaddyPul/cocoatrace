@@ -1,0 +1,9 @@
+# Confirmed P0 regression policy
+
+Every confirmed P0 fix must include a regression before or in the same PR. Maintainers classify severity; do not lower severity to bypass this rule. Label the PR `severity:P0`, enter `Defect severity: P0` and cite the registered P0 ID in the PR body. Record the failure and exact regression suite/title in p0-regressions.json. The same PR must include the regression or reference a regression already present before its fix. The engineering reviewer verifies the test fails against the defective behavior and covers the boundary without exposing private data.
+
+CI and release check unique IDs, current referenced scenarios and P0-labelled/body-declared PR links. Classification remains a review responsibility; tooling cannot detect undisclosed severity. A checked register is not runtime success. Unit, native and browser release gates still execute; a skipped/failed suite cannot be credited. PR event checks run against the PR head; checkout paths are restricted to repository tests, not external links or commands from registry fields.
+
+The initial P0 register is empty: this policy does not invent classifications for historical fixes. Existing critical regression suites are inventoried separately in CRITICAL_DOMAIN_COVERAGE.md. Record each newly confirmed P0 immediately, including unrepaired defects; if a regression is not yet available, the check fails rather than silently granting an exception. No test-free emergency merge path is introduced. Named real-world staffing and branch-protection configuration remain governance work.
+
+Maintain the checked scenario inventory when tests are renamed or behavior changes. `npm run quality:report` explicitly regenerates it; `npm run check:regressions` checks staleness and policy. Reported scenario counts are not line coverage or a probability of safety. Attach exact-commit release results separately.

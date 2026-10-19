@@ -53,6 +53,10 @@ async function submitAndVerify(buyer: Page, seller: Page, contractId: string, pr
   await expect(buyer.getByRole('button', { name: 'Submit payment', exact: true })).toHaveCount(0);
   await seller.goto(`/deal-room/${contractId}`);
   await seller.getByRole('button', { name: 'Confirm funds received', exact: true }).click();
+  await seller
+    .getByRole('dialog', { name: 'Review funds receipt', exact: true })
+    .getByRole('button', { name: 'Confirm verified receipt', exact: true })
+    .click();
   await expect(
     seller.getByRole('button', { name: 'Confirm funds received', exact: true }),
   ).toHaveCount(0);
@@ -135,6 +139,10 @@ for (const plan of [
       await expect(modal(seller)).toHaveCount(0);
       await buyer.goto(`/deal-room/${contract.id}`);
       await buyer.getByRole('button', { name: 'Confirm terms', exact: true }).click();
+      await buyer
+        .getByRole('dialog', { name: 'Review payment terms confirmation', exact: true })
+        .getByRole('button', { name: 'Confirm reviewed terms', exact: true })
+        .click();
       await expect(buyer.getByRole('button', { name: 'Confirm terms', exact: true })).toHaveCount(
         0,
       );

@@ -148,3 +148,59 @@ test('retained safety hold stays visible and evidence count makes no approval or
   await expect(page.getByText('2 approved', { exact: true })).toHaveCount(0);
   await expect(page.getByText('clear', { exact: true })).toHaveCount(0);
 });
+
+test('public QR publication reviews exact destination, cancels without writing and retains failed review', async ({
+  page,
+}) => {
+  await mock(page);
+  await page.route(/\/api\/batches\/batch-review(?:\?.*)?$/, (route) =>
+    route.fulfill({
+      json: {
+        batch: {
+          id: 'batch-review',
+          crop: 'peanut',
+          quantity_kg: 10,
+          harvest_date: '2026-01-01',
+          organic_claim_status: 'none',
+          current_holder_id: 'product-org',
+        },
+      },
+    }),
+  );
+  await page.route('**/api/product-profiles/batch/batch-review', (route) =>
+    route.fulfill({
+      json: {
+        id: 'profile-review',
+        batch_id: 'batch-review',
+        slug: 'review-peanut',
+        display_name: 'Review peanut',
+        description: 'Recorded product',
+        lot_code: 'LOT-REVIEW',
+        visibility: 'draft',
+      },
+    }),
+  );
+  let writes = 0;
+  await page.route('**/api/product-profiles/profile-review/publish', async (route) => {
+    writes += 1;
+    await route.fulfill({
+      status: 409,
+      json: { error: 'Publication changed. Refresh the draft.' },
+    });
+  });
+  await page.goto('/batches/batch-review');
+  await page.getByRole('button', { name: 'Publish & activate QR', exact: true }).click();
+  const review = page.getByRole('dialog', {
+    name: 'Review public product publication',
+    exact: true,
+  });
+  await expect(review).toContainText('/p/review-peanut');
+  await expect(review).toContainText('anyone with the link');
+  expect(writes).toBe(0);
+  await review.getByRole('button', { name: 'Cancel', exact: true }).click();
+  expect(writes).toBe(0);
+  await page.getByRole('button', { name: 'Publish & activate QR', exact: true }).click();
+  await review.getByRole('button', { name: 'Confirm public publication', exact: true }).click();
+  await expect(review.getByRole('alert')).toContainText('Publication changed. Refresh the draft.');
+  expect(writes).toBe(1);
+});
