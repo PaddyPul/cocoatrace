@@ -1,3 +1,4 @@
+import PlatformRoleNotice from '../components/shared/PlatformRoleNotice';
 import PublicNoticesPanel from '../components/catalog/PublicNoticesPanel';
 import PublicJourneyPanel from '../components/catalog/PublicJourneyPanel';
 import PublicEvidencePanel from '../components/catalog/PublicEvidencePanel';
@@ -109,6 +110,7 @@ export default function PublicProductPage() {
             </div>
           </section>
         </div>
+        <PlatformRoleNotice />
         <footer className="py-8 text-center text-xs text-stone-400"><p>Live product record · Recall records checked {safety?new Date(safety.checkedAt).toLocaleTimeString():'unavailable'}</p><p className="mt-1">BetterTrade shows recorded evidence; it does not replace regulator or manufacturer recall instructions.</p></footer>
       </div>
     </main>

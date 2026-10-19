@@ -28,6 +28,13 @@ Describe the customer, safety or engineering outcome—not only the files change
 - Rollback or compensation:
 - Configuration/secrets changed:
 
+## Defect regression
+
+- Defect severity: none / P0 / P1 / P2
+- Confirmed P0 register ID (if applicable):
+- Regression test and failure behavior:
+- A P0 fix must include its regression in the same PR; do not merge a test-free P0 fix. Add the defect and exact test title to docs/quality/p0-regressions.json. Label confirmed P0 PRs `severity:P0`.
+
 ## Verification
 
 - [ ] Unit tests

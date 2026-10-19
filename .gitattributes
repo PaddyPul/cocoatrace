@@ -416,3 +416,11 @@ web/src/components/shared/statusPresentation.ts text eol=lf
 web/src/components/shared/helpers.tsx text eol=lf
 scripts/status-presentation.test.mjs text eol=lf
 web/src/pages/DealRoomPage.tsx text eol=lf
+
+scripts/critical-regressions.mjs text eol=lf
+scripts/critical-regressions.test.mjs text eol=lf
+scripts/platform-role.test.mjs text eol=lf
+scripts/customer-claims.test.mjs text eol=lf
+web/src/components/shared/PlatformRoleNotice.tsx text eol=lf
+web/src/content/platformRole.ts text eol=lf
+web/src/pages/PlatformRolePage.tsx text eol=lf

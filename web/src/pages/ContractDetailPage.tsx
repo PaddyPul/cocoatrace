@@ -1,3 +1,4 @@
+import ConfirmDialog from '../components/shared/ConfirmDialog';
 import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -300,14 +301,20 @@ export default function ContractDetailPage() {
     }
   };
 
+  const [termsReview, setTermsReview] = useState<string | null>(null);
+  const [termsReviewError, setTermsReviewError] = useState('');
+
   const confirmTerms = async () => {
-    if (!id) return;
+    if (!id || !termsReview || termsLoading) return;
     setTermsLoading(true);
+    setTermsReviewError('');
     try {
       await contracts.confirmPaymentTerms(id);
+      setTermsReview(null);
       await loadContract();
       toast('success', 'Payment terms confirmed');
     } catch (e: any) {
+      setTermsReviewError(e.message);
       toast('error', e.message);
     } finally {
       setTermsLoading(false);
@@ -650,7 +657,12 @@ export default function ContractDetailPage() {
                 c.payment_terms_status === 'proposed' && (
                   <button
                     className="btn btn-primary w-full justify-center text-xs"
-                    onClick={confirmTerms}
+                    onClick={() => {
+                      setTermsReviewError('');
+                      setTermsReview(
+                        `Contract ${c.id}: payment plan ${c.payment_plan}; proposed terms ${c.payment_terms_status}. Confirm you reviewed the payment protection and instalment schedule shown here. This records your agreement; it does not transfer or verify funds.`,
+                      );
+                    }}
                     disabled={termsLoading}
                   >
                     <ShieldCheck size={14} />{' '}
@@ -856,6 +868,18 @@ export default function ContractDetailPage() {
           </div>
         </Modal>
       )}
+      <ConfirmDialog
+        open={termsReview !== null}
+        title="Review payment terms confirmation"
+        message={termsReview || ''}
+        confirmLabel="Confirm reviewed terms"
+        loading={termsLoading}
+        error={termsReviewError}
+        onConfirm={() => void confirmTerms()}
+        onCancel={() => {
+          if (!termsLoading) setTermsReview(null);
+        }}
+      />
     </Layout>
   );
 }

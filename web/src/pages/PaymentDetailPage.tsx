@@ -1,3 +1,5 @@
+import ConfirmDialog from '../components/shared/ConfirmDialog';
+import PlatformRoleNotice from '../components/shared/PlatformRoleNotice';
 import { useUnsavedChanges } from '../components/shared/UnsavedChanges';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -30,6 +32,8 @@ export default function PaymentDetailPage() {
   const [proofs, setProofs] = useState<Record<string, string | undefined>>({});
   const [provider, setProvider] = useState('');
   const [busy, setBusy] = useState('');
+  const [receiptReview, setReceiptReview] = useState<{ id: string; message: string } | null>(null);
+  const [receiptError, setReceiptError] = useState('');
 
   useUnsavedChanges(
     Boolean(reference || provider || Object.values(proofs).some(Boolean)),
@@ -129,6 +133,7 @@ export default function PaymentDetailPage() {
             </div>
           </div>
 
+          <PlatformRoleNotice />
           <div className="bg-surface border border-border rounded p-5">
             <h3 className="text-sm font-semibold flex items-center gap-2 mb-2">
               <ShieldCheck size={16} className="text-brand-400" /> How protection works
@@ -227,11 +232,10 @@ export default function PaymentDetailPage() {
                         className="btn btn-primary text-xs"
                         disabled={Boolean(busy)}
                         onClick={() =>
-                          act(
-                            `confirm-${item.id}`,
-                            () => payments.confirmInstallment(item.id),
-                            'Receipt verified',
-                          )
+                          setReceiptReview({
+                            id: item.id,
+                            message: `Contract ${p.contract_id}; instalment ${item.id}; amount ${item.amount_due} ${p.currency}; buyer reference ${item.payment_reference_external || 'not recorded'}. Confirm only after independently checking actual receipt in your bank account. This records verified goods-payment receipt and may advance trade clearance; a buyer reference alone is not proof.`,
+                          })
                         }
                       >
                         Confirm funds received
@@ -359,6 +363,40 @@ export default function PaymentDetailPage() {
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        open={receiptReview !== null}
+        title="Review funds receipt"
+        message={receiptReview?.message || ''}
+        confirmLabel="Confirm verified receipt"
+        loading={Boolean(busy)}
+        error={receiptError}
+        onCancel={() => {
+          if (!busy) {
+            setReceiptReview(null);
+            setReceiptError('');
+          }
+        }}
+        onConfirm={() => {
+          if (!receiptReview || busy) return;
+          setReceiptError('');
+          void act(
+            `confirm-${receiptReview.id}`,
+            async () => {
+              try {
+                const result = await payments.confirmInstallment(receiptReview.id);
+                setReceiptReview(null);
+                return result;
+              } catch (error) {
+                setReceiptError(
+                  error instanceof globalThis.Error ? error.message : 'Receipt verification failed',
+                );
+                throw error;
+              }
+            },
+            'Receipt verified',
+          );
+        }}
+      />
     </Layout>
   );
 }

@@ -146,7 +146,7 @@ export default function OnboardingPage() {
               <p className="mt-4 max-w-xl text-base leading-7 text-white/55">
                 BetterTrade connects buyers and suppliers around the same commercial terms,
                 field-level origin and supporting proof—then links recorded evidence through
-                shipment, recorded transformations and response.
+                recorded custody, shipment and recall response.
               </p>
               <button
                 className="mt-8 inline-flex min-h-12 items-center gap-2 rounded-xl bg-brand-400 px-5 text-sm font-bold text-emerald-950"

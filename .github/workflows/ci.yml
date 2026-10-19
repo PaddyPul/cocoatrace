@@ -23,6 +23,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run check:regressions
       - run: npm run check:quality
       - run: npm run test:backlog
       - run: npm run check:risks

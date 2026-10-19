@@ -1,3 +1,4 @@
+import PlatformRoleNotice from '../components/shared/PlatformRoleNotice';
 import Layout from '../components/layout/Layout';
 import { pilotLimitations } from '../content/pilotLimitations';
 
@@ -17,6 +18,7 @@ export default function PilotLimitationsPage() {
             supported behavior; it is not a certification, payment guarantee or legal opinion.
           </p>
         </header>
+        <PlatformRoleNotice />
         {pilotLimitations.sections.map((section) => (
           <section key={section.title} className="rounded-xl border border-border bg-surface p-5">
             <h3 className="font-semibold">{section.title}</h3>

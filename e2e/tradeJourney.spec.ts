@@ -160,6 +160,10 @@ test('full prepayment trade: offer, verified payment gate, document sharing, del
     await expect(modal(supplier)).toHaveCount(0);
     await buyer.goto(`/deal-room/${contract.id}`);
     await buyer.getByRole('button', { name: 'Confirm terms', exact: true }).click();
+    await buyer
+      .getByRole('dialog', { name: 'Review payment terms confirmation', exact: true })
+      .getByRole('button', { name: 'Confirm reviewed terms', exact: true })
+      .click();
     await expect(buyer.getByRole('button', { name: 'Submit payment', exact: true })).toBeVisible();
 
     // Neither agreed terms nor a buyer's reference is evidence of received funds.
@@ -176,6 +180,10 @@ test('full prepayment trade: offer, verified payment gate, document sharing, del
     expect(Number(snapshot.payment.amount_confirmed)).toBe(0);
     await supplier.goto(`/deal-room/${contract.id}`);
     await supplier.getByRole('button', { name: 'Confirm funds received', exact: true }).click();
+    await supplier
+      .getByRole('dialog', { name: 'Review funds receipt', exact: true })
+      .getByRole('button', { name: 'Confirm verified receipt', exact: true })
+      .click();
     await expect(
       supplier
         .getByTestId('deal-next-action')

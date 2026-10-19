@@ -208,6 +208,10 @@ test('damaged delivery stays committed through supplier resolution and buyer app
     await held();
     await supplier.reload();
     await supplier.getByRole('button', { name: 'Confirm funds received', exact: true }).click();
+    await supplier
+      .getByRole('dialog', { name: 'Review funds receipt', exact: true })
+      .getByRole('button', { name: 'Confirm verified receipt', exact: true })
+      .click();
     await expect(supplier.getByText('Trade completed', { exact: true })).toBeVisible();
     const complete = await tradeSnapshot(contract.id);
     expect(complete.contract.status).toBe('settled');

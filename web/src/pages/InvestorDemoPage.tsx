@@ -1,3 +1,4 @@
+import PlatformRoleNotice from '../components/shared/PlatformRoleNotice';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -52,8 +53,8 @@ export default function InvestorDemoPage() {
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200/20 bg-emerald-200/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.17em] text-emerald-200">
             <Sparkles size={13} /> Investor demo · Ghana to Netherlands
           </div>
-          <h2 className="max-w-2xl text-3xl font-bold leading-tight tracking-[-.035em] text-white sm:text-5xl">One scan tells the product story. One trace contains the risk.</h2>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-emerald-50/65 sm:text-base">BetterTrade links recorded lots from source evidence to product records, then calculates affected material paths from recorded movements and transformations.</p>
+          <h2 className="max-w-2xl text-3xl font-bold leading-tight tracking-[-.035em] text-white sm:text-5xl">One scan opens recorded product history. One trace helps investigate recorded risk.</h2>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-emerald-50/65 sm:text-base">BetterTrade links recorded lots from source evidence to product records, then calculates affected material paths from recorded movements. This simulation uses seeded genealogy; customer blending and repacking entry is not available.</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-emerald-400 px-5 text-sm font-bold text-emerald-950 transition hover:bg-emerald-300" href={CLEAR_PROFILE} target="_blank" rel="noreferrer"><QrCode size={17} /> Open a product profile <ExternalLink size={14} /></a>
             <button className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/[.06] px-5 text-sm font-semibold text-white transition hover:bg-white/10" onClick={() => document.getElementById('recall-demo')?.scrollIntoView({ behavior: 'smooth' })}><Play size={16} /> Run recall simulation</button>
@@ -75,7 +76,7 @@ export default function InvestorDemoPage() {
           <div className="flex items-center justify-between gap-3"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">Product identities</div><h3 className="mt-1 text-lg font-bold">See the QR experience</h3></div><QrCode className="text-brand-400" /></div>
           <p className="mt-2 text-xs leading-5 text-text-secondary">The same product page can move from clear to warning as the underlying safety record changes.</p>
           <div className="mt-5 space-y-3">
-            <ProfileLink href={CLEAR_PROFILE} status="Clear" title="Akwaaba Cocoa · Export Lot 042" lot="GH-2026-0042" tone="green" />
+            <ProfileLink href={CLEAR_PROFILE} status="Recorded demo profile" title="Akwaaba Cocoa · Export Lot 042" lot="GH-2026-0042" tone="green" />
             <ProfileLink href={WARNING_PROFILE} status="Demo warning" title="Demonstration Incident · Lot 0917" lot="GH-2026-0917" tone="amber" />
           </div>
           <div className="mt-5 rounded-2xl bg-surface-darker p-4 text-xs leading-5 text-text-secondary"><strong className="text-text-primary">What this proves:</strong> the QR is a durable pointer, not a static label. Provenance and safety can update without reprinting packaging.</div>
@@ -110,8 +111,9 @@ export default function InvestorDemoPage() {
       </section>
 
       <section className="mt-7 rounded-3xl border border-border bg-surface p-5 sm:p-7">
-        <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">The commercial wedge</div><h3 className="mt-1 text-xl font-bold">A buyer-ready traceability file, not another supply-chain database.</h3><p className="mt-2 max-w-3xl text-sm leading-6 text-text-secondary">Start with one exporter, one EU buyer and one certifier. Digitize one shipment, publish its product identity, and prove recall readiness before expanding the workflow.</p></div><div className="flex flex-wrap gap-2 lg:justify-end"><Pill icon={MapPin} text="Verified origin" /><Pill icon={PackageCheck} text="Chain of custody" /><Pill icon={CheckCircle2} text="Recall ready" /></div></div>
+        <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center"><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">The commercial wedge</div><h3 className="mt-1 text-xl font-bold">A buyer-ready traceability file, not another supply-chain database.</h3><p className="mt-2 max-w-3xl text-sm leading-6 text-text-secondary">Start with one exporter, one EU buyer and one certifier. Digitize one shipment, publish its product identity, and exercise a recorded recall investigation before expanding the workflow.</p></div><div className="flex flex-wrap gap-2 lg:justify-end"><Pill icon={MapPin} text="Recorded origin" /><Pill icon={PackageCheck} text="Chain of custody" /><Pill icon={CheckCircle2} text="Recall investigation" /></div></div>
       </section>
+      <PlatformRoleNotice />
     </Layout>
   );
 }

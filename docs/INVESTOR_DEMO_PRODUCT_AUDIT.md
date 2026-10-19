@@ -4,7 +4,7 @@
 
 The investor demo must communicate one promise in under three minutes:
 
-> Scan a product to verify its farm-to-fork history; trace a suspect lot to identify the exact finished lots and recipients that must be recalled.
+> Scan a product to inspect its recorded history; trace a suspect lot to calculate affected recorded lots and recipients. Results depend on entered records and do not establish complete physical coverage.
 
 The platform may continue to support the wider trade workflow, but those records are supporting infrastructure rather than the demo narrative.
 
@@ -26,16 +26,16 @@ The platform may continue to support the wider trade workflow, but those records
 
 1. Open `http://localhost:3000`.
 2. Select **Launch investor demo**. The seeded admin demo account opens automatically.
-3. State the promise shown in the hero: “One scan tells the product story. One trace contains the risk.”
+3. State the promise shown in the hero: “One scan opens recorded product context. One trace maps recorded risk.”
 4. Open **Asante Cocoa** to show a clear, public farm-to-fork profile.
 5. Return to the demo and open **Mensah Cocoa** to show the same QR experience with an active, explicitly labelled demonstration warning.
-6. Select **Run live calculation**. The API traces 500 kg from the isolated source lot `GH-2026-0917` through transformations recorded before the incident.
+6. Select **Run live calculation**. The API traces 500 kg from the isolated source lot `GH-2026-0917` through seeded genealogy recorded before the simulated incident. This does not expose a customer transformation-entry workflow.
 7. Explain the result using four numbers: suspect input, impacted lots, finished recall quantity, and recipients.
 8. If technical diligence is requested, open **Trace & recall** for the full lot-level calculation and assumptions.
 
 ## What to say
 
-“CocoaTrace gives a physical product a live profile. The buyer or consumer scans once to see its origin, certification, journey, evidence, and current safety status. If a source lot becomes suspect, the same data graph traces forward through blending and packaging. We preserve the precise suspect-equivalent mass, while conservatively recalling the full commingled finished lots. The result is faster containment with an explainable calculation.”
+“BetterTrade opens recorded product context from a QR: origin, certification records, journey, evidence and current safety status. This demonstration calculates affected material from seeded genealogy. Customer blending and repacking entry is not available. Results depend on recorded data and do not establish complete physical coverage.”
 
 ## What not to demo first
 
@@ -68,3 +68,10 @@ The prototype is suitable for an investor demo, but a real pilot still requires:
 - The result distinguishes suspect-equivalent quantity from full commingled recall quantity.
 - The full operational platform remains accessible without dominating primary navigation.
 - Web build, API build/typecheck and API tests pass.
+
+
+## Platform role clarification · 19 October 2026
+
+The current interface links to the publicly accessible `/platform-role` statement. BetterTrade is not a certifier, bank, escrow provider, carrier, customs broker or legal compliance authority. Investor profile shortcuts identify records; their hardcoded labels do not assert current safety. Open each profile to inspect its current recorded notices. Seeded records and simulations do not demonstrate real-world completeness or production readiness.
+
+This targeted review does not close the global unsupported-claim, dead-control and coherent-demo inventory (PRD-001). The broader audit above is historical implementation context, not a current acceptance certificate.
