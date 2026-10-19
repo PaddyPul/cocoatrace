@@ -1,3 +1,4 @@
+import { ApiError } from '../api/errors';
 import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import BatchEvidence from '../components/catalog/BatchEvidence';
 import ConfirmDialog from '../components/shared/ConfirmDialog';
@@ -22,6 +23,10 @@ export default function BatchDetailPage() {
   const [batch, setBatch] = useState<Batch | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [readVersion, setReadVersion] = useState(0);
+  const [profileVersion, setProfileVersion] = useState(0);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState('');
   const [productProfile, setProductProfile] = useState<ProductProfile | null>(null);
   const [profileBusy, setProfileBusy] = useState(false);
   const [publicationReview, setPublicationReview] = useState<ProductProfile | null>(null);
@@ -85,10 +90,16 @@ export default function BatchDetailPage() {
 
   useEffect(() => {
     if (!id) return;
+    let active = true;
     setLoading(true);
+    setError('');
+    setBatch(null);
+    setProductProfile(null);
     batchesApi
       .get(id)
       .then((d) => {
+        if (!active) return;
+        if (!d?.batch || d.batch.id !== id) throw new Error('Invalid batch response.');
         setBatch(d.batch);
         setPushBaseline({
           quantity: d.batch.quantity_kg || 0,
@@ -98,20 +109,56 @@ export default function BatchDetailPage() {
         setPqty(d.batch.quantity_kg || 0);
         setPorigin(d.batch.region ? `${d.batch.region}, Ghana` : 'Tema, Ghana');
         setPdest('Rotterdam, Netherlands');
-        productProfilesApi
-          .getForBatch(d.batch.id)
-          .then(setProductProfile)
-          .catch(() => undefined);
       })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [id]);
+      .catch((e) => {
+        if (active) setError(e instanceof Error ? e.message : 'Batch could not be loaded.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id, readVersion]);
 
   useEffect(() => {
     setAttCertId('');
     setShowAttest(false);
   }, [id]);
 
+  const profileBatchId = batch?.id;
+  useEffect(() => {
+    if (!profileBatchId) return;
+    let active = true;
+    setProfileLoading(true);
+    setProfileError('');
+    setProductProfile(null);
+    productProfilesApi
+      .getForBatch(profileBatchId)
+      .then((profile) => {
+        if (!active) return;
+        if (
+          !profile ||
+          profile.batch_id !== profileBatchId ||
+          typeof profile.id !== 'string' ||
+          !['draft', 'published', 'archived'].includes(profile.visibility)
+        )
+          throw new Error('Invalid product profile response.');
+        setProductProfile(profile);
+      })
+      .catch((error) => {
+        if (active && !(error instanceof ApiError && error.status === 404))
+          setProfileError(
+            error instanceof Error ? error.message : 'Product profile could not be loaded.',
+          );
+      })
+      .finally(() => {
+        if (active) setProfileLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [profileBatchId, profileVersion]);
   const handleAttest = async () => {
     if (!batch || !attCertId) {
       setAttErr('Select a certificate');
@@ -141,6 +188,7 @@ export default function BatchDetailPage() {
   const handleCreateProfile = async () => {
     if (!batch) return;
     setProfileBusy(true);
+    setProfileError('');
     try {
       const farmPart = (batch.farm_name || 'origin')
         .toLowerCase()
@@ -157,6 +205,7 @@ export default function BatchDetailPage() {
       setProductProfile(profile);
       toast('success', 'Draft product page created');
     } catch (e: any) {
+      setProfileError(e.message);
       toast('error', e.message);
     } finally {
       setProfileBusy(false);
@@ -170,9 +219,8 @@ export default function BatchDetailPage() {
     try {
       await productProfilesApi.publish(publicationReview.id);
       setPublicationReview(null);
-      const refreshed = await productProfilesApi.getForBatch(publicationReview.batch_id);
-      setProductProfile(refreshed);
-      toast('success', 'Product page published — QR is live');
+      setProfileVersion((value) => value + 1);
+      toast('success', 'Product page published — refreshing its current public identity.');
     } catch (e: any) {
       setPublicationError(e.message);
       toast('error', e.message);
@@ -217,9 +265,18 @@ export default function BatchDetailPage() {
   if (error || !batch)
     return (
       <Layout currentPage="batch">
-        <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">
+        <div
+          role="alert"
+          className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400"
+        >
           {error || 'Batch not found'}
         </div>
+        <button className="btn mt-3" onClick={() => setReadVersion((value) => value + 1)}>
+          Retry batch
+        </button>
+        <button className="btn mt-3 ml-2" onClick={() => navigate('/batches')}>
+          Back to batches
+        </button>
       </Layout>
     );
 
@@ -337,7 +394,21 @@ export default function BatchDetailPage() {
             <div className="flex items-center gap-2 text-sm font-semibold">
               <QrCode size={16} className="text-brand-400" /> Public product page
             </div>
-            {productProfile ? (
+            {profileLoading ? (
+              <p role="status" className="mt-3 text-xs">
+                Loading public product identity…
+              </p>
+            ) : profileError ? (
+              <div className="mt-3 text-xs">
+                <p role="alert">Product identity unavailable. {profileError}</p>
+                <button
+                  className="btn mt-2"
+                  onClick={() => setProfileVersion((value) => value + 1)}
+                >
+                  Retry product identity
+                </button>
+              </div>
+            ) : productProfile ? (
               <div className="mt-4">
                 {productProfile.visibility === 'published' ? (
                   <>

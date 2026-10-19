@@ -22,6 +22,7 @@ export default function FarmDetailPage() {
   const [plotVersion, setPlotVersion] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [readVersion, setReadVersion] = useState(0);
 
   // Plot creation
   const [showPlot, setShowPlot] = useState(false);
@@ -50,15 +51,27 @@ export default function FarmDetailPage() {
 
   useEffect(() => {
     if (!id) return;
+    let active = true;
     setLoading(true);
+    setError('');
+    setFarm(null);
     farmsApi
       .get(id)
       .then((farmData) => {
+        if (!active) return;
+        if (!farmData?.farm || farmData.farm.id !== id) throw new Error('Invalid farm response.');
         setFarm(farmData.farm);
       })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [id]);
+      .catch((e) => {
+        if (active) setError(e instanceof Error ? e.message : 'Farm could not be loaded.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id, readVersion]);
 
   const handleCreatePlot = async () => {
     if (!id || !plotCode || !plotArea) {
@@ -100,9 +113,18 @@ export default function FarmDetailPage() {
   if (error || !farm)
     return (
       <Layout currentPage="farm">
-        <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">
+        <div
+          role="alert"
+          className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400"
+        >
           {error || 'Farm not found'}
         </div>
+        <button className="btn mt-3" onClick={() => setReadVersion((value) => value + 1)}>
+          Retry farm
+        </button>
+        <button className="btn mt-3 ml-2" onClick={() => navigate('/farms')}>
+          Back to farms
+        </button>
       </Layout>
     );
 

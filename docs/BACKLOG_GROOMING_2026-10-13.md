@@ -245,3 +245,7 @@ Founder reports the custody/certificate/invitation review and scoped status rele
 ## 2026-10-19 two-percentage-point sprint
 
 Founder accepts corrected workspace review closure: UX-007 complete,157/343 (45.8%). Target UX-006, RCL-011, LEG-007, QLT-008, QLT-015, INV-012 and INV-014 as one sprint, pending full release and merge. Seven items mean2.04 percentage points,164/343 (47.8%). Do not close hosted, legal approval or traction work based on documentation. P0 policy is prospective; no exhaustive historical severity classification is claimed.
+
+## 2026-10-19 ten-point sprint target
+
+Founder accepts corrected seven-item sprint. Close UX-006/RCL-011/LEG-007/QLT-008/QLT-015/INV-012/INV-014:164/343 (47.8%). Next35-target sprint aims199/343 (58.0%), +10.20 percentage points, across verified batches. See SPRINT_35_CLOSURE_TARGETS_2026-10-19.md. Targets and partial work receive no completion credit.

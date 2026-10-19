@@ -17,12 +17,36 @@ import { productProfiles } from '../api';
 import type { ProductProfileSummary } from '../domains/product/types';
 import { SkeletonTable } from '../components/shared/Skeleton';
 
+async function readProductPage(parameters: Record<string, string>) {
+  const page = await productProfiles.page(parameters);
+  if (
+    !page ||
+    !Array.isArray(page.items) ||
+    page.items.some(
+      (item) =>
+        !item ||
+        typeof item.id !== 'string' ||
+        !item.id ||
+        typeof item.display_name !== 'string' ||
+        typeof item.slug !== 'string' ||
+        !item.slug ||
+        !['clear', 'advisory', 'warning', 'critical'].includes(item.safety_status) ||
+        (item.inventory_held !== undefined && typeof item.inventory_held !== 'boolean') ||
+        !Number.isFinite(Number(item.quantity_kg)) ||
+        Number(item.quantity_kg) < 0,
+    )
+  ) {
+    throw new Error('Invalid product records. Retry or contact the platform operator.');
+  }
+  return page;
+}
+
 export default function ProductsPage() {
   const { user } = useAuthCtx();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'published' | 'attention'>('all');
   const [version, setVersion] = useState(0);
-  const page = useCatalogPage(productProfiles.page, { search, visibility: filter, limit: '50' });
+  const page = useCatalogPage(readProductPage, { search, visibility: filter, limit: '50' });
   const key = JSON.stringify([user?.id, version]);
   const [totals, setTotals] = useState<{
     key: string;
@@ -178,7 +202,7 @@ export default function ProductsPage() {
 }
 
 function ProductCard({ item }: { item: ProductProfileSummary }) {
-  const unsafe = item.safety_status !== 'clear';
+  const unsafe = item.safety_status !== 'clear' || item.inventory_held === true;
   return (
     <article
       className={`group overflow-hidden rounded-3xl border bg-surface transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/15 ${unsafe ? 'border-amber-300/25' : 'border-border hover:border-brand-400/30'}`}
