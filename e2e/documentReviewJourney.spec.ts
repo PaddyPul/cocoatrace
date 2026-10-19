@@ -72,7 +72,13 @@ test('retained supplier document receives a real rejected review with a visible 
       .getByLabel('Document review reason', { exact: true })
       .fill('Please provide the signed weighing record.');
     await panel.getByLabel('I reviewed this exact file and hash.', { exact: true }).check();
+    const savedDecision = reviewer.waitForResponse((response) =>
+      new URL(response.url()).pathname === `/api/evidence/${proof.id}/review` &&
+      response.request().method() === 'POST',
+    );
     await panel.getByRole('button', { name: 'Record document decision', exact: true }).click();
+    const decisionResponse = await savedDecision;
+    expect(decisionResponse.status(), await decisionResponse.text()).toBe(200);
     await expect(
       panel.getByText('Please provide the signed weighing record.', { exact: true }),
     ).toBeVisible();

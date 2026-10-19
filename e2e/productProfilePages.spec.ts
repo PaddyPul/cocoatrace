@@ -153,7 +153,7 @@ test('public QR publication reviews exact destination, cancels without writing a
   page,
 }) => {
   await mock(page);
-  await page.route('**/api/batches/batch-review', (route) =>
+  await page.route(/\/api\/batches\/batch-review(?:\?.*)?$/, (route) =>
     route.fulfill({
       json: {
         batch: {
