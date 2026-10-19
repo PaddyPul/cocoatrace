@@ -1,3 +1,4 @@
+import ConfirmDialog from '../components/shared/ConfirmDialog';
 import { useUnsavedChanges } from '../components/shared/UnsavedChanges';
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Clock3, Copy, MailPlus, Users } from 'lucide-react';
@@ -99,6 +100,11 @@ export default function PilotTeamPage() {
   const [email, setEmail] = useState('');
   const clearInvitationDraft = useUnsavedChanges(Boolean(email), 'Team invitation');
   const [busy, setBusy] = useState(false);
+  const [review, setReview] = useState<{
+    id: string;
+    email: string;
+    action: 'resend' | 'revoke';
+  } | null>(null);
   const [error, setError] = useState('');
   const [created, setCreated] = useState<InvitationResult | null>(null);
   const [copied, setCopied] = useState(false);
@@ -137,6 +143,7 @@ export default function PilotTeamPage() {
     try {
       const result = await invitations.resend(id);
       setCreated(result);
+      setReview(null);
       await load();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Invitation action failed.');
@@ -146,11 +153,15 @@ export default function PilotTeamPage() {
   };
   const revoke = async (id: string) => {
     setError('');
+    setBusy(true);
     try {
       await invitations.revoke(id);
+      setReview(null);
       await load();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Invitation action failed.');
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -325,13 +336,17 @@ export default function PilotTeamPage() {
                         <button
                           disabled={busy}
                           className="btn btn-sm"
-                          onClick={() => void resend(row.id)}
+                          onClick={() =>
+                            setReview({ id: row.id, email: row.email, action: 'resend' })
+                          }
                         >
                           Resend
                         </button>
                         <button
                           className="btn btn-sm border-red-400/30 text-red-300"
-                          onClick={() => void revoke(row.id)}
+                          onClick={() =>
+                            setReview({ id: row.id, email: row.email, action: 'revoke' })
+                          }
                         >
                           Revoke
                         </button>
@@ -355,6 +370,25 @@ export default function PilotTeamPage() {
         Invitation emails use the configured identity-email provider. In development/demo mode the
         link remains available for controlled testing; never post it in a public channel.
       </div>
+      <ConfirmDialog
+        open={review !== null}
+        title={review?.action === 'resend' ? 'Replace invitation link' : 'Revoke invitation'}
+        message={
+          review?.action === 'resend'
+            ? `Send a replacement invitation to ${review.email}? The previous invitation link will stop working.`
+            : `Revoke the invitation for ${review?.email || ''}? Its link will stop working. Existing member access is managed separately.`
+        }
+        confirmLabel={review?.action === 'resend' ? 'Send replacement' : 'Revoke invitation'}
+        danger
+        loading={busy}
+        onCancel={() => {
+          if (!busy) setReview(null);
+        }}
+        onConfirm={() => {
+          if (review && !busy)
+            void (review.action === 'resend' ? resend(review.id) : revoke(review.id));
+        }}
+      />
     </Layout>
   );
 }

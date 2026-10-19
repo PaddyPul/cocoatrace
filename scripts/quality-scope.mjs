@@ -1,5 +1,10 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'web/src/pages/DealRoomPage.tsx',
+  'scripts/status-presentation.test.mjs',
+  'web/src/components/shared/helpers.tsx',
+  'web/src/components/shared/statusPresentation.ts',
+  'web/src/components/shared/ConfirmDialog.tsx',
   'web/src/components/catalog/useCatalogPage.ts',
   'web/src/pages/ShipmentDetailPage.tsx',
   'web/src/pages/RequestAccessPage.tsx',

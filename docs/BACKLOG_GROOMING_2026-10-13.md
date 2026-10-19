@@ -233,3 +233,7 @@ Fee collection enforcement is next after acceptance of the current delivery/fee 
 ## 2026-10-17 shared register and dashboard correction
 
 Correct shared padding across all 12 table-container usages and show Completed/Cancelled for terminal dashboard actions. Fee collection remains independent of goods completion. Runtime acceptance of this correction remains pending. Completion remains 153/343 (44.6%).
+
+## 2026-10-19 draft coverage acceptance
+
+Founder reports full workspace draft coverage release passed and merged. UX-011 closes:156/343 (45.5%). No founder commit or external CI URL was supplied; hosted readiness and accessibility gates remain unchanged.

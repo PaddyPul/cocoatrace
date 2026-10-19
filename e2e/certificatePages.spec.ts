@@ -1,18 +1,20 @@
 import { test, expect, type Page } from '@playwright/test';
-async function mock(page: Page, failure = false, malformed = false) {
+async function mock(page: Page, failure = false, malformed = false, issuer = false) {
   const seen: string[] = [];
-  await page.addInitScript(() =>
-    localStorage.setItem(
-      'ct_user',
-      JSON.stringify({
-        id: 'certificate-user',
-        organizationId: 'certificate-org',
-        orgType: 'exporter',
-        roles: [],
-        permissions: ['certificate.read'],
-        name: 'Certificate reader',
-      }),
-    ),
+  await page.addInitScript(
+    (issuer) =>
+      localStorage.setItem(
+        'ct_user',
+        JSON.stringify({
+          id: 'certificate-user',
+          organizationId: 'certificate-org',
+          orgType: 'exporter',
+          roles: [],
+          permissions: issuer ? ['certificate.read', 'certificate.issue'] : ['certificate.read'],
+          name: 'Certificate reader',
+        }),
+      ),
+    issuer,
   );
   await page.route('**/api/**', async (route) => {
     const url = new URL(route.request().url());
@@ -24,7 +26,7 @@ async function mock(page: Page, failure = false, malformed = false) {
           organization_id: 'certificate-org',
           org_type: 'exporter',
           roles: [],
-          permissions: ['certificate.read'],
+          permissions: issuer ? ['certificate.read', 'certificate.issue'] : ['certificate.read'],
           name: 'Certificate reader',
         },
       });
@@ -121,4 +123,37 @@ test('malformed certificate page cannot present an empty register', async ({ pag
   await page.goto('/certs');
   await expect(page.getByRole('alert').filter({ hasText: 'Invalid page response.' })).toBeVisible();
   await expect(page.getByText('No certificates', { exact: true })).toHaveCount(0);
+});
+
+test('certificate revocation requires contextual review and keeps review open after failure', async ({
+  page,
+}) => {
+  await mock(page, false, false, true);
+  let writes = 0;
+  await page.route('**/api/certificates/first-certificate/revoke', async (route) => {
+    writes += 1;
+    await route.fulfill({
+      status: 409,
+      json: { error: 'Certificate changed. Refresh and review.' },
+    });
+  });
+  await page.goto('/certs');
+  await page.getByRole('button', { name: 'Revoke', exact: true }).click();
+  const dialog = page.getByRole('dialog', {
+    name: 'Review certificate status change',
+    exact: true,
+  });
+  await expect(dialog).toContainText('first-certificate');
+  await expect(dialog).toContainText('cannot be reinstated');
+  expect(writes).toBe(0);
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(writes).toBe(0);
+  await page.getByRole('button', { name: 'Revoke', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Confirm revoke', exact: true }).click();
+  await expect(
+    page.getByText('Certificate changed. Refresh and review.', { exact: true }),
+  ).toBeVisible();
+  await expect(dialog).toBeVisible();
+  expect(writes).toBe(1);
 });

@@ -174,8 +174,16 @@ test('invitations page and search server-side and resend or revoke refresh curre
   await register.getByRole('button', { name: 'Next invitations', exact: true }).click();
   await expect(register.getByText('late@example.test', { exact: true })).toBeVisible();
   await register.getByRole('button', { name: 'Resend', exact: true }).click();
+  await page
+    .getByRole('dialog', { name: 'Replace invitation link', exact: true })
+    .getByRole('button', { name: 'Send replacement', exact: true })
+    .click();
   await expect(register.getByText('late@example.test', { exact: true })).toBeVisible();
   await register.getByRole('button', { name: 'Revoke', exact: true }).click();
+  await page
+    .getByRole('dialog', { name: 'Revoke invitation', exact: true })
+    .getByRole('button', { name: 'Revoke invitation', exact: true })
+    .click();
   await expect(register).toContainText('1 revoked');
   await expect(register.getByRole('button', { name: 'Resend', exact: true })).toHaveCount(0);
   expect(

@@ -174,7 +174,7 @@ export default function PaymentRecordsPage() {
                     <td>{fmtMoney(p.amount_total, p.currency, p.currency_minor_units)}</td>
                     <td>{p.currency}</td>
                     <td>
-                      <StatusBadge status={p.status} />
+                      <StatusBadge domain="payment" status={p.status} />
                     </td>
                     <td>{p.payment_reference_external || 'Not recorded'}</td>
                   </tr>

@@ -26,6 +26,7 @@ test('team invitations: create, resend, reject old link, revoke, reject revoked 
   const first = await emailLink(email, 'invitation');
   const row = page.locator('div.rounded-2xl').filter({ has: page.getByText(email, { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Resend', exact: true }) });
   await row.getByRole('button', { name: 'Resend', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Replace invitation link', exact: true }).getByRole('button', { name: 'Send replacement', exact: true }).click();
   const resent = await emailLink(email, 'invitation', first.id);
   const guest = await browser.newContext({ extraHTTPHeaders: { Origin: baseURL }, baseURL });
   try {
@@ -35,6 +36,7 @@ test('team invitations: create, resend, reject old link, revoke, reject revoked 
     await invited.goto(resent.link);
     await expect(invited.getByRole('heading', { name: 'Create your workspace' })).toBeVisible();
     await row.getByRole('button', { name: 'Revoke', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Revoke invitation', exact: true }).getByRole('button', { name: 'Revoke invitation', exact: true }).click();
     await expect(row.getByRole('button', { name: 'Resend', exact: true })).toHaveCount(0);
     await invited.reload();
     await expect(invited.getByRole('heading', { name: 'Invitation unavailable' })).toBeVisible();

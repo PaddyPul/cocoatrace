@@ -160,7 +160,7 @@ export default function ContractRecordsPage() {
                     </td>
                     <td>{c.incoterm}</td>
                     <td>
-                      <StatusBadge status={c.status} />
+                      <StatusBadge domain="trade" status={c.status} />
                     </td>
                   </tr>
                 ))}

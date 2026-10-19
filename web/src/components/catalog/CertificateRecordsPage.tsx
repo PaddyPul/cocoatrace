@@ -10,6 +10,8 @@ import Layout from '../layout/Layout';
 import { SkeletonTable } from '../shared/Skeleton';
 import EmptyState from '../shared/EmptyState';
 import FarmPicker from './FarmPicker';
+import ConfirmDialog from '../shared/ConfirmDialog';
+import type { Certificate } from '../../domains/certification/types';
 import PageNavigation from './PageNavigation';
 import { useCatalogPage } from './useCatalogPage';
 import { Search, X } from 'lucide-react';
@@ -18,6 +20,11 @@ export default function CertificateRecordsPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [selectedIssueFarm, setSelectedIssueFarm] = useState<Farm | null>(null);
+  const [statusReview, setStatusReview] = useState<{
+    certificate: Certificate;
+    action: 'suspend' | 'revoke' | 'reinstate';
+  } | null>(null);
+  const [statusBusy, setStatusBusy] = useState(false);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const page = useCatalogPage(certApi.page, { search, status, limit: '50' });
@@ -140,13 +147,19 @@ export default function CertificateRecordsPage() {
     }
   };
 
-  const handleAction = async (id: string, action: string) => {
+  const handleAction = async () => {
+    if (!statusReview || statusBusy) return;
+    const { certificate, action } = statusReview;
+    setStatusBusy(true);
     try {
-      await certApi.updateStatus(id, action);
+      await certApi.updateStatus(certificate.id, action);
+      setStatusReview(null);
       refetch();
       toast('success', `Certificate ${action}ed`);
     } catch (e: unknown) {
       toast('error', e instanceof Error ? e.message : 'Certificate status could not be changed');
+    } finally {
+      setStatusBusy(false);
     }
   };
 
@@ -242,13 +255,13 @@ export default function CertificateRecordsPage() {
                         <div className="flex gap-1">
                           <button
                             className="btn btn-sm text-[10px] text-yellow-400 border-yellow-500/30"
-                            onClick={() => handleAction(c.id, 'suspend')}
+                            onClick={() => setStatusReview({ certificate: c, action: 'suspend' })}
                           >
                             Suspend
                           </button>
                           <button
                             className="btn btn-sm text-[10px] text-red-400 border-red-500/30"
-                            onClick={() => handleAction(c.id, 'revoke')}
+                            onClick={() => setStatusReview({ certificate: c, action: 'revoke' })}
                           >
                             Revoke
                           </button>
@@ -256,7 +269,7 @@ export default function CertificateRecordsPage() {
                       ) : canDo('certificate.issue') && c.status === 'suspended' ? (
                         <button
                           className="btn btn-sm text-[10px] text-green-400 border-green-500/30"
-                          onClick={() => handleAction(c.id, 'reinstate')}
+                          onClick={() => setStatusReview({ certificate: c, action: 'reinstate' })}
                         >
                           Reinstate
                         </button>
@@ -418,6 +431,22 @@ export default function CertificateRecordsPage() {
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={statusReview !== null}
+        title="Review certificate status change"
+        message={
+          statusReview
+            ? `${statusReview.certificate.standard} certificate ${statusReview.certificate.id} for farm ${statusReview.certificate.farm_id}. Current status: ${statusReview.certificate.status}. ${statusReview.action === 'revoke' ? 'Revocation removes this certificate from active certification checks and cannot be reinstated from this register.' : statusReview.action === 'suspend' ? 'Suspension removes this certificate from active certification checks until it is reinstated.' : 'Reinstatement restores active status; validity, scope and independent evidence checks still apply.'}`
+            : ''
+        }
+        confirmLabel={statusReview ? `Confirm ${statusReview.action}` : 'Confirm'}
+        danger={statusReview?.action !== 'reinstate'}
+        loading={statusBusy}
+        onConfirm={() => void handleAction()}
+        onCancel={() => {
+          if (!statusBusy) setStatusReview(null);
+        }}
+      />
     </Layout>
   );
 }

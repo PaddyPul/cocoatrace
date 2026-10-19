@@ -274,7 +274,7 @@ export default function ShipmentDetailPage() {
                 <h1 className="text-lg font-bold">Transport Arrangement</h1>
                 <p className="font-mono text-xs text-text-muted mt-0.5">{s.id}</p>
               </div>
-              <StatusBadge status={s.current_milestone} />
+              <StatusBadge domain="transport" status={s.current_milestone} />
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <Field label="Coordinator" value={s.transport_coordinator_name} />

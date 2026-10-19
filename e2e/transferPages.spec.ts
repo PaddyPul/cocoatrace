@@ -98,6 +98,15 @@ test('receiving supplier pages and searches transfer requests, accepts and refre
     true,
   );
   await records.getByRole('button', { name: 'Accept transfer two', exact: true }).click();
+  const review = page.getByRole('dialog', { name: 'Review custody acceptance', exact: true });
+  await expect(review).toContainText('1.000 kg of peanut');
+  await expect(review).toContainText('Other to Supplier');
+  await review.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(
+    records.getByRole('button', { name: 'Accept transfer two', exact: true }),
+  ).toBeVisible();
+  await records.getByRole('button', { name: 'Accept transfer two', exact: true }).click();
+  await review.getByRole('button', { name: 'Confirm custody acceptance', exact: true }).click();
   await expect(
     records.getByText('No transfers match this view. Adjust direction, status or search.', {
       exact: true,
