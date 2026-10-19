@@ -42,16 +42,30 @@ export default function Layout({
   const [commandOpen, setCommandOpen] = useState(false);
   const [commandSearch, setCommandSearch] = useState('');
   const commandDialog = useRef<HTMLDialogElement>(null);
+  const commandReturnFocus = useRef<HTMLElement | null>(null);
+  const navigationReturnFocus = useRef<HTMLElement | null>(null);
   const navigationDialog = useRef<HTMLDialogElement>(null);
   useLayoutEffect(() => {
     if (!commandOpen) return;
     const element = commandDialog.current;
+    const trigger = commandReturnFocus.current;
     element?.showModal();
-    return () => element?.close();
+    return () => {
+      element?.close();
+      queueMicrotask(() => {
+        if (
+          trigger?.isConnected &&
+          trigger.getClientRects().length &&
+          !document.querySelector('dialog[open]')
+        )
+          trigger.focus();
+      });
+    };
   }, [commandOpen]);
   useLayoutEffect(() => {
     if (!sidebarOpen) return;
     const element = navigationDialog.current;
+    const trigger = navigationReturnFocus.current;
     const desktop = window.matchMedia('(min-width: 1024px)');
     const resize = () => {
       if (desktop.matches) setSidebarOpen(false);
@@ -62,6 +76,14 @@ export default function Layout({
     return () => {
       desktop.removeEventListener('change', resize);
       element?.close();
+      queueMicrotask(() => {
+        if (
+          trigger?.isConnected &&
+          trigger.getClientRects().length &&
+          !document.querySelector('dialog[open]')
+        )
+          trigger.focus();
+      });
     };
   }, [sidebarOpen]);
 
@@ -69,7 +91,11 @@ export default function Layout({
     const listener = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
-        setCommandOpen((open) => !open);
+        setCommandOpen((open) => {
+          if (!open && document.activeElement instanceof HTMLElement)
+            commandReturnFocus.current = document.activeElement;
+          return !open;
+        });
       }
     };
     window.addEventListener('keydown', listener);
@@ -221,7 +247,10 @@ export default function Layout({
         <header className="min-h-20 bg-surface-dark/95 backdrop-blur border-b border-border flex items-center px-4 sm:px-7 gap-4 shrink-0">
           <button
             className="lg:hidden grid h-10 w-10 place-items-center rounded-xl border border-border text-text-secondary hover:bg-surface-light hover:text-text-primary"
-            onClick={() => setSidebarOpen(true)}
+            onClick={(event) => {
+              navigationReturnFocus.current = event.currentTarget;
+              setSidebarOpen(true);
+            }}
             aria-label={t('shell.openNav')}
           >
             <Menu size={20} />
@@ -253,7 +282,10 @@ export default function Layout({
           <div className="flex items-center gap-2">{actions}</div>
           <button
             className="hidden min-h-10 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-[11px] text-text-muted transition hover:border-brand-400/30 hover:text-text-primary md:flex"
-            onClick={() => setCommandOpen(true)}
+            onClick={(event) => {
+              commandReturnFocus.current = event.currentTarget;
+              setCommandOpen(true);
+            }}
           >
             <Search size={14} /> {t('shell.find')}{' '}
             <kbd className="ml-3 rounded border border-border bg-surface-darker px-1.5 py-0.5 font-mono text-[9px]">
