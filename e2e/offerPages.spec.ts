@@ -188,3 +188,29 @@ test('supplier home reads aggregate offer counts instead of an array', async ({ 
   await expect(page).toHaveURL(/\/offers(?:\?|$)/);
   await expect(page.getByRole('button', { name: 'Received (1005)', exact: true })).toBeVisible();
 });
+
+test('accepting an offer reviews its inventory commitment and retains review after rejection', async ({ page }) => {
+  await mock(page);
+  let writes = 0;
+  await page.route('**/api/offers/first-offer/accept', async (route) => {
+    writes++;
+    return route.fulfill({ status: 409, json: { error: 'Offer changed. Review current terms.', code: 'OFFER_CHANGED' } });
+  });
+  await page.goto('/offers');
+  await page.getByRole('button', { name: 'Accept', exact: true }).click();
+  const review = page.getByRole('dialog', { name: 'Accept commercial offer', exact: true });
+  await expect(review).toContainText('First Buyer');
+  await expect(review).toContainText('commits inventory');
+  await expect(review.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
+  expect(writes).toBe(0);
+  await page.keyboard.press('Escape');
+  await expect(review).toHaveCount(0);
+  expect(writes).toBe(0);
+  await page.getByRole('button', { name: 'Accept', exact: true }).click();
+  await review.getByRole('button', { name: 'Accept and create contract', exact: true }).click();
+  await expect(page.getByText('Offer changed. Review current terms.', { exact: true })).toBeVisible();
+  await expect(review).toBeVisible();
+  expect(writes).toBe(1);
+  await review.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(review).toHaveCount(0);
+});

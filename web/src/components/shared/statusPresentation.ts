@@ -91,3 +91,19 @@ export function statusPresentation(status?: string | null, domain: StatusDomain 
   const tone = (domain === 'general' ? general : domains[domain])[value] || 'gray';
   return { label: value ? value.replace(/_/g, ' ') : 'Unknown', tone };
 }
+
+// Next actions are server-owned workflow observations, not payment or transport receipts.
+export function tradeActionPresentation(action: {
+  id: string;
+  kind: string;
+  requiresAction: boolean;
+}) {
+  if (action.kind === 'complete') {
+    const cancelled = action.id.endsWith(':cancelled');
+    return {
+      label: cancelled ? 'Cancelled' : 'Completed',
+      tone: cancelled ? ('red' as const) : ('green' as const),
+    };
+  }
+  return { label: action.requiresAction ? 'Your action' : 'In progress', tone: 'amber' as const };
+}

@@ -119,6 +119,10 @@ test('buyer and supplier acknowledge, account for recalled stock, upload proof a
     expect((await unchanged.json()).recoveries).toEqual([]);
     await buyerPanel.getByLabel('Returned (kg)', { exact: true }).fill('4');
     await buyerPanel.getByRole('button', { name: 'Save recovery accounting' }).click();
+    await buyer
+      .getByRole('dialog', { name: 'Review recovery accounting', exact: true })
+      .getByRole('button', { name: 'Confirm recovery accounting', exact: true })
+      .click();
     await expect(
       buyerPanel
         .getByRole('region', { name: 'Affected inventory accounting', exact: true })
@@ -142,6 +146,10 @@ test('buyer and supplier acknowledge, account for recalled stock, upload proof a
       .getByLabel('Recovery note')
       .fill('Remaining six kilograms destroyed after investigation.');
     await supplierPanel.getByRole('button', { name: 'Save recovery accounting' }).click();
+    await supplier
+      .getByRole('dialog', { name: 'Review recovery accounting', exact: true })
+      .getByRole('button', { name: 'Confirm recovery accounting', exact: true })
+      .click();
     await expect(
       supplierPanel
         .getByRole('region', { name: 'Affected inventory accounting', exact: true })
@@ -164,6 +172,10 @@ test('buyer and supplier acknowledge, account for recalled stock, upload proof a
         'Buyer returned all affected stock and supplier destroyed all remaining stock with documented proof.',
       );
     await supplierPanel.getByRole('button', { name: 'Resolve recall with evidence' }).click();
+    await supplier
+      .getByRole('dialog', { name: 'Review recall resolution', exact: true })
+      .getByRole('button', { name: 'Confirm recall resolution', exact: true })
+      .click();
     await expect(
       supplierPanel.getByText(
         'This recall is resolved. Response records remain available for audit; returned and destroyed material stays blocked.',

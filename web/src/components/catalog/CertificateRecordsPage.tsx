@@ -25,6 +25,7 @@ export default function CertificateRecordsPage() {
     action: 'suspend' | 'revoke' | 'reinstate';
   } | null>(null);
   const [statusBusy, setStatusBusy] = useState(false);
+  const [statusError, setStatusError] = useState('');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const page = useCatalogPage(certApi.page, { search, status, limit: '50' });
@@ -151,13 +152,16 @@ export default function CertificateRecordsPage() {
     if (!statusReview || statusBusy) return;
     const { certificate, action } = statusReview;
     setStatusBusy(true);
+    setStatusError('');
     try {
       await certApi.updateStatus(certificate.id, action);
       setStatusReview(null);
       refetch();
       toast('success', `Certificate ${action}ed`);
     } catch (e: unknown) {
-      toast('error', e instanceof Error ? e.message : 'Certificate status could not be changed');
+      const message = e instanceof Error ? e.message : 'Certificate status could not be changed';
+      setStatusError(message);
+      toast('error', message);
     } finally {
       setStatusBusy(false);
     }
@@ -255,13 +259,19 @@ export default function CertificateRecordsPage() {
                         <div className="flex gap-1">
                           <button
                             className="btn btn-sm text-[10px] text-yellow-400 border-yellow-500/30"
-                            onClick={() => setStatusReview({ certificate: c, action: 'suspend' })}
+                            onClick={() => {
+                              setStatusError('');
+                              setStatusReview({ certificate: c, action: 'suspend' });
+                            }}
                           >
                             Suspend
                           </button>
                           <button
                             className="btn btn-sm text-[10px] text-red-400 border-red-500/30"
-                            onClick={() => setStatusReview({ certificate: c, action: 'revoke' })}
+                            onClick={() => {
+                              setStatusError('');
+                              setStatusReview({ certificate: c, action: 'revoke' });
+                            }}
                           >
                             Revoke
                           </button>
@@ -269,7 +279,10 @@ export default function CertificateRecordsPage() {
                       ) : canDo('certificate.issue') && c.status === 'suspended' ? (
                         <button
                           className="btn btn-sm text-[10px] text-green-400 border-green-500/30"
-                          onClick={() => setStatusReview({ certificate: c, action: 'reinstate' })}
+                          onClick={() => {
+                            setStatusError('');
+                            setStatusReview({ certificate: c, action: 'reinstate' });
+                          }}
                         >
                           Reinstate
                         </button>
@@ -441,6 +454,7 @@ export default function CertificateRecordsPage() {
         }
         confirmLabel={statusReview ? `Confirm ${statusReview.action}` : 'Confirm'}
         danger={statusReview?.action !== 'reinstate'}
+        error={statusError}
         loading={statusBusy}
         onConfirm={() => void handleAction()}
         onCancel={() => {

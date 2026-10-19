@@ -20,10 +20,12 @@ export default function TransferRecords({ onAccepted }: { onAccepted: () => void
     material: string;
     quantity: string;
   } | null>(null);
+  const [acceptError, setAcceptError] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const page = useCatalogPage(holdings.transferPage, { direction, status, search: appliedSearch });
   const accept = async (id: string) => {
     setBusy(id);
+    setAcceptError('');
     try {
       await holdings.acceptTransfer(id);
       setReview(null);
@@ -31,7 +33,9 @@ export default function TransferRecords({ onAccepted }: { onAccepted: () => void
       onAccepted();
       toast('success', 'Transfer accepted — holding added to your inventory');
     } catch (error) {
-      toast('error', error instanceof Error ? error.message : 'Transfer could not be accepted');
+      const message = error instanceof Error ? error.message : 'Transfer could not be accepted';
+      setAcceptError(message);
+      toast('error', message);
       page.refresh();
     } finally {
       setBusy(null);
@@ -164,12 +168,16 @@ export default function TransferRecords({ onAccepted }: { onAccepted: () => void
             : ''
         }
         confirmLabel="Confirm custody acceptance"
+        error={acceptError}
         loading={Boolean(busy)}
         onConfirm={() => {
           if (review && !busy) void accept(review.id);
         }}
         onCancel={() => {
-          if (!busy) setReview(null);
+          if (!busy) {
+            setReview(null);
+            setAcceptError('');
+          }
         }}
       />
     </section>

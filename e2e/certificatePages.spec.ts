@@ -151,9 +151,7 @@ test('certificate revocation requires contextual review and keeps review open af
   expect(writes).toBe(0);
   await page.getByRole('button', { name: 'Revoke', exact: true }).click();
   await dialog.getByRole('button', { name: 'Confirm revoke', exact: true }).click();
-  await expect(
-    page.getByText('Certificate changed. Refresh and review.', { exact: true }),
-  ).toBeVisible();
+  await expect(dialog.getByRole('alert')).toContainText('Certificate changed. Refresh and review.');
   await expect(dialog).toBeVisible();
   expect(writes).toBe(1);
 });

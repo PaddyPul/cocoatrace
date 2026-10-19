@@ -30,3 +30,42 @@ test('missing and unrecognized statuses stay explicit and neutral', () => {
     tone: 'gray',
   });
 });
+
+test('home and deal next-action status share terminal, waiting and required semantics', async () => {
+  const { tradeActionPresentation } = await import(
+    '../web/src/components/shared/statusPresentation.ts'
+  );
+  assert.deepEqual(
+    tradeActionPresentation({ id: 'deal:one:complete', kind: 'complete', requiresAction: false }),
+    {
+      label: 'Completed',
+      tone: 'green',
+    },
+  );
+  assert.deepEqual(
+    tradeActionPresentation({ id: 'deal:one:cancelled', kind: 'complete', requiresAction: false }),
+    {
+      label: 'Cancelled',
+      tone: 'red',
+    },
+  );
+  // A fee collection action after settlement is still outstanding; it must not say completed.
+  assert.deepEqual(
+    tradeActionPresentation({ id: 'deal:one:fee', kind: 'platform_fee', requiresAction: true }),
+    {
+      label: 'Your action',
+      tone: 'amber',
+    },
+  );
+  assert.deepEqual(
+    tradeActionPresentation({
+      id: 'deal:one:wait',
+      kind: 'payment_waiting',
+      requiresAction: false,
+    }),
+    {
+      label: 'In progress',
+      tone: 'amber',
+    },
+  );
+});

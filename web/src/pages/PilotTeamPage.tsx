@@ -380,6 +380,7 @@ export default function PilotTeamPage() {
         }
         confirmLabel={review?.action === 'resend' ? 'Send replacement' : 'Revoke invitation'}
         danger
+        error={error}
         loading={busy}
         onCancel={() => {
           if (!busy) setReview(null);

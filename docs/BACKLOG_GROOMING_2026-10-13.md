@@ -237,3 +237,7 @@ Correct shared padding across all 12 table-container usages and show Completed/C
 ## 2026-10-19 draft coverage acceptance
 
 Founder reports full workspace draft coverage release passed and merged. UX-011 closes:156/343 (45.5%). No founder commit or external CI URL was supplied; hosted readiness and accessibility gates remain unchanged.
+
+## 2026-10-19 business action review acceptance
+
+Founder reports the custody/certificate/invitation review and scoped status release passed and merged. Slice accepted; UX-006/007 remain partial pending remaining coverage. Accepted completion remains156/343 (45.5%). Subsequent PR descriptions restore Outcome, Changes, Validation and Remaining work.

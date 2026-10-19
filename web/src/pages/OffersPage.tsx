@@ -83,6 +83,9 @@ export default function OffersPage() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [confirmReject, setConfirmReject] = useState<string | null>(null);
   const [confirmWithdraw, setConfirmWithdraw] = useState<string | null>(null);
+  const [acceptReview, setAcceptReview] = useState<Offer | null>(null);
+  const [acceptError, setAcceptError] = useState('');
+  const [withdrawError, setWithdrawError] = useState('');
   const [processing, setProcessing] = useState('');
   const dirty = confirmReject !== null && rejectionReason !== '';
   const clearUnsaved = useUnsavedChanges(dirty, 'Offer rejection');
@@ -95,17 +98,18 @@ export default function OffersPage() {
       });
   };
 
-  const handleAccept = async (offerId: string) => {
+  const handleAccept = async (review: Offer) => {
+    if (processing) return;
+    setAcceptError('');
+    const offerId = review.id;
     setProcessing(offerId);
     try {
-      const result: any = await offersApi.accept(
-        offerId,
-        data.find((o) => o.id === offerId)?.platform_fee_rate_bps,
-      );
+      const result: any = await offersApi.accept(offerId, review.platform_fee_rate_bps);
+      setAcceptReview(null);
       toast('success', 'Offer accepted. Contract and fulfilment workflow created.');
       navigate(`/deal-room/${result.contract.id}`);
     } catch (e: any) {
-      toast('error', e.message);
+      setAcceptError(e instanceof Error ? e.message : 'Offer acceptance failed.');
     } finally {
       setProcessing('');
     }
@@ -129,6 +133,7 @@ export default function OffersPage() {
   };
 
   const handleWithdraw = async (offerId: string) => {
+    setWithdrawError('');
     setProcessing(offerId);
     try {
       await offersApi.withdraw(offerId);
@@ -136,7 +141,7 @@ export default function OffersPage() {
       toast('success', 'Offer withdrawn. The seller can no longer accept it.');
       refetch();
     } catch (e: any) {
-      toast('error', e.message);
+      setWithdrawError(e instanceof Error ? e.message : 'Offer withdrawal failed.');
       refetch();
     } finally {
       setProcessing('');
@@ -277,7 +282,10 @@ export default function OffersPage() {
                           <div className="flex gap-1">
                             <button
                               className="btn btn-sm text-[10px] text-green-400 border-green-500/30"
-                              onClick={() => handleAccept(o.id)}
+                              onClick={() => {
+                                setAcceptError('');
+                                setAcceptReview({ ...o });
+                              }}
                               disabled={processing === o.id}
                             >
                               <Check size={12} /> {processing === o.id ? '…' : 'Accept'}
@@ -301,7 +309,7 @@ export default function OffersPage() {
                             {canDo('offer.create') && (
                               <button
                                 className="btn btn-sm"
-                                onClick={() => setConfirmWithdraw(o.id)}
+                                onClick={() => (setWithdrawError(''), setConfirmWithdraw(o.id))}
                                 disabled={!!processing}
                               >
                                 Withdraw offer
@@ -397,7 +405,26 @@ export default function OffersPage() {
       )}
       <PageNavigation page={page} label="offers" />
       <ConfirmDialog
+        open={acceptReview !== null}
+        title="Accept commercial offer"
+        error={acceptError}
+        message={
+          acceptReview
+            ? `Accept offer ${acceptReview.id} from ${acceptReview.buyer_name || 'the buyer'} for ${Number(acceptReview.quantity_kg).toLocaleString()} kg at ${fmtMoney(Number(acceptReview.offered_price_per_kg), acceptReview.currency, 4)} per kg? This commits inventory and creates the contract and fulfilment workflow. Payment terms, fee consent and dispatch checks remain separate. Review the offer before confirming; an accepted offer requires contract cancellation rather than withdrawal.`
+            : ''
+        }
+        confirmLabel="Accept and create contract"
+        loading={!!processing}
+        onConfirm={() => {
+          if (acceptReview) void handleAccept(acceptReview);
+        }}
+        onCancel={() => {
+          if (!processing) setAcceptReview(null);
+        }}
+      />
+      <ConfirmDialog
         open={!!confirmWithdraw}
+        error={withdrawError}
         title="Withdraw offer"
         message="Withdraw this pending offer? The seller will no longer be able to accept it. An already accepted offer must use contract cancellation."
         confirmLabel="Withdraw"

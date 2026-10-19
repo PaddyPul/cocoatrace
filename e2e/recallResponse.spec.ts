@@ -1,37 +1,121 @@
 import { test, expect, Page } from '@playwright/test';
 
-const notice = { id: 'recall-response', reference_code: 'RECALL-1', title: 'Peanut recovery', reason: 'Quality issue', instructions: 'Hold stock and contact the supplier.', severity: 'warning', status: 'active', initiated_at: '2026-10-02', issued_by: 'Supplier', batch_ids: ['batch'] };
-const response = (canManage = false) => ({ notice, canManage, myOrganizationId: 'buyer-org', participants: [{ organization_id: 'buyer-org', organization_name: 'Buyer organization', acknowledged_at: null, acknowledgement_note: null, contact_status: 'pending', email_statuses: ['submitted'], eligible_contact_count: 1 }], holdings: [{ id: 'holding-one', batch_id: 'batch', holder_organization_id: 'buyer-org', quantity_kg: 10 }], recoveries: [], evidence: [{ id: 'evidence-one', file_name: 'Recovery proof.pdf' }] });
+const notice = {
+  id: 'recall-response',
+  reference_code: 'RECALL-1',
+  title: 'Peanut recovery',
+  reason: 'Quality issue',
+  instructions: 'Hold stock and contact the supplier.',
+  severity: 'warning',
+  status: 'active',
+  initiated_at: '2026-10-02',
+  issued_by: 'Supplier',
+  batch_ids: ['batch'],
+};
+const response = (canManage = false) => ({
+  notice,
+  canManage,
+  myOrganizationId: 'buyer-org',
+  participants: [
+    {
+      organization_id: 'buyer-org',
+      organization_name: 'Buyer organization',
+      acknowledged_at: null,
+      acknowledgement_note: null,
+      contact_status: 'pending',
+      email_statuses: ['submitted'],
+      eligible_contact_count: 1,
+    },
+  ],
+  holdings: [
+    { id: 'holding-one', batch_id: 'batch', holder_organization_id: 'buyer-org', quantity_kg: 10 },
+  ],
+  recoveries: [],
+  evidence: [{ id: 'evidence-one', file_name: 'Recovery proof.pdf' }],
+});
 
 async function mock(page: Page, manager = false, unavailableTrace = false) {
   const requests: Array<{ path: string; body: any }> = [];
   let acknowledged = false;
-  await page.addInitScript(({ manager }) => localStorage.setItem('ct_user', JSON.stringify({ id: 'buyer', organizationId: 'buyer-org', roles: ['buyer_admin'], permissions: manager ? ['*'] : ['lot.read', 'evidence.read', 'evidence.upload'], name: 'Buyer' })), { manager });
-  await page.route('**/api/**', async route => {
+  await page.addInitScript(
+    ({ manager }) =>
+      localStorage.setItem(
+        'ct_user',
+        JSON.stringify({
+          id: 'buyer',
+          organizationId: 'buyer-org',
+          roles: ['buyer_admin'],
+          permissions: manager ? ['*'] : ['lot.read', 'evidence.read', 'evidence.upload'],
+          name: 'Buyer',
+        }),
+      ),
+    { manager },
+  );
+  await page.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
-    if (unavailableTrace && path === '/api/traceability/lots/page') { await route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ error: 'Investigation access required' }) }); return; }
+    if (unavailableTrace && path === '/api/traceability/lots/page') {
+      await route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Investigation access required' }),
+      });
+      return;
+    }
     if (['POST', 'PUT', 'PATCH'].includes(route.request().method())) {
       requests.push({ path, body: route.request().postDataJSON() });
       if (path.endsWith('/acknowledge')) acknowledged = true;
-      await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }); return;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+      return;
     }
     const view = response(manager);
     if (unavailableTrace) view.participants[0].eligible_contact_count = 0;
     if (acknowledged) view.participants[0].acknowledged_at = '2026-10-02' as any;
-    const selectedHolding = new URL(route.request().url()).searchParams.get('selectedHoldingId') === view.holdings[0]?.id ? view.holdings[0] : null;
-    const paging = Object.fromEntries(['participants','holdings','recoveries','evidence'].map(name => [name,{count:(view as any)[name].length,hasMore:false,nextCursor:null}]));
-    const body = path === '/api/me' ? { id: 'buyer', organization_id: 'buyer-org', roles: ['buyer_admin'], permissions: manager ? ['*'] : ['lot.read', 'evidence.read', 'evidence.upload'], name: 'Buyer' }
-      : path === '/api/onboarding' ? { status: 'completed' }
-      : path === '/api/traceability/lots/page' ? { items: [], nextCursor: null, hasMore: false }
-      : path === '/api/recalls/page' ? {items:[{...notice,batch_count:1,affected_lot_count:0}],hasMore:false,nextCursor:null}
-      : path === '/api/recalls/summary' ? {count:1,active_count:1}
-      : path.endsWith('/response') ? {...view,paging,selectedHolding} : [];
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+    const selectedHolding =
+      new URL(route.request().url()).searchParams.get('selectedHoldingId') === view.holdings[0]?.id
+        ? view.holdings[0]
+        : null;
+    const paging = Object.fromEntries(
+      ['participants', 'holdings', 'recoveries', 'evidence'].map((name) => [
+        name,
+        { count: (view as any)[name].length, hasMore: false, nextCursor: null },
+      ]),
+    );
+    const body =
+      path === '/api/me'
+        ? {
+            id: 'buyer',
+            organization_id: 'buyer-org',
+            roles: ['buyer_admin'],
+            permissions: manager ? ['*'] : ['lot.read', 'evidence.read', 'evidence.upload'],
+            name: 'Buyer',
+          }
+        : path === '/api/onboarding'
+          ? { status: 'completed' }
+          : path === '/api/traceability/lots/page'
+            ? { items: [], nextCursor: null, hasMore: false }
+            : path === '/api/recalls/page'
+              ? {
+                  items: [{ ...notice, batch_count: 1, affected_lot_count: 0 }],
+                  hasMore: false,
+                  nextCursor: null,
+                }
+              : path === '/api/recalls/summary'
+                ? { count: 1, active_count: 1 }
+                : path.endsWith('/response')
+                  ? { ...view, paging, selectedHolding }
+                  : [];
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(body),
+    });
   });
   return requests;
 }
 
-test('affected recipient sees and acknowledges recall without manager controls', async ({ page }) => {
+test('affected recipient sees and acknowledges recall without manager controls', async ({
+  page,
+}) => {
   const requests = await mock(page);
   await page.goto('/recalls');
   await page.getByRole('button', { name: 'Open response', exact: true }).click();
@@ -40,12 +124,17 @@ test('affected recipient sees and acknowledges recall without manager controls',
   await page.getByLabel('Acknowledgement note').fill('Stock isolated and instructions received.');
   await page.getByRole('button', { name: 'Acknowledge instructions' }).click();
   await expect(page.getByText('Acknowledged · Contact: pending')).toBeVisible();
-  expect(requests[0]).toEqual({ path: '/api/recalls/recall-response/acknowledge', body: { note: 'Stock isolated and instructions received.' } });
+  expect(requests[0]).toEqual({
+    path: '/api/recalls/recall-response/acknowledge',
+    body: { note: 'Stock isolated and instructions received.' },
+  });
   await expect(page.getByRole('button', { name: 'Resolve recall with evidence' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Record contact with/ })).toHaveCount(0);
 });
 
-test('recovery accounting rejects overflow and saves a full replacement snapshot', async ({ page }) => {
+test('recovery accounting rejects overflow and saves a full replacement snapshot', async ({
+  page,
+}) => {
   const requests = await mock(page);
   await page.goto('/recalls');
   await page.getByRole('button', { name: 'Open response' }).click();
@@ -58,44 +147,164 @@ test('recovery accounting rejects overflow and saves a full replacement snapshot
   await page.getByLabel('Returned (kg)', { exact: true }).fill('10');
   await page.getByLabel('Recovery note').fill('Entire stock returned under recall instructions.');
   await page.getByRole('button', { name: 'Save recovery accounting' }).click();
+  const review = page.getByRole('dialog', { name: 'Review recovery accounting', exact: true });
+  await expect(review).toContainText('Returned: 10 kg');
+  expect(requests).toHaveLength(0);
+  await review.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(page.getByLabel('Recovery note')).toHaveValue(
+    'Entire stock returned under recall instructions.',
+  );
+  expect(requests).toHaveLength(0);
+  await page.getByRole('button', { name: 'Save recovery accounting' }).click();
+  await review.getByRole('button', { name: 'Confirm recovery accounting', exact: true }).click();
   await expect.poll(() => requests.length).toBe(1);
-  expect(requests[0].body).toEqual({ quarantinedKg: 0, returnedKg: 10, destroyedKg: 0, correctedKg: 0, releasedKg: 0, note: 'Entire stock returned under recall instructions.' });
+  expect(requests[0].body).toEqual({
+    quarantinedKg: 0,
+    returnedKg: 10,
+    destroyedKg: 0,
+    correctedKg: 0,
+    releasedKg: 0,
+    note: 'Entire stock returned under recall instructions.',
+  });
 });
 
-test('manager resolution requires an explanation and selected supporting evidence', async ({ page }) => {
+test('manager resolution requires an explanation and selected supporting evidence', async ({
+  page,
+}) => {
   const requests = await mock(page, true);
   await page.goto('/recalls');
   await expect(page.getByRole('button', { name: 'Resolve', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Open response' }).click();
   const resolve = page.getByRole('button', { name: 'Resolve recall with evidence' });
   await expect(resolve).toBeDisabled();
-  await page.getByLabel('Resolution reason', { exact: true }).fill('All stock returned and the recovery has been verified.');
+  await page
+    .getByLabel('Resolution reason', { exact: true })
+    .fill('All stock returned and the recovery has been verified.');
   await expect(resolve).toBeDisabled();
   await page.getByLabel('Use Recovery proof.pdf for resolution').check();
   await resolve.click();
+  await page
+    .getByRole('dialog', { name: 'Review recall resolution', exact: true })
+    .getByRole('button', { name: 'Confirm recall resolution', exact: true })
+    .click();
   await expect.poll(() => requests.length).toBe(1);
-  expect(requests[0]).toEqual({ path: '/api/recalls/recall-response/resolve', body: { reason: 'All stock returned and the recovery has been verified.', evidenceIds: ['evidence-one'] } });
+  expect(requests[0]).toEqual({
+    path: '/api/recalls/recall-response/resolve',
+    body: {
+      reason: 'All stock returned and the recovery has been verified.',
+      evidenceIds: ['evidence-one'],
+    },
+  });
 });
 
-
-test('resolved recall with retained inventory hold never presents a clear public safety badge', async ({ page }) => {
-  await page.route('**/api/public/products/**', route => new URL(route.request().url()).pathname.endsWith('/notices/page') ? route.fulfill({json:{items:[],count:1,nextCursor:null,hasMore:false,safety:{status:'warning',inventoryHeld:true,activeCount:0,resolvedCount:1,criticalCount:0,warningCount:0,advisoryCount:0,checkedAt:'2026-01-01'}}}) : new URL(route.request().url()).pathname.endsWith('/journey/page') ? route.fulfill({json:{items:[],count:0,nextCursor:null,hasMore:false}}) : route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
-    profile: { displayName: 'Recalled peanut lot', slug: 'held-peanut', description: 'Recorded product', lotCode: 'HELD-1' },
-    product: { organicClaimStatus: 'none', harvestDate: '2026-10-02' }, origin: { farmName: null, region: 'Northern', country: 'Ghana', plot_count: 0, total_area_hectares: 0 },
-    evidence: [], journey: [], safety: { status: 'clear', inventoryHeld: true, activeRecalls: [], resolvedRecalls: [], checkedAt: '2026-10-02' },
-  }) }));
+test('resolved recall with retained inventory hold never presents a clear public safety badge', async ({
+  page,
+}) => {
+  await page.route('**/api/public/products/**', (route) =>
+    new URL(route.request().url()).pathname.endsWith('/notices/page')
+      ? route.fulfill({
+          json: {
+            items: [],
+            count: 1,
+            nextCursor: null,
+            hasMore: false,
+            safety: {
+              status: 'warning',
+              inventoryHeld: true,
+              activeCount: 0,
+              resolvedCount: 1,
+              criticalCount: 0,
+              warningCount: 0,
+              advisoryCount: 0,
+              checkedAt: '2026-01-01',
+            },
+          },
+        })
+      : new URL(route.request().url()).pathname.endsWith('/journey/page')
+        ? route.fulfill({ json: { items: [], count: 0, nextCursor: null, hasMore: false } })
+        : route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              profile: {
+                displayName: 'Recalled peanut lot',
+                slug: 'held-peanut',
+                description: 'Recorded product',
+                lotCode: 'HELD-1',
+              },
+              product: { organicClaimStatus: 'none', harvestDate: '2026-10-02' },
+              origin: {
+                farmName: null,
+                region: 'Northern',
+                country: 'Ghana',
+                plot_count: 0,
+                total_area_hectares: 0,
+              },
+              evidence: [],
+              journey: [],
+              safety: {
+                status: 'clear',
+                inventoryHeld: true,
+                activeRecalls: [],
+                resolvedRecalls: [],
+                checkedAt: '2026-10-02',
+              },
+            }),
+          }),
+  );
   await page.goto('/p/held-peanut');
   await expect(page.getByText('INVENTORY SAFETY HOLD', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toContainText('Material remains on safety hold');
   await expect(page.getByText('No active recalls recorded', { exact: true })).toHaveCount(0);
 });
 
-
-test('unavailable genealogy does not hide recall responses or missing-contact escalation', async ({ page }) => {
+test('unavailable genealogy does not hide recall responses or missing-contact escalation', async ({
+  page,
+}) => {
   await mock(page, true, true);
   await page.goto('/recalls');
   await expect(page.getByText(/Genealogy records are unavailable:/)).toBeVisible();
   await page.getByRole('button', { name: 'Open response', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Recall response and recovery' })).toBeVisible();
   await expect(page.getByText(/No eligible contact account is available/)).toBeVisible();
+});
+
+test('recall activation reviews scope before writing and retains the draft after failure', async ({
+  page,
+}) => {
+  await mock(page, true);
+  await page.route('**/api/traceability/lots/page**', (route) =>
+    route.fulfill({
+      json: {
+        items: [{ id: 'lot-review', lotCode: 'LOT-REVIEW', productName: 'Peanut', quantityKg: 10 }],
+        hasMore: false,
+        nextCursor: null,
+      },
+    }),
+  );
+  let writes = 0;
+  await page.route('**/api/recalls', async (route) => {
+    writes += 1;
+    await route.fulfill({ status: 409, json: { error: 'Recall scope changed. Review again.' } });
+  });
+  await page.goto('/recalls');
+  await page.getByRole('button', { name: 'Activate recall', exact: true }).click();
+  await page.getByPlaceholder('Reference code *', { exact: true }).fill('REVIEW-1');
+  await page
+    .getByPlaceholder('Public notice title *', { exact: true })
+    .fill('Reviewed peanut recall');
+  await page.getByPlaceholder('Reason *', { exact: true }).fill('Investigated contamination risk');
+  await page.getByRole('button', { name: 'Activate recall', exact: true }).last().click();
+  const review = page.getByRole('dialog', { name: 'Review recall activation', exact: true });
+  await expect(review).toContainText('lot-review');
+  await expect(review).toContainText('holds affected material');
+  expect(writes).toBe(0);
+  await review.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(page.getByPlaceholder('Reason *', { exact: true })).toHaveValue(
+    'Investigated contamination risk',
+  );
+  await page.getByRole('button', { name: 'Activate recall', exact: true }).last().click();
+  await review.getByRole('button', { name: 'Confirm recall activation', exact: true }).click();
+  await expect(review.getByRole('alert')).toContainText('Recall scope changed');
+  expect(writes).toBe(1);
 });
