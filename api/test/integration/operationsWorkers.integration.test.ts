@@ -322,6 +322,17 @@ describe('bounded private queue backlog observations', () => {
 
 describe('private process runtime metrics', () => {
   it('requires live administrator authority and returns bounded no-store observations', async () => {
+    // Keep revocation independent of test order; never revive the cleanup actor.
+    const revokedAdmin = await actor(true);
+    await query('UPDATE sessions SET revoked_at=NOW() WHERE id=$1', [revokedAdmin.sessionId]);
+    expect(
+      (
+        await request(app)
+          .get('/operations/metrics')
+          .set('Authorization', `Bearer ${revokedAdmin.token}`)
+      ).status,
+    ).toBe(401);
+    const metricsAdmin = await actor(true);
     expect((await request(app).get('/operations/metrics')).status).toBe(401);
     expect(
       (
@@ -332,17 +343,17 @@ describe('private process runtime metrics', () => {
     ).toBe(403);
     const response = await request(app)
       .get('/operations/metrics')
-      .set('Authorization', `Bearer ${admin.token}`);
+      .set('Authorization', `Bearer ${metricsAdmin.token}`);
     expect(response.status, JSON.stringify(response.body)).toBe(200);
     expect(response.headers['cache-control']).toBe('no-store');
     expect(response.body.schemaVersion).toBe(1);
     expect(response.body.http.durationMs.buckets).toHaveLength(11);
     expect(Object.keys(response.body.pool).sort()).toEqual(['idle', 'total', 'waiting']);
-    expect(JSON.stringify(response.body)).not.toContain(admin.organizationId);
-    expect(JSON.stringify(response.body)).not.toContain(admin.token);
+    expect(JSON.stringify(response.body)).not.toContain(metricsAdmin.organizationId);
+    expect(JSON.stringify(response.body)).not.toContain(metricsAdmin.token);
     const invalid = await request(app)
       .get('/operations/metrics?tenant=private')
-      .set('Authorization', `Bearer ${admin.token}`);
+      .set('Authorization', `Bearer ${metricsAdmin.token}`);
     expect(invalid.status).toBe(400);
     expect(invalid.headers['cache-control']).toBe('no-store');
   });
