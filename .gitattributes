@@ -424,3 +424,10 @@ scripts/customer-claims.test.mjs text eol=lf
 web/src/components/shared/PlatformRoleNotice.tsx text eol=lf
 web/src/content/platformRole.ts text eol=lf
 web/src/pages/PlatformRolePage.tsx text eol=lf
+
+e2e/detailReadRecovery.spec.ts text eol=lf
+
+e2e/sourceDetailFailures.spec.ts text eol=lf
+e2e/sharedAccessibility.spec.ts text eol=lf
+web/src/components/layout/Layout.tsx text eol=lf
+web/src/components/layout/Sidebar.tsx text eol=lf

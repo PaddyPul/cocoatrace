@@ -204,3 +204,63 @@ test('public QR publication reviews exact destination, cancels without writing a
   await expect(review.getByRole('alert')).toContainText('Publication changed. Refresh the draft.');
   expect(writes).toBe(1);
 });
+
+test('product rows reject malformed safety data instead of rendering a safe or empty register', async ({
+  page,
+}) => {
+  await mock(page);
+  await page.route('**/api/product-profiles/page**', (route) =>
+    route.fulfill({
+      json: {
+        items: [
+          {
+            id: 'malformed-product',
+            display_name: 'Malformed product',
+            slug: 'malformed',
+            quantity_kg: 10,
+            safety_status: null,
+          },
+        ],
+        hasMore: false,
+        nextCursor: null,
+      },
+    }),
+  );
+  await page.goto('/products');
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Invalid product records' }),
+  ).toBeVisible();
+  await expect(page.getByText('No products found', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('no recorded hold', { exact: true })).toHaveCount(0);
+});
+
+test('retained inventory hold overrides a clear notice status in product cards', async ({
+  page,
+}) => {
+  await mock(page);
+  await page.route('**/api/product-profiles/page**', (route) =>
+    route.fulfill({
+      json: {
+        items: [
+          {
+            id: 'held-product',
+            display_name: 'Held product',
+            slug: 'held-product',
+            lot_code: 'HELD',
+            visibility: 'published',
+            quantity_kg: 10,
+            evidence_count: 0,
+            safety_status: 'clear',
+            inventory_held: true,
+          },
+        ],
+        hasMore: false,
+        nextCursor: null,
+      },
+    }),
+  );
+  await page.goto('/products');
+  await expect(page.getByRole('heading', { name: 'Held product', exact: true })).toBeVisible();
+  await expect(page.getByText('safety hold', { exact: true })).toBeVisible();
+  await expect(page.getByText('no recorded hold', { exact: true })).toHaveCount(0);
+});

@@ -1,5 +1,10 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'web/src/components/layout/Sidebar.tsx',
+  'web/src/components/layout/Layout.tsx',
+  'e2e/sharedAccessibility.spec.ts',
+  'e2e/sourceDetailFailures.spec.ts',
+  'e2e/detailReadRecovery.spec.ts',
   'web/src/pages/PlatformRolePage.tsx',
   'web/src/content/platformRole.ts',
   'web/src/components/shared/PlatformRoleNotice.tsx',

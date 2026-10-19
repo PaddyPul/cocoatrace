@@ -28,6 +28,7 @@ export default function PaymentDetailPage() {
   const [operations, setOperations] = useState<PaymentOperationsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [readAttempt, setReadAttempt] = useState(0);
   const [reference, setReference] = useState('');
   const [proofs, setProofs] = useState<Record<string, string | undefined>>({});
   const [provider, setProvider] = useState('');
@@ -43,13 +44,15 @@ export default function PaymentDetailPage() {
     if (!id) return;
     const [payment, operationData] = await Promise.all([payments.get(id), payments.operations(id)]);
     setData(payment);
+    setError('');
     setOperations(operationData);
   }, [id]);
   useEffect(() => {
+    setLoading(true);
     refresh()
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [refresh]);
+  }, [refresh, readAttempt]);
   const act = async (name: string, action: () => Promise<unknown>, message: string) => {
     setBusy(name);
     try {
@@ -80,7 +83,12 @@ export default function PaymentDetailPage() {
   if (error || !data)
     return (
       <Layout currentPage="payments">
-        <Error message={error || 'Not found'} />
+        <section role="alert">
+          <Error message={error || 'Payment unavailable'} />
+          <button className="btn mt-3" onClick={() => setReadAttempt((value) => value + 1)}>
+            Retry payment
+          </button>
+        </section>
       </Layout>
     );
   const p = data;

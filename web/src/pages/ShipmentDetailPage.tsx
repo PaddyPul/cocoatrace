@@ -57,6 +57,7 @@ export default function ShipmentDetailPage() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [readAttempt, setReadAttempt] = useState(0);
 
   const [showDetails, setShowDetails] = useState(false);
   const [details, setDetails] = useState<any>({});
@@ -95,13 +96,15 @@ export default function ShipmentDetailPage() {
   const refresh = async () => {
     if (!id) return;
     setData(await shipments.get(id));
+    setError('');
   };
 
   useEffect(() => {
+    setLoading(true);
     refresh()
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, readAttempt]);
 
   if (loading)
     return (
@@ -113,7 +116,10 @@ export default function ShipmentDetailPage() {
     return (
       <Layout currentPage="shipments">
         <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">
-          {error || 'Not found'}
+          <p role="alert">{error || 'Transport unavailable'}</p>
+          <button className="btn mt-3" onClick={() => setReadAttempt((value) => value + 1)}>
+            Retry transport
+          </button>
         </div>
       </Layout>
     );

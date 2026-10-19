@@ -19,6 +19,7 @@ export default function HoldingDetailPage() {
   const [batch, setBatch] = useState<Batch | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [readVersion, setReadVersion] = useState(0);
 
   // Transfer
   const [showTransfer, setShowTransfer] = useState(false);
@@ -70,16 +71,28 @@ export default function HoldingDetailPage() {
 
   useEffect(() => {
     if (!id) return;
+    let active = true;
     setLoading(true);
+    setError('');
+    setHolding(null);
     holdingsApi
       .get(id)
       .then((d) => {
+        if (!active) return;
+        if (!d?.holding || d.holding.id !== id) throw new Error('Invalid holding response.');
         setHolding(d.holding);
         setBatch(d.batch);
       })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [id]);
+      .catch((e) => {
+        if (active) setError(e instanceof Error ? e.message : 'Holding could not be loaded.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id, readVersion]);
 
   if (loading)
     return (
@@ -90,9 +103,18 @@ export default function HoldingDetailPage() {
   if (error || !holding)
     return (
       <Layout currentPage="holding">
-        <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">
+        <div
+          role="alert"
+          className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400"
+        >
           {error || 'Holding not found'}
         </div>
+        <button className="btn mt-3" onClick={() => setReadVersion((value) => value + 1)}>
+          Retry holding
+        </button>
+        <button className="btn mt-3 ml-2" onClick={() => navigate('/holdings')}>
+          Back to inventory
+        </button>
       </Layout>
     );
 
