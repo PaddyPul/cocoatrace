@@ -117,7 +117,10 @@ export default function PaymentDetailPage() {
               <Field label="Seller" value={p.seller_name} icon={<Building2 size={14} />} />
               <Field label="Buyer" value={p.buyer_name} icon={<User size={14} />} />
               <Field label="Protection plan" value={pretty(p.payment_plan)} />
-              <Field label="Terms" value={pretty(p.payment_terms_status)} />
+              <Field
+                label="Terms"
+                value={<StatusBadge domain="terms" status={p.payment_terms_status} />}
+              />
               <Field label="Document release" value={pretty(p.release_status)} />
               <Field
                 label="Platform fee"
@@ -367,7 +370,7 @@ function Field({
   icon,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   highlight?: boolean;
   icon?: React.ReactNode;
 }) {

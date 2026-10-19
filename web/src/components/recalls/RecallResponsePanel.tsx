@@ -7,6 +7,7 @@ import {
   RecallCollectionNavigation,
 } from '../catalog/useRecallResponsePages';
 import { useAuthCtx } from '../auth/AuthProvider';
+import ConfirmDialog from '../shared/ConfirmDialog';
 
 const quantityFields = [
   ['quarantinedKg', 'quarantined_kg', 'Quarantined'],
@@ -40,6 +41,13 @@ export default function RecallResponsePanel({
   } | null>(null);
   const pages = useRecallResponsePages(recallId, chosen?.holding.id);
   const { data } = pages;
+  const [review, setReview] = useState<{
+    title: string;
+    message: string;
+    label: string;
+    operation: () => Promise<unknown>;
+    saved: () => void;
+  } | null>(null);
   const [error, setError] = useState('');
   const [mutationBusy, setBusy] = useState(false);
   const busy = mutationBusy || pages.loading;
@@ -72,6 +80,7 @@ export default function RecallResponsePanel({
   const discardHolding = useDiscardChanges(recoveryDirty);
 
   useEffect(() => {
+    setReview(null);
     setChosen(null);
     setHoldingId('');
     setQuantities(emptyQuantities);
@@ -154,10 +163,16 @@ export default function RecallResponsePanel({
       setError('Use nonnegative quantities totaling no more than the affected holding.');
       return;
     }
-    void act(
-      () => recalls.recovery(recallId, holdingId, { ...values, note: recoveryNote }),
-      () => setRecoveryBaseline(JSON.stringify([quantities, recoveryNote])),
-    );
+    const selectedId = holdingId;
+    const note = recoveryNote;
+    const baseline = JSON.stringify([quantities, note]);
+    setReview({
+      title: 'Review recovery accounting',
+      message: `Recall ${data?.notice.reference_code || recallId}; holding ${selectedId}, affected quantity ${selectedHolding.quantity_kg} kg. ${quantityFields.map(([key, , label]) => `${label}: ${values[key]} kg`).join(' · ')}. Note: ${note || 'No note'}. This replaces the complete saved disposition snapshot. Confirm physical quantities; returned and destroyed material remains blocked. Recording released stock does not itself release a safety hold.`,
+      label: 'Confirm recovery accounting',
+      operation: () => recalls.recovery(recallId, selectedId, { ...values, note }),
+      saved: () => setRecoveryBaseline(baseline),
+    });
   };
 
   return (
@@ -483,13 +498,20 @@ export default function RecallResponsePanel({
                 className="btn btn-sm"
                 disabled={busy || resolutionReason.trim().length < 10 || !evidenceIds.length}
                 onClick={() =>
-                  act(
-                    () => recalls.resolve(recallId, { reason: resolutionReason, evidenceIds }),
-                    () => {
+                  setReview({
+                    title: 'Review recall resolution',
+                    message: `Resolve recall ${data.notice.reference_code || recallId}. Reason: ${resolutionReason}. Supporting evidence: ${evidenceIds.join(', ')}. Resolution records the terminal recovery decision; returned and destroyed material remains blocked and withdrawn listings are not republished. The server rechecks acknowledgement, quantities and current evidence.`,
+                    label: 'Confirm recall resolution',
+                    operation: () =>
+                      recalls.resolve(recallId, {
+                        reason: resolutionReason,
+                        evidenceIds: [...evidenceIds],
+                      }),
+                    saved: () => {
                       setResolutionReason('');
                       setEvidenceIds([]);
                     },
-                  )
+                  })
                 }
               >
                 Resolve recall with evidence
@@ -504,6 +526,25 @@ export default function RecallResponsePanel({
           )}
         </>
       )}
+      <ConfirmDialog
+        open={review !== null}
+        title={review?.title || 'Review recall action'}
+        message={review?.message || ''}
+        confirmLabel={review?.label}
+        danger
+        error={error}
+        loading={busy}
+        onConfirm={() => {
+          if (review && !busy)
+            void act(review.operation, () => {
+              review.saved();
+              setReview(null);
+            });
+        }}
+        onCancel={() => {
+          if (!busy) setReview(null);
+        }}
+      />
     </section>
   );
 }

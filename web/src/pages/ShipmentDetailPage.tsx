@@ -251,16 +251,18 @@ export default function ShipmentDetailPage() {
               is separate from inspection and acceptance.
             </div>
           </div>
-          <div
-            className={`${Number(s.amount_confirmed || 0) >= Number(s.dispatch_required_amount || 0) && s.payment_terms_status === 'agreed' ? 'bg-green-500/10 border-green-500/30' : 'bg-amber-500/10 border-amber-500/30'} border rounded p-4 text-xs leading-5`}
-          >
-            <div className="font-semibold">Payment dispatch gate</div>
+          <div className="border border-border rounded p-4 text-xs leading-5">
+            <div className="font-semibold">Recorded payment conditions</div>
             <div className="text-text-muted">
               Plan: {pretty(s.payment_plan)} · confirmed{' '}
               {Number(s.amount_confirmed || 0).toLocaleString()} of{' '}
               {Number(s.dispatch_required_amount || 0).toLocaleString()} required before dispatch ·
-              security {pretty(s.security_status || 'not required')}.
+              security {s.security_status ? pretty(s.security_status) : 'Unknown'}.
             </div>
+            <p className="mt-2 text-text-muted">
+              These amounts do not confirm dispatch clearance. Review the current dispatch decision
+              in the deal room.
+            </p>
             {s.dispatch_exception && (
               <div className="text-amber-400 mt-1">
                 Exceptional dispatch: {s.dispatch_exception_reason}

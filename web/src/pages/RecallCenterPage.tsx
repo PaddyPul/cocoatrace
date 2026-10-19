@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { AlertTriangle, ArrowRight, GitBranch, PackagePlus, Plus, Sprout, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import RecallRegister from '../components/catalog/RecallRegister';
+import ConfirmDialog from '../components/shared/ConfirmDialog';
 import Layout from '../components/layout/Layout';
 import { recalls as recallsApi, traceability } from '../api';
 import type {
@@ -32,6 +33,14 @@ export default function RecallCenterPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [busy, setBusy] = useState(false);
   const [referenceCode, setReferenceCode] = useState('');
+  const [activationReview, setActivationReview] = useState<{
+    referenceCode: string;
+    title: string;
+    reason: string;
+    instructions: string;
+    severity: 'advisory' | 'warning' | 'critical';
+    lots: { lotId: string; quantityKg: number | undefined }[];
+  } | null>(null);
   const [title, setTitle] = useState('');
   const [reason, setReason] = useState('');
   const [instructions, setInstructions] = useState(
@@ -140,7 +149,7 @@ export default function RecallCenterPage() {
     }
   };
 
-  const create = async () => {
+  const reviewActivation = () => {
     const quantity = recallQuantity ? Number(recallQuantity) : undefined;
     if (!referenceCode || !title || !reason || !instructions || !recallLotId) {
       setError('Reference, title, reason, instructions and a suspect lot are required.');
@@ -150,17 +159,23 @@ export default function RecallCenterPage() {
       setError('Suspect quantity must be a positive number.');
       return;
     }
+    setError('');
+    setActivationReview({
+      referenceCode,
+      title,
+      reason,
+      instructions,
+      severity,
+      lots: [{ lotId: recallLotId, quantityKg: quantity }],
+    });
+  };
+  const create = async () => {
+    if (!activationReview || busy) return;
     setBusy(true);
     setError('');
     try {
-      await recallsApi.create({
-        referenceCode,
-        title,
-        reason,
-        instructions,
-        severity,
-        lots: [{ lotId: recallLotId, quantityKg: quantity }],
-      });
+      await recallsApi.create(activationReview);
+      setActivationReview(null);
       clearUnsaved();
       setSeverity('warning');
       setInstructions(
@@ -648,7 +663,7 @@ export default function RecallCenterPage() {
                 </button>
                 <button
                   className="btn btn-danger flex-1 justify-center"
-                  onClick={create}
+                  onClick={reviewActivation}
                   disabled={busy}
                 >
                   {busy ? 'Activating…' : 'Activate recall'}
@@ -658,6 +673,23 @@ export default function RecallCenterPage() {
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={activationReview !== null}
+        title="Review recall activation"
+        message={
+          activationReview
+            ? `Activate ${activationReview.referenceCode}: ${activationReview.title}. Suspect lot ${activationReview.lots[0].lotId}, ${activationReview.lots[0].quantityKg === undefined ? 'full lot' : `${activationReview.lots[0].quantityKg} kg`}; severity ${activationReview.severity}. Reason: ${activationReview.reason}. Instructions: ${activationReview.instructions}. Activation publishes the notice, holds affected material and descendants, withdraws affected supply and queues eligible contact notices. The server recalculates affected scope; resolution requires verified recovery.`
+            : ''
+        }
+        confirmLabel="Confirm recall activation"
+        danger
+        error={error}
+        loading={busy}
+        onConfirm={() => void create()}
+        onCancel={() => {
+          if (!busy) setActivationReview(null);
+        }}
+      />
     </Layout>
   );
 }

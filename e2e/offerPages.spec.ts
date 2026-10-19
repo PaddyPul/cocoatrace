@@ -188,3 +188,44 @@ test('supplier home reads aggregate offer counts instead of an array', async ({ 
   await expect(page).toHaveURL(/\/offers(?:\?|$)/);
   await expect(page.getByRole('button', { name: 'Received (1005)', exact: true })).toBeVisible();
 });
+
+test('accepting an offer reviews its inventory commitment and retains review after rejection', async ({ page }) => {
+  await mock(page);
+  let writes = 0;
+  await page.route('**/api/offers/first-offer/accept', async (route) => {
+    writes++;
+    return route.fulfill({ status: 409, json: { error: 'Offer changed. Review current terms.', code: 'OFFER_CHANGED' } });
+  });
+  const review = page.getByRole('dialog', { name: 'Accept commercial offer', exact: true });
+  const row = page.getByRole('row').filter({ has: page.getByRole('cell', { name: 'First Buyer', exact: true }) });
+  const accept = row.getByRole('button', { name: 'Accept', exact: true });
+  await test.step('load the received offer before opening its review', async () => {
+    await page.goto('/offers?tab=received');
+    await expect(page.getByRole('button', { name: 'Received (1005)', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Received (1005)', exact: true }).click();
+    await expect(row).toHaveCount(1);
+    await expect(accept).toBeEnabled();
+    await accept.click();
+    await expect(review).toBeVisible();
+    await expect(review).toContainText('First Buyer');
+    await expect(review).toContainText('commits inventory');
+    await expect(review.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
+    expect(writes).toBe(0);
+  });
+  await test.step('Escape cancels without writing and restores the same offer action', async () => {
+    await page.keyboard.press('Escape');
+    await expect(review).toHaveCount(0);
+    expect(writes).toBe(0);
+    await expect(accept).toBeVisible();
+    await accept.click();
+    await expect(review).toBeVisible();
+  });
+  await test.step('a rejected write stays inside the review until cancelled', async () => {
+    await review.getByRole('button', { name: 'Accept and create contract', exact: true }).click();
+    await expect(review.getByRole('alert')).toContainText('Offer changed. Review current terms.');
+    await expect(review).toBeVisible();
+    expect(writes).toBe(1);
+    await review.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(review).toHaveCount(0);
+  });
+});

@@ -331,7 +331,7 @@ export default function DealRoomPage() {
               <Operation
                 icon={WalletCards}
                 title="Payment"
-                value={pretty(deal.payment_status)}
+                value={<StatusBadge domain="payment" status={deal.payment_status} />}
                 detail={`${fmtMoney(Number(deal.amount_confirmed || 0), deal.currency, deal.currency_minor_units)} confirmed`}
                 action="Open schedule"
                 onClick={() => navigate(`/payments/${deal.payment_request_id}`)}
@@ -347,7 +347,7 @@ export default function DealRoomPage() {
               <Operation
                 icon={Ship}
                 title="Transport"
-                value={pretty(deal.current_milestone || 'planning')}
+                value={<StatusBadge domain="transport" status={deal.current_milestone} />}
                 detail={deal.transport_coordinator_name || 'Coordinator assigned'}
                 action="Open transport"
                 onClick={() => navigate(`/shipments/${deal.shipment_id}`)}
@@ -447,7 +447,7 @@ function Operation({
 }: {
   icon: typeof Ship;
   title: string;
-  value: string;
+  value: React.ReactNode;
   detail: string;
   action: string;
   onClick: () => void;

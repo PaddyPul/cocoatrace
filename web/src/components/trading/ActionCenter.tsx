@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { TradeAction } from './TradeAction';
+import { tradeActionPresentation } from '../shared/statusPresentation';
 
 type Filter = 'all' | 'required' | 'overdue';
 
@@ -72,16 +73,12 @@ export function ActionCenter({
               className="flex w-full flex-col gap-2 rounded-2xl border border-border p-4 text-left"
             >
               <span className="text-sm font-semibold">{item.title}</span>
-              <span className="text-xs">
-                {item.kind === 'complete'
-                  ? item.id.endsWith(':cancelled')
-                    ? 'Cancelled'
-                    : 'Completed'
-                  : item.requiresAction
-                    ? 'Your action'
-                    : 'In progress'}
-                {item.paymentDueState === 'overdue' ? ' · Payment overdue' : ''}
+              <span className={`badge badge-${tradeActionPresentation(item).tone}`}>
+                {tradeActionPresentation(item).label}
               </span>
+              {item.paymentDueState === 'overdue' && (
+                <span className="badge badge-red">Payment overdue</span>
+              )}
               <span className="text-xs text-text-muted">{item.description}</span>
               <span className="text-xs text-brand-300">{item.actionLabel}</span>
             </button>

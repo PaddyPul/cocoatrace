@@ -4,6 +4,7 @@ export default function ConfirmDialog({
   open,
   title,
   message,
+  error,
   confirmLabel,
   danger,
   loading,
@@ -13,6 +14,7 @@ export default function ConfirmDialog({
   open: boolean;
   title: string;
   message: string;
+  error?: string;
   confirmLabel?: string;
   danger?: boolean;
   loading?: boolean;
@@ -37,7 +39,7 @@ export default function ConfirmDialog({
       aria-labelledby={titleId}
       aria-describedby={messageId}
       aria-busy={loading || undefined}
-      className="rounded-2xl border border-border bg-surface text-text p-6 max-w-sm w-[calc(100%-2rem)] backdrop:bg-black/60"
+      className="rounded-2xl border border-border bg-surface text-text p-6 max-w-sm max-h-[calc(100dvh-2rem)] overflow-y-auto break-words w-[calc(100%-2rem)] backdrop:bg-black/60"
       onCancel={(event) => {
         event.preventDefault();
         if (!loading) onCancel();
@@ -49,6 +51,11 @@ export default function ConfirmDialog({
       <p id={messageId} className="text-xs text-text-muted mb-5">
         {message}
       </p>
+      {error && (
+        <p role="alert" className="mb-4 text-sm text-red-300">
+          {error}
+        </p>
+      )}
       <div className="flex gap-2 justify-center">
         <button ref={cancel} type="button" className="btn" onClick={onCancel} disabled={loading}>
           Cancel

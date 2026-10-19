@@ -213,6 +213,10 @@ test('resolution evidence selection survives evidence paging without granting re
     .getByRole('textbox', { name: 'Resolution reason', exact: true })
     .fill('Verified recovery and supporting documents reviewed');
   await panel.getByRole('button', { name: 'Resolve recall with evidence', exact: true }).click();
+  await page
+    .getByRole('dialog', { name: 'Review recall resolution', exact: true })
+    .getByRole('button', { name: 'Confirm recall resolution', exact: true })
+    .click();
   await expect.poll(() => writes.length).toBe(1);
   expect(writes[0].body).toMatchObject({ evidenceIds: ['evidence-first', 'evidence-late'] });
 });

@@ -115,6 +115,10 @@ test('full prepayment trade: offer, verified payment gate, document sharing, del
         response.request().method() === 'POST',
     );
     await supplier.getByRole('button', { name: 'Accept', exact: true }).click();
+    await supplier
+      .getByRole('dialog', { name: 'Accept commercial offer', exact: true })
+      .getByRole('button', { name: 'Accept and create contract', exact: true })
+      .click();
     const acceptanceResponse = await acceptanceEvent;
     expect(acceptanceResponse.status()).toBe(200);
     const { contract, shipment } = await acceptanceResponse.json();

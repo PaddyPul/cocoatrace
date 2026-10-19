@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { contracts, payments } from '../../api';
 import PaymentProof from '../payments/PaymentProof';
 import type { TradeAction } from './TradeAction';
+import { tradeActionPresentation } from '../shared/statusPresentation';
 
 type Props = {
   action: TradeAction | null;
@@ -161,6 +162,12 @@ export default function DealNextAction({
             Best next action · {action.requiresAction ? 'Your action' : 'Status'}
           </div>
           <h3 className="mt-1 text-lg font-bold">{action.title}</h3>
+          <span className={`badge badge-${tradeActionPresentation(action).tone}`}>
+            {tradeActionPresentation(action).label}
+          </span>
+          {action.paymentDueState === 'overdue' && (
+            <span className="badge badge-red ml-2">Payment overdue</span>
+          )}
           <p className="mt-1 max-w-2xl text-xs leading-5 text-text-muted">{action.description}</p>
         </div>
         <div className="w-full lg:w-auto lg:min-w-[310px]">
