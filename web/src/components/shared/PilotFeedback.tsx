@@ -1,3 +1,4 @@
+import { containDialogTab } from './dialogKeyboard';
 import { useUnsavedChanges, useDiscardChanges } from './UnsavedChanges';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { CheckCircle2, MessageSquareText, Send, X } from 'lucide-react';
@@ -82,6 +83,7 @@ export default function PilotFeedback({ currentPage }: { currentPage: string }) 
       </button>
       {open && (
         <dialog
+          onKeyDown={containDialogTab}
           ref={dialog}
           className="w-[calc(100%-2rem)] max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl border border-border bg-surface-dark p-6 text-white shadow-2xl backdrop:bg-black/70"
           onCancel={(event) => {

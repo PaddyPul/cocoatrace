@@ -1,5 +1,6 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'web/src/components/shared/dialogKeyboard.ts',
   'web/src/components/layout/Sidebar.tsx',
   'web/src/components/layout/Layout.tsx',
   'e2e/sharedAccessibility.spec.ts',

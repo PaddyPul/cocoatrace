@@ -431,3 +431,5 @@ e2e/sourceDetailFailures.spec.ts text eol=lf
 e2e/sharedAccessibility.spec.ts text eol=lf
 web/src/components/layout/Layout.tsx text eol=lf
 web/src/components/layout/Sidebar.tsx text eol=lf
+
+web/src/components/shared/dialogKeyboard.ts text eol=lf

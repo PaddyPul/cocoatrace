@@ -1,3 +1,4 @@
+import { containDialogTab } from '../shared/dialogKeyboard';
 import { ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAuthCtx } from '../auth/AuthProvider';
 import Sidebar from './Sidebar';
@@ -199,6 +200,7 @@ export default function Layout({
       </div>
       {sidebarOpen && (
         <dialog
+          onKeyDown={containDialogTab}
           ref={navigationDialog}
           aria-label={t('shell.openNav')}
           className="m-0 h-dvh max-h-none w-[272px] max-w-[90vw] border-0 p-0 backdrop:bg-black/50 lg:hidden"
@@ -278,6 +280,7 @@ export default function Layout({
 
       {commandOpen && (
         <dialog
+          onKeyDown={containDialogTab}
           ref={commandDialog}
           aria-label={t('shell.find')}
           className="mt-[12vh] w-[calc(100%-2rem)] max-w-xl overflow-hidden rounded-3xl border border-border bg-surface-dark p-0 text-white shadow-2xl shadow-black/50 backdrop:bg-black/70"

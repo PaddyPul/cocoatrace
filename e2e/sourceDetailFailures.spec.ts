@@ -34,7 +34,7 @@ for (const kind of ['farm', 'holding', 'batch'] as const) {
     await workspace(page);
     const plural = kind === 'batch' ? 'batches' : `${kind}s`;
     let malformed = true;
-    await page.route(`**/api/${plural}/${kind}-review`, (route) =>
+    await page.route(new RegExp(`/api/${plural}/${kind}-review(?:\\?.*)?$`), (route) =>
       route.fulfill({
         json: malformed
           ? {}
@@ -76,7 +76,7 @@ test('failed batch product identity stays unknown and cannot invite duplicate cr
   page,
 }) => {
   await workspace(page);
-  await page.route('**/api/batches/batch-review', (route) =>
+  await page.route(/\/api\/batches\/batch-review(?:\?.*)?$/, (route) =>
     route.fulfill({
       json: {
         batch: {
@@ -119,7 +119,7 @@ test('confirmed publication with failed refresh shows unknown identity without r
   page,
 }) => {
   await workspace(page);
-  await page.route('**/api/batches/batch-review', (route) =>
+  await page.route(/\/api\/batches\/batch-review(?:\?.*)?$/, (route) =>
     route.fulfill({
       json: {
         batch: {
