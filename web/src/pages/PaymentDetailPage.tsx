@@ -102,7 +102,7 @@ export default function PaymentDetailPage() {
                 <h1 className="text-lg font-bold">Protected Payment</h1>
                 <p className="font-mono text-xs text-text-muted mt-0.5">{p.id}</p>
               </div>
-              <StatusBadge status={p.status} />
+              <StatusBadge domain="payment" status={p.status} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Field
@@ -156,7 +156,7 @@ export default function PaymentDetailPage() {
                       <div className="font-mono text-sm">
                         {fmtMoney(item.amount_due, p.currency, p.currency_minor_units)}
                       </div>
-                      <StatusBadge status={item.status} />
+                      <StatusBadge domain="payment" status={item.status} />
                     </div>
                   </div>
                   {item.payment_reference_external && (

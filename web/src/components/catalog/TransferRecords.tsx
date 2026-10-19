@@ -4,6 +4,7 @@ import { useAuthCtx } from '../auth/AuthProvider';
 import { useToast } from '../shared/ToastProvider';
 import { useCatalogPage } from './useCatalogPage';
 import PageNavigation from './PageNavigation';
+import ConfirmDialog from '../shared/ConfirmDialog';
 
 export default function TransferRecords({ onAccepted }: { onAccepted: () => void }) {
   const { user, canDo } = useAuthCtx();
@@ -12,12 +13,20 @@ export default function TransferRecords({ onAccepted }: { onAccepted: () => void
   const [status, setStatus] = useState('requested');
   const [search, setSearch] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
+  const [review, setReview] = useState<{
+    id: string;
+    from: string;
+    to: string;
+    material: string;
+    quantity: string;
+  } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const page = useCatalogPage(holdings.transferPage, { direction, status, search: appliedSearch });
   const accept = async (id: string) => {
     setBusy(id);
     try {
       await holdings.acceptTransfer(id);
+      setReview(null);
       page.refresh();
       onAccepted();
       toast('success', 'Transfer accepted — holding added to your inventory');
@@ -124,7 +133,15 @@ export default function TransferRecords({ onAccepted }: { onAccepted: () => void
                       className="btn btn-primary"
                       aria-label={`Accept transfer ${transfer.id}`}
                       disabled={Boolean(busy) || transfer.activeRecall}
-                      onClick={() => accept(transfer.id)}
+                      onClick={() =>
+                        setReview({
+                          id: transfer.id,
+                          from: transfer.from_org_name || transfer.from_organization_id,
+                          to: transfer.to_org_name || transfer.to_organization_id,
+                          material: transfer.crop || 'Material',
+                          quantity: String(transfer.quantity_kg),
+                        })
+                      }
                     >
                       {busy === transfer.id ? 'Accepting…' : 'Accept transfer'}
                     </button>
@@ -137,6 +154,23 @@ export default function TransferRecords({ onAccepted }: { onAccepted: () => void
       <PageNavigation
         label="transfers"
         page={{ ...page, loading: page.loading || Boolean(busy) }}
+      />
+      <ConfirmDialog
+        open={review !== null}
+        title="Review custody acceptance"
+        message={
+          review
+            ? `Accept transfer ${review.id}: ${review.quantity} kg of ${review.material} from ${review.from} to ${review.to}. This records receipt of physical custody and adds the holding to your inventory. Confirm only after checking the received material. Recall and receiving-party checks still apply.`
+            : ''
+        }
+        confirmLabel="Confirm custody acceptance"
+        loading={Boolean(busy)}
+        onConfirm={() => {
+          if (review && !busy) void accept(review.id);
+        }}
+        onCancel={() => {
+          if (!busy) setReview(null);
+        }}
       />
     </section>
   );

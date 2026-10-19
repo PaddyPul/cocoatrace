@@ -410,7 +410,7 @@ export default function ContractDetailPage() {
                 <h1 className="text-lg font-bold">Trade agreement</h1>
                 <p className="font-mono text-xs text-text-muted mt-0.5">{c.id}</p>
               </div>
-              <StatusBadge status={c.status} />
+              <StatusBadge domain="trade" status={c.status} />
             </div>
             <p className="text-xs text-text-muted mb-4" data-testid="agreement-record-notice">
               Unsigned platform record: this trade agreement records the parties’ agreed commercial
@@ -448,7 +448,7 @@ export default function ContractDetailPage() {
               <h3 className="text-sm font-semibold flex items-center gap-2">
                 <ShieldCheck size={16} className="text-brand-400" /> Payment protection
               </h3>
-              <StatusBadge status={c.payment_terms_status} />
+              <StatusBadge domain="terms" status={c.payment_terms_status} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Field
@@ -600,7 +600,7 @@ export default function ContractDetailPage() {
                   <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
                     Status
                   </div>
-                  <StatusBadge status={c.current_milestone} />
+                  <StatusBadge domain="transport" status={c.current_milestone} />
                 </div>
               </div>
               <button

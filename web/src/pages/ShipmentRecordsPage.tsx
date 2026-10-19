@@ -152,7 +152,7 @@ export default function ShipmentRecordsPage() {
                     <td>{fmtDate(sh.eta_arrival)}</td>
                     <td>{sh.transport_document_reference || 'Not recorded'}</td>
                     <td>
-                      <StatusBadge status={sh.current_milestone} />
+                      <StatusBadge domain="transport" status={sh.current_milestone} />
                     </td>
                   </tr>
                 ))}

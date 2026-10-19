@@ -64,7 +64,13 @@ test('buyer reviews withdrawal confirmation and sees terminal history after serv
   await page.goto('/offers?tab=sent');
   await page.getByRole('button', { name: 'Withdraw offer', exact: true }).click();
   await expect(page.getByText('Withdraw this pending offer?', { exact: false })).toBeVisible();
-  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  const review = page.getByRole('dialog', { name: 'Withdraw offer', exact: true });
+  await expect(review.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(review).toHaveCount(0);
+  expect(writes).toBe(0);
+  await page.getByRole('button', { name: 'Withdraw offer', exact: true }).click();
+  await review.getByRole('button', { name: 'Cancel', exact: true }).click();
   expect(writes).toBe(0);
   await page.getByRole('button', { name: 'Withdraw offer', exact: true }).click();
   await page.getByRole('button', { name: 'Withdraw', exact: true }).click();

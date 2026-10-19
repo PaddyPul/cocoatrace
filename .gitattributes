@@ -409,3 +409,10 @@ web/src/pages/RecallCenterPage.tsx text eol=lf
 web/src/pages/RequestAccessPage.tsx text eol=lf
 web/src/pages/ShipmentDetailPage.tsx text eol=lf
 web/src/components/catalog/useCatalogPage.ts text eol=lf
+
+web/src/components/shared/ConfirmDialog.tsx text eol=lf
+
+web/src/components/shared/statusPresentation.ts text eol=lf
+web/src/components/shared/helpers.tsx text eol=lf
+scripts/status-presentation.test.mjs text eol=lf
+web/src/pages/DealRoomPage.tsx text eol=lf

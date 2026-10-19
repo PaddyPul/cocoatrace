@@ -1,6 +1,6 @@
 # Unsaved change protection coverage — 2026-10-18
 
-The initial route guard and seven entry workflows are founder release/merge accepted. The extended coverage below is the current candidate; native/browser/full release acceptance remains pending. No draft content is stored or sent by the guard. Browser reload/tab-close warnings are best effort and use browser-owned wording.
+The initial route guard and seven entry workflows are founder release/merge accepted. Founder reports the extended coverage release passed and merged on2026-10-19. UX-011 is accepted. No draft content is stored or sent by the guard. Browser reload/tab-close warnings are best effort and use browser-owned wording.
 
 The application uses one React Router blocker and one shared same-page discard review. Stay/Escape retains the current values; confirmed Discard executes only the requested close/reset/context transition. A blocked browser Back is fully reset before the regression repeats it. Loading the review chunk cannot silently leave: unavailable review keeps the page. Session loss and login/passkey/security remediation bypass blocking. Unsubmitted public organization applications also register; credential/token forms do not.
 
