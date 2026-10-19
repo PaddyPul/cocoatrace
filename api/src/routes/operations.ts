@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth, requirePermission } from '../middleware/auth';
-import { query } from '../db';
+import { query, pool } from '../db';
+import { runtimeMetrics } from '../modules/operations/runtimeMetrics';
 import { inDatabaseTransaction } from '../services/databaseTransaction';
 import { statusHealthy } from '../modules/operations/jobs';
 import {
@@ -20,6 +21,18 @@ import { readDeploymentDiagnostics } from '../modules/operations/deployment';
 
 const router = Router();
 router.use('/operations', requireAuth, requirePermission('*'));
+router.get('/operations/metrics', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  try {
+    if (Object.keys(req.query).length) throw new ValidationError('Unknown metrics parameter');
+    res.json({
+      ...runtimeMetrics.read(),
+      pool: { total: pool.totalCount, idle: pool.idleCount, waiting: pool.waitingCount },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 router.get('/operations/deployment', (req, res, next) => {
   try {
     if (Object.keys(req.query).length)

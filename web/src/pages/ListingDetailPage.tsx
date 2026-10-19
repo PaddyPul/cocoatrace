@@ -1,6 +1,7 @@
 import { useUnsavedChanges } from '../components/shared/UnsavedChanges';
 import ExternalNegotiationNotice from '../components/trading/ExternalNegotiationNotice';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { ApiError } from '../api/errors';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -38,6 +39,8 @@ export default function ListingDetailPage() {
   const [pack, setPack] = useState<ProvenancePack | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [packError, setPackError] = useState('');
+  const retryRead = useRef<() => void>(() => {});
   const [quantity, setQuantity] = useState(0);
   const [price, setPrice] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -53,6 +56,11 @@ export default function ListingDetailPage() {
   useEffect(() => {
     if (!id) return;
     let alive = true;
+    setLoading(true);
+    setListing(null);
+    setPack(null);
+    setError('');
+    setPackError('');
     let initialized = false;
     let refreshing = false;
     const refresh = async () => {
@@ -61,6 +69,7 @@ export default function ListingDetailPage() {
       try {
         const row = await listings.get(id);
         if (!alive) return;
+        if (!row || row.id !== id) throw new Error('Invalid supply response.');
         setListing(row);
         setError('');
         if (!initialized) {
@@ -73,15 +82,34 @@ export default function ListingDetailPage() {
           initialized = true;
         }
         if (row.batch_id) {
-          const currentPack = await provenanceApi.get(row.batch_id).catch(() => null);
-          if (alive) setPack(currentPack);
+          try {
+            const currentPack = await provenanceApi.get(row.batch_id);
+            if (alive) {
+              setPack(currentPack);
+              setPackError('');
+            }
+          } catch (error) {
+            if (alive) {
+              setPack(null);
+              setPackError(error instanceof Error ? error.message : 'Provenance unavailable');
+            }
+          }
         }
       } catch (err) {
-        if (alive) setError(err instanceof Error ? err.message : 'Unable to refresh supply');
+        if (alive) {
+          setError(err instanceof Error ? err.message : 'Unable to refresh supply');
+          if (err instanceof ApiError && [401, 403, 404].includes(err.status)) {
+            setListing(null);
+            setPack(null);
+          }
+        }
       } finally {
         refreshing = false;
         if (alive) setLoading(false);
       }
+    };
+    retryRead.current = () => {
+      void refresh();
     };
     void refresh();
     const visible = () => {
@@ -116,6 +144,10 @@ export default function ListingDetailPage() {
   );
   const unavailable = expired || listing?.active === false;
   const submit = async () => {
+    if (error) {
+      setOfferError('Refresh the supply before submitting an offer. Your draft is retained.');
+      return;
+    }
     if (unavailable) {
       setOfferError(
         'This publication is unavailable. The supplier must review current stock before a new offer.',
@@ -145,8 +177,23 @@ export default function ListingDetailPage() {
     } catch (err: any) {
       setOfferError(err.message);
       // A recall can become active while the buyer is preparing an offer.
-      const current = await listings.get(listing.id).catch(() => null);
-      if (current) setListing(current);
+      try {
+        const current = await listings.get(listing.id);
+        if (!current || current.id !== listing.id) {
+          setError('Invalid supply response.');
+          setListing(null);
+          return;
+        }
+        setListing(current);
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : 'Unable to refresh supply after offer failure.',
+        );
+        if (error instanceof ApiError && [401, 403, 404].includes(error.status)) {
+          setListing(null);
+          setPack(null);
+        }
+      }
     } finally {
       setBusy(false);
     }
@@ -158,12 +205,21 @@ export default function ListingDetailPage() {
         <SkeletonDetail />
       </Layout>
     );
-  if (error || !listing)
+  if (!listing)
     return (
       <Layout currentPage="listing">
-        <div className="rounded-2xl border border-red-500/30 bg-red-900/10 p-4 text-xs text-red-300">
+        <div
+          role="alert"
+          className="rounded-2xl border border-red-500/30 bg-red-900/10 p-4 text-xs text-red-300"
+        >
           {error || 'Listing not found'}
         </div>
+        <button className="btn mt-3" onClick={() => retryRead.current()}>
+          Retry supply
+        </button>
+        <button className="btn mt-3 ml-2" onClick={() => navigate('/marketplace')}>
+          Back to supply
+        </button>
       </Layout>
     );
 
@@ -194,6 +250,23 @@ export default function ListingDetailPage() {
       }
     >
       <section className="relative overflow-hidden rounded-3xl border border-brand-400/20 bg-[radial-gradient(circle_at_85%_0%,rgba(239,190,106,.2),transparent_28%),linear-gradient(135deg,#173326,#101c16)] p-6 sm:p-8">
+        {error && (
+          <div role="alert" className="mb-4 rounded border border-amber-400/30 p-3 text-sm">
+            Supply refresh unavailable. {error} Your offer draft is retained; refresh before
+            submitting.
+            <button className="btn ml-2" onClick={() => retryRead.current()}>
+              Retry supply
+            </button>
+          </div>
+        )}
+        {packError && (
+          <div role="alert" className="mb-4 rounded border border-amber-400/30 p-3 text-sm">
+            Provenance unavailable. {packError}
+            <button className="btn ml-2" onClick={() => retryRead.current()}>
+              Retry provenance
+            </button>
+          </div>
+        )}
         <div className="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <div className="flex flex-wrap gap-2">
@@ -270,7 +343,7 @@ export default function ListingDetailPage() {
               </div>
               <div className="flex gap-2">
                 <span className={`badge ${completeness >= 90 ? 'badge-green' : 'badge-amber'}`}>
-                  {completeness || '—'}% dossier
+                  {packError ? 'Dossier unavailable' : `${completeness || '—'}% dossier`}
                 </span>
                 <span className="badge badge-blue">Recorded inventory</span>
               </div>
@@ -301,9 +374,11 @@ export default function ListingDetailPage() {
                 icon={FileCheck2}
                 title="Policy checks"
                 value={
-                  checks.length
-                    ? `${passed} of ${checks.length} recorded checks passed`
-                    : 'Checks not recorded'
+                  packError
+                    ? 'Checks unavailable'
+                    : checks.length
+                      ? `${passed} of ${checks.length} recorded checks passed`
+                      : 'Checks not recorded'
                 }
                 detail={trustLabel(listing.trust?.eudr)}
                 ok={isReviewed(listing.trust?.eudr)}
@@ -435,7 +510,7 @@ export default function ListingDetailPage() {
                   <button
                     className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-400 px-5 text-sm font-bold text-emerald-950"
                     onClick={submit}
-                    disabled={busy || listing.activeRecall || unavailable}
+                    disabled={busy || Boolean(error) || listing.activeRecall || unavailable}
                   >
                     {listing.activeRecall ? (
                       'Offers blocked — recall hold'

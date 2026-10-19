@@ -32,6 +32,7 @@ export default function AgreementAcceptance({ contractId }: { contractId: string
   const refresh = useCallback(async () => {
     const result = await api<AcceptanceState>('GET', `/contracts/${contractId}/acceptance`);
     setData(result);
+    setError('');
     setConfirmed(false);
   }, [contractId]);
   useEffect(() => {
@@ -53,8 +54,9 @@ export default function AgreementAcceptance({ contractId }: { contractId: string
       );
       setConfirmed(false);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Acknowledgement failed');
+      const message = error instanceof Error ? error.message : 'Acknowledgement failed';
       await refresh().catch(() => {});
+      setError(message);
     } finally {
       setBusy(false);
     }
@@ -77,7 +79,18 @@ export default function AgreementAcceptance({ contractId }: { contractId: string
           Review agreement version
         </button>
       ) : !data ? (
-        <p>Loading commercial record…</p>
+        error ? (
+          <button
+            className="btn"
+            onClick={() => {
+              refresh().catch((error) => setError(error.message));
+            }}
+          >
+            Retry agreement
+          </button>
+        ) : (
+          <p role="status">Loading commercial record…</p>
+        )
       ) : (
         <>
           <p className="text-xs text-text-muted">

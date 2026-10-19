@@ -62,7 +62,10 @@ export default function DealRoomPage() {
   const [error, setError] = useState('');
 
   const refresh = useCallback(async () => {
-    if (id) setDeal(await contracts.get(id));
+    if (id) {
+      setDeal(await contracts.get(id));
+      setError('');
+    }
   }, [id]);
   useEffect(() => {
     const load = () => refresh().catch((err) => setError(err.message));
@@ -91,7 +94,15 @@ export default function DealRoomPage() {
     return (
       <Layout currentPage="deal-room">
         <div className="rounded-2xl border border-red-500/30 bg-red-900/10 p-4 text-xs text-red-300">
-          {error || 'Deal not found'}
+          <p role="alert">{error || 'Deal not found'}</p>
+          <button
+            className="btn mt-3"
+            onClick={() => {
+              void refresh().catch((err) => setError(err.message));
+            }}
+          >
+            Retry deal
+          </button>
         </div>
       </Layout>
     );

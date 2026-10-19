@@ -1,0 +1,16 @@
+{
+  "scope": "Shared/static disclosures and public status; no hidden universal acceptance claim",
+  "entries": [
+    {
+      "page": "ServiceStatusPage",
+      "evidence": [
+        "web/src/pages/ServiceStatusPage.tsx",
+        "e2e/serviceStatus.spec.ts",
+        "scripts/service-status.test.mjs"
+      ],
+      "remaining": [
+        "Actual focused/full browser release pending; external uptime monitoring and incident staffing remain separate."
+      ]
+    }
+  ]
+}

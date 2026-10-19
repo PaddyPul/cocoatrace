@@ -41,10 +41,45 @@ export default function AccessReviewPage() {
     [error, setError] = useState(''),
     [notice, setNotice] = useState('');
   useUnsavedChanges(Boolean(reason || confirmed), 'Privileged access review');
+  const [loading, setLoading] = useState(false);
   async function load() {
     setReport(null);
     setConfirmed(false);
-    setReport(await api<Report>('GET', '/admin/access-review'));
+    setLoading(true);
+    try {
+      const value = await api<Report>('GET', '/admin/access-review');
+      if (
+        !value ||
+        typeof value.snapshotHash !== 'string' ||
+        !value.snapshotHash ||
+        typeof value.due !== 'boolean' ||
+        !value.snapshot ||
+        !Array.isArray(value.snapshot.rows) ||
+        !value.snapshot.counts ||
+        !['total', 'unavailable', 'unknownActivity', 'staleRetainedEvidence'].every(
+          (key) =>
+            Number.isSafeInteger(
+              value.snapshot.counts[key as keyof Report['snapshot']['counts']],
+            ) && value.snapshot.counts[key as keyof Report['snapshot']['counts']] >= 0,
+        ) ||
+        !value.snapshot.rows.every(
+          (row) =>
+            row &&
+            typeof row.id === 'string' &&
+            typeof row.name === 'string' &&
+            typeof row.email === 'string' &&
+            typeof row.organization_name === 'string',
+        ) ||
+        (value.latestReview !== null &&
+          (!value.latestReview ||
+            typeof value.latestReview.reviewed_at !== 'string' ||
+            typeof value.latestReview.next_due_at !== 'string'))
+      )
+        throw new Error('Invalid access review response. Reload the complete roster.');
+      setReport(value);
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => {
     if (allowed) void load().catch((e) => setError(e.message));
@@ -94,7 +129,7 @@ export default function AccessReviewPage() {
         {notice && <p role="status">{notice}</p>}
         <button
           className="btn"
-          disabled={busy}
+          disabled={busy || loading}
           onClick={() => {
             setError('');
             void load().catch((e) => setError(e.message));
@@ -102,6 +137,7 @@ export default function AccessReviewPage() {
         >
           Reload complete roster
         </button>
+        {loading && <p role="status">Loading complete access roster…</p>}
         {report && (
           <>
             <p>

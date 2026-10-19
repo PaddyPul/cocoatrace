@@ -95,8 +95,13 @@ export default function OnboardingPage() {
         primaryGoal: goal,
         pilotMode,
       });
-      if (goal === 'buy_verified' || goal === 'sell_verified')
-        localStorage.setItem('ct_experience_mode', goal === 'buy_verified' ? 'buy' : 'sell');
+      if (goal === 'buy_verified' || goal === 'sell_verified') {
+        try {
+          localStorage.setItem('ct_experience_mode', goal === 'buy_verified' ? 'buy' : 'sell');
+        } catch {
+          // Device preferences are optional; the server has already saved onboarding.
+        }
+      }
       await refreshOnboarding();
       setBaseline(snapshot);
       clearUnsaved();

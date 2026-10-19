@@ -17,6 +17,7 @@ import { webConfig } from './config';
 const EnvironmentNotice = lazy(() => import('./components/environment/EnvironmentNotice'));
 
 const UnsavedChangesProvider = lazy(() => import('./components/shared/UnsavedChanges'));
+const ServiceStatusPage = lazy(() => import('./pages/ServiceStatusPage'));
 const PlatformRolePage = lazy(() => import('./pages/PlatformRolePage'));
 const PilotLimitationsPage = lazy(() => import('./pages/PilotLimitationsPage'));
 const EvidenceContributionPage = lazy(() => import('./pages/EvidenceContributionPage'));
@@ -71,7 +72,8 @@ const AccessApplicationsPage = lazy(() => import('./pages/AccessApplicationsPage
 const OperationsPage = lazy(() => import('./pages/OperationsPage'));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, onboarding, onboardingLoading } = useAuthCtx();
+  const { user, loading, onboarding, onboardingLoading, onboardingError, refreshOnboarding } =
+    useAuthCtx();
   const location = useLocation();
   if (loading)
     return (
@@ -85,6 +87,25 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return (
       <main className="grid min-h-screen place-items-center bg-surface-darker">
         <div className="spinner" />
+      </main>
+    );
+  if (onboardingError)
+    return (
+      <main className="min-h-screen bg-surface-darker p-6 text-text-primary">
+        <section className="mx-auto max-w-xl space-y-4">
+          <h1 className="text-xl font-bold">Workspace setup unavailable</h1>
+          <p role="alert">{onboardingError}</p>
+          <p>
+            Your setup state is unknown. Retry before continuing; no empty or completed setup is
+            assumed.
+          </p>
+          <button className="btn" onClick={() => void refreshOnboarding()}>
+            Retry workspace setup
+          </button>
+          <a className="ml-4 underline" href="/service-status">
+            Check service status
+          </a>
+        </section>
       </main>
     );
   if (onboarding && onboarding.status !== 'completed' && location.pathname !== '/onboarding')
@@ -196,6 +217,7 @@ function AppShell() {
                           </PublicRoute>
                         }
                       />
+                      <Route path="/service-status" element={<ServiceStatusPage />} />
                       <Route path="/platform-role" element={<PlatformRolePage />} />
                       <Route
                         path="/p/:slug"

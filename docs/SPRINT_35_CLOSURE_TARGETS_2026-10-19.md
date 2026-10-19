@@ -68,3 +68,9 @@ Baseline:164/343 (47.8%), founder reports prior release/merge accepted2026-10-19
 - Analytics require privacy/retention decisions and a minimal event contract; do not start collecting personal data merely to meet a target.
 - OPS service status/metrics must report observed unknown/unavailable states and redact business/identity details. Hosted monitoring and SLO gates remain independent.
 - Current first bundle focuses read retries, honest unknown/permission failure and shared keyboard interaction; it advances the sprint without claiming35 closures.
+
+## Batch tracking
+
+- Batch1 workspace resilience and keyboard corrections: founder reports full release/merge accepted. Broad UX parent items remain open.
+- Batch2 workspace state inventory and observability: candidate;54 page modules/68 evidence entries, source/trade/admin recovery fixes, private runtime metrics and public status. Focused/new native cases plus full release remain required.
+- Accepted completion stays164/343 (47.8%);35 closures are the sprint target, not an achieved count.

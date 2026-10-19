@@ -1,0 +1,347 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-10-19",
+  "scope": "Trading and commercial routes plus nested payment, fee, delivery, transport and cancellation panels",
+  "verification": "Static implementation audit and type checks. Listed browser suites are regression evidence to execute in the founder release; no new browser execution is claimed here.",
+  "offlinePolicy": "Failed network reads use explicit unavailable/error states and manual GET retries. No automatic mutation replay or invented empty history. This slice does not claim universal offline detection.",
+  "routes": [
+    {
+      "route": "/marketplace",
+      "remaining": [
+        "Individual listing-row schema validation is not comprehensive."
+      ],
+      "page": "MarketplacePage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/MarketplacePage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/catalogPages.spec.ts",
+          "e2e/sourcingRequestPages.spec.ts"
+        ],
+        "checked_states": [
+          "useCatalogPage pending, malformed-envelope rejection, explicit read retry; filtered misses do not imply no inventory"
+        ]
+      }
+    },
+    {
+      "route": "/listing/:id",
+      "remaining": [
+        "See source-route fragment for final changes and acceptance; do not infer independent provenance completeness."
+      ],
+      "page": "ListingDetailPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/ListingDetailPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/sourceDetailFailures.spec.ts"
+        ],
+        "checked_states": [
+          "Source fragment owns read retry, provenance partial-state and offer-draft recovery"
+        ]
+      }
+    },
+    {
+      "route": "/source/compare",
+      "remaining": [
+        "See source-route fragment and comparison boundary validation for final coverage."
+      ],
+      "page": "CompareOffersPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/CompareOffersPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/sourceDetailFailures.spec.ts"
+        ],
+        "checked_states": [
+          "Source fragment owns explicit shortlist/read errors, missing-selected-record distinction and retry"
+        ]
+      }
+    },
+    {
+      "route": "/offers",
+      "remaining": [
+        "Per-row malformed-field validation remains incomplete."
+      ],
+      "page": "OffersPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/OffersPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/offerPages.spec.ts",
+          "e2e/recoveryDrafts.spec.ts",
+          "e2e/offerWithdrawal.spec.ts"
+        ],
+        "checked_states": [
+          "Pending/error/filtered-empty distinguishable; explicit retry; full summary separate; failed rejection retains draft"
+        ]
+      }
+    },
+    {
+      "route": "/my-listings",
+      "remaining": [
+        "Not all refresh/revocation and malformed-row permutations have focused browser coverage."
+      ],
+      "page": "MyListingsPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/MyListingsPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/listingExpiry.spec.ts",
+          "e2e/catalogPages.spec.ts"
+        ],
+        "checked_states": [
+          "Read error explicit; retained same-scope rows support unsaved renewal review; denial clears rows"
+        ]
+      }
+    },
+    {
+      "route": "/source/new",
+      "remaining": [
+        "Complete malformed saved-brief field coverage remains unverified."
+      ],
+      "page": "SourcingBriefPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/SourcingBriefPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/sourcingEdit.spec.ts",
+          "e2e/sourcingLabels.spec.ts",
+          "e2e/sourcingCloseout.spec.ts"
+        ],
+        "checked_states": [
+          "Saved-brief pending/error/retry; submit and structure failures show inline error and retain typed requirements"
+        ]
+      }
+    },
+    {
+      "route": "/supply/new",
+      "remaining": [
+        "Comprehensive malformed holding-row validation remains incomplete."
+      ],
+      "page": "PublishSupplyPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/PublishSupplyPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/catalogPages.spec.ts",
+          "e2e/supplierPublishingJourney.spec.ts"
+        ],
+        "checked_states": [
+          "Inventory pending/read error/filtered miss/confirmed empty are distinct; Search inventory explicitly retries; publication error preserves entered commercial fields; inventory page/search/holding changes require reviewed discard and reset commercial terms only after confirmation"
+        ]
+      }
+    },
+    {
+      "route": "/contracts",
+      "remaining": [
+        "Comprehensive row-schema validation and all scoped-filter failure permutations remain pending."
+      ],
+      "page": "ContractRecordsPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/ContractRecordsPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/catalogPages.spec.ts",
+          "e2e/detailReadRecovery.spec.ts"
+        ],
+        "checked_states": [
+          "Paged pending/error/retry/filtered empty; aggregate failure stays unknown with independent retry"
+        ]
+      }
+    },
+    {
+      "route": "/contracts/:id",
+      "remaining": [
+        "Contract and nested detail DTO schema validation remains incomplete; some mutation failures remain toast-only."
+      ],
+      "page": "ContractDetailPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/ContractDetailPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/detailReadRecovery.spec.ts",
+          "e2e/tradeReadRecovery.spec.ts",
+          "e2e/agreementAcceptance.spec.ts",
+          "e2e/paymentPlans.spec.ts"
+        ],
+        "checked_states": [
+          "Top-level read has explicit retry and denial; nested agreement/delivery/cancellation now explicitly retry failed reads; mutation forms retain state and field errors"
+        ]
+      }
+    },
+    {
+      "route": "/payments",
+      "remaining": [
+        "Per-row malformed-field validation remains incomplete."
+      ],
+      "page": "PaymentRecordsPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/PaymentRecordsPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/paymentPages.spec.ts"
+        ],
+        "checked_states": [
+          "Paged pending/error/retry/filtered empty; aggregate failure stays unknown with independent retry"
+        ]
+      }
+    },
+    {
+      "route": "/payments/:id",
+      "remaining": [
+        "Some non-receipt mutation errors are toast-only; complete detail DTO validation remains open."
+      ],
+      "page": "PaymentDetailPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/PaymentDetailPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/detailReadRecovery.spec.ts",
+          "e2e/paymentPlans.spec.ts"
+        ],
+        "checked_states": [
+          "Read retry distinguishes unavailable and denial; reviewed receipt errors remain in modal with typed values"
+        ]
+      }
+    },
+    {
+      "route": "/shipments",
+      "remaining": [
+        "Shipment list has indirect coverage; dedicated malformed-row coverage remains pending."
+      ],
+      "page": "ShipmentRecordsPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/ShipmentRecordsPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/paymentPages.spec.ts"
+        ],
+        "checked_states": [
+          "Paged pending/error/retry/filtered empty; aggregate failure stays unknown with independent retry"
+        ]
+      }
+    },
+    {
+      "route": "/shipments/:id",
+      "remaining": [
+        "Complete nested transport detail DTO validation remains open."
+      ],
+      "page": "ShipmentDetailPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/ShipmentDetailPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/detailReadRecovery.spec.ts",
+          "e2e/transportTiming.spec.ts",
+          "e2e/tradeJourney.spec.ts"
+        ],
+        "checked_states": [
+          "Top-level retry; arrangement and milestone validation/errors retain review; timing/exception reads have explicit retry"
+        ]
+      }
+    },
+    {
+      "route": "/deal-room/:id",
+      "remaining": [
+        "Raw deal DTO not fully runtime-validated; some action errors remain toast-only."
+      ],
+      "page": "DealRoomPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/DealRoomPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/tradeReadRecovery.spec.ts",
+          "e2e/tradeActions.spec.ts",
+          "e2e/tradeJourney.spec.ts"
+        ],
+        "checked_states": [
+          "Explicit error/retry; successful refresh clears prior read error; next-action unavailable is explicit; panel reads remain independent"
+        ]
+      }
+    },
+    {
+      "route": "/home",
+      "remaining": [
+        "Loading and overlap-refresh arbitration need broader focused coverage; generic offline banners are outside this slice."
+      ],
+      "page": "ExperienceHomePage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/ExperienceHomePage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/catalogPages.spec.ts",
+          "e2e/offerPages.spec.ts",
+          "e2e/tradeActions.spec.ts"
+        ],
+        "checked_states": [
+          "Unknown failed aggregates remain unknown, successful independent summaries remain usable; explicit Retry workspace totals added; unavailable actions not reported empty"
+        ]
+      }
+    },
+    {
+      "route": "/platform-fees",
+      "remaining": [
+        "Reconciliation response schema and byte-limited list completeness use existing backend contract; comprehensive malformed-report tests remain pending."
+      ],
+      "page": "PlatformFeesPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/PlatformFeesPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/tradeReadRecovery.spec.ts",
+          "e2e/feeRefunds.spec.ts"
+        ],
+        "checked_states": [
+          "Register pending no longer shows empty; invalid envelopes explicit; read retry; failed reconciliation clears earlier successful report and exposes separate error"
+        ]
+      }
+    },
+    {
+      "route": "/platform-fees/:id",
+      "remaining": [
+        "Full malformed nested-fee DTO validation and every denial transition remain pending."
+      ],
+      "page": "PlatformFeesPage",
+      "evidence": {
+        "implementation": [
+          "web/src/pages/PlatformFeesPage.tsx"
+        ],
+        "browser_suites": [
+          "e2e/feeCollectionStatus.spec.ts",
+          "e2e/feeEnforcement.spec.ts",
+          "e2e/feeRefunds.spec.ts"
+        ],
+        "checked_states": [
+          "Statement, collection terms, refund and email panels have independent pending/error/manual refresh; failure never establishes payment or delivery"
+        ]
+      }
+    }
+  ],
+  "supportingPanels": {
+    "AgreementAcceptance": "Failed initial read no longer remains Loading forever; explicit Retry agreement; failed acknowledgement reason survives subsequent refresh.",
+    "DeliveryAcceptance": "Explicit Retry delivery record on initial failure; quantity, discrepancy and proof draft fields stay local on action failure.",
+    "ContractCancellation": "Failed current read clears stale action state; retry does not resend cancellation.",
+    "FeeStatement/FeeEnforcement/FeeRefunds/FeeStatementDelivery": "Independent explicit refresh controls and read errors exist; statements do not imply funds collected.",
+    "TransportTiming/DispatchAcknowledgement": "Explicit unavailable/retry; action failure retains reason; reviewed authority remains server-owned.",
+    "PaymentProof": "File input and upload explanation stay visible after failure; upload errors currently announced as status instead of alert.",
+    "PaymentOperations": "Derived from payment detail response; parent read failure keeps unavailable status; action review errors use parent handling.",
+    "DealActivity": "Bounded response validation, explicit read error and retry; no empty-history claim on malformed response."
+  },
+  "closure": "This inventory is partial evidence for UX-003/004/005 and PRD-011, not whole-item acceptance. Remaining entries prevent an honest universal closure."
+}

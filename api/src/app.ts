@@ -52,7 +52,10 @@ import transportTimingRoutes from './modules/transportTiming/routes';
 import dispatchAcknowledgementRoutes from './modules/dispatchAcknowledgement/routes';
 import organizationAccessRoutes from './modules/organizationAccess';
 
+import { observeHttp } from './modules/operations/runtimeMetrics';
+
 const app = express();
+app.use(observeHttp);
 // Forwarded IP/host headers are untrusted until an explicit ingress policy is introduced.
 app.set('trust proxy', false);
 const queryBudget = createQueryBudget(app);

@@ -60,6 +60,7 @@ export default function DeliveryAcceptance({ contractId, organizationId, onChang
   const refresh = useCallback(async () => {
     const result = await contracts.delivery(contractId);
     setData(result);
+    setError('');
   }, [contractId]);
   useEffect(() => {
     refresh().catch((error) => setError(error.message));
@@ -113,9 +114,19 @@ export default function DeliveryAcceptance({ contractId, organizationId, onChang
         {error ? (
           <p role="alert" className="text-xs text-red-400 mt-2">
             {error}
+            <button
+              className="btn mt-2"
+              onClick={() => {
+                void refresh().catch((error) => setError(error.message));
+              }}
+            >
+              Retry delivery record
+            </button>
           </p>
         ) : (
-          <p className="text-xs text-text-muted mt-2">Loading delivery record…</p>
+          <p role="status" className="text-xs text-text-muted mt-2">
+            Loading delivery record…
+          </p>
         )}
       </section>
     );

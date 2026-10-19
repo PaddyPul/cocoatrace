@@ -236,3 +236,22 @@ test('supplier source guidance uses full owned farm totals when inventory is abs
   ).toBeVisible();
   await expect(nextAction.getByTestId('supply-path-choice')).toHaveCount(0);
 });
+
+test('publishing keeps unsaved commercial terms until an inventory page change is reviewed', async ({
+  page,
+}) => {
+  await mock(page);
+  await page.goto('/supply/new');
+  const price = page.getByLabel('Price per kg', { exact: true });
+  await price.fill('9');
+  await page.getByRole('button', { name: 'Next inventory', exact: true }).click();
+  const review = page.getByRole('dialog', { name: 'Discard unsaved changes?', exact: true });
+  await expect(review).toBeVisible();
+  await review.getByRole('button', { name: 'Stay and keep editing', exact: true }).click();
+  await expect(price).toHaveValue('9');
+  await expect(page.getByRole('button', { name: /peanut.*10 kg/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Next inventory', exact: true }).click();
+  await review.getByRole('button', { name: 'Discard changes', exact: true }).click();
+  await expect(page.getByRole('button', { name: /shea.*10 kg/ })).toBeVisible();
+  await expect(price).toHaveValue('');
+});

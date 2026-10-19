@@ -512,13 +512,14 @@ export default function MarketplacePage() {
         </div>
       )}
       {loading ? (
-        <div className="loading">
+        <div role="status" className="loading">
           <div className="spinner" />
           Finding supply…
         </div>
       ) : error ? (
         <div className="mt-5 rounded-2xl border border-red-500/30 bg-red-900/10 p-4 text-xs text-red-300">
-          {error}
+          <p role="alert">{error}</p>
+          <button className="btn mt-3" onClick={page.refresh}>Retry supply search</button>
         </div>
       ) : result.length ? (
         <div className="mt-5 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">

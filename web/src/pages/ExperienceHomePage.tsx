@@ -25,6 +25,7 @@ export default function ExperienceHomePage() {
   const [catalogError, setCatalogError] = useState(false);
   const [actionError, setActionError] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     if (user?.id) localStorage.setItem(`ct_experience_mode:${user.id}`, mode);
@@ -38,10 +39,11 @@ export default function ExperienceHomePage() {
     const interval=window.setInterval(load,15000);
     window.addEventListener('focus',load);
     return()=>{active=false;window.clearInterval(interval);window.removeEventListener('focus',load);};
-  }, [mode, user?.id]);
+  }, [mode, user?.id, retry]);
 
   const switchMode = (next: Mode) => { if (user?.id) localStorage.setItem(`ct_experience_mode:${user.id}`, next); setParams({ mode: next }); };
   return <Layout currentPage="home" actions={canBuy && canSell ? <div className="hidden rounded-xl border border-border bg-surface-darker p-1 sm:flex"><ModeButton active={mode === 'buy'} onClick={() => switchMode('buy')} icon={Search}>Buy</ModeButton><ModeButton active={mode === 'sell'} onClick={() => switchMode('sell')} icon={Sprout}>Sell</ModeButton></div> : undefined}>
+    {!loading && (actionError || catalogError || !data.requestSummary || !data.offerSummary || !data.contractSummary) && <button className="btn mb-4" onClick={() => { setLoading(true); setRetry(value => value + 1); }}>Retry workspace totals</button>}
     {!loading && !data.requestSummary && <p role="alert" className="mb-4">Sourcing totals could not be refreshed. Reload to retry; no zero count is assumed.</p>}
     {!loading && !data.offerSummary && <p role="alert" className="mb-4">Offer totals could not be refreshed. Reload to retry; no zero count is assumed.</p>}
     {!loading && !data.contractSummary && <p role="alert" className="mb-4">Order totals could not be refreshed. Reload to retry; no zero count is assumed.</p>}

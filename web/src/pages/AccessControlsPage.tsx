@@ -14,6 +14,21 @@ type Entry = {
   protected: boolean;
 };
 type Result = { rows: Entry[]; next: string | null };
+function validResult(value: Result): boolean {
+  return Boolean(
+    value &&
+      Array.isArray(value.rows) &&
+      (value.next === null || (typeof value.next === 'string' && value.next.length > 0)) &&
+      value.rows.every(
+        (row) =>
+          row &&
+          typeof row.id === 'string' &&
+          typeof row.name === 'string' &&
+          typeof row.protected === 'boolean' &&
+          (row.access_suspended_at === null || typeof row.access_suspended_at === 'string'),
+      ),
+  );
+}
 export default function AccessControlsPage() {
   const { user } = useAuthCtx();
   const allowed = Boolean(user?.permissions.includes('*'));
@@ -35,6 +50,7 @@ export default function AccessControlsPage() {
       'GET',
       `/admin/access-controls/organizations${after ? `?after=${after}` : ''}`,
     );
+    if (!validResult(result)) throw new Error('Invalid organization access response.');
     setOrganizations((previous) => (after ? [...previous, ...result.rows] : result.rows));
     setOrgNext(result.next);
   };
@@ -43,6 +59,7 @@ export default function AccessControlsPage() {
       'GET',
       `/admin/access-controls/users?organizationId=${id}${after ? `&after=${after}` : ''}`,
     );
+    if (!validResult(result)) throw new Error('Invalid member access response.');
     setMembers((previous) => (after ? [...previous, ...result.rows] : result.rows));
     setUserNext(result.next);
   };
@@ -151,7 +168,33 @@ export default function AccessControlsPage() {
           Platform administration organizations are protected here and require a separate privileged
           recovery procedure.
         </p>
-        {error && <p role="alert">{error}</p>}
+        {error && (
+          <div role="alert">
+            <p>{error}</p>
+            <button
+              className="btn"
+              disabled={busy}
+              onClick={() => {
+                setBusy(true);
+                setError('');
+                void (async () => {
+                  try {
+                    await loadOrganizations();
+                    if (organization) await loadMembers(organization);
+                  } catch {
+                    setError(
+                      'Access controls could not be refreshed. Retry to read current records.',
+                    );
+                  } finally {
+                    setBusy(false);
+                  }
+                })();
+              }}
+            >
+              Retry access controls
+            </button>
+          </div>
+        )}
         {notice && <p role="status">{notice}</p>}
         <h3 className="font-bold">Organizations</h3>
         {list(organizations, 'organizations')}

@@ -433,3 +433,17 @@ web/src/components/layout/Layout.tsx text eol=lf
 web/src/components/layout/Sidebar.tsx text eol=lf
 
 web/src/components/shared/dialogKeyboard.ts text eol=lf
+
+web/src/components/serviceStatus/status.ts text eol=lf
+web/src/pages/ServiceStatusPage.tsx text eol=lf
+scripts/service-status.test.mjs text eol=lf
+e2e/serviceStatus.spec.ts text eol=lf
+api/src/modules/operations/runtimeMetrics.ts text eol=lf
+api/src/modules/operations/runtimeMetrics.test.ts text eol=lf
+
+scripts/route-resilience.mjs text eol=lf
+scripts/route-resilience.test.mjs text eol=lf
+e2e/adminAuthResilience.spec.ts text eol=lf
+e2e/tradeReadRecovery.spec.ts text eol=lf
+web/src/domains/marketplace/comparison.ts text eol=lf
+web/src/components/auth/AuthProvider.tsx text eol=lf

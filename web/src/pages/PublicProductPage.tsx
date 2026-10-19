@@ -2,7 +2,7 @@ import PlatformRoleNotice from '../components/shared/PlatformRoleNotice';
 import PublicNoticesPanel from '../components/catalog/PublicNoticesPanel';
 import PublicJourneyPanel from '../components/catalog/PublicJourneyPanel';
 import PublicEvidencePanel from '../components/catalog/PublicEvidencePanel';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   FileCheck2, Leaf, MapPin, PackageCheck,
@@ -22,6 +22,7 @@ export default function PublicProductPage() {
   const { slug = '' } = useParams();
   const [data, setData] = useState<PublicProduct | null>(null);
   const [error, setError] = useState('');
+  const retryRead = useRef<() => void>(() => {});
   const [noticeSafety,setNoticeSafety]=useState<PublicNoticeSafety|null>(null);
   const updateSafety=useCallback((safety:PublicNoticeSafety|null)=>setNoticeSafety(safety),[]);
   const [tab, setTab] = useState<'journey' | 'proof'>('journey');
@@ -34,13 +35,16 @@ export default function PublicProductPage() {
       refreshing = true;
       try {
         const product = await publicProducts.get(slug);
+        if (!product || !product.profile || typeof product.profile.displayName !== 'string' || !product.product || !product.origin) throw new Error('Invalid product profile response.');
         if (alive) { setData(product); setError(''); document.title = `${product.profile.displayName} — BetterTrade`; }
       } catch (err) {
         if (alive) setError(err instanceof Error ? err.message : 'Unable to refresh product record');
       } finally { refreshing = false; }
     };
     setData(null);
+    setError('');
     setNoticeSafety(null);
+    retryRead.current = () => { void refresh(); };
     void refresh();
     publicProducts.recordScan(slug).catch(() => undefined);
     const visible = () => { if (document.visibilityState === 'visible') void refresh(); };
@@ -50,8 +54,8 @@ export default function PublicProductPage() {
     return () => { alive = false; window.clearInterval(interval); window.removeEventListener('focus', visible); document.removeEventListener('visibilitychange', visible); };
   }, [slug]);
 
-  if (error) return <main className="min-h-screen bg-[#f6f4ee] text-stone-900 grid place-items-center p-6"><div className="max-w-md text-center"><div className="text-5xl mb-4">🌱</div><h1 className="text-2xl font-bold">Product profile unavailable</h1><p className="mt-2 text-stone-500">{error}</p><button className="mt-4 underline" onClick={() => window.location.reload()}>Retry product profile</button></div></main>;
-  if (!data) return <main className="min-h-screen bg-[#f6f4ee] grid place-items-center"><div className="h-9 w-9 rounded-full border-2 border-stone-200 border-t-emerald-700 animate-spin" /></main>;
+  if (error) return <main className="min-h-screen bg-[#f6f4ee] text-stone-900 grid place-items-center p-6"><div className="max-w-md text-center"><div className="text-5xl mb-4">🌱</div><h1 className="text-2xl font-bold">Product profile unavailable</h1><p role="alert" className="mt-2 text-stone-500">{error}</p><button className="mt-4 underline" onClick={() => retryRead.current()}>Retry product profile</button></div></main>;
+  if (!data) return <main role="status" aria-label="Loading product profile" className="min-h-screen bg-[#f6f4ee] grid place-items-center"><div className="h-9 w-9 rounded-full border-2 border-stone-200 border-t-emerald-700 animate-spin" /></main>;
 
   const safety=noticeSafety;
   const unsafe = !safety || safety.status !== 'clear' || safety.inventoryHeld;
