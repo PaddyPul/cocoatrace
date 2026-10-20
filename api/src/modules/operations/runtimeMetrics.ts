@@ -75,7 +75,7 @@ export function createRuntimeMetrics() {
         acquisitionDurationMs: databaseAcquisition.read(),
         acquisitionErrors,
         coverage:
-          'exported query helper duration includes pool acquisition; exported getClient acquisition excludes subsequent transaction queries',
+          'promise/callback queries on this application pool, including transaction clients; excludes acquisition and streaming/submittable queries',
       },
       queues: {
         source: '/operations/backlog',
