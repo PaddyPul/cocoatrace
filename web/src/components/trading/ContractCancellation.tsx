@@ -23,6 +23,7 @@ export default function ContractCancellation({
       setState(await contracts.cancellation(contractId));
       setError('');
     } catch (e) {
+      setState(null);
       setError(e instanceof Error ? e.message : 'Could not load cancellation status');
     }
   }, [contractId]);
@@ -63,6 +64,9 @@ export default function ContractCancellation({
       {error && (
         <p role="alert" className="text-xs text-red-400">
           {error}
+          <button className="btn ml-2" disabled={busy} onClick={() => void load()}>
+            Retry cancellation status
+          </button>
         </p>
       )}
       {!state && !error && <p role="status">Loading cancellation status…</p>}

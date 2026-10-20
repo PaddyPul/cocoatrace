@@ -1,0 +1,232 @@
+{
+  "scope": "Admin, authentication, onboarding, team, support and operations route audit",
+  "status": "Implementation and source evidence audit; new browser cases require founder runtime",
+  "routes": [
+    {
+      "page": "LoginPage.tsx",
+      "evidence": ["e2e/identity.spec.ts"],
+      "behavior": {
+        "loading": "Submit busy state; separate password/passkey actions",
+        "error": "Inline alert, credentials retained for deliberate retry",
+        "empty": "Not a collection",
+        "permission": "Existing auth/session redirect",
+        "draft": "Secrets never persisted"
+      },
+      "remaining": [
+        "No dedicated mocked network-failure browser scenario; real identity journey covers sign-in boundaries"
+      ]
+    },
+    {
+      "page": "RequestAccessPage.tsx",
+      "evidence": ["e2e/identity.spec.ts", "e2e/recordDrafts.spec.ts"],
+      "behavior": {
+        "loading": "Explicit sending state",
+        "error": "Inline alert and same-details verification-email retry after saved application",
+        "empty": "Not a collection",
+        "permission": "Public intentional access",
+        "draft": "Unsaved guard excludes persisted secrets"
+      },
+      "remaining": []
+    },
+    {
+      "page": "AcceptInvitationPage.tsx",
+      "evidence": ["e2e/identity.spec.ts", "e2e/adminAuthResilience.spec.ts"],
+      "behavior": {
+        "loading": "Announced invitation loading",
+        "error": "Malformed/read errors explicit; Retry invitation reads only; submit error near form",
+        "empty": "Unavailable invitation never presented as available",
+        "permission": "Single-use server invitation validation unchanged",
+        "draft": "Name/password in memory only"
+      },
+      "remaining": ["Real browser identity journey plus new mocked read test required on Windows"]
+    },
+    {
+      "page": "AccessVerificationPage.tsx",
+      "evidence": ["e2e/identity.spec.ts"],
+      "behavior": {
+        "loading": "Working token verification state",
+        "error": "Explicit error with new-request path; cached in-flight request avoids duplicate token consume",
+        "empty": "Incomplete link explicit",
+        "permission": "Public single-purpose token",
+        "draft": "No draft"
+      },
+      "remaining": [
+        "No automatic token-consumption retry; user requests rotated email when token fails"
+      ]
+    },
+    {
+      "page": "ForgotPasswordPage.tsx",
+      "evidence": ["e2e/identity.spec.ts"],
+      "behavior": {
+        "loading": "Busy submit state",
+        "error": "Inline alert, deliberate form resubmit",
+        "empty": "Not a collection; incomplete reset token blocked",
+        "permission": "Server current-password/single-use-token policies retained",
+        "draft": "Passwords kept in memory only, never draft storage"
+      },
+      "remaining": []
+    },
+    {
+      "page": "ResetPasswordPage.tsx",
+      "evidence": ["e2e/identity.spec.ts"],
+      "behavior": {
+        "loading": "Busy submit state",
+        "error": "Inline alert, deliberate form resubmit",
+        "empty": "Not a collection; incomplete reset token blocked",
+        "permission": "Server current-password/single-use-token policies retained",
+        "draft": "Passwords kept in memory only, never draft storage"
+      },
+      "remaining": []
+    },
+    {
+      "page": "ChangePasswordPage.tsx",
+      "evidence": ["e2e/identity.spec.ts"],
+      "behavior": {
+        "loading": "Busy submit state",
+        "error": "Inline alert, deliberate form resubmit",
+        "empty": "Not a collection; incomplete reset token blocked",
+        "permission": "Server current-password/single-use-token policies retained",
+        "draft": "Passwords kept in memory only, never draft storage"
+      },
+      "remaining": []
+    },
+    {
+      "page": "PasskeysPage.tsx",
+      "evidence": ["e2e/passkeys.spec.ts", "e2e/adminAuthResilience.spec.ts"],
+      "behavior": {
+        "loading": "Announced list loading, enrollment disabled until known",
+        "error": "Strict list shape check, unknown protection alert, explicit read-only retry",
+        "empty": "No keys only after valid successful response",
+        "permission": "Fresh ceremony/server validation unchanged",
+        "draft": "Password not persisted"
+      },
+      "remaining": ["New mocked browser test requires Windows runtime"]
+    },
+    {
+      "page": "OnboardingPage.tsx",
+      "evidence": ["e2e/identity.spec.ts", "e2e/adminAuthResilience.spec.ts"],
+      "behavior": {
+        "loading": "Busy progress/finish actions",
+        "error": "Inline submit alert; optional device-storage failure cannot turn server save into failure",
+        "empty": "Not a collection",
+        "permission": "Authenticated route/API",
+        "draft": "Unsaved goal/pilot changes guarded"
+      },
+      "remaining": [
+        "AuthProvider exports explicit onboardingError; root route gates unknown setup and supplies explicit retry"
+      ]
+    },
+    {
+      "page": "AccessApplicationsPage.tsx",
+      "evidence": ["e2e/reviewQueuePages.spec.ts"],
+      "behavior": {
+        "loading": "Announced page loading",
+        "error": "Page and independent totals explicit retry; malformed envelope rejected",
+        "empty": "Only successful filtered page produces no matches",
+        "permission": "Administrator guard",
+        "draft": "Review note preserved through refresh/conflict"
+      },
+      "remaining": []
+    },
+    {
+      "page": "AccessControlsPage.tsx",
+      "evidence": ["e2e/accessSuspension.spec.ts"],
+      "behavior": {
+        "loading": "Busy member/decision actions",
+        "error": "Explicit read-only Retry access controls reloads organization and selected members; retains explanation",
+        "empty": "No explicit zero-count assertion on failed loads",
+        "permission": "Administrator redirect; protected accounts/server reauthentication unchanged",
+        "draft": "Unsaved decision guard, password cleared after attempt"
+      },
+      "remaining": [
+        "Native access suspension journey required; no separate mocked access-control read retry test yet"
+      ]
+    },
+    {
+      "page": "AccessReviewPage.tsx",
+      "evidence": ["e2e/accessReview.spec.ts"],
+      "behavior": {
+        "loading": "Announced complete roster load",
+        "error": "Shape and count validation rejects malformed report; reload action retained",
+        "empty": "No report represented while unavailable",
+        "permission": "Administrator guard + hash-bound server receipt",
+        "draft": "Explanation retained, confirmation invalidated on reload"
+      },
+      "remaining": []
+    },
+    {
+      "page": "OrganizationsPage.tsx",
+      "evidence": ["e2e/adminCollectionPages.spec.ts"],
+      "behavior": {
+        "loading": "Organization/member loading status",
+        "error": "Independent unknown totals and row retry",
+        "empty": "Successful valid page only",
+        "permission": "Scoped server directory checks",
+        "draft": "Member dialog selection separate from page state"
+      },
+      "remaining": []
+    },
+    {
+      "page": "PilotTeamPage.tsx",
+      "evidence": ["e2e/adminCollectionPages.spec.ts", "e2e/identity.spec.ts"],
+      "behavior": {
+        "loading": "Page/member/role loading",
+        "error": "Independent totals unavailable, role/member retry, invitation decision inline errors",
+        "empty": "Successful valid page only",
+        "permission": "Current team permissions, fresh server authorization",
+        "draft": "Invitation address/review forms guarded; no password persistence"
+      },
+      "remaining": [],
+      "components": ["components/team/TeamMembers.tsx"]
+    },
+    {
+      "page": "SupportPage.tsx",
+      "evidence": ["e2e/supportRequests.spec.ts"],
+      "behavior": {
+        "loading": "Announced history loading",
+        "error": "History alert with explicit Refresh requests; request ambiguity keeps same idempotency key",
+        "empty": "No requests only after valid history",
+        "permission": "Operator/current-user server scope",
+        "draft": "Review reason preserved through refresh and failed mutation"
+      },
+      "remaining": []
+    },
+    {
+      "page": "NotificationsPage.tsx",
+      "evidence": ["e2e/notifications.spec.ts"],
+      "behavior": {
+        "loading": "Announced notification loading",
+        "error": "Current read/receipt failure explicit retry, unknown count",
+        "empty": "Only successful current list",
+        "permission": "Current actor notifications only",
+        "draft": "No text draft; receipt action explicit"
+      },
+      "remaining": []
+    },
+    {
+      "page": "EvidenceReviewPage.tsx",
+      "evidence": ["e2e/documentReviewJourney.spec.ts", "e2e/documentReview.spec.ts"],
+      "behavior": {
+        "loading": "Queue and detail loading statuses",
+        "error": "Queue refresh, history refresh, submit errors near review; malformed API decoder",
+        "empty": "No decision explicitly not approval",
+        "permission": "Administrator queue and server file authorization",
+        "draft": "Reason/file/claim preserved under failure, discard guarded"
+      },
+      "remaining": [],
+      "components": ["components/evidenceReview/EvidenceReviewHistory.tsx"]
+    },
+    {
+      "page": "OperationsPage.tsx",
+      "evidence": ["e2e/operations.spec.ts"],
+      "behavior": {
+        "loading": "Explicit operations refresh state",
+        "error": "Strict response validators, unknown queue/alert health and refresh recovery",
+        "empty": "No terminal work only after successful response",
+        "permission": "Administrator guard; native recovery rechecks authority",
+        "draft": "Recovery explanation preserved through refresh/conflict"
+      },
+      "remaining": []
+    }
+  ]
+}

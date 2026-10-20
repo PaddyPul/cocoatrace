@@ -1,4 +1,4 @@
-import { useUnsavedChanges } from '../components/shared/UnsavedChanges';
+import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useCatalogPage } from '../components/catalog/useCatalogPage';
 import PageNavigation from '../components/catalog/PageNavigation';
 import SupplyPathChoice from '../components/supply/SupplyPathChoice';
@@ -27,6 +27,14 @@ export default function PublishSupplyPage() {
   const [destination, setDestination] = useState('');
   const [edited, setEdited] = useState(false);
   const clearUnsaved = useUnsavedChanges(edited, 'Publish supply');
+  const discard = useDiscardChanges(edited);
+  const resetCommercialDraft = () => {
+    setEdited(false);
+    setPrice('');
+    setCurrency('EUR');
+    setIncoterm('CIF');
+    setDestination('');
+  };
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const loading = page.loading;
@@ -108,14 +116,32 @@ export default function PublishSupplyPage() {
         <button
           className="btn"
           disabled={busy}
-          onClick={() => {
-            setAppliedSearch(inventorySearch.trim());
-            page.refresh();
-          }}
+          onClick={() =>
+            discard(() => {
+              resetCommercialDraft();
+              setAppliedSearch(inventorySearch.trim());
+              page.refresh();
+            })
+          }
         >
           Search inventory
         </button>
-        <PageNavigation page={page} label="inventory" />
+        <PageNavigation
+          page={{
+            ...page,
+            next: () =>
+              discard(() => {
+                resetCommercialDraft();
+                page.next();
+              }),
+            previous: () =>
+              discard(() => {
+                resetCommercialDraft();
+                page.previous();
+              }),
+          }}
+          label="inventory"
+        />
       </div>
       {loading ? (
         <p role="status">Loading inventory…</p>
@@ -174,9 +200,12 @@ export default function PublishSupplyPage() {
                   <button
                     key={item.id}
                     onClick={() => {
-                      setSelected(item.id);
-                      setQuantity(String(item.quantity_kg));
-                      setEdited(true);
+                      if (item.id !== selected)
+                        discard(() => {
+                          resetCommercialDraft();
+                          setSelected(item.id);
+                          setQuantity(String(item.quantity_kg));
+                        });
                     }}
                     className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left ${selected === item.id ? 'border-brand-400/40 bg-brand-400/5' : 'border-border bg-surface-darker'}`}
                   >

@@ -7,40 +7,70 @@ import { StatusBadge } from '../shared/helpers';
 export default function FarmBatches({ farmId }: { farmId: string }) {
   const navigate = useNavigate();
   const page = useCatalogPage(batches.page, { farm: farmId });
+  const [version, setVersion] = useState(0);
+  const [totalsLoading, setTotalsLoading] = useState(true);
+  const [totalsError, setTotalsError] = useState('');
   const [totals, setTotals] = useState<{ count: number; recorded_quantity_kg: string } | null>(
     null,
   );
   useEffect(() => {
     let active = true;
     setTotals(null);
+    setTotalsLoading(true);
+    setTotalsError('');
     batches
       .summary(farmId)
       .then((row) => {
-        if (active && typeof row.count === 'number' && typeof row.recorded_quantity_kg === 'string')
-          setTotals(row);
+        if (
+          !row ||
+          !Number.isSafeInteger(row.count) ||
+          row.count < 0 ||
+          typeof row.recorded_quantity_kg !== 'string' ||
+          !Number.isFinite(Number(row.recorded_quantity_kg)) ||
+          Number(row.recorded_quantity_kg) < 0
+        )
+          throw new Error('Invalid farm batch totals');
+        if (active) setTotals(row);
       })
-      .catch(() => {});
+      .catch(() => {
+        if (active)
+          setTotalsError('Batch totals unavailable. Page length is not the full farm total.');
+      })
+      .finally(() => {
+        if (active) setTotalsLoading(false);
+      });
     return () => {
       active = false;
     };
-  }, [farmId]);
+  }, [farmId, version]);
   return (
     <section
       aria-label="Farm batch history"
       className="rounded border border-border bg-surface p-5"
     >
       <h3 className="text-sm font-semibold">Recorded batches</h3>
-      {totals ? (
+      {totalsLoading ? (
+        <p role="status" className="my-2 text-xs">
+          Loading farm batch totals…
+        </p>
+      ) : totals ? (
         <p className="my-2 text-xs">
           {totals.count} recorded batches · {Number(totals.recorded_quantity_kg).toLocaleString()}{' '}
           kg recorded source quantity
         </p>
       ) : (
-        <p role="status" className="my-2 text-xs">
-          Batch totals unavailable. Page length is not the full farm total.
+        <p role="alert" className="my-2 text-xs">
+          {totalsError}
         </p>
       )}
-      <button className="btn btn-sm" disabled={page.loading} onClick={page.refresh}>
+      <button
+        className="btn btn-sm"
+        disabled={page.loading}
+        onClick={() => {
+          page.refresh();
+          setVersion((value) => value + 1);
+        }}
+      >
         Retry farm batches
       </button>
       {page.loading ? (

@@ -20,13 +20,17 @@ export default function InvestorDemoPage() {
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState('');
+  const [readVersion, setReadVersion] = useState(0);
 
   useEffect(() => {
+    let active = true;
+    setLoading(true); setError(''); setLots([]); setImpact(null);
     traceability.listLots()
-      .then(setLots)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+      .then(rows => { if (!Array.isArray(rows) || rows.some(row => !row || typeof row.id !== 'string')) throw new Error('Invalid demo lot response.'); if (active) setLots(rows); })
+      .catch(err => { if (active) setError(err instanceof Error ? err.message : 'Demo lots unavailable.'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [readVersion]);
 
   const suspectLot = useMemo(
     () => lots.find((lot) => lot.lotCode === 'GH-2026-0917') || lots.find((lot) => lot.lotType === 'source'),
@@ -106,7 +110,7 @@ export default function InvestorDemoPage() {
               <button className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-brand-300 hover:text-brand-200" onClick={() => navigate('/recalls')}>Open the full investigation workspace <ArrowRight size={14} /></button>
             </div>
           )}
-          {error && <div className="mt-4 rounded-xl border border-red-400/25 bg-red-400/10 px-4 py-3 text-xs text-red-300">{error}</div>}
+          {error && <div role="alert" className="mt-4 rounded-xl border border-red-400/25 bg-red-400/10 px-4 py-3 text-xs text-red-300">{error}<button className="btn ml-2" onClick={() => setReadVersion(value => value + 1)}>Retry demo records</button></div>}
         </div>
       </section>
 

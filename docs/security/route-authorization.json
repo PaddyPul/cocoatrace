@@ -1735,6 +1735,25 @@
     },
     {
       "method": "GET",
+      "path": "/operations/metrics",
+      "source": "api/src/routes/operations.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "*"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "inline",
+      "authentication": "session"
+    },
+    {
+      "method": "GET",
       "path": "/operations/status",
       "source": "api/src/routes/operations.ts",
       "guards": [

@@ -1,5 +1,17 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'web/src/components/auth/AuthProvider.tsx',
+  'web/src/domains/marketplace/comparison.ts',
+  'e2e/tradeReadRecovery.spec.ts',
+  'e2e/adminAuthResilience.spec.ts',
+  'scripts/route-resilience.test.mjs',
+  'scripts/route-resilience.mjs',
+  'api/src/modules/operations/runtimeMetrics.test.ts',
+  'api/src/modules/operations/runtimeMetrics.ts',
+  'e2e/serviceStatus.spec.ts',
+  'scripts/service-status.test.mjs',
+  'web/src/pages/ServiceStatusPage.tsx',
+  'web/src/components/serviceStatus/status.ts',
   'web/src/components/shared/dialogKeyboard.ts',
   'web/src/components/layout/Sidebar.tsx',
   'web/src/components/layout/Layout.tsx',

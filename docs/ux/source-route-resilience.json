@@ -1,0 +1,510 @@
+{
+  "scope": "Source, inventory, catalog, public and trace families; includes final ownership of ListingDetailPage and CompareOffersPage by agreement. Excludes auth/admin/trading families assigned separately.",
+  "audit_date": "2026-10-19",
+  "method": "Read mutation/read branches and state guards, preserve accepted first-batch fixes, add regressions for concrete remaining swallowed errors. Tests are authored and typechecked; browser execution is not claimed.",
+  "entries": [
+    {
+      "route": "/farms",
+      "page": "SourceFarmsPage",
+      "evidence": {
+        "implementation": ["web/src/pages/SourceFarmsPage.tsx"],
+        "browser_suites": ["e2e/sourceRecordPages.spec.ts"],
+        "checked_states": [
+          "paged loading/error/retry, explicit initial versus filtered empty",
+          "create form inline failure preserves draft",
+          "access controls hide unauthorized creation"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/farms/:id",
+      "page": "FarmDetailPage",
+      "evidence": {
+        "implementation": ["web/src/pages/FarmDetailPage.tsx"],
+        "browser_suites": ["e2e/sourceDetailFailures.spec.ts"],
+        "checked_states": [
+          "detail read validation, cancellation, error alert and retry/back",
+          "plot mutation inline failure preserves draft",
+          "FarmPlots/FarmCertificates independently distinguish errors, empty and totals unavailable"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/batches",
+      "page": "SourceBatchesPage",
+      "evidence": {
+        "implementation": ["web/src/pages/SourceBatchesPage.tsx"],
+        "browser_suites": ["e2e/sourceRecordPages.spec.ts"],
+        "checked_states": [
+          "paged loading/error/retry and initial versus filtered empty",
+          "FarmPicker error disables selection, retains create fields on failure"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/batches/:id",
+      "page": "BatchDetailPage",
+      "evidence": {
+        "implementation": ["web/src/pages/BatchDetailPage.tsx"],
+        "browser_suites": ["e2e/sourceDetailFailures.spec.ts"],
+        "checked_states": [
+          "read validation/retry and independent product identity loading/error/404",
+          "failed identity never invites duplicate creation",
+          "confirmed publish write remains separate from refresh failure",
+          "attestation and supply forms keep failed drafts"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/holdings",
+      "page": "InventoryPage",
+      "evidence": {
+        "implementation": ["web/src/pages/InventoryPage.tsx"],
+        "browser_suites": ["e2e/catalogPages.spec.ts"],
+        "checked_states": [
+          "paged read errors distinct from empty/filter miss",
+          "aggregate and transfer reads isolated",
+          "create holding failure retains fields"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/holdings/:id",
+      "page": "HoldingDetailPage",
+      "evidence": {
+        "implementation": ["web/src/pages/HoldingDetailPage.tsx"],
+        "browser_suites": ["e2e/sourceDetailFailures.spec.ts"],
+        "checked_states": [
+          "read error/malformed response explicit retry/back",
+          "cancel stale request",
+          "custody request inline failure keeps selected organization/quantity/reason"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/inventory/new",
+      "page": "DirectInventoryPage",
+      "evidence": {
+        "implementation": ["web/src/pages/DirectInventoryPage.tsx"],
+        "browser_suites": ["e2e/sourceEvidenceEntry.spec.ts"],
+        "checked_states": [
+          "write validation and inline API error, field values retained",
+          "busy submit disabled, success navigates to persisted record"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/supply/new",
+      "page": "PublishSupplyPage",
+      "evidence": {
+        "implementation": ["web/src/pages/PublishSupplyPage.tsx"],
+        "browser_suites": ["e2e/catalogPages.spec.ts"],
+        "checked_states": [
+          "inventory pages/search errors remain visible",
+          "form fields and selected inventory retained after failed publication",
+          "empty state only after successful read"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/products",
+      "page": "ProductsPage",
+      "evidence": {
+        "implementation": ["web/src/pages/ProductsPage.tsx"],
+        "browser_suites": ["e2e/productProfilePages.spec.ts"],
+        "checked_states": [
+          "list loading/error/retry separate from unknown totals",
+          "malformed safety rows rejected",
+          "retained hold overrides clear notice status"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/certs",
+      "page": "components/catalog/CertificateRecordsPage",
+      "evidence": {
+        "implementation": ["web/src/components/catalog/CertificateRecordsPage.tsx"],
+        "browser_suites": ["e2e/certificatePages.spec.ts"],
+        "checked_states": [
+          "list and aggregate independent errors/retry, no empty on failed read",
+          "status confirmation retains failure, issuance inline error/draft"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/my-listings",
+      "page": "MyListingsPage",
+      "evidence": {
+        "implementation": ["web/src/pages/MyListingsPage.tsx"],
+        "browser_suites": ["e2e/listingExpiry.spec.ts"],
+        "checked_states": [
+          "same-scope transient refresh retains rows and renewal draft",
+          "authorization errors clear retained records",
+          "renewal reviewed reason remains after server rejection"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/marketplace",
+      "page": "MarketplacePage",
+      "evidence": {
+        "implementation": ["web/src/pages/MarketplacePage.tsx"],
+        "browser_suites": ["e2e/sourcingRequestPages.spec.ts"],
+        "checked_states": [
+          "list read/loading/error and scoped empty",
+          "sourcing selector lookup/page errors explicit/retry",
+          "published listing lookup failure separate from unavailable history"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/listing/:id",
+      "page": "ListingDetailPage",
+      "evidence": {
+        "implementation": ["web/src/pages/ListingDetailPage.tsx"],
+        "browser_suites": ["e2e/sourceDetailFailures.spec.ts"],
+        "checked_states": [
+          "initial read error/retry",
+          "transient focus refresh keeps offer draft but blocks stale write",
+          "401/403/404 clear rows, provenance failed read is unknown with retry"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/source/compare",
+      "page": "CompareOffersPage",
+      "evidence": {
+        "implementation": ["web/src/pages/CompareOffersPage.tsx"],
+        "browser_suites": ["e2e/sourceDetailFailures.spec.ts"],
+        "checked_states": [
+          "blocked/malformed storage explicit error with bytes preserved",
+          "lookup page validation and missing selections distinct from empty shortlist",
+          "retry does not clear device selections"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/source/new",
+      "page": "SourcingBriefPage",
+      "evidence": {
+        "implementation": ["web/src/pages/SourcingBriefPage.tsx"],
+        "browser_suites": ["e2e/sourcingEdit.spec.ts"],
+        "checked_states": [
+          "saved brief read error/retry separate from editor",
+          "structure/publish mutation inline errors preserve edits",
+          "success navigates after persistence"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/evidence",
+      "page": "EvidenceRecordsPage",
+      "evidence": {
+        "implementation": ["web/src/pages/EvidenceRecordsPage.tsx"],
+        "browser_suites": ["e2e/evidencePages.spec.ts"],
+        "checked_states": [
+          "paged loading/error/retry distinct from empty",
+          "exact record query scope persists through paging"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/evidence/contribute",
+      "page": "EvidenceContributionPage",
+      "evidence": {
+        "implementation": ["web/src/pages/EvidenceContributionPage.tsx"],
+        "browser_suites": ["e2e/evidenceSelection.spec.ts"],
+        "checked_states": [
+          "selector and deep-link lookup failures retry without source-create invitation",
+          "file/explanation retained on failed upload",
+          "success clears file only after attachment persisted"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/p/:slug",
+      "page": "PublicProductPage",
+      "evidence": {
+        "implementation": ["web/src/pages/PublicProductPage.tsx"],
+        "browser_suites": ["e2e/publicJourneyPages.spec.ts"],
+        "checked_states": [
+          "public profile error alert and retry, malformed base rejected",
+          "loading announced",
+          "journey/evidence/notices paged independently; unknown safety when notice failure",
+          "telemetry failure deliberately does not block profile"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/recalls",
+      "page": "RecallCenterPage",
+      "evidence": {
+        "implementation": ["web/src/pages/RecallCenterPage.tsx"],
+        "browser_suites": ["e2e/recallRegisterPages.spec.ts"],
+        "checked_states": [
+          "trace list/calculation failures explicit; response register independent",
+          "paging error distinct from no notices",
+          "activation failure keeps draft/review"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/recalls response",
+      "page": "components/recalls/RecallResponsePanel",
+      "evidence": {
+        "implementation": ["web/src/components/recalls/RecallResponsePanel.tsx"],
+        "browser_suites": ["e2e/recallResponsePages.spec.ts"],
+        "checked_states": [
+          "collections errors/retained response/scoped selection",
+          "recovery form retained on refresh failure",
+          "review errors retained for recovery and resolution"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/farms/:id/plots",
+      "page": "components/catalog/FarmPlots",
+      "evidence": {
+        "implementation": ["web/src/components/catalog/FarmPlots.tsx"],
+        "browser_suites": ["e2e/sourceDetailCollections.spec.ts"],
+        "checked_states": [
+          "independent read/loading/retry and scoped empty",
+          "total unavailable never count zero"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/farms/:id/certificates",
+      "page": "components/catalog/FarmCertificates",
+      "evidence": {
+        "implementation": ["web/src/components/catalog/FarmCertificates.tsx"],
+        "browser_suites": ["e2e/certificateDetails.spec.ts"],
+        "checked_states": [
+          "independent list and summary errors/retry",
+          "scoped empty only on successful page"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/batches/:id/evidence",
+      "page": "components/catalog/BatchEvidence",
+      "evidence": {
+        "implementation": ["web/src/components/catalog/BatchEvidence.tsx"],
+        "browser_suites": ["e2e/sourceDetailCollections.spec.ts"],
+        "checked_states": [
+          "independent list and summary errors/retry",
+          "scoped empty only on successful page"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/p/:slug collections",
+      "page": "components/catalog/PublicJourneyPanel/PublicEvidencePanel/PublicNoticesPanel",
+      "evidence": {
+        "implementation": [
+          "web/src/components/catalog/PublicJourneyPanel.tsx",
+          "web/src/components/catalog/PublicEvidencePanel.tsx",
+          "web/src/components/catalog/PublicNoticesPanel.tsx"
+        ],
+        "browser_suites": ["e2e/publicNoticePages.spec.ts"],
+        "checked_states": [
+          "scoped malformed page validation and explicit retry",
+          "no unverified full-history empty or safety clearance",
+          "unavailable aggregate invalidates safety callback"
+        ]
+      },
+      "remaining": [
+        "Browser runtime acceptance must be supplied by full release for current commit."
+      ]
+    },
+    {
+      "route": "/farms/:id/batches",
+      "page": "components/catalog/FarmBatches",
+      "evidence": {
+        "implementation": ["web/src/components/catalog/FarmBatches.tsx"],
+        "browser_suites": ["e2e/sourceDetailFailures.spec.ts"],
+        "checked_states": [
+          "list/summary independent errors and unknown totals",
+          "loading distinguished from summary failure",
+          "Retry farm batches retries both page and aggregate, validating nonnegative totals"
+        ]
+      },
+      "remaining": ["Full release browser acceptance for current commit."]
+    },
+    {
+      "route": "/audit",
+      "page": "AuditRecordsPage",
+      "evidence": {
+        "implementation": ["web/src/pages/AuditRecordsPage.tsx"],
+        "browser_suites": ["e2e/auditPages.spec.ts"],
+        "checked_states": [
+          "Loading announced; malformed/hash/page rejection explicit; exact filter scope preserved; failed page does not claim empty history; Retry audit events retained."
+        ]
+      },
+      "remaining": ["Integrated browser acceptance for current commit."]
+    },
+    {
+      "route": "/dashboard",
+      "page": "ControlTowerPage",
+      "evidence": {
+        "implementation": ["web/src/pages/ControlTowerPage.tsx"],
+        "browser_suites": ["e2e/workspaceOverview.spec.ts"],
+        "checked_states": [
+          "Whole aggregate validator rejects malformed overview; clears prior data on refresh; loading/error/Retry workspace totals; stale response sequence guard."
+        ]
+      },
+      "remaining": ["Integrated browser acceptance for current commit."]
+    },
+    {
+      "route": "compatibility export",
+      "page": "DashboardPage",
+      "evidence": {
+        "implementation": ["web/src/pages/DashboardPage.tsx"],
+        "browser_suites": ["e2e/workspaceOverview.spec.ts"],
+        "checked_states": [
+          "Re-export of ControlTowerPage, no independent request/mutation or state branch."
+        ]
+      },
+      "remaining": [
+        "Integrated current-commit acceptance; no independent async states apply to static/compatibility routes."
+      ]
+    },
+    {
+      "route": "compatibility exports",
+      "page": "DataPages",
+      "evidence": {
+        "implementation": ["web/src/pages/DataPages.tsx"],
+        "browser_suites": ["e2e/catalogPages.spec.ts"],
+        "checked_states": [
+          "Named re-exports of route implementations; no independent data reads or state. Trading/admin targets inventoried by their owners."
+        ]
+      },
+      "remaining": [
+        "Integrated current-commit acceptance; no independent async states apply to static/compatibility routes."
+      ]
+    },
+    {
+      "route": "/demo",
+      "page": "InvestorDemoPage",
+      "evidence": {
+        "implementation": ["web/src/pages/InvestorDemoPage.tsx"],
+        "browser_suites": [],
+        "checked_states": [
+          "Seeded-demo only; list loading/error/retry and malformed array guard; failed calculation shows error, no recall activation."
+        ]
+      },
+      "remaining": [
+        "Demo route requires demo-mode build; malformed list/calculation retry runtime acceptance not executed here."
+      ]
+    },
+    {
+      "route": "/pilot/limitations",
+      "page": "PilotLimitationsPage",
+      "evidence": {
+        "implementation": ["web/src/pages/PilotLimitationsPage.tsx"],
+        "browser_suites": ["scripts/platform-role.test.mjs"],
+        "checked_states": [
+          "Static imported pilot limitations content; no API request, empty collection or mutation to fail. Shared shell errors owned separately."
+        ]
+      },
+      "remaining": [
+        "Integrated current-commit acceptance; no independent async states apply to static/compatibility routes."
+      ]
+    },
+    {
+      "route": "/platform-role",
+      "page": "PlatformRolePage",
+      "evidence": {
+        "implementation": ["web/src/pages/PlatformRolePage.tsx"],
+        "browser_suites": ["scripts/platform-role.test.mjs"],
+        "checked_states": [
+          "Public static imported role content; no API dependency, async loading, empty collection or mutation."
+        ]
+      },
+      "remaining": [
+        "Integrated current-commit acceptance; no independent async states apply to static/compatibility routes."
+      ]
+    }
+  ],
+  "whole_item_remaining": [
+    "Combine with other agents route inventories before whole-app UX-003, UX-004, UX-005 or PRD-011 closure.",
+    "A static component audit cannot replace founder browser/full-release acceptance.",
+    "Generic catalog envelope validation does not establish comprehensive domain validation for every row; that is a separate API contract concern."
+  ],
+  "new_regressions": [
+    "e2e/sourceDetailFailures.spec.ts: supply draft survives transient refresh, stale offer disabled, denial removes record, provenance failure explicit; malformed shortlist does not invent empty history."
+  ],
+  "preserved_intentional_exceptions": [
+    "Public scan analytics failures do not interrupt product read and do not claim safety or a successful business write.",
+    "Public product profile failure hides all content until successful retry; public safety collections independently fail closed."
+  ]
+}

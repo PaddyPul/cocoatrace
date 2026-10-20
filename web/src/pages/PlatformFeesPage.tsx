@@ -11,21 +11,59 @@ export default function PlatformFeesPage() {
   const [rows, setRows] = useState<Statement['fee'][]>([]),
     [error, setError] = useState(''),
     [report, setReport] = useState<FeeReconciliation | null>(null);
+  const [loading, setLoading] = useState(!id);
+  const [retry, setRetry] = useState(0);
+  const [reportError, setReportError] = useState('');
+  const [reconciling, setReconciling] = useState(false);
   useEffect(() => {
-    if (!id)
+    let active = true;
+    if (!id) {
+      setLoading(true);
+      setError('');
+      setRows([]);
+
       platformFees
         .list()
-        .then(setRows)
-        .catch((e) => setError(e.message));
-  }, [id]);
+        .then((value) => {
+          if (
+            !Array.isArray(value) ||
+            value.some(
+              (row) =>
+                !row ||
+                typeof row.id !== 'string' ||
+                typeof row.contract_id !== 'string' ||
+                typeof row.status !== 'string' ||
+                typeof row.currency !== 'string' ||
+                !Number.isFinite(Number(row.amount_total)),
+            )
+          )
+            throw new Error('Invalid fee register response. Retry the register.');
+          if (active) setRows(value);
+        })
+        .catch((e) => {
+          if (active) setError(e.message);
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    }
+    return () => {
+      active = false;
+    };
+  }, [id, retry]);
   const reconcile = async () => {
+    setReconciling(true);
+    setReport(null);
+    setReportError('');
     try {
       const value = await platformFees.reconcile();
       setReport(value);
-      setError('');
+      setReportError('');
       downloadJson('cocoatrace-fee-reconciliation.json', value);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Reconciliation failed');
+      setReportError(e instanceof Error ? e.message : 'Reconciliation failed');
+    } finally {
+      setReconciling(false);
     }
   };
   return (
@@ -36,13 +74,21 @@ export default function PlatformFeesPage() {
           Commercial fee statements are separate from goods payments. Tax treatment and external
           collection channels need platform agreement.
         </p>
-        {error && <p role="alert">{error}</p>}
+        {error && (
+          <p role="alert">
+            {error}{' '}
+            <button className="btn" onClick={() => setRetry((value) => value + 1)}>
+              Retry fee register
+            </button>
+          </p>
+        )}
+        {reportError && <p role="alert">{reportError}</p>}
         {id ? (
           <FeeStatement contractId={id} />
         ) : (
           <>
             {canDo('finance.manage') && (
-              <button className="btn" onClick={() => void reconcile()}>
+              <button className="btn" disabled={reconciling} onClick={() => void reconcile()}>
                 Reconcile and export fee ledger
               </button>
             )}
@@ -65,7 +111,8 @@ export default function PlatformFeesPage() {
                 ))}
               </div>
             )}
-            {!rows.length && !error && (
+            {loading && <p role="status">Loading fee register…</p>}
+            {!loading && !rows.length && !error && (
               <p>
                 No fee statements for your organization yet. A fee estimate is created when an offer
                 is accepted.

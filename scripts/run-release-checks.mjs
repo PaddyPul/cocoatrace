@@ -30,6 +30,7 @@ export const releaseChecks = [
     true,
   ],
   ['Language foundation tests', ['run', 'test:locale']],
+  ['Workspace route-state evidence', ['run', 'check:workspace-states']],
   ['Critical-domain regression evidence', ['run', 'check:regressions']],
   ['Pilot risk register', ['run', 'check:risks']],
   ['Pilot architecture and capability evidence', ['run', 'check:pilot-evidence']],

@@ -177,3 +177,114 @@ test('confirmed publication with failed refresh shows unknown identity without r
   ).toBeVisible();
   expect(writes).toBe(1);
 });
+
+test('supply refresh preserves a drafted offer, blocks stale submission and clears denied records', async ({
+  page,
+}) => {
+  await workspace(page);
+  let status = 200;
+  let writes = 0;
+  await page.route('**/api/listings/listing-resilience', (route) =>
+    route.fulfill(
+      status === 200
+        ? {
+            json: {
+              id: 'listing-resilience',
+              seller_organization_id: 'seller-org',
+              seller_name: 'Supplier',
+              batch_id: 'batch-resilience',
+              available_quantity_kg: 10,
+              price_per_kg: 4,
+              currency: 'EUR',
+              incoterm: 'FOB',
+              crop: 'peanut',
+              organic_claim_status: 'none',
+              active: true,
+            },
+          }
+        : {
+            status,
+            json: {
+              error: status === 403 ? 'Supply access revoked' : 'Supply temporarily unavailable',
+            },
+          },
+    ),
+  );
+  await page.route('**/api/provenance/**', (route) =>
+    route.fulfill({ status: 503, json: { error: 'Provenance temporarily unavailable' } }),
+  );
+  await page.route('**/api/offers', (route) => {
+    writes += 1;
+    return route.fulfill({ status: 409, json: { error: 'Unexpected write' } });
+  });
+  await page.goto('/listing/listing-resilience');
+  const quantity = page.locator('input[type="number"]').first();
+  await quantity.fill('6');
+  status = 503;
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Supply refresh unavailable' }),
+  ).toBeVisible();
+  await expect(quantity).toHaveValue('6');
+  await expect(
+    page.getByRole('button', { name: 'Send evidence-backed offer', exact: true }),
+  ).toBeDisabled();
+  expect(writes).toBe(0);
+  status = 200;
+  await page.getByRole('button', { name: 'Retry supply', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Send evidence-backed offer', exact: true }),
+  ).toBeEnabled();
+  await expect(quantity).toHaveValue('6');
+  await expect(page.getByRole('alert').filter({ hasText: 'Provenance unavailable' })).toBeVisible();
+  await expect(page.getByText('Checks unavailable', { exact: true })).toBeVisible();
+  status = 403;
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(page.getByRole('alert')).toContainText('Supply access revoked');
+  await expect(page.getByRole('heading', { name: 'Build an offer', exact: true })).toHaveCount(0);
+});
+
+test('malformed shortlist is an explicit read failure and preserves device bytes', async ({
+  page,
+}) => {
+  await workspace(page);
+  await page.addInitScript(() =>
+    sessionStorage.setItem('ct_shortlisted_listings:detail-user', '{invalid'),
+  );
+  await page.goto('/source/compare');
+  await expect(page.getByRole('alert')).toContainText('shortlist could not be read');
+  await expect(page.getByText('Nothing to compare yet', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Retry comparison', exact: true })).toBeVisible();
+  expect(
+    await page.evaluate(() => sessionStorage.getItem('ct_shortlisted_listings:detail-user')),
+  ).toBe('{invalid');
+});
+
+test('farm batch aggregate failure remains unknown and its retry reloads totals', async ({
+  page,
+}) => {
+  await workspace(page);
+  await page.route(/\/api\/farms\/farm-review(?:\?.*)?$/, (route) =>
+    route.fulfill({
+      json: {
+        farm: { id: 'farm-review', name: 'Reviewed farm', farmer_organization_id: 'detail-org' },
+      },
+    }),
+  );
+  let unavailable = true;
+  await page.route('**/api/batches/summary**', (route) => {
+    expect(new URL(route.request().url()).searchParams.get('farm')).toBe('farm-review');
+    return route.fulfill(
+      unavailable
+        ? { status: 503, json: { error: 'Unavailable' } }
+        : { json: { count: 1005, recorded_quantity_kg: '1250.000' } },
+    );
+  });
+  await page.goto('/farms/farm-review');
+  await expect(page.getByRole('heading', { name: 'Reviewed farm', exact: true })).toBeVisible();
+  const history = page.getByRole('region', { name: 'Farm batch history', exact: true });
+  await expect(history.getByRole('alert')).toContainText('Batch totals unavailable');
+  unavailable = false;
+  await history.getByRole('button', { name: 'Retry farm batches', exact: true }).click();
+  await expect(history).toContainText('1005 recorded batches');
+});
