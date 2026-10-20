@@ -12,20 +12,23 @@ CocoaTrace has five explicit application environments. `APP_ENV` controls applic
 
 ## Local demo
 
-`setup.sh` creates `.env` from `.env.demo.example` on first setup. Demo reset commands require `APP_ENV=demo` and `DEMO_MODE=true`. The frontend independently requires `VITE_DEMO_MODE=true` at build or development-server startup; this prevents a runtime API setting from accidentally exposing seeded credentials in a production web bundle.
+Use the full local Compose stack from the repository root. Preserve an existing `.env`; on a fresh checkout, copy `.env.demo.example` to `.env` first. The frontend independently requires `VITE_DEMO_MODE=true` at build time; an API setting alone cannot expose demo controls in a production web bundle.
 
 ```bash
-bash setup.sh
-npm run dev
+test -f .env || cp .env.demo.example .env
+docker compose up -d --build
+docker compose ps
 ```
 
-The Docker Compose file is also an explicitly local demo stack. It builds the web UI with demo controls enabled and runs the API with `APP_ENV=demo`. API startup applies migrations but does **not** seed or reset data. Initialize a fresh demo deliberately:
+Wait for PostgreSQL, ClamAV and the API to become healthy. Initial scanner signature loading can take several minutes. The API applies migrations at startup but does **not** seed or reset data. Only for a new, isolated synthetic demo database, initialize example records explicitly:
 
 ```bash
-docker compose up -d postgres
-docker compose run --rm api npx tsx api/scripts/demo.ts incident
-docker compose up -d
+docker compose exec -T api node --import tsx api/scripts/seed.ts
 ```
+
+Open `http://localhost:3000`. The hardened API image has no npm/npx; use its documented Node entry points. Default Compose ports are published and this stack must not be exposed as a public pilot. `docker compose stop` preserves volumes; never reset customer data to resolve startup or login failures.
+
+For host development, use `.env.example`, install with `npm ci`, configure the required services, apply migrations with `npm run db:migrate`, then use `npm run dev`. Root `.env` takes precedence over `api/.env`. Development scanner/storage modes are not deployed assurance. The older `setup.sh` starts only PostgreSQL while its demo template expects ClamAV; use the full Compose path above for an evidence-ready synthetic demonstration.
 
 ## Staging and production
 

@@ -1,406 +1,169 @@
-> **BetterTrade planning update (2026-10-06):** CocoaTrace is the current runtime/repository name. The [BetterTrade pilot plan](docs/BETTERTRADE_PILOT_PLAN.md) is the current product direction; rebranding is staged to preserve existing installations. See [the backlog audit and percentages](docs/BACKLOG_GROOMING_2026-10-06.md). No provider marketplace capability is implied by the rename.
+# BetterTrade
 
-# CocoaTrace — Organic Cocoa Provenance Platform
+**Evidence-backed raw-material sourcing, trade coordination and traceability.**
 
-> CocoaTrace is a product identity and safety network for trusted food trade, beginning with Ghana-to-EU cocoa. See the [pilot operating model](docs/PILOT_OPERATING_MODEL.md) and [production release gate](docs/PRODUCTION_READINESS.md).
+BetterTrade helps buyers and suppliers move from a sourcing requirement to an agreed trade, recorded payment checks, physical delivery and an auditable closeout. Source records, supporting documents, custody history and recall response stay connected to the material and decisions they support.
 
-Web2 provenance platform for the Ghana → Netherlands organic cocoa corridor.
+This repository contains the application, automated release tooling, operating runbooks and delivery backlog. Its technical name remains **`cocoatrace`**: existing database names, package names, environment variables and deployment identifiers are intentionally preserved. Customer-facing branding is BetterTrade.
 
-The MVP now also gives traceable lots a public, QR-linked product profile with a
-farm-to-fork event feed and live recall status. See
-[`docs/FOOD_PROVENANCE_RESEARCH.md`](docs/FOOD_PROVENANCE_RESEARCH.md) for the
-research, product audit and recommended roadmap.
+> **Current stage:** an invited-pilot codebase with automated local release verification. Local tests and synthetic demonstrations do not establish hosted production readiness, regulatory approval or customer traction. The [capability matrix](docs/investor/CAPABILITY_MATRIX.md), [pilot gates](docs/pilot-gates.json) and [known limitations](docs/pilot/KNOWN_LIMITATIONS.md) distinguish implementation from remaining acceptance.
 
-The application shell, role navigation and priority workflows follow the
-[`UI/UX redesign sprint`](docs/UI_UX_REDESIGN_SPRINT.md), which also tracks the
-remaining responsive and accessibility work.
+## Start here
 
-The product strategy and system-wide experience now follow the
-[`venture-scale product blueprint`](docs/VENTURE_SCALE_PRODUCT_BLUEPRINT.md):
-Control Tower → Products → Trace & Recall, with operational records available
-as supporting tools.
+| You want to… | Read |
+| --- | --- |
+| Understand the product and its direction | [North Star](docs/NORTH_STAR.md) · [pilot plan](docs/BETTERTRADE_PILOT_PLAN.md) |
+| Evaluate what works today and what is planned | [Capability matrix](docs/investor/CAPABILITY_MATRIX.md) · [customer limitations](docs/pilot/KNOWN_LIMITATIONS.md) |
+| Run a local synthetic demonstration | [Local demo](#run-a-local-synthetic-demo) below |
+| Develop or review a change | [Contributing](CONTRIBUTING.md) · [architecture and security overview](docs/investor/ARCHITECTURE_SECURITY_OVERVIEW.md) |
+| Operate or release the application | [Release readiness](docs/PRODUCTION_READINESS.md) · [environment model](docs/ENVIRONMENTS.md) · [runbooks](docs/runbooks) |
+| Understand priorities and progress | [Delivery backlog](docs/DELIVERY_BACKLOG.md) · [current sprint](docs/SPRINT_35_CLOSURE_TARGETS_2026-10-19.md) |
+| Report a security concern | [Private reporting policy](SECURITY.md)—never disclose credentials or customer records in public issues |
 
-## Delivery source of truth
+## North Star
 
-Ongoing product and engineering work is managed in the repository:
+Make a raw-material trade understandable and reviewable from the first sourcing requirement through delivery and recorded settlement: **what is being traded, which claims have evidence, who must act next, what has actually happened, and what remains uncertain.**
 
-- [`North Star`](docs/NORTH_STAR.md) — product promise, investability thesis, outcomes and release definitions
-- [`Delivery backlog`](docs/DELIVERY_BACKLOG.md) — numbered, prioritized and tickable 16-week work plan
-- [`Architecture modernization`](docs/ARCHITECTURE_MODERNIZATION.md) — SOLID boundaries, target structure and incremental refactor order
-- [`Environment model`](docs/ENVIRONMENTS.md) — development, test, demo, staging and production safety boundaries
-- [`Contributing`](CONTRIBUTING.md) — branch, test, security, migration and backlog-update rules
+The first operating scope is a narrow, founder-approved buyer–supplier pilot. Ghana-to-Europe cocoa is the existing demonstration context; it is neither a permanent product restriction nor evidence that every commodity, country or corridor is supported.
 
-When deciding what to build next, start with the delivery backlog's **Current
-execution queue** and active phase exit gate. Material pull requests should cite
-a backlog ID and update its status only after the documented definition of done
-is satisfied.
+The wider direction includes domestic and regional trade and an optional curated logistics-service marketplace. Those extensions require explicit commodity, route, commercial and provider policies before launch. The current pilot supports externally arranged transport; it does not include a verified-provider procurement marketplace.
 
----
+Success is measured by repeatable completed customer workflows, useful evidence, reduced coordination effort and sustainable operating economics—not feature count or a fundraising valuation inferred from code. See the [North Star](docs/NORTH_STAR.md), [unit-economics hypotheses](docs/investor/UNIT_ECONOMICS_HYPOTHESES.md) and [evidence-based defensibility narrative](docs/investor/DEFENSIBILITY_NARRATIVE.md).
 
-## Prerequisites
+## The platform
 
-| Tool | Install |
-|------|---------|
-| **Node.js 18+** | https://nodejs.org |
-| **Docker Desktop** | https://docker.com/products/docker-desktop |
+| Area | Current capability | Important boundary |
+| --- | --- | --- |
+| Access and organizations | Organization applications, reviewed approval, invitations, onboarding, team access and revocable sessions | Invitation-only pilot; privileged actions use passkeys and current permissions. Hosted operator/recovery acceptance remains separate |
+| Supplier records | Conventional physical inventory, or relevant farm/plot/harvest source records | Conventional goods do not acquire fictional farm provenance or an organic claim |
+| Sourcing and marketplace | Saved editable sourcing briefs, paged search and matching, published supply and expiring offers | Negotiation takes place outside the platform; external messages do not amend accepted records |
+| Agreement and guided trade | Reviewed offer acceptance, contract records, payment terms and one shared next-action source for home and deal views | A platform agreement record is not a claim of independently executed legal signature |
+| Recorded goods payments | Five payment plans, installment submissions, seller receipt verification, bank-security records and dispatch controls | Submitting proof is distinct from verifying receipt. BetterTrade does not move or hold funds |
+| Documents and assurance | Private evidence uploads, scanning, authorized downloads, document decisions, versions and attributable claim assessments | Stored, scan-clean, supplier-declared and independently reviewed are different states; none guarantees the underlying claim |
+| Fulfillment and delivery | Incoterm-based party responsibilities, manual transport arrangements, progress/timing records, inspection and exceptions | Authorized party records are not independent carrier tracking. Buyer delivery acceptance remains distinct from payment and settlement |
+| Platform fees | Versioned fee terms, pre-dispatch collection controls for enrolled trades, recorded receipts, reviewed exceptions, statements and eligible full external-refund recovery | Original policy snapshots are preserved; no automatic debit, tax-invoice or bank-reconciliation guarantee |
+| Product identity and safety | Published QR profiles, recorded provenance, quantity-aware trace analysis, recall holds, recipient response and recovery accounting | Public output is scoped to published data; no recorded recall does not prove safety. Customer blending/repacking is not offered |
+| Workspace and operations | Current-state notifications, activity history, support references, saved filters, durable jobs, reviewed recovery, private process metrics and public service observation | Email submission is not recipient acknowledgement; device-local preferences are not cross-device storage; current status is not an uptime history |
 
-That is it. PostgreSQL runs inside Docker — nothing to install locally.
+Detailed availability and evidence are maintained in the [capability matrix](docs/investor/CAPABILITY_MATRIX.md). The public application pages `/platform-role` and `/service-status` explain the platform boundary and current service observations; the signed-in `/pilot/limitations` page carries versioned customer limitations.
 
----
+### A typical buyer–supplier trade
 
-## Quick Start
+1. **Establish the context.** The supplier records available material through the conventional or source-traceable path. The buyer saves a sourcing brief and reviews matching supply and evidence.
+2. **Agree the commercial offer.** The buyer submits an offer. The supplier reviews and accepts it, committing inventory and creating the connected contract/fulfillment workflow.
+3. **Review the agreement and payment plan.** Parties review the recorded terms, responsibilities and applicable documents. The supplier proposes payment terms; the buyer accepts the current proposal.
+4. **Record and verify payment conditions.** The buyer submits external payment/security details as required. The seller verifies actual receipt or security. Document and safety requirements remain independent checks.
+5. **Meet applicable platform-fee conditions.** Versioned policy determines consent, collection or a reviewed exception. A commercial fee statement alone is not evidence that the fee was collected; goods payments remain separate.
+6. **Coordinate dispatch and transport.** The responsible trade party records the external arrangement and physical progress. Server-side payment, fee, document, inventory and recall controls govern permitted actions.
+7. **Inspect delivery and resolve exceptions.** The buyer records inspected quantities and acceptance, or a supported shortage/damage/discrepancy path. Timing, physical delivery and acceptance are separate facts.
+8. **Complete the recorded trade.** Required receipts, delivery decisions and inventory/custody updates determine closeout. Activity, fee history and evidence remain available; unresolved safety holds are not cleared by commercial completion.
 
-```bash
-# 1. Unzip and enter the project
+Home and the deal room guide each party through the same server-derived next action. [Payment/document rules](docs/runbooks/PAYMENT_DOCUMENT_RULES.md), [fee collection](docs/runbooks/FEE_COLLECTION_ENFORCEMENT.md) and [trade next-action policy](docs/runbooks/TRADE_NEXT_ACTION_POLICY.md) explain the detailed boundaries.
+
+### When material must be recalled
+
+Trace-back and trace-forward views operate on recorded lot relationships and quantities. Authorized recall activation persists the notice, blocks affected supply and records its calculated scope. Recipients acknowledge and account for held/recovered material; resolution requires the current evidence and accounting conditions. Returned or destroyed material can retain safety holds after the notice is resolved.
+
+Missing or oversized/incomplete genealogy produces an explicit limitation instead of a silently partial safety report. A seeded demonstration graph is not evidence that customers can enter transformations or that physical traceability is independently complete. See [recall authority](docs/security/RECALL_OPERATION_AUTHORITY.md), [tabletop drills](docs/runbooks/RECALL_TABLETOP_DRILLS.md) and [transformation-claim boundaries](docs/ux/CUSTOMER_TRANSFORMATION_CLAIMS.md).
+
+## Architecture and engineering approach
+
+The codebase is a TypeScript monorepo with a React web application and an Express API backed by PostgreSQL. Feature-owned policies, use cases, repositories and frontend clients are replacing legacy mixed controllers incrementally; the modernization is not represented as finished.
+
+| Layer | Responsibility | Location |
+| --- | --- | --- |
+| Web application | Buyer/supplier experiences, guided deals, source/evidence/safety and operator interfaces | [`web/src`](web/src) |
+| API and domain modules | Authentication, authorization, validation, transactions, business policies and HTTP adapters | [`api/src`](api/src) |
+| Relational data | Organizations, commercial records, inventory/custody, traceability, audit and durable work | [`api/src/migrations`](api/src/migrations) · [`db`](db) |
+| Private evidence | Local development or configured S3-compatible storage, bounded transfers, quarantine and malware scanning | [`evidence storage`](api/src/services/evidenceStorage.ts) · [`scanner`](api/src/services/evidenceMalwareScanner.ts) |
+| Background work | Leased/retried email, reminder and cleanup jobs with private monitoring and reviewed recovery | [`operations modules`](api/src/modules/operations) |
+| Verification and delivery | Unit/native/browser tests, migration checks, image scanning, workload/recovery evidence and exact-commit release reports | [`scripts`](scripts) · [CI workflows](.github/workflows) · [`e2e`](e2e) |
+
+Optional AI-assisted narrative features are not an authorization, payment, traceability or compliance authority. Deterministic recorded facts and server policies remain the basis for business decisions.
+
+Read the [current architecture/security overview](docs/investor/ARCHITECTURE_SECURITY_OVERVIEW.md), [modernization direction](docs/ARCHITECTURE_MODERNIZATION.md), [authorization matrix](docs/security/AUTHORIZATION_MATRIX.md) and [API error contract](docs/security/API_ERROR_CONTRACT.md). The checked route register is an authorization inventory, **not** a complete OpenAPI specification or proof of every role/resource combination.
+
+## Run a local synthetic demo
+
+### Requirements
+
+- Git and Docker with Compose v2; Docker Desktop must be running on Windows/macOS.
+- Network access to pull the configured images and malware-scanner signatures.
+- For host development and release commands: Node.js **24** is the recommended runtime, with npm. See [`package.json`](package.json) for the supported engine range; CI also exercises Node 22.
+
+The default Compose stack is a **local synthetic demo**, not a staging/production deployment. It publishes web/API/database ports; use a trusted development machine and do not expose this default stack as a public pilot.
+
+### Fresh checkout
+
+```powershell
+git clone https://github.com/PaddyPul/cocoatrace.git
 cd cocoatrace
-
-# 2. Run setup  (starts Docker postgres, installs deps, loads demo data)
-bash setup.sh
-
-# 3. Start the app
-npm run dev
+if (-not (Test-Path '.env')) { Copy-Item '.env.demo.example' '.env' }
+docker compose up -d --build
+docker compose ps
 ```
 
-Open **http://localhost:3000**
+For Bash, the environment-copy equivalent is `test -f .env || cp .env.demo.example .env`; the remaining Git/Compose commands are the same. If this is an existing checkout, preserve its configuration and volumes rather than replacing them with demo defaults.
 
-For the shortest investor walkthrough, click **Launch investor demo** on the
-login page. This opens a guided Scan → Verify → Respond story and a live,
-non-destructive recall calculation using the seeded lot genealogy. The product
-requirements audit and talk track are in
-[`docs/INVESTOR_DEMO_PRODUCT_AUDIT.md`](docs/INVESTOR_DEMO_PRODUCT_AUDIT.md).
+Wait for the services to become healthy. The API applies verified migrations before it starts. Initial ClamAV signature loading can take several minutes; inspect `docker compose logs --tail 100 clamav api` if readiness is delayed.
 
-Two public scan demonstrations are seeded:
+**Only for a new, isolated synthetic demo database**, initialize the example records explicitly:
 
-- `http://localhost:3000/p/akwaaba-cocoa-2026-ready` — clear commercial export lot
-- `http://localhost:3000/p/cocoatrace-demo-incident-2026` — isolated demonstration incident
-
----
-
-## What setup.sh does
-
-1. Checks that `node`, `npm`, and `docker` are available
-2. Runs `npm install` in `api/` and `web/`
-3. Runs `docker compose up -d postgres` — starts a Postgres 16 container on port 15433
-4. Waits for the container to be healthy
-5. Applies versioned Knex migrations with `npm run db:migrate`
-6. Loads the repeatable demo seed with `npm run db:seed`
-
-`setup.sh` preserves the existing PostgreSQL volume. It does not erase pilot data.
-
----
-
-## Manual setup
-
-If you prefer to run steps individually:
-
-```bash
-# Start postgres
-docker compose up -d postgres
-
-# Install dependencies
-npm install
-
-# Apply schema + seed
-npm run db:migrate
-npm run db:seed
-
-# Start app
-npm run dev
+```powershell
+docker compose exec -T api node --import tsx api/scripts/seed.ts
 ```
 
----
+Open **[http://localhost:3000](http://localhost:3000)**. Demo-only accounts are shown by the local seed output/demo interface; do not reuse them for real organizations. Existing customer data must never be seeded or reset to fix a login or migration problem.
 
-## Demo users
+| Local endpoint | Purpose |
+| --- | --- |
+| `http://localhost:3000` | Web application; browser API calls use `/api` |
+| `http://localhost:3001` | Direct API, including `/health/live` and `/health/ready` |
+| `localhost:15433` | Local demonstration PostgreSQL port |
 
-All passwords: **Password123!**
+The hardened API image intentionally does not include `npm`/`npx`. Use documented Node entry points inside it; host npm commands run from the repository root. `docker compose stop` preserves local volumes. Destructive resets and migration-ledger edits are not troubleshooting steps.
 
-| Email | Role | What you can do |
-|-------|------|----------------|
-| `kwame@farm.gh` | Farmer | Register farms, record harvests |
-| `akosua@organiccert.gh` | Certifier | Issue certificates, attest batches |
-| `ama@accragold.gh` | Exporter | Manage inventory, listings, contracts |
-| `pieter@dutchcacao.nl` | Importer | Browse listings, make offers, confirm payments |
-| `kofi@marecargo.gh` | Logistics | Record shipment milestones |
-| `ingrid@cocobod.gh` | Regulator | View audit log, all farms, all batches |
-| `admin@cocoatrace.io` | Admin | Full access |
-| `newbuyer@cocoatrace.io` | New buyer | Start in a genuinely empty buyer organization |
-| `newsupplier@cocoatrace.io` | New supplier | Start in a genuinely empty supplier organization |
+### Host development
 
-Click the quick-login pills on the login page — no typing needed.
+Use the development environment examples, install reproducibly with `npm ci`, start the required local services, apply migrations with `npm run db:migrate`, then run `npm run dev`. The web development server proxies `/api` to the API. Root `.env` values take precedence over `api/.env`; inspect existing configuration before changing it.
 
----
+Development storage/scanning modes are not a substitute for deployed private storage and real malware scanning. The older `setup.sh` helper is not the recommended evidence-ready path: it starts PostgreSQL only, while its demo template expects a scanner. Start with the full Compose demo above or follow a deliberately configured development environment in the [environment guide](docs/ENVIRONMENTS.md).
 
-## Pre-loaded demo corridor
+## Verify a change
 
-- **3 farms** in Ashanti region with 4 plots (C1 intentionally has no GPS — triggers an evidence gap; the incident farm is isolated)
-- **2 current EU Organic certificates** issued by OrganicCert Ghana
-- **3 harvest batches** — one trade-ready, one needing geolocation, one isolated incident lot
-- **4 holdings** across 3 warehouses
-- **2 active listings** on the marketplace
-- **1 sales contract** — 8,000 kg CIF Rotterdam with Northstar Foods B.V.
-- **1 active shipment** — MV Atlantic Bridge, departed Tema on 18 September 2026
-- **1 payment request** — €67,200 outstanding
-- **1 isolated recall graph** — distributed before the 20 September 2026 incident and never listed for sale
+Install host dependencies with `npm ci`. Run commands from the repository root:
 
-### Deterministic demo scenarios
+| Command | Purpose |
+| --- | --- |
+| `npm run check:quality` | Lint, scoped formatting and script/quality contracts |
+| `npm run typecheck` | API, web and browser TypeScript checks |
+| `npm test --workspace=api` | API unit regressions |
+| `npm run test:integration:docker --workspace=api` | Disposable database/storage/scanner integration suites |
+| `npm run test:browser:docker` | Disposable browser, database and captured-email journeys |
+| `npm run verify:release` | Ordered release gates, stopping at the first failed gate |
+| `npm run backlog:progress` | Backlog and pilot-gate closure counts, separate from readiness |
 
-These commands intentionally reset only a recognized local demo database and
-preserve Knex migration history. They require `APP_ENV=demo` and
-`DEMO_MODE=true`, and always refuse staging or production.
+A focused native run takes **one suite filename**, for example `npm run test:integration:docker --workspace=api -- operationsWorkers.integration.test.ts`. Do not run overlapping copies of the same disposable Docker project. Frontend-only mocked browser checks require the preview server and the explicit disposable origin described in the [browser runbook](docs/runbooks/BROWSER_REGRESSION.md).
 
-```bash
-npm run demo:seed:fresh       # identities only; empty new-customer workspaces
-npm run demo:seed:commercial  # coherent sourcing-to-shipment story, no incident
-npm run demo:seed:incident    # full commercial story plus isolated recall
-npm run demo:validate         # verify quantities, dates, evidence and safety rules
-```
+Release reports live under `release-test-results`; individual gates retain their own reports. Check that the report passed for the **current commit**, the commit did not change during verification and tracked files remained clean. Required CI and review must pass before merge. Logs, credentials, private traces and customer evidence do not belong in public PR artifacts. See [contribution rules](CONTRIBUTING.md), [quality policy](docs/engineering/CODE_QUALITY.md) and [production readiness](docs/PRODUCTION_READINESS.md).
 
-`npm run demo:reset` is an alias for the complete incident scenario. Ordinary
-`setup.sh` remains non-destructive and never invokes the reset command.
-- **3 evidence documents** — certificate, weighing ticket, bill of lading
+## Operating and launch boundaries
 
----
+BetterTrade is **not a certifier, bank, escrow provider, carrier, customs broker or legal compliance authority**. It coordinates records and decisions; independent parties remain responsible for certification, funds, carriage, customs and legal requirements. Scanning does not guarantee file safety, a recorded bank reference does not guarantee payment, and a public QR profile does not guarantee product safety or complete provenance.
 
-## Testing the workflows
+| Before opening access | Required evidence |
+| --- | --- |
+| Synthetic demonstration | Isolated synthetic data, controlled sharing and accurate product claims |
+| Invited buyer–supplier pilot | Approved scope/terms, isolated hosted resources, private storage/scanning, real identity email, privileged access review, recovery evidence and named operating owners |
+| Provider marketplace | Core pilot gates plus scoped provider verification, separate service orders, job grants and actual provider acceptance |
+| Wider production | Supported-route policies, independent review, representative capacity/recovery/incident exercises and repeated customer evidence |
 
-Run `npm run test:migrations:docker` to test the normal release migration
-command against a fresh isolated PostgreSQL database, safe upgrades and
-transactional failure rollback. See the
-[migration startup runbook](docs/runbooks/MIGRATION_STARTUP.md).
+The local `/service-status` page reports a recent process/dependency observation, not historical uptime. `/operations/metrics` is private, bounded and process-local; it is not a centralized monitoring deployment. See [public status](docs/runbooks/PUBLIC_SERVICE_STATUS.md), [private metrics](docs/runbooks/PRIVATE_RUNTIME_METRICS.md), [risk register](docs/RISK_REGISTER.md) and [launch gates](docs/pilot-gates.json).
 
-Run `npm run test:browser:docker` from the repository root to exercise six
-identity/email browser journeys against an isolated PostgreSQL/Mailpit stack.
-The runner creates fixtures and cleans up its test containers automatically;
-your normal application database is untouched. See the
-[browser regression runbook](docs/runbooks/BROWSER_REGRESSION.md) for coverage,
-safety guards and sanitized diagnostics. This complements the API unit and
-`npm run test:integration:docker` suites. Demo walkthroughs below are optional
-product checks, not a replacement for automated release gates.
+## Delivery, contribution and security
 
-### Full trade lifecycle (Exporter + Importer)
+The [delivery backlog](docs/DELIVERY_BACKLOG.md) is the execution source of truth. The [35-task sprint](docs/SPRINT_35_CLOSURE_TARGETS_2026-10-19.md) is a target across verified bundles; partial work and unverified external requirements do not receive full-item closure credit. Use the progress command for current counts rather than a percentage copied into this README. Completion is not a production-readiness or valuation score.
 
-```
-Log in as ama@accragold.gh (Exporter)
-→ Dashboard  — see inventory, active contract, shipment progress
-→ Batches    — click 📋 on any batch to see its live provenance pack
-→ Inventory  — split a holding into two lots
-→ Listings   — create a new listing on an available holding
+Changes should identify the outcome, relevant backlog IDs, authorization/data impact, validation and remaining work. Preserve migration history and existing installations. Keep current capability claims and customer limitations aligned with the implementation.
 
-Log in as pieter@dutchcacao.nl (Importer)
-→ Dashboard  — see available listings with prices and organic status
-→ Browse Listings → Make offer on any listing
-
-Log in as ama@accragold.gh again
-→ Offers     — accept the pending offer (creates a sales contract)
-→ Contracts  → 🚢 Ship — request a shipment on the new contract
-```
-
-### Attestation (Certifier)
-
-```
-Log in as akosua@organiccert.gh
-→ Dashboard  — see "1 batch awaiting attestation"
-→ Click Attest → — runs 3 live policy checks against the DB:
-   ✅ Certificate active on harvest date
-   ✅ Certificate covers this farm
-   ✅ Certifier is the issuing organization
-→ Attestation is written to DB with SHA-256 provenance hash
-```
-
-### Shipment milestone tracking (Logistics)
-
-```
-Log in as kofi@marecargo.gh
-→ Shipments  — MV Atlantic Bridge currently at "departed"
-→ + Record milestone → advance to "arrived"
-→ Try going backward — API blocks it:
-   "Cannot go from arrived to loaded. Milestones must progress forward."
-```
-
-### EUDR and provenance pack
-
-```
-Log in as ama@accragold.gh
-→ Batches → open the ready 2026 Asante harvest lot
-→ Provenance pack shows:
-   - 83% completeness (EUDR due-diligence reference missing)
-   - 4/6 policy checks passed
-   - Chain of custody with hashes
-   - Evidence documents with SHA-256 hashes
-
-Log in as pieter@dutchcacao.nl
-→ Contracts → Details → Add EUDR ref
-→ Pack completeness rises to 100%
-```
-
----
-
-## API reference
-
-Base URL: `http://localhost:3001`
-
-```bash
-# Get a token
-TOKEN=$(curl -s -X POST http://localhost:3001/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"ama@accragold.gh","password":"Password123!"}' \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['accessToken'])")
-
-# Use it
-curl http://localhost:3001/batches -H "Authorization: Bearer $TOKEN"
-```
-
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/auth/login` | — | Login → JWT |
-| GET | `/me` | ✓ | Current user + permissions |
-| GET | `/farms` | ✓ | List farms (scoped by role) |
-| POST | `/farms` | ✓ | Register farm |
-| GET | `/farms/:id` | ✓ | Farm + plots + certificates |
-| POST | `/farms/:id/plots` | ✓ | Add plot |
-| GET | `/farms/:id/eudr` | ✓ | EUDR readiness breakdown |
-| GET | `/certificates` | ✓ | List certificates |
-| POST | `/certificates` | certifier | Issue certificate |
-| POST | `/certificates/:id/suspend` | certifier | Suspend |
-| POST | `/certificates/:id/revoke` | certifier | Revoke |
-| GET | `/batches` | ✓ | List batches |
-| POST | `/batches` | ✓ | Record harvest |
-| POST | `/batches/:id/attest` | certifier | Attest (policy checks run) |
-| GET | `/holdings` | ✓ | List holdings |
-| POST | `/holdings` | exporter | Create holding |
-| POST | `/holdings/:id/transfer` | ✓ | Request custody transfer |
-| POST | `/holdings/:id/split` | ✓ | Split holding |
-| POST | `/transfers/:id/accept` | ✓ | Accept transfer |
-| GET | `/listings` | ✓ | Active listings |
-| POST | `/listings` | exporter | Create listing |
-| POST | `/listings/:id/offers` | importer | Make offer |
-| GET | `/offers` | ✓ | My offers |
-| POST | `/offers/:id/accept` | exporter | Accept → creates contract |
-| POST | `/offers/:id/reject` | exporter | Reject |
-| GET | `/contracts` | ✓ | My contracts |
-| GET | `/contracts/:id` | ✓ | Contract detail + shipment |
-| PATCH | `/contracts/:id/eudr` | importer | Add EUDR reference |
-| POST | `/contracts/:id/shipments` | exporter | Request shipment |
-| POST | `/contracts/:id/payment-requests` | exporter | Create invoice |
-| GET | `/shipments` | ✓ | My shipments |
-| GET | `/shipments/:id` | ✓ | Shipment + milestone history |
-| POST | `/shipments/:id/milestones` | logistics | Record milestone |
-| GET | `/payment-requests` | ✓ | Payment requests |
-| POST | `/payment-requests/:id/pay` | importer | Confirm payment |
-| POST | `/evidence` | ✓ | Upload file (multipart) |
-| GET | `/evidence` | ✓ | List evidence |
-| GET | `/provenance/batches/:id` | ✓ | Live provenance pack |
-| GET | `/audit/events` | regulator | Audit log |
-| GET | `/public/products/:slug` | — | Public product profile, journey and safety status |
-| GET | `/public/products/:slug/qr.svg` | — | Stable QR code for a published profile |
-| POST | `/product-profiles` | batch creator | Create or update a lot profile |
-| POST | `/product-profiles/:id/publish` | batch creator | Publish a product profile |
-| GET | `/traceability/lots` | batch reader | Source, production and packaging lots |
-| GET | `/traceability/lots/:id/trace-back` | batch reader | Required sources for a lot or quantity |
-| GET | `/traceability/lots/:id/trace-forward` | batch reader | Descendants, distributions and recipients |
-| POST | `/traceability/recall-impact` | recall manager | Multi-lot recall impact preview |
-| GET | `/recalls` | recall manager | Recall notices with calculated lot scope |
-| POST | `/recalls` | recall manager | Calculate, persist and activate a lot recall |
-| POST | `/recalls/:id/resolve` | recall manager | Resolve an active recall |
-
----
-
-## Database commands
-
-```bash
-# View postgres logs
-docker compose logs -f postgres
-
-# Connect to the database directly
-docker compose exec postgres psql -U cocoa -d cocoatrace
-
-# Useful queries
-\dt                          -- list all tables
-SELECT * FROM audit_events ORDER BY occurred_at DESC LIMIT 10;
-SELECT * FROM harvest_batches;
-SELECT * FROM sales_contracts;
-
-# Stop postgres (data is preserved in Docker volume)
-docker compose stop
-
-# Restart postgres
-docker compose start
-
-# Wipe everything and start fresh
-docker compose down -v
-bash setup.sh
-```
-
----
-
-## Project structure
-
-```
-cocoatrace/
-├── api/
-│   ├── src/
-│   │   ├── app.ts            ← Express application and route composition
-│   │   ├── db.ts             ← PostgreSQL connection pool
-│   │   ├── middleware/
-│   │   │   └── auth.ts       ← Session/bearer verification + permission guard
-│   │   └── services/
-│   │       └── audit.ts      ← Audit log writer + SHA-256 helper
-│   ├── scripts/
-│   │   ├── migrate.ts        ← Apply versioned migrations
-│   │   ├── seed.ts           ← Non-destructively load db/seed.sql
-│   │   ├── demo.ts           ← Guarded scenario reset runner
-│   │   └── validate-demo.ts  ← Demo integrity gate
-│   └── package.json
-├── web/
-│   ├── src/                  ← React + TypeScript application
-│   ├── vite.config.ts        ← Development server and API proxy
-│   └── package.json
-├── db/
-│   ├── schema.sql            ← Full PostgreSQL schema (25 tables)
-│   ├── seed.sql              ← Coherent 2026 Ghana → NL demo corridor
-│   └── demo-*.sql            ← Reset and scenario isolation helpers
-├── docker-compose.yml        ← PostgreSQL 16 container
-├── .env                      ← Environment variables
-├── package.json              ← Root: npm run dev starts both API + Web
-├── setup.sh                  ← One-command setup
-└── README.md
-```
-
----
-
-## Troubleshooting
-
-**Docker not running**
-```bash
-# Start Docker Desktop, then:
-docker compose up -d postgres
-```
-
-**Port 5432 already in use** (local postgres running)
-```bash
-# Option 1: stop local postgres
-brew services stop postgresql   # macOS
-sudo service postgresql stop    # Linux
-
-# Option 2: use a different port in docker-compose.yml
-#   ports: ["5433:5432"]
-# and update DATABASE_URL in .env to port 5433
-```
-
-**Port 3001 or 3000 in use**
-```bash
-# Edit .env and change PORT and/or WEB_PORT
-# Then restart with npm run dev
-```
-
-**"Invalid credentials" on login**
-```bash
-# Re-run the seed to reset passwords
-npm run db:seed
-```
-
-**Want to reset all data**
-```bash
-npm run demo:reset        # guarded local reset to the full coherent demo
-npm run demo:validate     # confirm the story is internally consistent
-```
+For contribution and review: [CONTRIBUTING.md](CONTRIBUTING.md). For suspected vulnerabilities: [SECURITY.md](SECURITY.md), including its current private-intake limitations. Never publish credentials, session links, private evidence or an exploit affecting unrelated organizations in an ordinary issue.

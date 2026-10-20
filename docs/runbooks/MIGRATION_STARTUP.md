@@ -4,7 +4,7 @@ Backlog: ENV-019, ENV-007, QLT-005. Decision:
 [ADR 001](../adr/001-frozen-schema-bootstrap.md).
 
 The normal application/release command is `npm run db:migrate` from the repo
-root. Containers continue to use `tsx api/scripts/migrate.ts` before starting
+root. Containers continue to use `node --import tsx api/scripts/migrate.ts` before starting
 the compiled API. The frozen schema, applied migrations and integrity manifest
 are unchanged. Do not use the obsolete `db:migrate:js` alias.
 

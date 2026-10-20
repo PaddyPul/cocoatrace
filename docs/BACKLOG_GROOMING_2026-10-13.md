@@ -253,3 +253,10 @@ Founder accepts corrected seven-item sprint. Close UX-006/RCL-011/LEG-007/QLT-00
 ## 2026-10-19 route-state and observability batch
 
 Founder accepts the corrected first resilience batch. No additional parent item is complete:164/343 (47.8%). Next candidate checks54 page modules/68 evidence entries, fixes known unknown/read/retry/malformed/draft states, adds private bounded runtime metrics and public point-in-time service status. Remaining whole-item gaps are preserved in inventories.35-target sprint goal stays199/343 (58.0%); targets do not grant closure credit.
+
+
+## 2026-10-20 workspace-state acceptance and repository entry point
+
+Founder reports the corrected workspace-state release passed and merged. OPS-016 closes for the implemented public/customer service-status mechanism; uptime history and hosted monitoring remain separate. Accepted completion is165/343 (48.1%),1 of35 sprint targets. OPS-011 remains partial because direct transaction-client queries are not fully instrumented. Broad UX parent items retain their original acceptance requirements.
+
+The repository README now covers the platform, North Star, current boundaries, synthetic setup, architecture, verification and operating documentation. This documentation correction adds no backlog closure credit.

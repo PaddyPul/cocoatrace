@@ -72,5 +72,5 @@ Baseline:164/343 (47.8%), founder reports prior release/merge accepted2026-10-19
 ## Batch tracking
 
 - Batch1 workspace resilience and keyboard corrections: founder reports full release/merge accepted. Broad UX parent items remain open.
-- Batch2 workspace state inventory and observability: candidate;54 page modules/68 evidence entries, source/trade/admin recovery fixes, private runtime metrics and public status. Focused/new native cases plus full release remain required.
-- Accepted completion stays164/343 (47.8%);35 closures are the sprint target, not an achieved count.
+- Batch2 workspace state inventory and observability: founder reports full release passed and merged;54 page modules/68 evidence entries, source/trade/admin recovery fixes, private runtime metrics and public status. OPS-016 is accepted; broad UX items and incomplete direct transaction query instrumentation remain open.
+- Accepted completion165/343 (48.1%):1 of35 target items closed. Target remains199/343 (58.0%);34 further full-item closures are required.
