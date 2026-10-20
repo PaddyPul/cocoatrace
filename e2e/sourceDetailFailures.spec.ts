@@ -264,7 +264,7 @@ test('farm batch aggregate failure remains unknown and its retry reloads totals'
   page,
 }) => {
   await workspace(page);
-  await page.route('**/api/farms/farm-review', (route) =>
+  await page.route(/\/api\/farms\/farm-review(?:\?.*)?$/, (route) =>
     route.fulfill({
       json: {
         farm: { id: 'farm-review', name: 'Reviewed farm', farmer_organization_id: 'detail-org' },
@@ -281,6 +281,7 @@ test('farm batch aggregate failure remains unknown and its retry reloads totals'
     );
   });
   await page.goto('/farms/farm-review');
+  await expect(page.getByRole('heading', { name: 'Reviewed farm', exact: true })).toBeVisible();
   const history = page.getByRole('region', { name: 'Farm batch history', exact: true });
   await expect(history.getByRole('alert')).toContainText('Batch totals unavailable');
   unavailable = false;
