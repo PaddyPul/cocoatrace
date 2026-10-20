@@ -260,3 +260,8 @@ Founder accepts the corrected first resilience batch. No additional parent item 
 Founder reports the corrected workspace-state release passed and merged. OPS-016 closes for the implemented public/customer service-status mechanism; uptime history and hosted monitoring remain separate. Accepted completion is165/343 (48.1%),1 of35 sprint targets. OPS-011 remains partial because direct transaction-client queries are not fully instrumented. Broad UX parent items retain their original acceptance requirements.
 
 The repository README now covers the platform, North Star, current boundaries, synthetic setup, architecture, verification and operating documentation. This documentation correction adds no backlog closure credit.
+
+
+## 2026-10-20 expanded sprint target and database observations
+
+Founder reports README/Vite release passed and merged. Forward target is103 additional full-task closures (30% of343), reaching268/343 (78.1%) from165/343 (48.1%). The new sprint register preserves existing requirements and distinguishes external dependencies. Database connection observation now includes candidate transaction/callback coverage; OPS-011 remains partial until native/full release acceptance. No new completion credit is applied.

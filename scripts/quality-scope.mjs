@@ -1,5 +1,8 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/db.ts',
+  'api/src/modules/operations/observeDatabaseClient.ts',
+  'api/src/modules/operations/observeDatabaseClient.test.ts',
   'web/src/components/auth/AuthProvider.tsx',
   'web/src/domains/marketplace/comparison.ts',
   'e2e/tradeReadRecovery.spec.ts',

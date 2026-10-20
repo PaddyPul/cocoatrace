@@ -6,6 +6,7 @@ import app from '../../src/app';
 import { getClient, pool, query } from '../../src/db';
 import { createSession } from '../../src/services/authSessionService';
 import { inDatabaseTransaction } from '../../src/services/databaseTransaction';
+import { runtimeMetrics } from '../../src/modules/operations/runtimeMetrics';
 import { runTrackedJob } from '../../src/modules/operations/jobs';
 import { retryCleanup } from '../../src/modules/operations/recovery';
 import { authenticator } from '../../src/testing/webauthnFixture';
@@ -321,6 +322,35 @@ describe('bounded private queue backlog observations', () => {
 });
 
 describe('private process runtime metrics', () => {
+  it('counts real transaction, callback and helper queries once across pool reuse', async () => {
+    const connection = await getClient();
+    const before = runtimeMetrics.read().database;
+    try {
+      await connection.query('BEGIN');
+      await connection.query('SELECT 1');
+      await expect(
+        connection.query('SELECT * FROM missing_metrics_fixture_table'),
+      ).rejects.toThrow();
+      await connection.query('ROLLBACK');
+      await new Promise<void>((resolve, reject) => {
+        connection.query('SELECT 2', (error) => (error ? reject(error) : resolve()));
+      });
+    } finally {
+      connection.release();
+    }
+    await query('SELECT 3');
+    const after = runtimeMetrics.read().database;
+    expect(after.queryDurationMs.count - before.queryDurationMs.count).toBe(6);
+    expect(after.queryErrors - before.queryErrors).toBe(1);
+    const reused = await getClient();
+    const reuseBefore = runtimeMetrics.read().database.queryDurationMs.count;
+    try {
+      await reused.query('SELECT 4');
+    } finally {
+      reused.release();
+    }
+    expect(runtimeMetrics.read().database.queryDurationMs.count - reuseBefore).toBe(1);
+  });
   it('requires live administrator authority and returns bounded no-store observations', async () => {
     // Keep revocation independent of test order; never revive the cleanup actor.
     const revokedAdmin = await actor(true);

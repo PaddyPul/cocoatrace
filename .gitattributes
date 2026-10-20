@@ -447,3 +447,7 @@ e2e/adminAuthResilience.spec.ts text eol=lf
 e2e/tradeReadRecovery.spec.ts text eol=lf
 web/src/domains/marketplace/comparison.ts text eol=lf
 web/src/components/auth/AuthProvider.tsx text eol=lf
+
+api/src/db.ts text eol=lf
+api/src/modules/operations/observeDatabaseClient.ts text eol=lf
+api/src/modules/operations/observeDatabaseClient.test.ts text eol=lf

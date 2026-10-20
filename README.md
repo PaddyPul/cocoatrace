@@ -17,7 +17,7 @@ This repository contains the application, automated release tooling, operating r
 | Run a local synthetic demonstration | [Local demo](#run-a-local-synthetic-demo) below |
 | Develop or review a change | [Contributing](CONTRIBUTING.md) · [architecture and security overview](docs/investor/ARCHITECTURE_SECURITY_OVERVIEW.md) |
 | Operate or release the application | [Release readiness](docs/PRODUCTION_READINESS.md) · [environment model](docs/ENVIRONMENTS.md) · [runbooks](docs/runbooks) |
-| Understand priorities and progress | [Delivery backlog](docs/DELIVERY_BACKLOG.md) · [current sprint](docs/SPRINT_35_CLOSURE_TARGETS_2026-10-19.md) |
+| Understand priorities and progress | [Delivery backlog](docs/DELIVERY_BACKLOG.md) · [current sprint](docs/SPRINT_103_CLOSURE_TARGETS_2026-10-20.md) |
 | Report a security concern | [Private reporting policy](SECURITY.md)—never disclose credentials or customer records in public issues |
 
 ## North Star
@@ -162,7 +162,7 @@ The local `/service-status` page reports a recent process/dependency observation
 
 ## Delivery, contribution and security
 
-The [delivery backlog](docs/DELIVERY_BACKLOG.md) is the execution source of truth. The [35-task sprint](docs/SPRINT_35_CLOSURE_TARGETS_2026-10-19.md) is a target across verified bundles; partial work and unverified external requirements do not receive full-item closure credit. Use the progress command for current counts rather than a percentage copied into this README. Completion is not a production-readiness or valuation score.
+The [delivery backlog](docs/DELIVERY_BACKLOG.md) is the execution source of truth. The [103-task sprint](docs/SPRINT_103_CLOSURE_TARGETS_2026-10-20.md) is a target across verified bundles; partial work and unverified external requirements do not receive full-item closure credit. Use the progress command for current counts rather than a percentage copied into this README. Completion is not a production-readiness or valuation score.
 
 Changes should identify the outcome, relevant backlog IDs, authorization/data impact, validation and remaining work. Preserve migration history and existing installations. Keep current capability claims and customer limitations aligned with the implementation.
 
