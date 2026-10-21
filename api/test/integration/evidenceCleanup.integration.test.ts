@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import app from '../../src/app';
-import * as audit from '../../src/services/audit';
+import * as auditWriter from '../../src/services/auditWriter';
 import { config } from '../../src/config/env';
 import { getClient, pool, query } from '../../src/db';
 import { registerObject } from '../../src/modules/evidenceCleanup/repository';
@@ -406,17 +406,43 @@ describe('durable private evidence cleanup and conservative tenant quota', () =>
     expect(blocked.status, JSON.stringify(blocked.body)).toBe(413);
     expect(blocked.body.code).toBe('EVIDENCE_QUOTA_EXCEEDED');
   });
-  it('preserves committed clean evidence when post-commit reporting fails and retries return the same record', async () => {
+  it('rolls evidence completion back when its critical audit fails', async () => {
     const upload = await admitted();
-    const reporting = vi
-      .spyOn(audit, 'record')
-      .mockRejectedValueOnce(new Error('Reporting failure'));
+    const auditFailure = vi
+      .spyOn(auditWriter, 'recordAudit')
+      .mockRejectedValueOnce(new Error('Critical audit unavailable'));
     try {
       const result = await request(app)
         .put(upload.uploadUrl)
         .set('Content-Type', 'application/pdf')
         .send(content);
       expect(result.status).toBe(500);
+      const intent = (
+        await query('SELECT status,evidence_item_id FROM evidence_upload_intents WHERE id=$1', [
+          upload.intentId,
+        ])
+      ).rows[0];
+      expect(intent).toMatchObject({ status: 'rejected', evidence_item_id: null });
+      expect(
+        (
+          await query(
+            "SELECT count(*)::int AS count FROM evidence_object_cleanup WHERE upload_intent_id=$1 AND state='retained'",
+            [upload.intentId],
+          )
+        ).rows[0].count,
+      ).toBe(0);
+    } finally {
+      auditFailure.mockRestore();
+    }
+  });
+  it('retains committed clean evidence and its audit when retries return the same record', async () => {
+    const upload = await admitted();
+    {
+      const result = await request(app)
+        .put(upload.uploadUrl)
+        .set('Content-Type', 'application/pdf')
+        .send(content);
+      expect(result.status, JSON.stringify(result.body)).toBe(201);
       const saved = (
         await query(
           'SELECT i.status,i.evidence_item_id,e.storage_key FROM evidence_upload_intents i JOIN evidence_items e ON e.id=i.evidence_item_id WHERE i.id=$1',
@@ -434,8 +460,14 @@ describe('durable private evidence cleanup and conservative tenant quota', () =>
         .send(content);
       expect(retry.status, JSON.stringify(retry.body)).toBe(201);
       expect(retry.body.id).toBe(saved.evidence_item_id);
-    } finally {
-      reporting.mockRestore();
+      expect(
+        (
+          await query(
+            "SELECT count(*)::int AS count FROM audit_events WHERE entity_id=$1 AND action='evidence.upload.complete'",
+            [saved.evidence_item_id],
+          )
+        ).rows[0].count,
+      ).toBe(1);
     }
   });
 });

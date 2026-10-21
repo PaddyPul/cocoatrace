@@ -1,4 +1,4 @@
-import { query } from '../../db';
+import type { PoolClient } from 'pg';
 import type { z } from 'zod';
 import { createSourcingRequestSchema } from '../../validation';
 import type { AuditActor } from '../../services/auditWriter';
@@ -22,6 +22,7 @@ export interface SourcingRequestRow {
   updated_at: Date;
 }
 export async function insertSourcingRequest(
+  client: PoolClient,
   actor: AuditActor,
   input: z.infer<typeof createSourcingRequestSchema>,
 ): Promise<SourcingRequestRow> {
@@ -39,7 +40,7 @@ export async function insertSourcingRequest(
     visibility,
     status,
   } = input;
-  const result = await query<SourcingRequestRow>(
+  const result = await client.query<SourcingRequestRow>(
     `INSERT INTO sourcing_requests (
       buyer_organization_id,created_by_user_id,title,commodity,quantity_kg,
       origin_countries,quality_requirements,assurance_requirements,delivery_location,

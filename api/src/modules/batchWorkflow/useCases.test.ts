@@ -50,7 +50,7 @@ vi.mock('../../services/inventoryIntegrity', () => ({
   pendingTransferQuantity: mocks.pending,
 }));
 vi.mock('../../services/materialLot', () => ({ ensureSourceMaterialLot: mocks.material }));
-vi.mock('../../services/audit', () => ({ record: mocks.audit }));
+vi.mock('../../services/auditWriter', () => ({ recordAudit: mocks.audit }));
 vi.mock('../trading/transaction', () => ({ recordTradeAudit: mocks.tradeAudit }));
 import { publishBatchInventory, registerHarvestBatch, registerDirectInventory } from './useCases';
 const actor = { id: 'user', organizationId: 'organization' };
@@ -117,11 +117,52 @@ describe('batch workflow invariants', () => {
     expect(mocks.query.mock.calls.map((call) => call[0])).toEqual(['BEGIN', 'ROLLBACK']);
     expect(mocks.release).toHaveBeenCalledOnce();
   });
-  it('retains direct inventory post-commit audit semantics', async () => {
+  it.each(['harvest', 'direct'] as const)(
+    'rolls back %s batch, material lot and holding when audit fails',
+    async (kind) => {
+      mocks.ownsFarm.mockResolvedValue(true);
+      mocks.createHarvest.mockResolvedValue({ id: 'batch' });
+      mocks.createDirect.mockResolvedValue({ id: 'batch' });
+      mocks.createHarvestHolding.mockResolvedValue({ id: 'holding' });
+      mocks.createWarehouseHolding.mockResolvedValue({ id: 'holding' });
+      mocks.audit.mockRejectedValue(new Error('audit failed'));
+      const result =
+        kind === 'harvest'
+          ? registerHarvestBatch(actor, {
+              farmId: 'farm',
+              crop: 'cocoa',
+              harvestDate: '2026-01-01',
+              quantityKg: 2,
+            })
+          : registerDirectInventory(actor, {
+              commodity: 'cocoa',
+              quantityKg: 2,
+              inventoryDate: '2026-01-01',
+              sourceCountry: 'GH',
+            });
+      await expect(result).rejects.toThrow('audit failed');
+      expect(mocks.material).toHaveBeenCalledWith(expect.objectContaining({ query: mocks.query }), {
+        id: 'batch',
+      });
+      expect(
+        kind === 'harvest' ? mocks.createHarvestHolding : mocks.createWarehouseHolding,
+      ).toHaveBeenCalledOnce();
+      expect(mocks.audit).toHaveBeenCalledWith(
+        expect.objectContaining({ query: mocks.query }),
+        actor,
+        kind === 'harvest' ? 'batch.create' : 'inventory.create_direct',
+        'harvest_batch',
+        'batch',
+      );
+      expect(mocks.query.mock.calls.map((call) => call[0])).toEqual(['BEGIN', 'ROLLBACK']);
+      expect(mocks.release).toHaveBeenCalledOnce();
+    },
+  );
+  it('commits direct inventory only after its audit succeeds', async () => {
     mocks.createDirect.mockResolvedValue({ id: 'batch' });
     mocks.createWarehouseHolding.mockResolvedValue({ id: 'holding' });
     mocks.audit.mockImplementation(async () => {
-      expect(mocks.query).toHaveBeenLastCalledWith('COMMIT');
+      expect(mocks.query).toHaveBeenLastCalledWith('BEGIN');
     });
     await expect(
       registerDirectInventory(actor, {
@@ -131,7 +172,7 @@ describe('batch workflow invariants', () => {
         sourceCountry: 'GH',
       }),
     ).resolves.toEqual({ id: 'batch', holding_id: 'holding' });
-    expect(mocks.material).toHaveBeenCalled();
+    expect(mocks.query.mock.calls.map((call) => call[0])).toEqual(['BEGIN', 'COMMIT']);
     expect(mocks.release).toHaveBeenCalledOnce();
   });
 });

@@ -20,7 +20,10 @@ vi.mock('../../services/invitationIssuance', () => ({
   createPendingInvitation: dependencies.issue,
 }));
 vi.mock('../../services/invitationDelivery', () => ({ deliverInvitation: dependencies.deliver }));
-vi.mock('../../services/audit', () => ({ record: dependencies.audit }));
+vi.mock('../../services/audit', () => ({
+  record: dependencies.audit,
+  hashObject: () => 'safe-hash',
+}));
 import { acceptInvitation, createInvitation, resendInvitation, revokeInvitation } from './useCases';
 const input = {
   user: { id: 'actor', organizationId: 'org', permissions: ['member.invite'] },
@@ -55,9 +58,15 @@ describe('invitation workflows', () => {
       kind: 'success',
       value: { role: 'farmer', inviteUrl: expect.stringContaining('/accept-invite/') },
     });
-    expect(dependencies.audit).toHaveBeenCalledWith(
-      expect.objectContaining({ action: 'member.invite' }),
-    );
+  });
+  it('does not send when transactional issuance audit fails', async () => {
+    dependencies.query
+      .mockResolvedValueOnce({ rows: [{ id: 'org', name: 'Coop', type: 'cooperative' }] })
+      .mockResolvedValueOnce({ rows: [{ id: 'farmer-role', name: 'farmer' }] })
+      .mockResolvedValueOnce({ rows: [] });
+    dependencies.issue.mockRejectedValue(new Error('audit unavailable'));
+    await expect(createInvitation(input.user, input.body)).rejects.toThrow('audit unavailable');
+    expect(dependencies.deliver).not.toHaveBeenCalled();
   });
   it('locks organization before invitation and commits acceptance before releasing', async () => {
     dependencies.clientQuery
@@ -103,27 +112,76 @@ describe('invitation workflows', () => {
     expect(dependencies.release).toHaveBeenCalledOnce();
   });
   it('does not audit a missing revocation', async () => {
-    dependencies.query.mockResolvedValue({ rows: [] });
+    dependencies.clientQuery.mockResolvedValue({ rows: [] });
     expect(await revokeInvitation(input.user, input.params.id)).toMatchObject({
       kind: 'active_invitation_missing',
     });
     expect(dependencies.audit).not.toHaveBeenCalled();
   });
   it('rotates a token and exposes the test link while preserving delivery status', async () => {
-    dependencies.query.mockResolvedValue({
-      rows: [
-        { id: 'invite', email: input.body.email, expires_at: 'future', organization_name: 'Coop' },
-      ],
+    dependencies.clientQuery
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: 'invite',
+            email: input.body.email,
+            expires_at: 'future',
+            organization_name: 'Coop',
+          },
+        ],
+      })
+      .mockResolvedValue({ rows: [] });
+    dependencies.deliver.mockImplementation(async () => {
+      expect(dependencies.clientQuery).toHaveBeenLastCalledWith('COMMIT');
+      expect(dependencies.release).toHaveBeenCalledOnce();
+      return { status: 'failed' };
     });
-    dependencies.deliver.mockResolvedValue({ status: 'failed' });
     expect(await resendInvitation(input.user, input.params.id)).toMatchObject({
       value: { emailDelivery: 'failed', inviteUrl: expect.stringContaining('/accept-invite/') },
     });
-    expect(dependencies.query.mock.calls[0][1]).toEqual([
+    expect(dependencies.clientQuery.mock.calls[1][1]).toEqual([
       expect.stringMatching(/^[a-f0-9]{64}$/),
       'invite',
       false,
       'org',
     ]);
   });
+  it.each(['revoke', 'resend', 'accept'])(
+    'rolls back %s on audit failure without sending',
+    async (operation) => {
+      dependencies.clientQuery.mockImplementation(async (sql: string) => {
+        if (sql.includes('INSERT INTO audit_events')) throw new Error('audit unavailable');
+        if (sql.includes('SELECT organization_id')) return { rows: [{ organization_id: 'org' }] };
+        if (sql.includes('FOR SHARE')) return { rows: [{ access_suspended_at: null }] };
+        if (sql.includes('FOR UPDATE'))
+          return {
+            rows: [
+              { id: 'invite', organization_id: 'org', email: input.body.email, role_id: 'role' },
+            ],
+          };
+        if (sql.includes('INSERT INTO users')) return { rows: [{ id: 'new-user' }] };
+        if (sql.includes('UPDATE user_invitations'))
+          return { rows: [{ id: 'invite', email: input.body.email }] };
+        return { rows: [] };
+      });
+      dependencies.hash.mockResolvedValue('password-hash');
+      const result =
+        operation === 'accept'
+          ? acceptInvitation('token', input.body)
+          : operation === 'revoke'
+            ? revokeInvitation(input.user, 'invite')
+            : resendInvitation(input.user, 'invite');
+      await expect(result).rejects.toThrow('audit unavailable');
+      const auditCall = dependencies.clientQuery.mock.calls.find(([sql]) =>
+        sql.includes('INSERT INTO audit_events'),
+      )!;
+      expect(auditCall[1][0]).toBe(operation === 'accept' ? 'new-user' : 'actor');
+      expect(auditCall[1][6]).toBe('{}');
+      expect(dependencies.clientQuery).toHaveBeenLastCalledWith('ROLLBACK');
+      expect(dependencies.clientQuery.mock.calls.some(([sql]) => sql === 'COMMIT')).toBe(false);
+      expect(dependencies.deliver).not.toHaveBeenCalled();
+      expect(dependencies.release).toHaveBeenCalledOnce();
+    },
+  );
 });

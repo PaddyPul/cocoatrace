@@ -69,9 +69,10 @@ export async function markAccepted(client: PoolClient, parameters: [invitationId
   );
 }
 export async function revoke(
+  client: PoolClient,
   parameters: [invitationId: string, isPlatformAdmin: boolean, organizationId: string],
 ) {
-  return query<{ id: string }>(
+  return client.query<{ id: string }>(
     `UPDATE user_invitations
         SET revoked_at=COALESCE(revoked_at,NOW())
       WHERE id=$1
@@ -83,6 +84,7 @@ export async function revoke(
   );
 }
 export async function rotate(
+  client: PoolClient,
   parameters: [
     tokenHash: string,
     invitationId: string,
@@ -90,7 +92,7 @@ export async function rotate(
     organizationId: string,
   ],
 ) {
-  return query<{
+  return client.query<{
     id: string;
     email: string;
     expires_at: Date;

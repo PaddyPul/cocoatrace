@@ -1,4 +1,5 @@
 import { query } from '../../db';
+import type { PoolClient } from 'pg';
 import type { z } from 'zod';
 import { onboardingSchema, pilotFeedbackSchema } from '../../validation';
 import type { AuditActor } from '../../services/auditWriter';
@@ -28,9 +29,10 @@ export async function findOnboarding(userId: string): Promise<OnboardingRow | un
 export async function saveOnboarding(
   actor: AuditActor,
   input: z.infer<typeof onboardingSchema>,
+  client?: PoolClient,
 ): Promise<OnboardingRow> {
   const { status, currentStep, primaryGoal, pilotMode } = input;
-  const result = await query<OnboardingRow>(
+  const result = await (client ? client.query.bind(client) : query)<OnboardingRow>(
     `INSERT INTO user_onboarding (user_id,status,current_step,primary_goal,pilot_mode,completed_at)
      VALUES ($1,$2,$3,$4,$5,CASE WHEN $2='completed' THEN NOW() ELSE NULL END)
      ON CONFLICT (user_id) DO UPDATE SET status=EXCLUDED.status,

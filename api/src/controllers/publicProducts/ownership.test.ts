@@ -1,8 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Request, Response } from 'express';
 
-const mocks = vi.hoisted(() => ({ query: vi.fn(), relationship: vi.fn(), activate: vi.fn() }));
-vi.mock('../../db', () => ({ query: mocks.query }));
+const mocks = vi.hoisted(() => ({
+  query: vi.fn(),
+  relationship: vi.fn(),
+  activate: vi.fn(),
+  transaction: vi.fn(),
+  release: vi.fn(),
+}));
+vi.mock('../../db', () => ({
+  query: mocks.query,
+  getClient: async () => ({ query: mocks.transaction, release: mocks.release }),
+}));
 vi.mock('../../config/env', () => ({ config: { publicWebUrl: 'https://example.test' } }));
 vi.mock('../../services/audit', () => ({ record: vi.fn() }));
 vi.mock('../../services/resourcePolicy', () => ({
@@ -38,7 +47,14 @@ function request(permissions: string[] = []) {
     user: { id: 'user-1', organizationId: 'org-1', permissions },
   } as unknown as Request;
 }
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.transaction.mockImplementation((sql: string, values: unknown[]) =>
+    ['BEGIN', 'COMMIT', 'ROLLBACK'].includes(sql)
+      ? Promise.resolve({ rows: [] })
+      : mocks.query(sql, values),
+  );
+});
 describe('separate public rendering, profile administration and recall ownership', () => {
   it('keeps every compatibility export bound to its owned handler', () => {
     expect(compatibility).toMatchObject({ ...rendering, ...administration, ...recalls });

@@ -2,7 +2,6 @@ import { insertSourcingRequest } from './creationRepository';
 import type { AuditActor } from '../../services/auditWriter';
 import type { z } from 'zod';
 import { query } from '../../db';
-import * as audit from '../../services/audit';
 import { createSourcingRequestSchema } from '../../validation';
 import { inDatabaseTransaction } from '../../services/databaseTransaction';
 import { recordAudit } from '../../services/auditWriter';
@@ -12,15 +11,11 @@ export async function createRequest(
   actor: AuditActor,
   input: z.infer<typeof createSourcingRequestSchema>,
 ) {
-  const created = await insertSourcingRequest(actor, input);
-  await audit.record({
-    actorUserId: actor.id,
-    actorOrganizationId: actor.organizationId,
-    action: 'sourcing_request.create',
-    entityType: 'sourcing_request',
-    entityId: created.id,
+  return inDatabaseTransaction(async (client) => {
+    const created = await insertSourcingRequest(client, actor, input);
+    await recordAudit(client, actor, 'sourcing_request.create', 'sourcing_request', created.id);
+    return created;
   });
-  return created;
 }
 
 export async function updateRequest(

@@ -1,7 +1,7 @@
 import { findOnboarding, saveOnboarding, insertFeedback } from './repository';
-import type { AuditActor } from '../../services/auditWriter';
+import { recordAudit, type AuditActor } from '../../services/auditWriter';
+import { inDatabaseTransaction } from '../../services/databaseTransaction';
 import type { z } from 'zod';
-import * as audit from '../../services/audit';
 import { onboardingSchema, pilotFeedbackSchema } from '../../validation';
 const defaultOnboarding = {
   status: 'not_started',
@@ -16,17 +16,12 @@ export async function getOnboarding(userId: string) {
 }
 
 export async function updateOnboarding(actor: AuditActor, input: z.infer<typeof onboardingSchema>) {
-  const row = await saveOnboarding(actor, input);
-  if (input.status === 'completed') {
-    await audit.record({
-      actorUserId: actor.id,
-      actorOrganizationId: actor.organizationId,
-      action: 'onboarding.complete',
-      entityType: 'user',
-      entityId: actor.id,
-    });
-  }
-  return row;
+  if (input.status !== 'completed') return saveOnboarding(actor, input);
+  return inDatabaseTransaction(async (client) => {
+    const row = await saveOnboarding(actor, input, client);
+    await recordAudit(client, actor, 'onboarding.complete', 'user', actor.id);
+    return row;
+  });
 }
 
 export async function createFeedback(

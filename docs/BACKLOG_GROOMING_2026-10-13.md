@@ -279,3 +279,7 @@ Candidate next batch removes residual production API explicit-any annotations, a
 Founder reports API type-safety release passed and merged. QLT-007 closes for maintained production API no-explicit-any enforcement; inherited framework/database defaults and full DTO boundary adoption remain ARC-020. Accepted completion167/343 (48.7%).
 
 Controller-workflow candidate extracts the remaining SQL/transaction orchestration from29 production controller files (including public helpers/barrels), adds named feature repositories/use cases, and gates recursive database-free HTTP boundaries. ARC-011 and ARC-019 remain partial until native/full release acceptance. Static checks do not close ARC-013: preserved best-effort/post-commit audits and invitation acceptance audit coverage remain separate gaps. The103-additional-task target is still268/343 (78.1%);2 accepted closures since165,101 remain.
+
+## 2026-10-21 controller acceptance and audit rollback batch
+
+Founder reports controller release passed and merged. ARC-011/019 close:169/343 (49.3%). Atomic business audit batch is candidate only; ARC-013 remains partial for durable invitation outbox and complete write/event coverage.

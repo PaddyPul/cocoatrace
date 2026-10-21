@@ -6,7 +6,7 @@ import { config } from '../../config/env';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 
-import * as audit from '../../services/audit';
+import { recordAudit } from '../../services/auditWriter';
 import { createPendingInvitation } from '../../services/invitationIssuance';
 import { deliverInvitation } from '../../services/invitationDelivery';
 export type InvitationActor = Actor & { id: string; sessionId?: string };
@@ -77,14 +77,6 @@ export async function createInvitation(
     invitationUrl: inviteUrl,
     organizationName: org.name,
   });
-  await audit.record({
-    actorUserId: actor.id,
-    actorOrganizationId: actor.organizationId,
-    action: 'member.invite',
-    entityType: 'user_invitation',
-    entityId: invitation.id,
-    metadata: { invitedOrganizationId: organizationId, role: role.name },
-  });
   return {
     kind: 'success',
     value: {
@@ -153,6 +145,13 @@ export async function acceptInvitation(token: string, draft: AccountDraft): Prom
     ]);
     await repository.assignRole(client, [userResult.rows[0].id, invitation.role_id]);
     await repository.markAccepted(client, [invitation.id]);
+    await recordAudit(
+      client,
+      { id: userResult.rows[0].id, organizationId: invitation.organization_id },
+      'member.invitation_accepted',
+      'user_invitation',
+      invitation.id,
+    );
     await repository.commit(client);
     return {
       kind: 'success',
@@ -177,17 +176,26 @@ export async function revokeInvitation(
   invitationId: string,
 ): Promise<Outcome> {
   const isPlatformAdmin = (actor.permissions || []).includes('*');
-  const result = await repository.revoke([invitationId, isPlatformAdmin, actor.organizationId]);
-  if (!result.rows[0]) {
-    return { kind: 'active_invitation_missing', message: 'Active invitation not found' };
+  const client = await repository.getClient();
+  try {
+    await repository.begin(client);
+    const result = await repository.revoke(client, [
+      invitationId,
+      isPlatformAdmin,
+      actor.organizationId,
+    ]);
+    if (!result.rows[0]) {
+      await repository.rollback(client);
+      return { kind: 'active_invitation_missing', message: 'Active invitation not found' };
+    }
+    await recordAudit(client, actor, 'member.invitation_revoked', 'user_invitation', invitationId);
+    await repository.commit(client);
+  } catch (error) {
+    await repository.rollback(client);
+    throw error;
+  } finally {
+    client.release();
   }
-  await audit.record({
-    actorUserId: actor.id,
-    actorOrganizationId: actor.organizationId,
-    action: 'member.invitation_revoked',
-    entityType: 'user_invitation',
-    entityId: invitationId,
-  });
   return { kind: 'success', value: undefined };
 }
 
@@ -197,15 +205,28 @@ export async function resendInvitation(
 ): Promise<Outcome> {
   const isPlatformAdmin = (actor.permissions || []).includes('*');
   const token = crypto.randomBytes(32).toString('base64url');
-  const result = await repository.rotate([
-    hashToken(token),
-    invitationId,
-    isPlatformAdmin,
-    actor.organizationId,
-  ]);
-  const invitation = result.rows[0];
-  if (!invitation) {
-    return { kind: 'invitation_missing', message: 'Invitation not found' };
+  const client = await repository.getClient();
+  let invitation;
+  try {
+    await repository.begin(client);
+    const result = await repository.rotate(client, [
+      hashToken(token),
+      invitationId,
+      isPlatformAdmin,
+      actor.organizationId,
+    ]);
+    invitation = result.rows[0];
+    if (!invitation) {
+      await repository.rollback(client);
+      return { kind: 'invitation_missing', message: 'Invitation not found' };
+    }
+    await recordAudit(client, actor, 'member.invitation_resent', 'user_invitation', invitation.id);
+    await repository.commit(client);
+  } catch (error) {
+    await repository.rollback(client);
+    throw error;
+  } finally {
+    client.release();
   }
   const delivery = await deliverInvitation({
     id: invitation.id,
@@ -213,13 +234,6 @@ export async function resendInvitation(
     to: invitation.email,
     invitationUrl: `${config.publicWebUrl}/accept-invite/${token}`,
     organizationName: invitation.organization_name,
-  });
-  await audit.record({
-    actorUserId: actor.id,
-    actorOrganizationId: actor.organizationId,
-    action: 'member.invitation_resent',
-    entityType: 'user_invitation',
-    entityId: invitation.id,
   });
   return {
     kind: 'success',
