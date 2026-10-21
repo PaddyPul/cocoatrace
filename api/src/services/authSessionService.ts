@@ -1,5 +1,5 @@
 import { AuthenticationError } from '../errors';
-import type { PoolClient } from 'pg';
+import type { PoolClient, QueryResult } from 'pg';
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env';
@@ -21,41 +21,94 @@ export interface AuthenticatedActor {
   mfa?: MfaState;
 }
 
-type TokenClaims = jwt.JwtPayload & { sub: string; sid: string };
+type TokenClaims = { sub: string; sid: string };
+type SessionIdentityRow = { organization_id: string };
+type SessionUserRow = SessionIdentityRow & { id: string; password_hash: string };
+type CurrentActorRow = {
+  id: string;
+  organization_id: string;
+  email: string;
+  name: string;
+  org_name: string;
+  org_type: string;
+  roles: string[] | null;
+  permissions: string[] | null;
+};
+type SessionRow = { id: string; user_id: string };
+type AssuranceRow = {
+  mfa_verified_at: Date | null;
+  history: boolean;
+  enrolled: boolean;
+  valid_key: boolean;
+};
 
 export function hashSessionToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
-export async function createSession(userId: string, expectedPasswordHash?: string): Promise<{ token: string; actor: AuthenticatedActor }> {
+export async function createSession(
+  userId: string,
+  expectedPasswordHash?: string,
+): Promise<{ token: string; actor: AuthenticatedActor }> {
   const client = await getClient();
   try {
     await client.query('BEGIN');
-    const identity = (await client.query('SELECT organization_id FROM users WHERE id=$1', [userId])).rows[0];
+    const identity = (
+      await client.query<SessionIdentityRow>('SELECT organization_id FROM users WHERE id=$1', [
+        userId,
+      ])
+    ).rows[0];
     if (!identity) throw new AuthenticationError('Account is unavailable');
     // Serialize session issuance with suspension: organization before user.
-    await client.query('SELECT id FROM organizations WHERE id=$1 FOR SHARE', [identity.organization_id]);
-    const user = (await client.query('SELECT id,password_hash,organization_id FROM users WHERE id=$1 FOR SHARE', [userId])).rows[0];
-    if (!user || user.organization_id !== identity.organization_id || (expectedPasswordHash && user.password_hash !== expectedPasswordHash)) throw new AuthenticationError('Credentials changed; sign in again');
+    await client.query('SELECT id FROM organizations WHERE id=$1 FOR SHARE', [
+      identity.organization_id,
+    ]);
+    const user = (
+      await client.query<SessionUserRow>(
+        'SELECT id,password_hash,organization_id FROM users WHERE id=$1 FOR SHARE',
+        [userId],
+      )
+    ).rows[0];
+    if (
+      !user ||
+      user.organization_id !== identity.organization_id ||
+      (expectedPasswordHash && user.password_hash !== expectedPasswordHash)
+    )
+      throw new AuthenticationError('Credentials changed; sign in again');
     const actor = await loadCurrentActor(userId, client);
     if (!actor) throw new AuthenticationError('Account is unavailable');
     const sessionId = crypto.randomUUID();
     const token = jwt.sign({ sub: actor.id, sid: sessionId }, config.jwtSecret, {
-      expiresIn: sessionLifetimeSeconds, issuer: 'cocoatrace-api', audience: 'cocoatrace',
+      expiresIn: sessionLifetimeSeconds,
+      issuer: 'cocoatrace-api',
+      audience: 'cocoatrace',
     });
-    await client.query(`INSERT INTO sessions(id,user_id,token_hash,expires_at,last_seen_at)
-      VALUES ($1,$2,$3,$4,NOW())`, [sessionId, actor.id, hashSessionToken(token), new Date(Date.now() + sessionLifetimeSeconds * 1000)]);
+    await client.query(
+      `INSERT INTO sessions(id,user_id,token_hash,expires_at,last_seen_at)
+      VALUES ($1,$2,$3,$4,NOW())`,
+      [
+        sessionId,
+        actor.id,
+        hashSessionToken(token),
+        new Date(Date.now() + sessionLifetimeSeconds * 1000),
+      ],
+    );
     await client.query('COMMIT');
     return { token, actor: { ...actor, sessionId } };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
-  } finally { client.release(); }
+  } finally {
+    client.release();
+  }
 }
 
-async function loadCurrentActor(userId: string, client?: PoolClient): Promise<Omit<AuthenticatedActor, 'sessionId'> | null> {
+async function loadCurrentActor(
+  userId: string,
+  client?: PoolClient,
+): Promise<Omit<AuthenticatedActor, 'sessionId'> | null> {
   const execute = client ? client.query.bind(client) : query;
-  const { rows } = await execute(
+  const result: QueryResult<CurrentActorRow> = await execute(
     `SELECT u.id,u.organization_id,u.email,u.name,o.name AS org_name,o.type AS org_type,
             array_remove(array_agg(DISTINCT r.name),NULL) AS roles,
             array_remove(array_agg(DISTINCT permission),NULL) AS permissions
@@ -68,7 +121,7 @@ async function loadCurrentActor(userId: string, client?: PoolClient): Promise<Om
       GROUP BY u.id,o.id`,
     [userId],
   );
-  const row = rows[0];
+  const row = result.rows[0];
   if (!row) return null;
   return {
     id: row.id,
@@ -85,14 +138,22 @@ async function loadCurrentActor(userId: string, client?: PoolClient): Promise<Om
 export async function authenticateSession(token: string): Promise<AuthenticatedActor | null> {
   let claims: TokenClaims;
   try {
-    const verified = jwt.verify(token, config.jwtSecret, { issuer: 'cocoatrace-api', audience: 'cocoatrace' });
-    if (typeof verified === 'string' || typeof verified.sub !== 'string' || typeof verified.sid !== 'string') return null;
-    claims = verified as TokenClaims;
+    const verified = jwt.verify(token, config.jwtSecret, {
+      issuer: 'cocoatrace-api',
+      audience: 'cocoatrace',
+    });
+    if (
+      typeof verified === 'string' ||
+      typeof verified.sub !== 'string' ||
+      typeof verified.sid !== 'string'
+    )
+      return null;
+    claims = { sub: verified.sub, sid: verified.sid };
   } catch {
     return null;
   }
 
-  const session = await query(
+  const session: QueryResult<SessionRow> = await query(
     `SELECT id,user_id FROM sessions
       WHERE id=$1 AND user_id=$2 AND token_hash=$3 AND revoked_at IS NULL AND expires_at>NOW()`,
     [claims.sid, claims.sub, hashSessionToken(token)],
@@ -105,14 +166,29 @@ export async function authenticateSession(token: string): Promise<AuthenticatedA
       WHERE id=$1 AND (last_seen_at IS NULL OR last_seen_at<NOW()-INTERVAL '5 minutes')`,
     [claims.sid],
   );
-  const assurance = (await query(`SELECT s.mfa_verified_at,
+  const assuranceResult: QueryResult<AssuranceRow> = await query(
+    `SELECT s.mfa_verified_at,
     EXISTS(SELECT 1 FROM user_passkeys WHERE user_id=s.user_id) AS history,
     EXISTS(SELECT 1 FROM user_passkeys WHERE user_id=s.user_id AND revoked_at IS NULL) AS enrolled,
     EXISTS(SELECT 1 FROM user_passkeys WHERE id=s.mfa_credential_id AND user_id=s.user_id AND revoked_at IS NULL) AS valid_key
-    FROM sessions s WHERE id=$1 AND revoked_at IS NULL AND expires_at>NOW()`, [claims.sid])).rows[0];
+    FROM sessions s WHERE id=$1 AND revoked_at IS NULL AND expires_at>NOW()`,
+    [claims.sid],
+  );
+  const assurance = assuranceResult.rows[0];
   if (!assurance) return null;
-  return { ...actor, sessionId: claims.sid, mfa: mfaState(config.mfaEnforced, actor.roles, actor.permissions,
-    assurance.enrolled, assurance.valid_key ? assurance.mfa_verified_at : null, Date.now(), assurance.history) };
+  return {
+    ...actor,
+    sessionId: claims.sid,
+    mfa: mfaState(
+      config.mfaEnforced,
+      actor.roles,
+      actor.permissions,
+      assurance.enrolled,
+      assurance.valid_key ? assurance.mfa_verified_at : null,
+      Date.now(),
+      assurance.history,
+    ),
+  };
 }
 
 export async function revokeSession(sessionId: string, reason = 'logout'): Promise<boolean> {
@@ -124,7 +200,11 @@ export async function revokeSession(sessionId: string, reason = 'logout'): Promi
   return Boolean(result.rows[0]);
 }
 
-export async function revokeUserSessions(userId: string, reason: string, exceptSessionId?: string): Promise<number> {
+export async function revokeUserSessions(
+  userId: string,
+  reason: string,
+  exceptSessionId?: string,
+): Promise<number> {
   const result = await query(
     `UPDATE sessions SET revoked_at=NOW(),revoked_reason=$2
       WHERE user_id=$1 AND revoked_at IS NULL AND ($3::uuid IS NULL OR id<>$3::uuid)`,

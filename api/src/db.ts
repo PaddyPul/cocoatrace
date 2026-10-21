@@ -1,4 +1,4 @@
-import { Pool, QueryResult, PoolClient } from 'pg';
+import { Pool, QueryResult, QueryResultRow, PoolClient } from 'pg';
 import logger from './logger';
 import { observeDatabaseClient } from './modules/operations/observeDatabaseClient';
 import { runtimeMetrics } from './modules/operations/runtimeMetrics';
@@ -22,9 +22,12 @@ pool.on('error', (err: Error) => {
   logger.error({ err }, 'Unexpected DB error');
 });
 
-async function query(text: string, params?: any[]): Promise<QueryResult> {
+async function query<Row extends QueryResultRow = QueryResultRow>(
+  text: string,
+  params?: unknown[],
+): Promise<QueryResult<Row>> {
   const start = Date.now();
-  const res = await pool.query(text, params);
+  const res = await pool.query<Row>(text, params);
   const duration = Date.now() - start;
   if (config.logQueries) {
     logger.debug({ text: text.slice(0, 80), duration, rows: res.rowCount }, 'query');

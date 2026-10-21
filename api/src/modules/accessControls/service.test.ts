@@ -32,9 +32,13 @@ describe('password-confirmed access decisions', () => {
     expect(changeAccess).not.toHaveBeenCalled();
   });
   it('audits failed password confirmation without storing the password or changing access', async () => {
-    vi.mocked(query).mockResolvedValue({ rows: [{ password_hash: 'hash' }] } as Awaited<
-      ReturnType<typeof query>
-    >);
+    vi.mocked(query).mockResolvedValue({
+      rows: [{ password_hash: 'hash' }],
+      command: 'SELECT',
+      rowCount: 1,
+      oid: 0,
+      fields: [],
+    });
     vi.mocked(bcrypt.compare).mockResolvedValue(false as never);
     await expect(decideAccess(actor, 'users', 'target', input)).rejects.toMatchObject({
       code: 'REAUTHENTICATION_REQUIRED',
@@ -46,9 +50,13 @@ describe('password-confirmed access decisions', () => {
     );
   });
   it('passes only the verified hash to the transactional authorization recheck', async () => {
-    vi.mocked(query).mockResolvedValue({ rows: [{ password_hash: 'hash' }] } as Awaited<
-      ReturnType<typeof query>
-    >);
+    vi.mocked(query).mockResolvedValue({
+      rows: [{ password_hash: 'hash' }],
+      command: 'SELECT',
+      rowCount: 1,
+      oid: 0,
+      fields: [],
+    });
     vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
     vi.mocked(changeAccess).mockResolvedValue({
       id: 'target',

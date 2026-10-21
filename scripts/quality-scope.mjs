@@ -1,5 +1,15 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/modules/trust/assessment.test.ts',
+  'api/src/services/authSessionService.ts',
+  'api/src/services/readinessNarrative.ts',
+  'api/src/services/readinessNarrative.test.ts',
+  'api/src/services/traceGraphRepository.ts',
+  'api/src/services/traceGraphRepository.test.ts',
+  'api/src/controllers/traceabilityController.ts',
+  'api/src/controllers/holdingController.ts',
+  'api/src/controllers/invitationController.ts',
+  'api/src/modules/trust/assessment.ts',
   'api/src/db.ts',
   'api/src/modules/operations/observeDatabaseClient.ts',
   'api/src/modules/operations/observeDatabaseClient.test.ts',

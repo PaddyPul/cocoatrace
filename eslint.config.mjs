@@ -31,6 +31,11 @@ export default tseslint.config(
     },
   },
   {
+    files: ['api/src/**/*.ts'],
+    ignores: ['api/src/**/*.test.ts'],
+    rules: { '@typescript-eslint/no-explicit-any': 'error' },
+  },
+  {
     files: [
       'api/src/modules/recall/{lifecycle,notifications,activationRepository,notificationRepository,response,responseRepository,responseModel,policy}{,.test}.ts',
       'api/src/modules/support/**/*.ts',

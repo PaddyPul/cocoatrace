@@ -49,7 +49,7 @@ Combine independent changes within each coherent batch; run focused checks befor
 | PRD-010 | partial | Provide document checklists based on payment plan, route and Incoterm. |
 | RCL-009 | open | Add reconciliation warnings as actionable blocking tasks where safety is uncertain. |
 | RCL-012 | open | Add chain-of-custody event correction through superseding records rather than destructive edits. |
-| OPS-011 | partial | Add database pool, query latency, HTTP latency and queue metrics. |
+| OPS-011 | accepted | Add database pool, query latency, HTTP latency and queue metrics. |
 | OPS-016 | accepted | Add a public or customer-facing service-status mechanism before wider launch. |
 | PRD-014 | open | Add product analytics without collecting unnecessary personal data. |
 | INV-008 | open | Instrument time-to-first-value, completion, review time, support interventions and repeat usage. |
@@ -122,3 +122,7 @@ Combine independent changes within each coherent batch; run focused checks befor
 | PAY-011 | partial | Define platform fee payer, tax treatment, invoice timing and collection process. |
 | PER-001 | partial | Accepted max-100 scoped pages/searches, explicit legacy/export overflow, SQL deadlines and native query plans now cover source, inventory/marketplace, evidence, trade/payment, certificates/products, recalls/responses, public histories, audit/provenance, sourcing, organizations/members/invitations and review/feedback registers. Remaining: explicit universal endpoint inventory and any uncovered legacy/detail/export paths, representative hosted indexes/concurrent SLO benchmarks. Do not repeat accepted slices or infer universal coverage from this list. |
 | PRD-008 | partial | Send transactional emails for invitation, offer, terms, payment, dispatch, delivery, dispute and recall actions. |
+
+## 2026-10-21 accepted checkpoint
+
+Database-metrics release passed and merged per founder: OPS-011 closes. Completion166/343 (48.4%);1 of103 additional targets accepted,102 remain. API type-safety batch is candidate only.
