@@ -136,6 +136,7 @@ Install host dependencies with `npm ci`. Run commands from the repository root:
 | Command | Purpose |
 | --- | --- |
 | `npm run check:quality` | Lint, scoped formatting and script/quality contracts |
+| `npm run check:controller-boundaries` | Prevent direct database access and inline SQL from returning to HTTP controllers |
 | `npm run typecheck` | API, web and browser TypeScript checks |
 | `npm test --workspace=api` | API unit regressions |
 | `npm run test:integration:docker --workspace=api` | Disposable database/storage/scanner integration suites |

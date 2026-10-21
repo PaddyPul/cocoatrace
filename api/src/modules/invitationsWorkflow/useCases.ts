@@ -1,0 +1,234 @@
+import type { Actor } from '../../services/resourcePolicy';
+import * as repository from './repository';
+import { withCatalogRead } from '../catalog/paging';
+import { invitationPage, invitationSummary, legacyInvitations } from '../catalog/invitationRecords';
+import { config } from '../../config/env';
+import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
+
+import * as audit from '../../services/audit';
+import { createPendingInvitation } from '../../services/invitationIssuance';
+import { deliverInvitation } from '../../services/invitationDelivery';
+export type InvitationActor = Actor & { id: string; sessionId?: string };
+export interface InvitationDraft {
+  organizationId?: string;
+  role?: string;
+  email: string;
+}
+export interface AccountDraft {
+  name: string;
+  password: string;
+}
+export type Outcome =
+  | { kind: 'success'; value: unknown }
+  | {
+      kind:
+        | 'organization_missing'
+        | 'role_missing'
+        | 'account_exists'
+        | 'invalid_invitation'
+        | 'active_invitation_missing'
+        | 'invitation_missing';
+      message: string;
+    };
+
+const exposeRawLinks = config.environment === 'demo' || config.environment === 'test';
+
+const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
+
+export async function createInvitation(
+  actor: InvitationActor,
+  draft: InvitationDraft,
+): Promise<Outcome> {
+  const isAdmin = (actor.permissions || []).includes('*');
+  const organizationId =
+    isAdmin && draft.organizationId ? draft.organizationId : actor.organizationId;
+  const org = (await repository.findOrganization([organizationId])).rows[0];
+  if (!org) {
+    return { kind: 'organization_missing', message: 'Organization not found' };
+  }
+  const roleName =
+    isAdmin && draft.role ? draft.role : org.type === 'cooperative' ? 'farmer' : org.type;
+  const role = (await repository.findRole([roleName])).rows[0];
+  if (!role) {
+    return { kind: 'role_missing', message: `No workspace role is configured for ${roleName}` };
+  }
+  const existing = await repository.findExistingUser([draft.email]);
+  if (existing.rows[0]) {
+    return { kind: 'account_exists', message: 'A user with this email already exists' };
+  }
+
+  const token = crypto.randomBytes(32).toString('base64url');
+  const invitation: { id: string; email: string; expires_at: Date; created_at: Date } =
+    await createPendingInvitation({
+      organizationId,
+      email: draft.email,
+      roleId: role.id,
+      tokenHash: hashToken(token),
+      actorId: actor.id,
+      actorOrganizationId: actor.organizationId,
+      actorSessionId: actor.sessionId,
+    });
+  const inviteUrl = `${config.publicWebUrl}/accept-invite/${token}`;
+  const delivery = await deliverInvitation({
+    id: invitation.id,
+    token,
+    to: draft.email,
+    invitationUrl: inviteUrl,
+    organizationName: org.name,
+  });
+  await audit.record({
+    actorUserId: actor.id,
+    actorOrganizationId: actor.organizationId,
+    action: 'member.invite',
+    entityType: 'user_invitation',
+    entityId: invitation.id,
+    metadata: { invitedOrganizationId: organizationId, role: role.name },
+  });
+  return {
+    kind: 'success',
+    value: {
+      ...invitation,
+      organizationName: org.name,
+      role: role.name,
+      emailDelivery: delivery.status,
+      ...(exposeRawLinks ? { inviteUrl } : {}),
+    },
+  };
+}
+
+export async function listInvitations(actor: InvitationActor): Promise<Outcome> {
+  return {
+    kind: 'success',
+    value: await withCatalogRead((execute) => legacyInvitations(execute, actor)),
+  };
+}
+export async function listInvitationPage(
+  actor: InvitationActor,
+  parameters: Record<string, unknown>,
+): Promise<Outcome> {
+  return {
+    kind: 'success',
+    value: await withCatalogRead((execute) => invitationPage(execute, actor, parameters)),
+  };
+}
+export async function summarizeInvitations(actor: InvitationActor): Promise<Outcome> {
+  return {
+    kind: 'success',
+    value: await withCatalogRead((execute) => invitationSummary(execute, actor)),
+  };
+}
+
+export async function invitationDetails(token: string): Promise<Outcome> {
+  const result = await repository.findDetails([hashToken(token)]);
+  const invitation = result.rows[0];
+  if (!invitation || invitation.accepted_at || new Date(invitation.expires_at) <= new Date()) {
+    return { kind: 'invalid_invitation', message: 'This invitation is invalid or has expired' };
+  }
+  return { kind: 'success', value: invitation };
+}
+
+export async function acceptInvitation(token: string, draft: AccountDraft): Promise<Outcome> {
+  const client = await repository.getClient();
+  try {
+    await repository.begin(client);
+    const candidate = (await repository.findCandidate(client, [hashToken(token)])).rows[0];
+    if (!candidate) {
+      await repository.rollback(client);
+      return { kind: 'invalid_invitation', message: 'This invitation is invalid or has expired' };
+    }
+    const organization = (await repository.lockOrganization(client, [candidate.organization_id]))
+      .rows[0];
+    const invitation = (await repository.lockInvitation(client, [hashToken(token)])).rows[0];
+    if (!invitation || !organization || organization.access_suspended_at) {
+      await repository.rollback(client);
+      return { kind: 'invalid_invitation', message: 'This invitation is invalid or has expired' };
+    }
+    const passwordHash = await bcrypt.hash(draft.password, 12);
+    const userResult = await repository.insertUser(client, [
+      invitation.organization_id,
+      invitation.email,
+      passwordHash,
+      draft.name,
+    ]);
+    await repository.assignRole(client, [userResult.rows[0].id, invitation.role_id]);
+    await repository.markAccepted(client, [invitation.id]);
+    await repository.commit(client);
+    return {
+      kind: 'success',
+      value: {
+        ...userResult.rows[0],
+        message: 'Account created. Sign in to set up your workspace.',
+      },
+    };
+  } catch (error: unknown) {
+    await repository.rollback(client);
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505') {
+      return { kind: 'account_exists', message: 'An account with this email already exists' };
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function revokeInvitation(
+  actor: InvitationActor,
+  invitationId: string,
+): Promise<Outcome> {
+  const isPlatformAdmin = (actor.permissions || []).includes('*');
+  const result = await repository.revoke([invitationId, isPlatformAdmin, actor.organizationId]);
+  if (!result.rows[0]) {
+    return { kind: 'active_invitation_missing', message: 'Active invitation not found' };
+  }
+  await audit.record({
+    actorUserId: actor.id,
+    actorOrganizationId: actor.organizationId,
+    action: 'member.invitation_revoked',
+    entityType: 'user_invitation',
+    entityId: invitationId,
+  });
+  return { kind: 'success', value: undefined };
+}
+
+export async function resendInvitation(
+  actor: InvitationActor,
+  invitationId: string,
+): Promise<Outcome> {
+  const isPlatformAdmin = (actor.permissions || []).includes('*');
+  const token = crypto.randomBytes(32).toString('base64url');
+  const result = await repository.rotate([
+    hashToken(token),
+    invitationId,
+    isPlatformAdmin,
+    actor.organizationId,
+  ]);
+  const invitation = result.rows[0];
+  if (!invitation) {
+    return { kind: 'invitation_missing', message: 'Invitation not found' };
+  }
+  const delivery = await deliverInvitation({
+    id: invitation.id,
+    token,
+    to: invitation.email,
+    invitationUrl: `${config.publicWebUrl}/accept-invite/${token}`,
+    organizationName: invitation.organization_name,
+  });
+  await audit.record({
+    actorUserId: actor.id,
+    actorOrganizationId: actor.organizationId,
+    action: 'member.invitation_resent',
+    entityType: 'user_invitation',
+    entityId: invitation.id,
+  });
+  return {
+    kind: 'success',
+    value: {
+      id: invitation.id,
+      email: invitation.email,
+      expires_at: invitation.expires_at,
+      emailDelivery: delivery.status,
+      ...(exposeRawLinks ? { inviteUrl: `${config.publicWebUrl}/accept-invite/${token}` } : {}),
+    },
+  };
+}

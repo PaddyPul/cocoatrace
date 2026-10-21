@@ -1,0 +1,51 @@
+import type { AuthenticatedActor } from '../../services/authSessionService';
+import { reviewedOrganicSql } from './repository';
+import { withCatalogRead } from './paging';
+import { adviseReadiness, type ReadinessFacts } from '../../services/readinessAdvisor';
+import { createReadinessNarrative } from '../../services/readinessNarrative';
+import { hasExplicitPermission } from '../../services/resourcePolicy';
+export async function readWorkspaceReadiness(actor: AuthenticatedActor) {
+  const networkScope = hasExplicitPermission(actor, 'analytics.read.network');
+  const result = await withCatalogRead((execute) =>
+    execute(
+      `WITH scoped_batches AS (
+       SELECT b.id, ${reviewedOrganicSql} AS reviewed FROM harvest_batches b
+       WHERE $1::boolean OR b.current_holder_id=$2
+     ), scoped_products AS (
+       SELECT pp.id, pp.batch_id, pp.visibility FROM product_profiles pp
+       JOIN scoped_batches b ON b.id=pp.batch_id
+     )
+     SELECT
+       (SELECT COUNT(*) FROM scoped_batches)::int AS batches_total,
+       (SELECT COUNT(*) FROM scoped_batches WHERE reviewed)::int AS batches_attested,
+       (SELECT COUNT(*) FROM scoped_products)::int AS products_total,
+       (SELECT COUNT(*) FROM scoped_products WHERE visibility='published')::int AS products_published,
+       (SELECT COUNT(*) FROM scoped_products pp WHERE EXISTS (
+         SELECT 1 FROM evidence_items e WHERE e.linked_entity_type='batch' AND e.linked_entity_id=pp.batch_id AND e.review_status='approved' AND EXISTS (SELECT 1 FROM trust_claim_reviews tr JOIN users ru ON ru.id=tr.reviewer_user_id AND ru.organization_id=tr.reviewer_organization_id WHERE tr.entity_type='evidence' AND tr.entity_id=e.id AND tr.claim_key='evidence_review' AND tr.status='reviewed' AND tr.reviewer_organization_id<>e.uploader_organization_id AND tr.reviewed_at<=NOW() AND (tr.expires_at IS NULL OR tr.expires_at>NOW()))
+       ))::int AS products_with_evidence,
+       (SELECT COUNT(*) FROM recall_notices r WHERE r.status='active' AND ($1::boolean OR r.initiated_by_organization_id=$2))::int AS active_recalls,
+       (SELECT COUNT(*) FROM shipments s JOIN sales_contracts c ON c.id=s.contract_id
+        WHERE s.delivered_at IS NULL AND ($1::boolean OR c.seller_organization_id=$2 OR c.buyer_organization_id=$2 OR s.logistics_organization_id=$2))::int AS shipments_in_progress`,
+      [networkScope, actor.organizationId],
+    ),
+  );
+  const row = result.rows[0];
+  const facts: ReadinessFacts = {
+    batchesTotal: Number(row.batches_total),
+    batchesAttested: Number(row.batches_attested),
+    productsTotal: Number(row.products_total),
+    productsPublished: Number(row.products_published),
+    productsWithEvidence: Number(row.products_with_evidence),
+    activeRecalls: Number(row.active_recalls),
+    shipmentsInProgress: Number(row.shipments_in_progress),
+  };
+  const advice = adviseReadiness(facts);
+  const narrative = await createReadinessNarrative(advice.score, facts, advice.recommendations);
+  return {
+    ...advice,
+    facts,
+    narrative,
+    scope: networkScope ? 'permitted network' : 'your organization',
+    disclaimer: 'Operational guidance only; not a legal compliance or certification decision.',
+  };
+}

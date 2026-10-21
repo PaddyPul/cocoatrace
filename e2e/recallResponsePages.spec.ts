@@ -17,6 +17,11 @@ const user = {
   organizationId: 'response-org',
   organization_id: 'response-org',
   name: 'Response user',
+  email: 'response@example.invalid',
+  orgType: 'importer',
+  org_type: 'importer',
+  orgName: 'Response organization',
+  org_name: 'Response organization',
   roles: [],
   permissions: ['evidence.read', 'evidence.upload'],
 };
@@ -28,6 +33,7 @@ async function mock(
   const writes: Array<{ path: string; body: unknown }> = [];
   await page.addInitScript((user) => localStorage.setItem('ct_user', JSON.stringify(user)), user);
   let failed = false;
+  let responseAccessRevoked = false;
   await page.route('**/api/**', async (route) => {
     const url = new URL(route.request().url()),
       path = url.pathname;
@@ -53,6 +59,10 @@ async function mock(
       return;
     }
     if (path === '/api/recalls/response-notice/response') {
+      if (responseAccessRevoked) {
+        await route.fulfill({ status: 404, json: { error: 'Recall not found' } });
+        return;
+      }
       const parameters = Object.fromEntries(url.searchParams);
       requests.push(parameters);
       if (options.fail && !failed) {
@@ -128,12 +138,37 @@ async function mock(
     }
     await route.fulfill({ status: 403, json: { error: 'No investigation access' } });
   });
-  return { requests, writes };
+  return {
+    requests,
+    writes,
+    revokeResponseAccess: () => {
+      responseAccessRevoked = true;
+    },
+  };
 }
 async function open(page: Page) {
-  await page.goto('/recalls');
-  await page.getByRole('button', { name: 'Open response', exact: true }).click();
-  return page.getByRole('region', { name: 'Recall response', exact: true });
+  const [response] = await Promise.all([
+    page.waitForResponse(
+      (value) =>
+        new URL(value.url()).pathname === '/api/recalls/page' && value.request().method() === 'GET',
+    ),
+    page.goto('/recalls'),
+  ]);
+  expect(response.status(), 'Recall register fixture must load before opening a response').toBe(
+    200,
+  );
+  expect((await response.json()).items).toEqual([notice]);
+  const register = page.getByRole('region', { name: 'Recall register', exact: true });
+  await expect(register).toBeVisible();
+  await expect(register).toHaveAttribute('aria-busy', 'false');
+  const card = register
+    .locator('article')
+    .filter({ has: page.getByRole('heading', { name: notice.title, exact: true }) });
+  await expect(card).toHaveCount(1);
+  await card.getByRole('button', { name: 'Open response', exact: true }).click();
+  const panel = register.getByRole('region', { name: 'Recall response', exact: true });
+  await expect(panel).toBeVisible();
+  return panel;
 }
 test('response collections search and page independently with full totals and scoped holding recovery', async ({
   page,
@@ -254,15 +289,22 @@ test('failed response retries and malformed paging never presents an empty or ac
   ).toHaveCount(0);
 });
 test('revoked response access clears open recovery controls after refresh', async ({ page }) => {
-  await mock(page);
+  const { revokeResponseAccess } = await mock(page);
   const panel = await open(page);
   await panel
     .getByRole('combobox', { name: 'Your affected holding', exact: true })
     .selectOption('holding-first');
-  await page.route('**/api/recalls/response-notice/response**', (route) =>
-    route.fulfill({ status: 404, json: { error: 'Recall not found' } }),
+  await expect(
+    panel.getByRole('button', { name: 'Save recovery accounting', exact: true }),
+  ).toBeVisible();
+  revokeResponseAccess();
+  const revokedRead = page.waitForResponse(
+    (value) =>
+      new URL(value.url()).pathname === '/api/recalls/response-notice/response' &&
+      value.status() === 404,
   );
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await revokedRead;
   await expect(panel.getByRole('alert')).toContainText('Recall response unavailable');
   await expect(
     panel.getByRole('button', { name: 'Save recovery accounting', exact: true }),

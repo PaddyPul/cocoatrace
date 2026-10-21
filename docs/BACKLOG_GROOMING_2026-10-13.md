@@ -272,3 +272,10 @@ Founder reports README/Vite release passed and merged. Forward target is103 addi
 Founder reports the database-metrics release passed and merged. OPS-011 closes for private process-local pool/query/HTTP observations with existing queue observations. Accepted completion166/343 (48.4%). Hosted monitoring remains a separate operating gate.
 
 Candidate next batch removes residual production API explicit-any annotations, adds row/input/provider contracts and extends no-explicit-any enforcement across production API services/controllers/middleware. QLT-007 remains partial pending full release acceptance; ARC-020 retains implicit database/request and broader boundary adoption requirements. No new type-safety closure credit is applied merely from lint or type checking. The103-additional-closure sprint target remains268/343 (78.1%) from its original165 baseline;102 further closures are required after OPS-011 acceptance.
+
+
+## 2026-10-21 API type-safety acceptance and controller boundaries
+
+Founder reports API type-safety release passed and merged. QLT-007 closes for maintained production API no-explicit-any enforcement; inherited framework/database defaults and full DTO boundary adoption remain ARC-020. Accepted completion167/343 (48.7%).
+
+Controller-workflow candidate extracts the remaining SQL/transaction orchestration from29 production controller files (including public helpers/barrels), adds named feature repositories/use cases, and gates recursive database-free HTTP boundaries. ARC-011 and ARC-019 remain partial until native/full release acceptance. Static checks do not close ARC-013: preserved best-effort/post-commit audits and invitation acceptance audit coverage remain separate gaps. The103-additional-task target is still268/343 (78.1%);2 accepted closures since165,101 remain.
