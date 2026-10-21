@@ -20,6 +20,7 @@ vi.mock('../../src/config/env', async (original) => {
 vi.mock('../../src/services/invitationDelivery', () => ({
   deliverInvitation: async () => ({ status: 'pending' }),
 }));
+import { definitions } from '../../src/modules/teamMembers/policy';
 import { PostgresOrganizationAccessRepository } from '../../src/modules/organizationAccess/repository';
 import { pool, query } from '../../src/db';
 import { inDatabaseTransaction } from '../../src/services/databaseTransaction';
@@ -37,7 +38,19 @@ import {
 } from '../../src/modules/invitationsWorkflow/useCases';
 
 let org: string, user: string, role: string, session: string, invitedRole: string;
-let ownsInvitedRole = false;
+const ownedRecipientRoles: string[] = [];
+async function recipientRole(name: string, permissions: string[]): Promise<string> {
+  const inserted = await query<{ id: string }>(
+    'INSERT INTO roles(name,permissions) VALUES($1,$2) ON CONFLICT(name) DO NOTHING RETURNING id',
+    [name, permissions],
+  );
+  const created = inserted.rows[0];
+  if (created) ownedRecipientRoles.push(created.id);
+  const found =
+    created || (await query<{ id: string }>('SELECT id FROM roles WHERE name=$1', [name])).rows[0];
+  if (!found) throw new Error(`Invitation delivery recipient role fixture unavailable: ${name}`);
+  return found.id;
+}
 const token = () => crypto.randomBytes(32).toString('base64url');
 const who = () => ({
   id: user,
@@ -92,18 +105,10 @@ beforeAll(async () => {
     "INSERT INTO sessions(id,user_id,token_hash,expires_at) VALUES($1,$2,$3,NOW()+INTERVAL '1 day')",
     [session, user, invitationTokenHash(token())],
   );
-  // The native migration baseline is intentionally unseeded. This non-platform
-  // issuance scenario requires the legacy role name that matches its org type.
-  // Own that fixture when absent; never overwrite a shared role's permissions.
-  const created = await query<{ id: string }>(
-    "INSERT INTO roles(name,permissions) VALUES('exporter',ARRAY[]::text[]) ON CONFLICT(name) DO NOTHING RETURNING id",
-  );
-  ownsInvitedRole = !!created.rows[0];
-  const target =
-    created.rows[0] ||
-    (await query<{ id: string }>("SELECT id FROM roles WHERE name='exporter'")).rows[0];
-  if (!target) throw new Error('Invitation delivery recipient role fixture unavailable');
-  invitedRole = target.id;
+  // globalSetup truncates all business tables after applying migrations,
+  // including roles inserted by forward migrations. Own both dependencies.
+  invitedRole = await recipientRole('exporter', []);
+  await recipientRole('supplier_admin', definitions('exporter').supplier_admin);
 });
 beforeEach(() => {
   delivery.enabled = true;
@@ -112,15 +117,15 @@ beforeEach(() => {
 afterAll(async () => {
   try {
     if (org) await query('DELETE FROM user_invitations WHERE organization_id=$1', [org]);
-    if (ownsInvitedRole && invitedRole) {
+    for (const ownedRole of ownedRecipientRoles) {
       // Acceptance creates a test user with this role. Remove only our org's
       // assignments and the role we created, leaving pre-existing roles intact.
       await query(
         `DELETE FROM user_roles ur USING users u
         WHERE ur.user_id=u.id AND u.organization_id=$1 AND ur.role_id=$2`,
-        [org, invitedRole],
+        [org, ownedRole],
       );
-      await query('DELETE FROM roles WHERE id=$1', [invitedRole]);
+      await query('DELETE FROM roles WHERE id=$1', [ownedRole]);
     }
   } finally {
     await pool.end();

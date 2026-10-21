@@ -1,19 +1,17 @@
-# Invitation delivery fixture correction
+# Invitation delivery fixture correction v2
 
-The first native release run passed 83 suites/877 cases, but invitationDelivery.integration.test.ts assumed the unseeded database already contained the legacy exporter role. beforeAll failed and all 21 delivery scenarios were skipped; those skips are not passing coverage.
+The original native release passed 83 suites/877 cases, but the new suite assumed a seeded exporter role and skipped its 21 cases after setup failed. The first correction supplied exporter; the founder's focused rerun passed 20/21, exposing a second dependency on supplier_admin in first-admin approval.
 
-Correction: create the required recipient role only if absent, preserve pre-existing role permissions, report a clear missing-fixture error if unavailable, remove only fixture-owned assignments/role after deleting the suite's invitations, and always close the pool. Ordinary issuer authority and every delivery assertion are unchanged. The other role dependency (supplier_admin for first-admin approval) is explicitly introduced by migration 017; it is not a demo seed assumption.
+Confirmed cause: globalSetup applies migrations, then truncates all business tables, including roles introduced by migrations. The earlier assurance that migration 017 guaranteed supplier_admin in the test database was incorrect. The v2 fixture explicitly provides both recipient roles. Supplier-admin permissions come from the existing bounded team policy. Existing roles/permissions are preserved; only fixture-created role assignments and roles are cleaned up. Issuer authority, all 21 scenarios, production code and migrations are unchanged. The injected SMTP/key error logs belong to passing negative tests, not a request to change deployment secrets.
 
-No production code, schema, dependencies, secret, migration digest, accepted backlog count or authorization gate changes. This is a test-only correction to the existing feature branch. The main PR description retains the required template and now records the failed native setup honestly.
+Download bettertrade-invitation-fixture-v2-fix.bundle directly to Downloads. Apply only its tip on feat/durable-invitation-delivery-v1, after the first correction. Do not import earlier bundles again, alter migration data, regenerate the delivery key or reset volumes.
 
-Download bettertrade-invitation-fixture-fix.bundle directly to Downloads. Do not import the original durable-delivery bundle again, create a new feature branch, or reset volumes. Stay on feat/durable-invitation-delivery-v1. Apply only the correction tip, capture the resulting candidate before verification, run the focused native suite, then run the entire release. Push only after a matching passing release summary and clean tracked tree. Full PowerShell instructions are supplied in chat.
-
-Focused command (the runner accepts one filename, no --suite flag):
+Capture the new committed candidate before verification. Run the focused suite first:
 
 ```powershell
 npm run test:integration:docker -- invitationDelivery.integration.test.ts
 ```
 
-Author: standalone strict compilation and code-quality checks passed. Native/Docker execution is still pending; the prior 877 passing cases do not establish that these corrected 21 cases pass. If the focused run fails, stop and send the failure rather than running the full release or pushing.
+If it passes, run the entire npm run verify:release. Push only with a passing release-test-results/summary.json matching the captured commit, unchanged HEAD/branch and clean tracked tree. Full guarded PowerShell instructions are supplied in chat. If focused verification fails, stop and send the output; do not push or merge.
 
-After full success, update the existing PR using docs/releases/DURABLE_INVITATION_DELIVERY_V1_PR.md and record the new passing SHA/date and CI. Required PR checkboxes for native/browser acceptance remain unchecked until their runs actually pass. No new P0 classification or completion credit.
+Author checks: strict standalone compilation, existing bounded-role policy tests and code-quality checks pass. Native/Docker execution is still pending; 20/21 is not a full pass. The main PR description retains the exact requested format and records both failed native attempts honestly. After the corrected full release, record its new SHA/date and required CI evidence before merging. Backlog completion remains unchanged; no P0 reclassification or test bypass.
