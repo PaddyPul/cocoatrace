@@ -1,5 +1,6 @@
 import type { Actor } from '../../services/resourcePolicy';
 import * as repository from './repository';
+import { lockInvitationAuthority, lockInvitationTarget } from './authority';
 import { withCatalogRead } from '../catalog/paging';
 import { invitationPage, invitationSummary, legacyInvitations } from '../catalog/invitationRecords';
 import { config } from '../../config/env';
@@ -175,10 +176,16 @@ export async function revokeInvitation(
   actor: InvitationActor,
   invitationId: string,
 ): Promise<Outcome> {
-  const isPlatformAdmin = (actor.permissions || []).includes('*');
   const client = await repository.getClient();
   try {
     await repository.begin(client);
+    const { isPlatformAdmin } = await lockInvitationAuthority(client, actor);
+    if (
+      !(await lockInvitationTarget(client, invitationId, actor.organizationId, isPlatformAdmin))
+    ) {
+      await repository.rollback(client);
+      return { kind: 'active_invitation_missing', message: 'Active invitation not found' };
+    }
     const result = await repository.revoke(client, [
       invitationId,
       isPlatformAdmin,
@@ -203,12 +210,18 @@ export async function resendInvitation(
   actor: InvitationActor,
   invitationId: string,
 ): Promise<Outcome> {
-  const isPlatformAdmin = (actor.permissions || []).includes('*');
   const token = crypto.randomBytes(32).toString('base64url');
   const client = await repository.getClient();
   let invitation;
   try {
     await repository.begin(client);
+    const { isPlatformAdmin } = await lockInvitationAuthority(client, actor);
+    if (
+      !(await lockInvitationTarget(client, invitationId, actor.organizationId, isPlatformAdmin))
+    ) {
+      await repository.rollback(client);
+      return { kind: 'invitation_missing', message: 'Invitation not found' };
+    }
     const result = await repository.rotate(client, [
       hashToken(token),
       invitationId,

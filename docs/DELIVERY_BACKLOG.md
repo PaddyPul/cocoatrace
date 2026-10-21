@@ -5,7 +5,7 @@
 **Pilot launch plan:** [`BETTERTRADE_PILOT_PLAN.md`](BETTERTRADE_PILOT_PLAN.md)
 **Progress audit:** [`BACKLOG_GROOMING_2026-10-13.md`](BACKLOG_GROOMING_2026-10-13.md) (supersedes the 2026-10-06 snapshot)
 **Architecture direction:** [`ARCHITECTURE_MODERNIZATION.md`](./ARCHITECTURE_MODERNIZATION.md)
-**Last triaged:** 2026-10-15
+**Last triaged:** 2026-10-21
 **Next formal review:** Weekly, before selecting new work
 
 ## How to use this file
@@ -1009,3 +1009,41 @@ Next three complete-outcome targets: ARC-009 public module ownership, UX-009 ini
 Founder reports controller workflow release passed and merged, including fixture corrections. ARC-011 and ARC-019 close. Accepted completion169/343 (49.3%);4 of103 sprint targets accepted,99 remain. No independent CI URL was supplied.
 
 The next candidate makes existing critical audits transactional for harvest/direct inventory, sourcing creation, organizations, onboarding completion, compliance references, public product administration, invitation issuance/acceptance/revoke/resend and evidence upload transitions. See engineering/BUSINESS_AUDIT_ATOMICITY.md. ARC-013 remains partial: invitation delivery has no durable transactional outbox and the whole write/event inventory remains incomplete. Candidate native acceptance is pending; no further completion credit.
+
+
+## 2026-10-21 accepted baseline and next closure bundle
+
+Founder reports the corrected atomic-business-audits release passed and merged; main contains PR #138 at `1c9afc564c1ea3013f5c6a2dd1c33c956c65a86f`. This supersedes the preceding candidate-pending wording for that bundle. ARC-013 remains partial; no universal write/event coverage or real inbox acceptance is inferred. Accepted completion remains 169 existing items.
+
+Current candidate: invitation resend/revoke now revalidate live actor/session/role/passkey authority, derive platform scope from current roles, and lock a verified unsuspended target organization before mutation. Unit and native regression definitions cover stale roles/sessions and target suspension. Native/full-release acceptance remains pending for this candidate.
+
+Next executable priorities within ARC-013 / IDN-021 / SEC-006:
+
+1. Deliver durable invitation email outbox for initial approval/team invitation and resend, including secure token lifecycle, crash/restart recovery, bounded retries, live recipient eligibility and operational status. See [the implementation plan](engineering/INVITATION_DELIVERY_NEXT.md). The candidate does not implement that outbox.
+2. Finish the explicit mutation/audit/event inventory and native rollback/concurrency tests for uncovered write paths; do not equate the accepted critical-flow matrix with route-wide completeness.
+3. Obtain real provider/staging inbox and hosted operator evidence separately; keep associated launch gates open.
+4. Advance the optional Canton inspection/ADR spike after core safety closures; do not put it on the MVP critical path.
+
+## Canton research integration — BT-CANTON-001
+
+P2 optional strategic research, Phase 3. Source requirements: [BT-CANTON-001](research/canton/BT-CANTON-001_REQUIREMENTS.md). Repo-specific corrections and dependencies: [CT-00 integration map](research/canton/INTEGRATION_MAP.md). No Canton integration is implemented or runtime-tested. The source document's P0 task labels are mandatory internal PoC gates, not P0 MVP launch blockers. Count the following 19 work items once; the epic and source table are not additional roadmap items. Partial work earns no completion credit.
+
+- [-] **CT-00 · P2 · Phase 3 · IN PROGRESS:** Inspect identity, offers, contracts, audits, migrations and release; deliver integration map. Completion: Map delivered against main; review exact snapshot/approval timing and accept the map.
+- [ ] **CT-01 · P2 · Phase 3:** Approve the ten ADRs and threat model. Completion: Pin supported SDK/API/license, topology, trust tier, snapshot authority, token acquisition and failure model before runtime work.
+- [ ] **CT-02 · P2 · Phase 3:** Create isolated private Docker Canton topology. Completion: Separate buyer/seller participants, test synchronizer, persistent stores, health and restart tests; record Windows resource use.
+- [ ] **CT-03 · P2 · Phase 3:** Configure OIDC/JWKS and ledger-specific JWT validation. Completion: Valid scoped principal works; missing, forged, expired, wrong-audience/issuer tokens fail; no raw tokens in logs or outbox.
+- [ ] **CT-04 · P2 · Phase 3:** Provision parties and participant-local user rights. Completion: Stable environment-scoped mappings; no runtime identity can act as both counterparties; read does not grant actAs.
+- [ ] **CT-05 · P2 · Phase 3:** Implement minimal Daml proposal/accept/reject/cancel agreement package. Completion: Build and separate-party authorization, expiry, replay and visibility tests pass.
+- [ ] **CT-06 · P2 · Phase 3:** Build narrowly scoped ledger gateway and health diagnostics. Completion: Submit/query through approved party-specific authority without participant-admin credentials.
+- [ ] **CT-07 · P2 · Phase 3:** Add immutable operation schema and transactional ledger outbox. Completion: Commit business intent/audit/outbox atomically; no duplicate logical command; do not edit applied migrations.
+- [ ] **CT-08 · P2 · Phase 3:** Integrate buyer proposal with immutable version. Completion: Current buyer authority and exact version/digest binding; seller/unrelated party denied.
+- [ ] **CT-09 · P2 · Phase 3:** Integrate explicit supplier approval. Completion: Current supplier authority, intended terms and scoped ledger token; buyer/backend cannot impersonate supplier.
+- [ ] **CT-10 · P2 · Phase 3:** Implement update consumer, checkpoints and reconciliation. Completion: Recover timeout, missed event, duplicate completion and restart without false confirmation or duplicate agreement.
+- [ ] **CT-11 · P2 · Phase 3:** Add pending/confirmed/failed verification and receipt UX. Completion: Existing guided dashboards and legacy trade work remain intact; no wallet/JWT handling by ordinary users.
+- [ ] **CT-12 · P2 · Phase 3:** Deliver receipt generator plus web and CLI verifier. Completion: Reproducible digest vectors, signature checks and authorized ledger verification; label gateway-only and offline results accurately.
+- [ ] **CT-13 · P2 · Phase 3:** Run adversarial authorization and privacy matrix. Completion: All mandatory negative scenarios in the requirements pass; disclose managed Tier 1 administrator powers.
+- [ ] **CT-14 · P2 · Phase 3:** Deliver reproducible synthetic end-to-end demonstration. Completion: Two parties approve the same version; denial, tamper, outage and restart demonstrated without payment or real-world-truth claims.
+- [ ] **CT-15 · P2 · Phase 3:** Integrate optional release gates and rollback. Completion: Exact-commit full release passes; flag off preserves existing trade/payment/shipment behavior and needs no Canton services.
+- [ ] **CT-16 · P2 · Phase 3:** Prove independently administered supplier authority (optional Tier 2). Completion: BetterTrade admins cannot mint supplier tokens, change supplier rights or approve on its behalf; attack test proves governance boundary.
+- [ ] **CT-17 · P2 · Phase 3:** Deliver operations, Windows reproduction and recovery runbooks. Completion: Another developer can start/seed/test/stop/restore isolated PoC; controlled resets, rotation, monitoring and resource limits documented.
+- [ ] **CT-18 · P2 · Phase 3:** Link validated provenance evidence digests (optional expansion). Completion: Only authorized validated evidence hashes linked, with explicit scope and no private plaintext leakage.

@@ -1,3 +1,5 @@
+import { authenticateSession } from '../../src/services/authSessionService';
+import { resendInvitation, revokeInvitation } from '../../src/modules/invitationsWorkflow/useCases';
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import request from 'supertest';
@@ -242,4 +244,79 @@ describe('bounded invitation register and current workspace authorization', () =
       expired_count: 0,
     });
   });
+});
+
+describe('invitation mutation authority changes after authentication', () => {
+  for (const [name, action] of [
+    ['resend', resendInvitation],
+    ['revoke', revokeInvitation],
+  ] as const) {
+    it(`${name} refuses captured permissions after live role removal without changing invitation or audit`, async () => {
+      const id = await invite(states);
+      const captured = await authenticateSession(states.token);
+      expect(captured).toBeTruthy();
+      const before = (
+        await query('SELECT token_hash,revoked_at FROM user_invitations WHERE id=$1', [id])
+      ).rows[0];
+      try {
+        await query('UPDATE roles SET permissions=ARRAY[]::text[] WHERE id=$1', [states.role]);
+        await expect(action(captured!, id)).rejects.toMatchObject({ statusCode: 403 });
+        expect(
+          (await query('SELECT token_hash,revoked_at FROM user_invitations WHERE id=$1', [id]))
+            .rows[0],
+        ).toEqual(before);
+        expect((await query('SELECT id FROM audit_events WHERE entity_id=$1', [id])).rows).toEqual(
+          [],
+        );
+      } finally {
+        await query('UPDATE roles SET permissions=$2 WHERE id=$1', [
+          states.role,
+          ['member.invite'],
+        ]);
+      }
+    });
+    it(`${name} refuses an expired session captured before the mutation`, async () => {
+      const id = await invite(states);
+      const captured = await authenticateSession(states.token);
+      expect(captured).toBeTruthy();
+      const session = (
+        await query('SELECT expires_at FROM sessions WHERE id=$1', [captured!.sessionId])
+      ).rows[0];
+      try {
+        await query("UPDATE sessions SET expires_at=NOW()-INTERVAL '1 second' WHERE id=$1", [
+          captured!.sessionId,
+        ]);
+        await expect(action(captured!, id)).rejects.toMatchObject({ statusCode: 403 });
+        expect(
+          (await query('SELECT revoked_at FROM user_invitations WHERE id=$1', [id])).rows[0]
+            .revoked_at,
+        ).toBeNull();
+      } finally {
+        await query('UPDATE sessions SET expires_at=$2 WHERE id=$1', [
+          captured!.sessionId,
+          session.expires_at,
+        ]);
+      }
+    });
+    it(`${name} hides a suspended target from a separately authorized platform actor`, async () => {
+      const id = await invite(other);
+      const captured = await authenticateSession(network.token);
+      expect(captured).toBeTruthy();
+      try {
+        await query('UPDATE organizations SET access_suspended_at=NOW() WHERE id=$1', [other.org]);
+        expect(await action(captured!, id)).toMatchObject({
+          kind: name === 'resend' ? 'invitation_missing' : 'active_invitation_missing',
+        });
+        expect(
+          (await query('SELECT revoked_at FROM user_invitations WHERE id=$1', [id])).rows[0]
+            .revoked_at,
+        ).toBeNull();
+        expect((await query('SELECT id FROM audit_events WHERE entity_id=$1', [id])).rows).toEqual(
+          [],
+        );
+      } finally {
+        await query('UPDATE organizations SET access_suspended_at=NULL WHERE id=$1', [other.org]);
+      }
+    });
+  }
 });
