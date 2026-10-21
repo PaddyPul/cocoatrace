@@ -1,3 +1,4 @@
+import type { QueryResultRow } from 'pg';
 import {
   TRACE_LIMITS,
   TraceBudget,
@@ -8,7 +9,49 @@ import { getClient, query } from '../db';
 import { TraceGraph } from './recallTrace';
 import { activeBatchRecallSql } from '../modules/recall/safety';
 
-type TraceQuery = (sql: string, params?: any[]) => Promise<{ rows: any[] }>;
+export type TraceQuery = <Row extends QueryResultRow = QueryResultRow>(
+  sql: string,
+  params?: unknown[],
+) => Promise<{ rows: Row[] }>;
+
+export interface TraceLotRow {
+  id: string;
+  lot_code: string;
+  lot_type: TraceGraph['lots'][number]['lotType'];
+  product_name: string;
+  quantity_kg: string | number;
+  batch_id: string | null;
+  owner_organization_id: string;
+  status: string;
+  produced_at: string;
+  owner_name: string;
+  source_mode: TraceGraph['lots'][number]['sourceMode'];
+  source_label: string | null;
+  downstream_lot_count: number;
+  distribution_count: number;
+}
+interface TraceNeighborRow {
+  id: string;
+  source_lot_id: string;
+  destination_lot_id: string;
+}
+interface TraceEdgeRow extends TraceNeighborRow {
+  allocated_input_kg: string | number;
+  allocation_method: TraceGraph['edges'][number]['allocationMethod'];
+  event_code: string;
+  event_type: string;
+  occurred_at: string;
+}
+interface TraceDistributionRow {
+  id: string;
+  lot_id: string;
+  recipient_organization_id: string;
+  recipient_name: string;
+  quantity_kg: string | number;
+  distribution_reference: string;
+  shipment_id: string | null;
+  dispatched_at: string;
+}
 
 export async function withTraceRead<T>(read: (runQuery: TraceQuery) => Promise<T>): Promise<T> {
   const client = await getClient();
@@ -16,12 +59,14 @@ export async function withTraceRead<T>(read: (runQuery: TraceQuery) => Promise<T
     await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
     await client.query(`SET LOCAL statement_timeout = '${TRACE_LIMITS.statementMs}ms'`);
     const budget = new TraceBudget(TRACE_LIMITS.databaseMs);
-    const result = await read(async (sql, params) => {
-      budget.step();
-      const rows = await client.query(sql, params);
-      budget.step();
-      return rows;
-    });
+    const result = await read(
+      async <Row extends QueryResultRow>(sql: string, params?: unknown[]) => {
+        budget.step();
+        const rows = await client.query<Row>(sql, params);
+        budget.step();
+        return rows;
+      },
+    );
     await client.query('COMMIT');
     return result;
   } catch (error) {
@@ -41,10 +86,13 @@ export async function loadTraceGraph(
   if (!runQuery) return withTraceRead((execute) => loadTraceGraph(execute, rootLotIds));
   await runQuery(`SET LOCAL statement_timeout = '${TRACE_LIMITS.statementMs}ms'`);
   const budget = new TraceBudget(TRACE_LIMITS.databaseMs);
-  const execute: TraceQuery = async (sql, params) => {
+  const execute: TraceQuery = async <Row extends QueryResultRow>(
+    sql: string,
+    params?: unknown[],
+  ) => {
     budget.step();
     try {
-      const result = await runQuery(sql, params);
+      const result = await runQuery<Row>(sql, params);
       budget.step();
       return result;
     } catch (error) {
@@ -62,7 +110,7 @@ export async function loadTraceGraph(
     let depth = 0;
     while (frontier.length) {
       budget.step(1, depth++);
-      const neighbors = await execute(
+      const neighbors = await execute<TraceNeighborRow>(
         `SELECT id,source_lot_id,destination_lot_id FROM lot_genealogy_edges
         WHERE source_lot_id=ANY($1::uuid[]) OR destination_lot_id=ANY($1::uuid[])
         ORDER BY id LIMIT $2`,
@@ -87,7 +135,7 @@ export async function loadTraceGraph(
     ids = [...known];
   }
   const [lotsResult, edgesResult, distributionsResult] = await Promise.all([
-    execute(
+    execute<TraceLotRow>(
       `SELECT ml.id, ml.lot_code, ml.lot_type, ml.product_name, ml.quantity_kg,
               ml.batch_id, ml.owner_organization_id, CASE WHEN ${activeBatchRecallSql('ml.batch_id')} OR EXISTS (
                 SELECT 1 FROM recall_safety_holds safety JOIN recall_notices recall ON recall.id=safety.recall_id
@@ -105,7 +153,7 @@ export async function loadTraceGraph(
        ORDER BY ml.produced_at, ml.lot_code LIMIT $2`,
       [ids || null, TRACE_LIMITS.lots + 1],
     ),
-    execute(
+    execute<TraceEdgeRow>(
       `SELECT ge.id, ge.source_lot_id, ge.destination_lot_id,
               ge.allocated_input_kg, ge.allocation_method,
               te.event_code, te.event_type, te.occurred_at
@@ -115,7 +163,7 @@ export async function loadTraceGraph(
        ORDER BY te.occurred_at, ge.id LIMIT $2`,
       [ids || null, TRACE_LIMITS.edges + 1],
     ),
-    execute(
+    execute<TraceDistributionRow>(
       `SELECT ld.id, ld.lot_id, ld.recipient_organization_id,
               o.name AS recipient_name, ld.quantity_kg,
               ld.distribution_reference, ld.shipment_id, ld.dispatched_at
@@ -136,7 +184,7 @@ export async function loadTraceGraph(
   );
   budget.step();
   return {
-    lots: lotsResult.rows.map((row: any) => ({
+    lots: lotsResult.rows.map((row) => ({
       id: row.id,
       lotCode: row.lot_code,
       lotType: row.lot_type,
@@ -152,7 +200,7 @@ export async function loadTraceGraph(
       downstreamLotCount: Number(row.downstream_lot_count || 0),
       distributionCount: Number(row.distribution_count || 0),
     })),
-    edges: edgesResult.rows.map((row: any) => ({
+    edges: edgesResult.rows.map((row) => ({
       id: row.id,
       sourceLotId: row.source_lot_id,
       destinationLotId: row.destination_lot_id,
@@ -162,7 +210,7 @@ export async function loadTraceGraph(
       eventType: row.event_type,
       occurredAt: row.occurred_at,
     })),
-    distributions: distributionsResult.rows.map((row: any) => ({
+    distributions: distributionsResult.rows.map((row) => ({
       id: row.id,
       lotId: row.lot_id,
       recipientOrganizationId: row.recipient_organization_id,
@@ -187,14 +235,14 @@ export async function accessibleTraceLotIds(
     );
   if (requestedIds) checkTraceSize(requestedIds.length, TRACE_LIMITS.seeds, 'SEEDS_LIMIT');
   if (seeAll) {
-    const result = await runQuery(
+    const result = await runQuery<{ id: string }>(
       'SELECT id FROM material_lots WHERE ($1::uuid[] IS NULL OR id=ANY($1::uuid[])) ORDER BY id LIMIT $2',
       [requestedIds || null, TRACE_LIMITS.lots + 1],
     );
     checkTraceSize(result.rows.length, TRACE_LIMITS.lots, 'LOTS_LIMIT');
-    return new Set(result.rows.map((row: any) => row.id));
+    return new Set(result.rows.map((row) => row.id));
   }
-  const result = await runQuery(
+  const result = await runQuery<{ id: string }>(
     `SELECT DISTINCT ml.id
        FROM material_lots ml
        LEFT JOIN batch_holdings h ON h.batch_id=ml.batch_id
@@ -208,5 +256,5 @@ export async function accessibleTraceLotIds(
     [organizationId, requestedIds || null, TRACE_LIMITS.lots + 1],
   );
   checkTraceSize(result.rows.length, TRACE_LIMITS.lots, 'LOTS_LIMIT');
-  return new Set(result.rows.map((row: any) => row.id));
+  return new Set(result.rows.map((row) => row.id));
 }

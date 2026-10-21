@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('../db', () => ({ query: vi.fn(), getClient: vi.fn() }));
 import { getClient } from '../db';
-import { loadTraceGraph } from './traceGraphRepository';
+import { loadTraceGraph, type TraceQuery } from './traceGraphRepository';
 import { TRACE_LIMITS } from '../modules/trace/limits';
 
 const lot = (id: string) => ({
@@ -30,7 +30,7 @@ describe('bounded connected trace reads', () => {
       if (sql.includes('FROM lot_genealogy_edges ge')) return { rows: [edge] };
       return { rows: [] };
     });
-    const graph = await loadTraceGraph(run, ['output']);
+    const graph = await loadTraceGraph(run as TraceQuery, ['output']);
     expect(graph.lots.map((item) => item.id)).toEqual(['source', 'output']);
     expect(run.mock.calls.some(([sql]) => sql.includes('SET LOCAL statement_timeout'))).toBe(true);
     for (const [sql, params] of run.mock.calls)
@@ -43,7 +43,7 @@ describe('bounded connected trace reads', () => {
         ? Array.from({ length: TRACE_LIMITS.lots + 1 }, (_, id) => lot(String(id)))
         : [],
     }));
-    await expect(loadTraceGraph(run)).rejects.toThrow(/LOTS_LIMIT/);
+    await expect(loadTraceGraph(run as TraceQuery)).rejects.toThrow(/LOTS_LIMIT/);
   });
   it('converts PostgreSQL cancellation into explicit incomplete analysis', async () => {
     const run = vi.fn(async (sql: string) => {
@@ -51,7 +51,7 @@ describe('bounded connected trace reads', () => {
         throw Object.assign(new Error('canceling statement'), { code: '57014' });
       return { rows: [] };
     });
-    await expect(loadTraceGraph(run, ['source'])).rejects.toMatchObject({
+    await expect(loadTraceGraph(run as TraceQuery, ['source'])).rejects.toMatchObject({
       code: 'TRACE_ANALYSIS_INCOMPLETE',
       analysis: { reason: 'DATABASE_TIMEOUT', safetyClearance: false },
     });

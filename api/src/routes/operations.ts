@@ -4,7 +4,7 @@ import { requireAuth, requirePermission } from '../middleware/auth';
 import { query, pool } from '../db';
 import { runtimeMetrics } from '../modules/operations/runtimeMetrics';
 import { inDatabaseTransaction } from '../services/databaseTransaction';
-import { statusHealthy } from '../modules/operations/jobs';
+import { statusHealthy, type JobStatus } from '../modules/operations/jobs';
 import {
   emailOutboxes,
   retryCleanup,
@@ -45,7 +45,7 @@ router.get('/operations/deployment', (req, res, next) => {
 });
 router.get('/operations/status', async (_req, res, next) => {
   try {
-    const jobs = await query(
+    const jobs = await query<JobStatus>(
       'SELECT job_name,status,started_at,finished_at,last_success_at,error_code,consecutive_failures,runs FROM operations_job_status ORDER BY job_name',
     );
     res.setHeader('Cache-Control', 'no-store');

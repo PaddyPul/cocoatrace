@@ -451,3 +451,14 @@ web/src/components/auth/AuthProvider.tsx text eol=lf
 api/src/db.ts text eol=lf
 api/src/modules/operations/observeDatabaseClient.ts text eol=lf
 api/src/modules/operations/observeDatabaseClient.test.ts text eol=lf
+
+api/src/services/authSessionService.ts text eol=lf
+api/src/services/readinessNarrative.ts text eol=lf
+api/src/services/readinessNarrative.test.ts text eol=lf
+api/src/services/traceGraphRepository.ts text eol=lf
+api/src/services/traceGraphRepository.test.ts text eol=lf
+api/src/controllers/traceabilityController.ts text eol=lf
+api/src/controllers/holdingController.ts text eol=lf
+api/src/controllers/invitationController.ts text eol=lf
+api/src/modules/trust/assessment.ts text eol=lf
+api/src/modules/trust/assessment.test.ts text eol=lf

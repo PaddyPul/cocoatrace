@@ -265,3 +265,10 @@ The repository README now covers the platform, North Star, current boundaries, s
 ## 2026-10-20 expanded sprint target and database observations
 
 Founder reports README/Vite release passed and merged. Forward target is103 additional full-task closures (30% of343), reaching268/343 (78.1%) from165/343 (48.1%). The new sprint register preserves existing requirements and distinguishes external dependencies. Database connection observation now includes candidate transaction/callback coverage; OPS-011 remains partial until native/full release acceptance. No new completion credit is applied.
+
+
+## 2026-10-21 database metrics acceptance and API type safety
+
+Founder reports the database-metrics release passed and merged. OPS-011 closes for private process-local pool/query/HTTP observations with existing queue observations. Accepted completion166/343 (48.4%). Hosted monitoring remains a separate operating gate.
+
+Candidate next batch removes residual production API explicit-any annotations, adds row/input/provider contracts and extends no-explicit-any enforcement across production API services/controllers/middleware. QLT-007 remains partial pending full release acceptance; ARC-020 retains implicit database/request and broader boundary adoption requirements. No new type-safety closure credit is applied merely from lint or type checking. The103-additional-closure sprint target remains268/343 (78.1%) from its original165 baseline;102 further closures are required after OPS-011 acceptance.
