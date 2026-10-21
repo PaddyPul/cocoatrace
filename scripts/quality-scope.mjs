@@ -1,5 +1,6 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/test/integration/evidenceCleanup.integration.test.ts',
   'api/src/controllers/publicProducts/ownership.test.ts',
   'api/src/services/audit.ts',
   'api/src/services/auditWriter.ts',

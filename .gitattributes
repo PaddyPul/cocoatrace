@@ -555,3 +555,5 @@ api/src/modules/workspaceWorkflow/atomicAudit.test.ts text eol=lf
 api/src/services/evidenceUploadService.test.ts text eol=lf
 api/src/services/invitationIssuance.test.ts text eol=lf
 api/test/integration/businessAuditAtomicity.integration.test.ts text eol=lf
+
+api/test/integration/evidenceCleanup.integration.test.ts text eol=lf
