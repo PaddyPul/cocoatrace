@@ -523,3 +523,7 @@ api/src/modules/workspaceWorkflow/commands.ts text eol=lf
 api/src/modules/workspaceWorkflow/repository.ts text eol=lf
 scripts/controller-boundaries.mjs text eol=lf
 scripts/controller-boundaries.test.mjs text eol=lf
+
+api/test/integration/privilegedLifecycle.integration.test.ts text eol=lf
+api/test/integration/accessSuspension.integration.test.ts text eol=lf
+api/test/integration/fixtures/invitationRole.ts text eol=lf

@@ -1,5 +1,8 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/test/integration/privilegedLifecycle.integration.test.ts',
+  'api/test/integration/accessSuspension.integration.test.ts',
+  'api/test/integration/fixtures/invitationRole.ts',
   'api/src/controllers/auditController.ts',
   'api/src/controllers/authController.ts',
   'api/src/controllers/batchController.ts',
