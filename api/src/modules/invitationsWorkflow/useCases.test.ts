@@ -1,3 +1,7 @@
+vi.mock('./authority', () => ({
+  lockInvitationAuthority: (...args: unknown[]) => dependencies.authority(...args),
+  lockInvitationTarget: (...args: unknown[]) => dependencies.target(...args),
+}));
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 const dependencies = vi.hoisted(() => ({
   query: vi.fn(),
@@ -7,6 +11,8 @@ const dependencies = vi.hoisted(() => ({
   issue: vi.fn(),
   deliver: vi.fn(),
   audit: vi.fn(),
+  authority: vi.fn(),
+  target: vi.fn(),
 }));
 vi.mock('../../db', () => ({
   query: dependencies.query,
@@ -40,6 +46,8 @@ const input = {
 describe('invitation workflows', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    dependencies.authority.mockResolvedValue({ isPlatformAdmin: false });
+    dependencies.target.mockResolvedValue(true);
   });
   it('keeps tenant and cooperative role selection authoritative for a non-platform actor', async () => {
     dependencies.query
@@ -180,6 +188,46 @@ describe('invitation workflows', () => {
       expect(auditCall[1][6]).toBe('{}');
       expect(dependencies.clientQuery).toHaveBeenLastCalledWith('ROLLBACK');
       expect(dependencies.clientQuery.mock.calls.some(([sql]) => sql === 'COMMIT')).toBe(false);
+      expect(dependencies.deliver).not.toHaveBeenCalled();
+      expect(dependencies.release).toHaveBeenCalledOnce();
+    },
+  );
+});
+
+describe('invitation transaction authority failures', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    dependencies.authority.mockResolvedValue({ isPlatformAdmin: false });
+    dependencies.target.mockResolvedValue(true);
+  });
+  it.each(['resend', 'revoke'])(
+    'rolls back %s before token mutation, audit or delivery on live denial',
+    async (operation) => {
+      dependencies.clientQuery.mockResolvedValue({ rows: [] });
+      dependencies.authority.mockRejectedValueOnce(new Error('authorization changed'));
+      const action = operation === 'resend' ? resendInvitation : revokeInvitation;
+      await expect(action(input.user, 'invite')).rejects.toThrow('authorization changed');
+      expect(dependencies.clientQuery.mock.calls.map(([sql]) => sql)).toEqual([
+        'BEGIN',
+        'ROLLBACK',
+      ]);
+      expect(dependencies.deliver).not.toHaveBeenCalled();
+      expect(dependencies.release).toHaveBeenCalledOnce();
+    },
+  );
+  it.each(['resend', 'revoke'])(
+    'returns nondisclosing missing result for %s when target becomes suspended',
+    async (operation) => {
+      dependencies.clientQuery.mockResolvedValue({ rows: [] });
+      dependencies.target.mockResolvedValueOnce(false);
+      const action = operation === 'resend' ? resendInvitation : revokeInvitation;
+      expect(await action(input.user, 'invite')).toMatchObject({
+        kind: operation === 'resend' ? 'invitation_missing' : 'active_invitation_missing',
+      });
+      expect(dependencies.clientQuery.mock.calls.map(([sql]) => sql)).toEqual([
+        'BEGIN',
+        'ROLLBACK',
+      ]);
       expect(dependencies.deliver).not.toHaveBeenCalled();
       expect(dependencies.release).toHaveBeenCalledOnce();
     },

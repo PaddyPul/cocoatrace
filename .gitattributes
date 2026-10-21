@@ -557,3 +557,8 @@ api/src/services/invitationIssuance.test.ts text eol=lf
 api/test/integration/businessAuditAtomicity.integration.test.ts text eol=lf
 
 api/test/integration/evidenceCleanup.integration.test.ts text eol=lf
+
+api/src/modules/invitationsWorkflow/authority.ts text eol=lf
+api/src/modules/invitationsWorkflow/authority.test.ts text eol=lf
+api/test/integration/invitationPages.integration.test.ts text eol=lf
+api/src/controllers/invitationController.test.ts text eol=lf

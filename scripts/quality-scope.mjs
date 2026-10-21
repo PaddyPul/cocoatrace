@@ -1,5 +1,9 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/modules/invitationsWorkflow/authority.ts',
+  'api/src/modules/invitationsWorkflow/authority.test.ts',
+  'api/test/integration/invitationPages.integration.test.ts',
+  'api/src/controllers/invitationController.test.ts',
   'api/test/integration/evidenceCleanup.integration.test.ts',
   'api/src/controllers/publicProducts/ownership.test.ts',
   'api/src/services/audit.ts',
