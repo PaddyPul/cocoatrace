@@ -30,10 +30,10 @@ Combine independent changes within each coherent batch; run focused checks befor
 | PER-005 | open | Split heavy frontend routes and establish mobile performance/accessibility budgets. Completion: measured production bundles and buyer/supplier mobile journey with regression thresholds. |
 | ARC-002 | partial | Define shared actor, organization scope, money, quantity and identifier types. |
 | ARC-003 | partial | Create reusable resource policy interfaces and move authorization decisions out of controllers. |
-| ARC-011 | partial | Move SQL from migrated controllers into repositories/query modules. |
+| ARC-011 | accepted | Move SQL from migrated controllers into repositories/query modules. |
 | ARC-013 | partial | Write critical business changes, audit records and outbox events atomically. |
 | ARC-018 | partial | Refactor batch, contract and shipment route components into focused components and hooks. |
-| ARC-019 | partial | Replace compressed multi-operation functions with readable, named use cases. |
+| ARC-019 | accepted | Replace compressed multi-operation functions with readable, named use cases. |
 | ARC-020 | partial | Eliminate `any` from high-risk domain, authorization, payment, evidence and traceability paths. |
 | ARC-021 | open | Publish and maintain an OpenAPI specification. |
 | ARC-022 | open | Generate or strongly type the frontend API boundary from the OpenAPI contract. |
@@ -130,3 +130,5 @@ Database-metrics release passed and merged per founder: OPS-011 closes. Completi
 ## API type-safety acceptance
 
 Founder reports release passed and merged2026-10-21: QLT-007 closes. Completion167/343 (48.7%);2 of103 additional targets accepted,101 remain. Controller boundary extraction is candidate only; ARC-011/019 await native/full release acceptance.
+
+2026-10-21: Founder reports controller release passed and merged. ARC-011/019 accepted;169/343 (49.3%),4 of103 targets accepted,99 remain. Atomic audit candidate receives no additional credit before native acceptance.

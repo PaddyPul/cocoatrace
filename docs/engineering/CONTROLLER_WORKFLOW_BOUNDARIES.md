@@ -23,7 +23,7 @@ Controllers adapt validated HTTP inputs, actors, domain outcomes, headers and re
 
 ## Remaining gaps
 
-This extraction does not establish universal atomic auditing (ARC-013). Existing source-batch creation, organization creation, sourcing creation, onboarding completion, contract references, public-product changes and invitation notification/resend/revoke audit points retain their preexisting best-effort or post-commit behavior. Invitation acceptance still lacks a dedicated audit event. These require separately specified audit transactions and native rollback tests; moving a function does not repair them.
+Founder reports the controller extraction release passed and merged2026-10-21; ARC-011/019 are accepted. The following atomic audit candidate supersedes the prior best-effort audit gaps for the flows listed in BUSINESS_AUDIT_ATOMICITY.md. ARC-013 still requires durable invitation delivery and a complete write/event inventory.
 
 ARC-020 full framework/database DTO precision, ARC-021 OpenAPI, ARC-022 frontend contract generation, ARC-024 whole-route/list/export inventory and hosted capacity acceptance remain separate. Existing registered routes and permissions are unchanged. No new grant, schema, dependency, payment override or safety-release path is introduced.
 

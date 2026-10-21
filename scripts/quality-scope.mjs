@@ -1,5 +1,16 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/controllers/publicProducts/ownership.test.ts',
+  'api/src/services/audit.ts',
+  'api/src/services/auditWriter.ts',
+  'api/src/services/invitationIssuance.ts',
+  'api/src/modules/agreements/complianceReferences.test.ts',
+  'api/src/modules/publicProducts/atomicAudit.test.ts',
+  'api/src/modules/sourcing/requestWorkflow.test.ts',
+  'api/src/modules/workspaceWorkflow/atomicAudit.test.ts',
+  'api/src/services/evidenceUploadService.test.ts',
+  'api/src/services/invitationIssuance.test.ts',
+  'api/test/integration/businessAuditAtomicity.integration.test.ts',
   'api/test/integration/privilegedLifecycle.integration.test.ts',
   'api/test/integration/accessSuspension.integration.test.ts',
   'api/test/integration/fixtures/invitationRole.ts',

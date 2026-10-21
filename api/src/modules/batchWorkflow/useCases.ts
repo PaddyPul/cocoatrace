@@ -1,5 +1,5 @@
 import type { AuditActor } from '../../services/auditWriter';
-import * as audit from '../../services/audit';
+import { recordAudit } from '../../services/auditWriter';
 import { ensureSourceMaterialLot } from '../../services/materialLot';
 import { lockHoldingListings, pendingTransferQuantity } from '../../services/inventoryIntegrity';
 import { recordTradeAudit } from '../trading/transaction';
@@ -101,14 +101,8 @@ export async function registerHarvestBatch(
       actor.organizationId,
       input.quantityKg,
     );
+    await recordAudit(client, actor, 'batch.create', 'harvest_batch', batch.id);
     await client.query('COMMIT');
-    await audit.record({
-      actorUserId: actor.id,
-      actorOrganizationId: actor.organizationId,
-      action: 'batch.create',
-      entityType: 'harvest_batch',
-      entityId: batch.id,
-    });
     return { ...batch, holding_id: holding.id };
   } catch (error) {
     await client.query('ROLLBACK');
@@ -129,14 +123,8 @@ export async function registerDirectInventory(
     const batch = await repository.createDirect(actor.organizationId, input);
     await ensureSourceMaterialLot(client, batch);
     const holding = await repository.createWarehouseHolding(batch.id, actor.organizationId, input);
+    await recordAudit(client, actor, 'inventory.create_direct', 'harvest_batch', batch.id);
     await client.query('COMMIT');
-    await audit.record({
-      actorUserId: actor.id,
-      actorOrganizationId: actor.organizationId,
-      action: 'inventory.create_direct',
-      entityType: 'harvest_batch',
-      entityId: batch.id,
-    });
     return { ...batch, holding_id: holding.id };
   } catch (error) {
     await client.query('ROLLBACK');

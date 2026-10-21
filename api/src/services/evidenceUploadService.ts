@@ -12,7 +12,8 @@ import { config } from '../config/env';
 import { getClient, query } from '../db';
 import { AppError, ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../errors';
 import { JwtPayload } from '../middleware/auth';
-import * as audit from './audit';
+import { recordAudit } from './auditWriter';
+import { inDatabaseTransaction } from './databaseTransaction';
 import {
   AllowedEvidenceMime,
   validateEvidenceContent,
@@ -212,6 +213,7 @@ export async function createUploadIntent(actor: JwtPayload, rawInput: CreateEvid
       uploadIntentId: id,
       reason: 'upload_quarantine',
     });
+    await recordAudit(client, actor, 'evidence.upload_intent.create', 'evidence_upload_intent', id);
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined);
@@ -221,13 +223,6 @@ export async function createUploadIntent(actor: JwtPayload, rawInput: CreateEvid
   }
   const expires = Math.floor(expiresAt.getTime() / 1000);
   const signature = uploadSignature(id, quarantineObjectKey, expires);
-  await audit.record({
-    actorUserId: actor.id,
-    actorOrganizationId: actor.organizationId,
-    action: 'evidence.upload_intent.create',
-    entityType: 'evidence_upload_intent',
-    entityId: id,
-  });
   return {
     intentId: id,
     uploadUrl: `/evidence/upload-intents/${id}/content?expires=${expires}&signature=${signature}`,
@@ -343,17 +338,20 @@ export async function completeUploadIntent(
     try {
       scanResult = await evidenceMalwareScanner().scan(content);
     } catch (error) {
-      await query(
-        `UPDATE evidence_upload_intents SET status='scan_failed',malware_scan_status='scan_failed',
+      await inDatabaseTransaction(async (client) => {
+        const changed = await client.query(
+          `UPDATE evidence_upload_intents SET status='scan_failed',malware_scan_status='scan_failed',
           rejection_reason=$2,malware_scanned_at=NOW(),updated_at=NOW() WHERE id=$1 AND status='scanning'`,
-        [intentId, error instanceof Error ? error.message : 'Malware scanner failed'],
-      );
-      await audit.record({
-        actorUserId: intent.uploader_user_id,
-        actorOrganizationId: intent.uploader_organization_id,
-        action: 'evidence.scan.failed',
-        entityType: 'evidence_upload_intent',
-        entityId: intentId,
+          [intentId, error instanceof Error ? error.message : 'Malware scanner failed'],
+        );
+        if (changed.rowCount !== 1) throw new ConflictError('Upload intent is no longer scanning');
+        await recordAudit(
+          client,
+          { id: intent.uploader_user_id, organizationId: intent.uploader_organization_id },
+          'evidence.scan.failed',
+          'evidence_upload_intent',
+          intentId,
+        );
       });
       throw new AppError(
         'Evidence malware scanning is temporarily unavailable; upload the file again later',
@@ -362,18 +360,21 @@ export async function completeUploadIntent(
       );
     }
     if (scanResult.status === 'infected') {
-      await query(
-        `UPDATE evidence_upload_intents SET status='infected',malware_scan_status='infected',malware_signature=$2,
+      await inDatabaseTransaction(async (client) => {
+        const changed = await client.query(
+          `UPDATE evidence_upload_intents SET status='infected',malware_scan_status='infected',malware_signature=$2,
           malware_scanner_engine=$3,malware_scanned_at=NOW(),rejection_reason='Malware detected',updated_at=NOW()
          WHERE id=$1 AND status='scanning'`,
-        [intentId, scanResult.signature, scanResult.engine],
-      );
-      await audit.record({
-        actorUserId: intent.uploader_user_id,
-        actorOrganizationId: intent.uploader_organization_id,
-        action: 'evidence.scan.infected',
-        entityType: 'evidence_upload_intent',
-        entityId: intentId,
+          [intentId, scanResult.signature, scanResult.engine],
+        );
+        if (changed.rowCount !== 1) throw new ConflictError('Upload intent is no longer scanning');
+        await recordAudit(
+          client,
+          { id: intent.uploader_user_id, organizationId: intent.uploader_organization_id },
+          'evidence.scan.infected',
+          'evidence_upload_intent',
+          intentId,
+        );
       });
       throw new AppError(
         'The uploaded file was rejected by malware scanning',
@@ -445,11 +446,22 @@ export async function completeUploadIntent(
         ],
       );
       evidence = inserted.rows[0];
-      await client.query(
+      const transitioned = await client.query(
         `UPDATE evidence_upload_intents SET status='completed',evidence_item_id=$2,updated_at=NOW() WHERE id=$1 AND status='scanning' AND malware_scan_status='clean'`,
         [intentId, evidence.id],
       );
+      if (transitioned.rowCount !== 1)
+        throw new ConflictError('Upload intent is no longer clean and scanning');
       await retainUploadObjects(client, intentId, finalObjectKey, evidence.id);
+      await recordAudit(
+        client,
+        { id: intent.uploader_user_id, organizationId: intent.uploader_organization_id },
+        'evidence.upload.complete',
+        'evidence_item',
+        evidence.id,
+        {},
+        { newStateHash: hash },
+      );
       await client.query('COMMIT');
       completed = true;
     } catch (error) {
@@ -458,14 +470,6 @@ export async function completeUploadIntent(
     } finally {
       client.release();
     }
-    await audit.record({
-      actorUserId: intent.uploader_user_id,
-      actorOrganizationId: intent.uploader_organization_id,
-      action: 'evidence.upload.complete',
-      entityType: 'evidence_item',
-      entityId: evidence.id,
-      newStateHash: hash,
-    });
     return evidence;
   } catch (error) {
     if (!completed) {

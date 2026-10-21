@@ -2,9 +2,9 @@ import type { Request, Response } from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 const dependencies = vi.hoisted(() => ({ query: vi.fn(), send: vi.fn(), audit: vi.fn() }));
 vi.mock('../config/env', () => ({ config: { environment: 'production', publicWebUrl: 'https://app.example.com' } }));
-vi.mock('../db', () => ({ query: dependencies.query, getClient: vi.fn() }));
+vi.mock('../db', () => ({ query: dependencies.query, getClient: async () => ({ query: async (sql: string, values?: unknown[]) => /^(BEGIN|COMMIT|ROLLBACK)$/.test(sql) ? { rows: [] } : dependencies.query(sql, values), release: vi.fn() }) }));
 vi.mock('../services/invitationDelivery', () => ({ deliverInvitation: dependencies.send }));
-vi.mock('../services/audit', () => ({ record: dependencies.audit }));
+vi.mock('../services/auditWriter', () => ({ recordAudit: dependencies.audit }));
 import { resendInvitation } from './invitationController';
 
 describe('invitation resend response', () => {

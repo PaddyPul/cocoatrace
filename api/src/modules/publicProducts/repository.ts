@@ -1,3 +1,4 @@
+import type { PoolClient } from 'pg';
 import { query } from '../../db';
 import type { ProfileRow, PublishedProductRow, PlotSummaryRow, CertificateRow } from './types';
 
@@ -5,9 +6,9 @@ export function findProfileForBatch(values: [batchId: string]) {
   return query<ProfileRow>('SELECT * FROM product_profiles WHERE batch_id=$1', values);
 }
 
-export function findProfileBatch(values: [batchId: string]) {
-  return query<{ id: string; current_holder_id: string }>(
-    'SELECT id, current_holder_id FROM harvest_batches WHERE id=$1',
+export function findProfileBatch(values: [batchId: string], client: PoolClient) {
+  return client.query<{ id: string; current_holder_id: string }>(
+    'SELECT id, current_holder_id FROM harvest_batches WHERE id=$1 FOR SHARE',
     values,
   );
 }
@@ -23,8 +24,9 @@ export function saveProfile(
     lotCode: string,
     heroImageUrl: string | null,
   ],
+  client: PoolClient,
 ) {
-  return query<ProfileRow>(
+  return client.query<ProfileRow>(
     `INSERT INTO product_profiles (batch_id, slug, display_name, brand_name, description, gtin, lot_code, hero_image_url)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
      ON CONFLICT (batch_id) DO UPDATE SET slug=EXCLUDED.slug, display_name=EXCLUDED.display_name,
@@ -37,8 +39,9 @@ export function saveProfile(
 
 export function publishOwnedProfile(
   values: [profileId: string, all: boolean, organizationId: string],
+  client: PoolClient,
 ) {
-  return query<ProfileRow>(
+  return client.query<ProfileRow>(
     `UPDATE product_profiles pp SET visibility='published', published_at=COALESCE(published_at, NOW()), updated_at=NOW()
      FROM harvest_batches b
      WHERE pp.id=$1 AND b.id=pp.batch_id AND ($2::boolean OR b.current_holder_id=$3)
@@ -108,5 +111,12 @@ export function insertPublishedScan(values: [slug: string]) {
      SELECT id FROM product_profiles WHERE slug=$1 AND visibility='published'
      RETURNING id`,
     values,
+  );
+}
+
+export function lockProfileBatch(profileId: string, client: PoolClient) {
+  return client.query<{ id: string }>(
+    `SELECT b.id FROM harvest_batches b JOIN product_profiles pp ON pp.batch_id=b.id WHERE pp.id=$1 FOR SHARE OF b`,
+    [profileId],
   );
 }
