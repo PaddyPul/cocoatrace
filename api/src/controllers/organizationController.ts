@@ -1,6 +1,5 @@
+import * as workflow from '../modules/organizationWorkflow/commands';
 import { Request, Response } from 'express';
-import { query } from '../db';
-import * as audit from '../services/audit';
 import { withCatalogRead } from '../modules/catalog/paging';
 import {
   legacyOrganizations,
@@ -25,19 +24,8 @@ export async function summarizeOrganizations(req: Request, res: Response): Promi
 }
 
 export async function createOrganization(req: Request, res: Response): Promise<void> {
-  const { name, type, jurisdiction, legalRegistrationNumber } = req.body;
-  const { rows } = await query(
-    'INSERT INTO organizations (name, type, jurisdiction, legal_registration_number) VALUES ($1,$2,$3,$4) RETURNING *',
-    [name, type, jurisdiction, legalRegistrationNumber || null],
-  );
-  await audit.record({
-    actorUserId: req.user!.id,
-    actorOrganizationId: req.user!.organizationId,
-    action: 'organization.create',
-    entityType: 'organization',
-    entityId: rows[0].id,
-  });
-  res.status(201).json(rows[0]);
+  const result = await workflow.createOrganization(req.user!, req.body);
+  res.status(201).json(result);
 }
 
 export async function listOrganizationMembers(req: Request, res: Response): Promise<void> {

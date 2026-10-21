@@ -9,8 +9,7 @@ import {
   listFees,
   type FeeReview,
 } from '../modules/fees/ledger';
-import { getClient } from '../db';
-import { reconcileFees } from '../modules/fees/reconciliation';
+import { readFeeReconciliation } from '../modules/fees/reconciliationRead';
 function id(value: unknown) {
   const result = z.string().uuid().safeParse(value);
   if (!result.success) throw new ValidationError('A valid identifier is required');
@@ -47,16 +46,5 @@ export async function download(req: Request, res: Response) {
     .send(JSON.stringify(result, null, 2));
 }
 export async function reconcile(_req: Request, res: Response) {
-  const client = await getClient();
-  try {
-    await client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
-    const result = await reconcileFees(client);
-    await client.query('COMMIT');
-    res.set('Cache-Control', 'no-store').json(result);
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
+  res.set('Cache-Control', 'no-store').json(await readFeeReconciliation());
 }

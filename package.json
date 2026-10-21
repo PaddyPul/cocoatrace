@@ -42,7 +42,7 @@
     "format:check": "node scripts/run-format-check.mjs",
     "format:fix": "node scripts/run-format-check.mjs --write",
     "check:scripts": "node scripts/check-script-contracts.mjs",
-    "check:quality": "npm run lint && npm run format:check && npm run check:scripts && node --test scripts/quality-policy.test.mjs scripts/check-script-contracts.test.mjs",
+    "check:quality": "npm run lint && npm run format:check && npm run check:scripts && npm run check:controller-boundaries && node --test scripts/quality-policy.test.mjs scripts/check-script-contracts.test.mjs",
     "typecheck": "npm run typecheck --workspace=api && npm run typecheck --workspace=web && npm run typecheck:browser",
     "check:dependencies": "node scripts/check-dependencies.mjs",
     "check:containers": "node scripts/check-container-security.mjs",
@@ -64,6 +64,7 @@
     "check:pilot-load": "node --import tsx scripts/pilot-load.mjs",
     "quality:report": "node scripts/critical-regressions.mjs --write",
     "check:regressions": "node scripts/critical-regressions.mjs --pr && node --test scripts/critical-regressions.test.mjs",
+    "check:controller-boundaries": "node scripts/controller-boundaries.mjs && node --test scripts/controller-boundaries.test.mjs",
     "check:workspace-states": "node scripts/route-resilience.mjs && node --test scripts/route-resilience.test.mjs"
   },
   "devDependencies": {

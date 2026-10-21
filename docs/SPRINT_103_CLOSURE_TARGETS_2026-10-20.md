@@ -38,7 +38,7 @@ Combine independent changes within each coherent batch; run focused checks befor
 | ARC-021 | open | Publish and maintain an OpenAPI specification. |
 | ARC-022 | open | Generate or strongly type the frontend API boundary from the OpenAPI contract. |
 | ARC-024 | partial | Accepted feature-owned paged/query modules cover the resource slices listed under PER-001 and delivery checkpoints. Remaining: explicit all-route/list/export inventory and any unreviewed legacy boundaries; hosted capacity remains PER-004. Earlier evidence-selector/native-pending text is superseded by founder acceptance. |
-| QLT-007 | partial | Strict no-new-any rules now include trace, catalog, security, MFA, access controls, transport, trade actions, payments, delivery, cancellation, fees and operations. Legacy evidence/auth/controller adoption remains open. |
+| QLT-007 | accepted | Strict no-new-any rules now include trace, catalog, security, MFA, access controls, transport, trade actions, payments, delivery, cancellation, fees and operations. Legacy evidence/auth/controller adoption remains open. |
 | DAT-010 | open | Add evidence requirements by claim type rather than accepting arbitrary labels. |
 | DAT-011 | open | Introduce configurable assurance schemes rather than hard-coded organic/EUDR assumptions. |
 | DAT-012 | open | Add history/effective dates so past decisions remain explainable after claim changes. |
@@ -126,3 +126,7 @@ Combine independent changes within each coherent batch; run focused checks befor
 ## 2026-10-21 accepted checkpoint
 
 Database-metrics release passed and merged per founder: OPS-011 closes. Completion166/343 (48.4%);1 of103 additional targets accepted,102 remain. API type-safety batch is candidate only.
+
+## API type-safety acceptance
+
+Founder reports release passed and merged2026-10-21: QLT-007 closes. Completion167/343 (48.7%);2 of103 additional targets accepted,101 remain. Controller boundary extraction is candidate only; ARC-011/019 await native/full release acceptance.
