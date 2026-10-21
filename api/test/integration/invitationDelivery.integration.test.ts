@@ -37,6 +37,7 @@ import {
 } from '../../src/modules/invitationsWorkflow/useCases';
 
 let org: string, user: string, role: string, session: string, invitedRole: string;
+let ownsInvitedRole = false;
 const token = () => crypto.randomBytes(32).toString('base64url');
 const who = () => ({
   id: user,
@@ -91,15 +92,39 @@ beforeAll(async () => {
     "INSERT INTO sessions(id,user_id,token_hash,expires_at) VALUES($1,$2,$3,NOW()+INTERVAL '1 day')",
     [session, user, invitationTokenHash(token())],
   );
-  invitedRole = (await query("SELECT id FROM roles WHERE name='exporter'")).rows[0].id;
+  // The native migration baseline is intentionally unseeded. This non-platform
+  // issuance scenario requires the legacy role name that matches its org type.
+  // Own that fixture when absent; never overwrite a shared role's permissions.
+  const created = await query<{ id: string }>(
+    "INSERT INTO roles(name,permissions) VALUES('exporter',ARRAY[]::text[]) ON CONFLICT(name) DO NOTHING RETURNING id",
+  );
+  ownsInvitedRole = !!created.rows[0];
+  const target =
+    created.rows[0] ||
+    (await query<{ id: string }>("SELECT id FROM roles WHERE name='exporter'")).rows[0];
+  if (!target) throw new Error('Invitation delivery recipient role fixture unavailable');
+  invitedRole = target.id;
 });
 beforeEach(() => {
   delivery.enabled = true;
   delivery.key = '12'.repeat(32);
 });
 afterAll(async () => {
-  await query('DELETE FROM user_invitations WHERE organization_id=$1', [org]);
-  await pool.end();
+  try {
+    if (org) await query('DELETE FROM user_invitations WHERE organization_id=$1', [org]);
+    if (ownsInvitedRole && invitedRole) {
+      // Acceptance creates a test user with this role. Remove only our org's
+      // assignments and the role we created, leaving pre-existing roles intact.
+      await query(
+        `DELETE FROM user_roles ur USING users u
+        WHERE ur.user_id=u.id AND u.organization_id=$1 AND ur.role_id=$2`,
+        [org, invitedRole],
+      );
+      await query('DELETE FROM roles WHERE id=$1', [invitedRole]);
+    }
+  } finally {
+    await pool.end();
+  }
 });
 describe('durable private invitation delivery and recovery', () => {
   it('recovers committed invitation intent after the original request is gone and scrubs submitted credentials', async () => {
