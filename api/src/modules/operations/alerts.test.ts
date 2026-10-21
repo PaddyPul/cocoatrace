@@ -31,7 +31,7 @@ const healthy = jobNames.map((job_name) => ({
 describe('redacted deduplicated operator incident alerts', () => {
   it('classifies missing, failed and stale jobs without copying private provider errors', () => {
     expect(incidentSignals(healthy, [], now)).toEqual([]);
-    expect(incidentSignals([], [], now)).toHaveLength(5);
+    expect(incidentSignals([], [], now)).toHaveLength(jobNames.length);
     expect(
       incidentSignals(
         [

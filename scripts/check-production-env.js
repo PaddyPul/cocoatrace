@@ -8,6 +8,7 @@ for (const name of ['WEB_URL', 'PUBLIC_WEB_URL']) if (process.env[name] && !proc
 if (process.env.COOKIE_SECURE !== 'true') failures.push('COOKIE_SECURE must be true');
 if (Boolean(process.env.OPENAI_API_KEY) !== Boolean(process.env.OPENAI_MODEL)) failures.push('OPENAI_API_KEY and OPENAI_MODEL must be configured together');
 if (process.env.IDENTITY_EMAIL_ENABLED === 'true') {
+  if (!/^[a-f0-9]{64}$/i.test(process.env.INVITATION_DELIVERY_KEY || '')) failures.push('INVITATION_DELIVERY_KEY must be a dedicated random 32-byte hex key');
   if (process.env.EMAIL_DRIVER !== 'smtp') failures.push('EMAIL_DRIVER must be smtp when identity email is enabled');
   for (const name of ['EMAIL_FROM', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASSWORD']) {
     if (!process.env[name]) failures.push(`${name} is required when identity email is enabled`);

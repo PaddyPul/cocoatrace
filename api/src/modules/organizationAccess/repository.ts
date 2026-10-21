@@ -1,3 +1,6 @@
+import { enqueueInvitationDelivery } from '../invitationDelivery/outbox';
+import { lockInvitationAuthority } from '../invitationsWorkflow/authority';
+import { ForbiddenError } from '../../errors';
 import { assertMutationAssurance } from '../mfa/assurance';
 import { PoolClient } from 'pg';
 import { getClient, query } from '../../db';
@@ -26,6 +29,7 @@ type ApproveApplication = {
   actor: AccessReviewActor;
   reason?: string;
   invitationTokenHash: string;
+  invitationToken: string;
   invitationExpiresAt: Date;
 };
 
@@ -150,7 +154,8 @@ export class PostgresOrganizationAccessRepository implements OrganizationAccessR
     const client = await getClient();
     try {
       await client.query('BEGIN');
-      await assertMutationAssurance(client, input.actor);
+      const live = await lockInvitationAuthority(client, input.actor);
+      if (!live.isPlatformAdmin) throw new ForbiddenError('Current platform reviewer required');
       const selected = await client.query(
         `SELECT ${applicationColumns} FROM organization_access_applications WHERE id=$1 FOR UPDATE`,
         [input.id],
@@ -217,6 +222,7 @@ export class PostgresOrganizationAccessRepository implements OrganizationAccessR
         'organization_access.approve',
         input.reason,
       );
+      await enqueueInvitationDelivery(client, input.actor, invitation.rows[0].id, input.invitationToken);
       await client.query('COMMIT');
       return {
         application: mapApplication(updated.rows[0]),

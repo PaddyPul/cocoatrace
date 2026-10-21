@@ -158,14 +158,14 @@ router.post('/operations/cleanup/:id/retry', async (req, res, next) => {
     next(error);
   }
 });
-const emailQueue = z.enum(['payment_reminder', 'recall', 'fee_statement']);
+const emailQueue = z.enum(['payment_reminder', 'recall', 'fee_statement', 'invitation']);
 router.get('/operations/email/:queue/dead', async (req, res, next) => {
   try {
     const queue = emailQueue.safeParse(req.params.queue);
     if (!queue.success) throw new ValidationError('Unknown email queue');
     // Existing partial indexes cover this order. No counts or recipient/message hydration.
     const rows = await query(`SELECT id,status,attempts,last_error,created_at,
-      (sent_at IS NULL AND lease_token IS NULL AND lease_expires_at IS NULL) AS retryable
+      (sent_at IS NULL AND lease_token IS NULL AND lease_expires_at IS NULL${queue.data === 'invitation' ? " AND token_ciphertext IS NOT NULL AND last_error IN ('SMTP_SUBMISSION_FAILED','FINAL_LEASE_EXPIRED')" : ''}) AS retryable
       FROM ${emailOutboxes[queue.data]} WHERE status='failed_terminal' ORDER BY id LIMIT 51`);
     res.setHeader('Cache-Control', 'no-store');
     res.json({

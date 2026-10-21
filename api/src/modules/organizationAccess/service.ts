@@ -89,6 +89,7 @@ export class OrganizationAccessService {
       actor,
       reason,
       invitationTokenHash: hashToken(invitationToken),
+      invitationToken,
       invitationExpiresAt: new Date(Date.now() + invitationLifetimeMs),
     });
     const inviteUrl = `${this.publicWebUrl}/accept-invite/${encodeURIComponent(invitationToken)}`;

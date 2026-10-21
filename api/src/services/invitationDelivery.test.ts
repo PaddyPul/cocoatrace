@@ -1,31 +1,40 @@
-import crypto from 'node:crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-const dependencies = vi.hoisted(() => ({ query: vi.fn(), send: vi.fn(), error: vi.fn() }));
-vi.mock('../db', () => ({ query: dependencies.query }));
-vi.mock('./emailSender', () => ({ sendInvitationEmail: dependencies.send }));
-vi.mock('../logger', () => ({ default: { error: dependencies.error } }));
+const deps = vi.hoisted(() => ({ query: vi.fn(), drain: vi.fn(), error: vi.fn() }));
+vi.mock('../db', () => ({ query: deps.query }));
+vi.mock('../modules/invitationDelivery/worker', () => ({ processInvitationEmails: deps.drain }));
+vi.mock('../logger', () => ({ default: { error: deps.error } }));
 import { deliverInvitation } from './invitationDelivery';
-
-const input = { id: 'invite-id', token: 'bearer-secret', to: 'private@example.com', invitationUrl: 'https://example.com/accept-invite/bearer-secret' };
-
-describe('invitation email submission', () => {
-  beforeEach(() => { vi.resetAllMocks(); dependencies.query.mockResolvedValue({ rows: [] }); });
-
-  it.each(['sent', 'suppressed'] as const)('records %s without persisting the bearer credential', async (status) => {
-    dependencies.send.mockResolvedValue({ status });
-    expect(await deliverInvitation(input)).toEqual({ status });
-    expect(dependencies.query.mock.calls[0][1]).toEqual([
-      status, input.id, crypto.createHash('sha256').update(input.token).digest('hex'),
-    ]);
-    expect(JSON.stringify(dependencies.query.mock.calls)).not.toContain(input.token);
+const input = {
+  id: 'invite-id',
+  token: 'bearer-secret',
+  to: 'private@example.com',
+  invitationUrl: 'https://example.com/accept-invite/bearer-secret',
+};
+describe('committed invitation delivery response', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
   });
-
-  it('records failure for retry without logging recipient, token or provider error text', async () => {
-    dependencies.send.mockRejectedValue(new Error(`provider rejected ${input.to} ${input.token}`));
-    expect(await deliverInvitation(input)).toEqual({ status: 'failed' });
-    expect(dependencies.query.mock.calls[0][1][0]).toBe('failed');
-    expect(JSON.stringify(dependencies.error.mock.calls)).not.toContain(input.token);
-    expect(JSON.stringify(dependencies.error.mock.calls)).not.toContain(input.to);
+  it.each(['sent', 'suppressed', 'failed', 'failed_terminal', 'queued', 'sending'])(
+    'reports durable state %s without storing caller links',
+    async (status) => {
+      deps.query.mockResolvedValueOnce({ rows: [{ status }] });
+      expect(await deliverInvitation(input)).toEqual({
+        status:
+          status === 'failed_terminal'
+            ? 'failed'
+            : ['queued', 'sending'].includes(status)
+              ? 'pending'
+              : status,
+      });
+      expect(deps.drain).toHaveBeenCalledWith(undefined, 1, input.id);
+      expect(JSON.stringify(deps.query.mock.calls)).not.toContain(input.token);
+      expect(JSON.stringify(deps.query.mock.calls)).not.toContain(input.to);
+    },
+  );
+  it('keeps a committed intent pending when immediate drain fails without exposing provider details', async () => {
+    deps.drain.mockRejectedValueOnce(new Error(input.to + ' ' + input.token));
+    expect(await deliverInvitation(input)).toEqual({ status: 'pending' });
+    expect(JSON.stringify(deps.error.mock.calls)).not.toContain(input.token);
+    expect(JSON.stringify(deps.error.mock.calls)).not.toContain(input.to);
   });
 });

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-async function mock(page: Page) {
+async function mock(page: Page, delivery: 'sent' | 'pending' = 'sent') {
   let summariesFail = false,
     membersFail = false,
     malformed = false,
@@ -102,7 +102,7 @@ async function mock(page: Page) {
       revoked = true;
       body = {};
     } else if (path === '/api/invitations' && route.request().method() === 'POST')
-      body = { emailDelivery: 'sent' };
+      body = { emailDelivery: delivery };
     await route.fulfill({ json: body });
   });
   return {
@@ -242,4 +242,30 @@ test('member summary failure keeps the scoped directory available without false 
   setup.restoreSummaries();
   await dialog.getByRole('button', { name: 'Retry member totals', exact: true }).click();
   await expect(dialog).toContainText('1,005 members');
+});
+
+test('queued invitation delivery is shown as pending rather than disabled or sent', async ({
+  page,
+}) => {
+  await mock(page, 'pending');
+  await page.goto('/pilot');
+  await page.getByLabel('Work email', { exact: true }).fill('queued@example.test');
+  await page.getByRole('button', { name: 'Create invitation', exact: true }).click();
+  await expect(
+    page.getByText(
+      'Invitation saved and queued for email delivery. You can return to this page to check its status.',
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Email is disabled in this local demo. Use the test link below.', {
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText(
+      'Invitation submitted to the email provider. Ask the recipient to check their inbox and spam folder.',
+      { exact: true },
+    ),
+  ).toHaveCount(0);
 });

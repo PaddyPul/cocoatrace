@@ -1,19 +1,14 @@
-# Remaining invitation delivery work (ARC-013 / IDN-021)
+# Invitation delivery follow-ups (ARC-013 / IDN-021)
 
-The accepted atomic audit slice prevents email submission when mutation/audit rolls back, but sends after commit. A crash between commit and submission loses delivery. This candidate adds live authority checks to resend/revoke only; durable delivery and initial-issuance revalidation still need the following slice. Do not mark ARC-013 or IDN-021 complete.
+The durable-invitation candidate implements the previously planned outbox for all three producers: team issuance, resend and first-admin organization approval. It also revalidates initial issuance/approval authority and adds recoverable encrypted credentials, generation/recipient binding, bounded claims/retries, worker status, metadata-only backlog/terminal review, and audited operator recovery. See [the runbook](../runbooks/INVITATION_DELIVERY.md).
 
-## Required implementation slice
+Candidate acceptance requires the exact-commit full release, migration fresh/upgrade, native invitation-delivery cases and browser checks. Author unit/type/build checks alone do not close this work.
 
-- Inspect both `api/src/services/invitationIssuance.ts` and the organization approval workflow, including its initial administrator invitation path. Cover every producer; initial approval must not keep a separate best-effort send.
-- Add a forward migration for an outbox keyed by invitation and immutable token generation. Persist intent in the same transaction as invitation, audit and approval when applicable. Keep applied migrations frozen and register the new digest.
-- Design recoverable bearer delivery without storing raw tokens, links or plaintext recipient data in generic job logs/audits. Current invitations store only a token hash, so an outbox ID alone cannot recreate the existing email after restart. Review a dedicated encryption key with authenticated ciphertext, explicit rotation/key ID and bounded payload retention, or a reviewed derivation protocol. Never reuse a session JWT as an encryption credential or silently keep plaintext in JSON.
-- Worker must check live invitation generation, unaccepted/unrevoked/unexpired status, verified unsuspended target, intended email and issuer authority policy before submission. Resend rotates generation atomically; stale queued work must not overwrite newer delivery status. Revocation/acceptance invalidates pending work. Define what happens when the original inviter loses access after the invitation was authorized.
-- Use bounded claims with leases, maximum attempts/backoff and restart recovery; store safe error codes. Handle SMTP acceptance followed by connection/process loss honestly: at-least-once may duplicate email, and inbox arrival is not proven by relay acceptance.
-- Add worker status, pending/terminal queue visibility and audited retry controls. Preserve demo/test links only in their existing allowed environments; production responses must not expose bearer links. Configuration disabled must not generate retry storms or claim successful delivery.
-- Review and revalidate initial invitation creation's live session, role assignment and target scope in the same transaction; resend/revoke changes in this bundle must not be interpreted as fixing every issuance path.
+Remaining after acceptance:
 
-## Acceptance matrix
+- **ARC-013:** Finish the explicit whole-write mutation/audit/event inventory. The accepted critical-flow audit matrix and this outbox must not be generalized into universal atomicity.
+- **IDN-021 / ENV-004–014:** Verify registration verification email, first-admin invitation, team invitation/resend and password reset arrive in the intended real staging inbox. Record revoked/expired/reused-link behavior, key recovery and private database restore evidence. Provider relay acceptance is not inbox evidence.
+- **OPS-006 / OPS-010:** Hosted worker ownership, external alerts, incident owner and key/retention/recovery rehearsal. Existing local scheduler/status/retry implementation is not named operational ownership.
+- **SEC-006 / SAF-002:** Review hosted secret storage, key recovery, least-privilege DB access and internal digest exposure; document latency/lock impact of slow SMTP. No key-ring/hot rotation is claimed.
 
-Native tests: audit failure leaves no invitation/outbox; enqueue failure rolls everything back; crash after commit recovers; two workers do not concurrently claim; timeout/lease expiry preserves honest retry state; resend supersedes stale generation; accepted/revoked/expired/suspended/role-removed cases refuse new sends; ciphertext tampering and unknown key fail closed without leaking payload; older send cannot overwrite a newer generation; terminal retry has current administrator authority and an atomic audit.
-
-Browser coverage: queued versus submitted versus failed statuses, retry without duplicate account/organization, revoked/rotated link rejection. Full committed-candidate `npm run verify:release` must pass. Real staging provider/inbox tests remain separate from synthetic tests.
+No automatic historical replay is required or implemented: old hash-only invitations need explicit authorized resend if delivery is intended. Email-disabled environments never retain raw/recoverable new credentials merely to simulate delivery.

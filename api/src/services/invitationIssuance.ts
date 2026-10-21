@@ -1,6 +1,7 @@
-import { assertMutationAssurance } from '../modules/mfa/assurance';
+import { lockInvitationAuthority } from '../modules/invitationsWorkflow/authority';
+import { enqueueInvitationDelivery } from '../modules/invitationDelivery/outbox';
 import { getClient } from '../db';
-import { ConflictError } from '../errors';
+import { ConflictError, ForbiddenError } from '../errors';
 import { recordAudit } from './auditWriter';
 
 export async function createPendingInvitation(input: {
@@ -8,6 +9,7 @@ export async function createPendingInvitation(input: {
   email: string;
   roleId: string;
   tokenHash: string;
+  token: string;
   actorId: string;
   actorOrganizationId?: string;
   actorSessionId?: string;
@@ -15,12 +17,42 @@ export async function createPendingInvitation(input: {
   const client = await getClient();
   try {
     await client.query('BEGIN');
-    if (input.actorOrganizationId)
-      await assertMutationAssurance(client, {
-        id: input.actorId,
-        organizationId: input.actorOrganizationId,
-        sessionId: input.actorSessionId,
-      });
+    const actorOrganizationId =
+      input.actorOrganizationId ||
+      (
+        await client.query<{ organization_id: string }>(
+          'SELECT organization_id FROM users WHERE id=$1',
+          [input.actorId],
+        )
+      ).rows[0]?.organization_id;
+    if (!actorOrganizationId) throw new ForbiddenError('Invitation actor unavailable');
+    const actor = {
+      id: input.actorId,
+      organizationId: actorOrganizationId,
+      sessionId: input.actorSessionId,
+      permissions: [],
+    };
+    const { isPlatformAdmin } = await lockInvitationAuthority(client, actor);
+    const target = (
+      await client.query<{ type: string }>(
+        `SELECT type FROM organizations WHERE id=$1
+      AND access_suspended_at IS NULL AND verification_status='verified' FOR SHARE`,
+        [input.organizationId],
+      )
+    ).rows[0];
+    const role = (
+      await client.query<{ name: string }>('SELECT name FROM roles WHERE id=$1 FOR SHARE', [
+        input.roleId,
+      ])
+    ).rows[0];
+    if (
+      !target ||
+      !role ||
+      (!isPlatformAdmin &&
+        (actorOrganizationId !== input.organizationId ||
+          role.name !== (target.type === 'cooperative' ? 'farmer' : target.type)))
+    )
+      throw new ForbiddenError('Invitation scope or role changed');
     // Serialize double-clicks and concurrent requests for the same address.
     await client.query('SELECT pg_advisory_xact_lock(hashtextextended(LOWER($1),0))', [
       input.email,
@@ -41,15 +73,6 @@ export async function createPendingInvitation(input: {
       VALUES ($1,$2,$3,$4,$5,NOW()+INTERVAL '7 days','pending') RETURNING id,email,expires_at,created_at`,
       [input.organizationId, input.email, input.roleId, input.tokenHash, input.actorId],
     );
-    const actorOrganizationId =
-      input.actorOrganizationId ||
-      (
-        await client.query<{ organization_id: string }>(
-          'SELECT organization_id FROM users WHERE id=$1 FOR SHARE',
-          [input.actorId],
-        )
-      ).rows[0]?.organization_id;
-    if (!actorOrganizationId) throw new Error('Invitation actor organization unavailable');
     await recordAudit(
       client,
       { id: input.actorId, organizationId: actorOrganizationId },
@@ -58,6 +81,7 @@ export async function createPendingInvitation(input: {
       result.rows[0].id,
       { invitedOrganizationId: input.organizationId, roleId: input.roleId },
     );
+    await enqueueInvitationDelivery(client, actor, result.rows[0].id, input.token);
     await client.query('COMMIT');
     return result.rows[0];
   } catch (error) {

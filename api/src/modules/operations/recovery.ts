@@ -1,3 +1,5 @@
+import { lockAccessDecisions } from '../mfa/reviewers';
+import { retryableInvitationErrors } from '../invitationDelivery/policy';
 import type { PoolClient } from 'pg';
 import { ConflictError, NotFoundError, ForbiddenError } from '../../errors';
 import { recordAudit, type AuditActor } from '../../services/auditWriter';
@@ -62,6 +64,7 @@ export const emailOutboxes = {
   payment_reminder: 'payment_reminder_email_outbox',
   recall: 'recall_email_outbox',
   fee_statement: 'fee_statement_email_outbox',
+  invitation: 'invitation_email_outbox',
 } as const;
 export type EmailQueue = keyof typeof emailOutboxes;
 
@@ -72,6 +75,7 @@ export async function retryEmail(
   id: string,
   reason: string,
 ): Promise<void> {
+  await lockAccessDecisions(client);
   await assertOperator(client, actor);
   const table = emailOutboxes[queue];
   const row = (
@@ -85,6 +89,19 @@ export async function retryEmail(
     throw new ConflictError(
       'Only terminal, unleased email work without recorded submission can be retried',
     );
+  if (queue === 'invitation') {
+    const usable = await client.query(
+      `SELECT q.id FROM invitation_email_outbox q JOIN user_invitations i ON i.id=q.invitation_id
+      WHERE q.id=$1 AND q.token_ciphertext IS NOT NULL AND q.key_id IS NOT NULL AND q.token_hash=i.token_hash
+      AND i.accepted_at IS NULL AND i.revoked_at IS NULL AND i.expires_at>clock_timestamp()
+      AND q.last_error=ANY($2::text[])`,
+      [id, [...retryableInvitationErrors]],
+    );
+    if (!usable.rows[0])
+      throw new ConflictError(
+        'Invitation generation or credential requires investigation; resend only after review',
+      );
+  }
   await client.query(
     `UPDATE ${table} SET status='queued',attempts=0,next_attempt_at=NOW(),last_error=NULL,
       lease_token=NULL,lease_expires_at=NULL${queue === 'recall' ? ',exhausted_at=NULL' : ''} WHERE id=$1`,
@@ -100,7 +117,10 @@ export async function retryEmail(
 
 export function safeEmailError(value: unknown): string | null {
   if (value === null) return null;
-  return value === 'SMTP_SUBMISSION_FAILED' || value === 'FINAL_LEASE_EXPIRED'
+  return value === 'SMTP_SUBMISSION_FAILED' ||
+    value === 'FINAL_LEASE_EXPIRED' ||
+    value === 'INVITATION_KEY_UNAVAILABLE' ||
+    value === 'INVITATION_CREDENTIAL_INVALID'
     ? value
     : 'UNKNOWN_EMAIL_FAILURE';
 }

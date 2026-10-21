@@ -1,3 +1,4 @@
+import { processInvitationEmails } from '../invitationDelivery/worker';
 import { config } from '../../config/env';
 import { query } from '../../db';
 import { Pool } from 'pg';
@@ -10,6 +11,16 @@ import { processRecallEmails } from '../recall/notifications';
 import { jobErrorCode, runTrackedJob, type Job } from './jobs';
 
 const jobs: Job[] = [
+  {
+    name: 'invitation_email',
+    run: async () => {
+      const result = await processInvitationEmails(undefined, 20);
+      const terminal = await query(
+        "SELECT EXISTS(SELECT 1 FROM invitation_email_outbox WHERE status='failed_terminal')::int n",
+      );
+      return { ...result, terminalFailures: terminal.rows[0].n };
+    },
+  },
   { name: 'evidence_scan', run: () => scanPendingEvidence({ batchSize: 5 }) },
   {
     name: 'evidence_cleanup',
@@ -66,7 +77,7 @@ export function startOperationsWorkers(): () => Promise<void> {
     ssl: config.databaseSsl
       ? { rejectUnauthorized: config.databaseSslRejectUnauthorized }
       : undefined,
-    max: 5,
+    max: 6,
     connectionTimeoutMillis: 5_000,
     idleTimeoutMillis: 30_000,
   });
@@ -119,7 +130,8 @@ export function startOperationsWorkers(): () => Promise<void> {
             },
             job.name === 'payment_reminders' ||
               job.name === 'recall_email' ||
-              job.name === 'fee_statement_email'
+              job.name === 'fee_statement_email' ||
+              job.name === 'invitation_email'
               ? 15_000
               : 60_000,
           );

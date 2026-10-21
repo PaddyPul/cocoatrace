@@ -10,6 +10,7 @@ services:
       MP_SMTP_AUTH_ALLOW_INSECURE: "true"
   api:
     environment:
+      INVITATION_DELIVERY_KEY: ${INVITATION_DELIVERY_KEY:?Set a random 64-hex INVITATION_DELIVERY_KEY in .env first}
       IDENTITY_EMAIL_ENABLED: "true"
       EMAIL_DRIVER: smtp
       EMAIL_FROM: identity@cocoatrace.test

@@ -53,5 +53,5 @@ export interface OrganizationAccessEmailPort {
   sendFirstAdminInvitation(input: {
     invitationId: string; token: string; recipientEmail: string;
     recipientName: string; organizationName: string; invitationUrl: string;
-  }): Promise<{ status: 'sent' | 'suppressed' | 'failed' }>;
+  }): Promise<{ status: 'sent' | 'suppressed' | 'failed' | 'pending' }>;
 }

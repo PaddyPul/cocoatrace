@@ -212,6 +212,10 @@
     {
       "path": "api/src/migrations/051_fee_statement_delivery.ts",
       "sha256": "8e685e934ed4609783965158a1e9a8fda7d735d12ab66d2c1bbf645e7ae7b4cd"
+    },
+    {
+      "path": "api/src/migrations/052_invitation_delivery_outbox.ts",
+      "sha256": "40d75c2fd1828d95dea85ea4d4cef2ca84c64f8d9ff31a30de76543ee2b733eb"
     }
   ]
 }

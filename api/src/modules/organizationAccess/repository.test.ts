@@ -1,3 +1,5 @@
+vi.mock('../invitationDelivery/outbox', () => ({enqueueInvitationDelivery: async () => undefined}));
+vi.mock('../invitationsWorkflow/authority', () => ({ lockInvitationAuthority: async () => ({isPlatformAdmin:true}) }));
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const db = vi.hoisted(() => ({
@@ -58,6 +60,7 @@ describe('Postgres organization access repository', () => {
       actor: { id: 'reviewer-id', organizationId: 'platform-org', permissions: ['*'] },
       reason: 'Pilot organization approved',
       invitationTokenHash: 'a'.repeat(64),
+      invitationToken: 'secret-token',
       invitationExpiresAt: new Date('2026-10-08T00:00:00Z'),
     });
 
@@ -88,6 +91,7 @@ describe('Postgres organization access repository', () => {
       id: applicationRow.id,
       actor: { id: 'reviewer-id', organizationId: 'platform-org', permissions: ['*'] },
       invitationTokenHash: 'a'.repeat(64),
+      invitationToken: 'secret-token',
       invitationExpiresAt: new Date(),
     })).rejects.toMatchObject({ statusCode: 409 });
 

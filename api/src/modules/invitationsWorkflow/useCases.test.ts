@@ -1,3 +1,7 @@
+vi.mock('../invitationDelivery/outbox', () => ({
+  enqueueInvitationDelivery: async () => undefined,
+  cancelInvitationDelivery: async () => undefined,
+}));
 vi.mock('./authority', () => ({
   lockInvitationAuthority: (...args: unknown[]) => dependencies.authority(...args),
   lockInvitationTarget: (...args: unknown[]) => dependencies.target(...args),

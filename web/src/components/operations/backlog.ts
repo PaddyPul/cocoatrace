@@ -3,6 +3,7 @@ export const queueLabels = {
   payment_reminder: 'Payment reminder email',
   recall: 'Recall email',
   fee_statement: 'Fee statement email',
+  invitation: 'Invitation email',
 };
 type Count = { count: number; more: boolean };
 export type Backlog = {

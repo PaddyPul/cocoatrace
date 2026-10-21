@@ -1,26 +1,36 @@
-import crypto from 'node:crypto';
 import { query } from '../db';
 import logger from '../logger';
-import { sendInvitationEmail } from './emailSender';
+import { invitationTokenHash } from '../modules/invitationDelivery/outbox';
+import { processInvitationEmails } from '../modules/invitationDelivery/worker';
 
-export type InvitationDelivery = { status: 'sent' | 'suppressed' | 'failed' };
-
-// Never persist or log bearer links. A token hash condition prevents a slow
-// earlier send from overwriting the delivery status of a newer resend.
+export type InvitationDelivery = { status: 'sent' | 'suppressed' | 'failed' | 'pending' };
+/** Best-effort immediate drain of already committed work. Recovery never needs this caller's token. */
 export async function deliverInvitation(input: {
-  id: string; token: string; to: string; invitationUrl: string;
-  recipientName?: string; organizationName?: string;
+  id: string;
+  token: string;
+  to: string;
+  invitationUrl: string;
+  recipientName?: string;
+  organizationName?: string;
 }): Promise<InvitationDelivery> {
-  const tokenHash = crypto.createHash('sha256').update(input.token).digest('hex');
-  let status: InvitationDelivery['status'];
   try {
-    status = (await sendInvitationEmail(input)).status;
+    await processInvitationEmails(undefined, 1, input.id);
+    const row = (
+      await query<{ status: string }>(
+        `SELECT status FROM invitation_email_outbox
+      WHERE invitation_id=$1 AND token_hash=$2`,
+        [input.id, invitationTokenHash(input.token)],
+      )
+    ).rows[0];
+    const status = row?.status;
+    if (status === 'sent' || status === 'suppressed') return { status };
+    if (status === 'failed' || status === 'failed_terminal') return { status: 'failed' };
+    return { status: 'pending' };
   } catch {
-    status = 'failed';
-    logger.error({ invitationId: input.id }, 'Invitation email submission failed; resend is available');
+    logger.error(
+      { invitationId: input.id },
+      'Invitation immediate delivery deferred; committed outbox retained',
+    );
+    return { status: 'pending' };
   }
-  await query(`UPDATE user_invitations
-    SET email_delivery_status=$1, email_attempted_at=NOW()
-    WHERE id=$2 AND token_hash=$3`, [status, input.id, tokenHash]);
-  return { status };
 }

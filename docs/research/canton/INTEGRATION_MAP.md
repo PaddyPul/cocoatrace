@@ -1,7 +1,7 @@
 # CT-00: BetterTrade integration map and entry gates
 
 Inspected main: `1c9afc564c1ea3013f5c6a2dd1c33c956c65a86f` (atomic audit release merged).
-Status: inspection delivered; CT-00 stays IN PROGRESS until reviewed and accepted with this bundle. No Canton runtime exists or has been tested.
+Status: CT-00 inspection accepted following the founder’s full-release/merge confirmation for PR #139 on 2026-10-21. No Canton runtime exists or has been tested.
 
 ## Actual integration boundaries
 

@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "reviewedAt": "2026-10-13",
+  "reviewedAt": "2026-10-21",
   "authorSourceCommit": "602620e07fad58bcd3d85dd5b04e6d6d42dd4f75",
-  "acceptance": "Founder-reported local release/merge acknowledgements, including prescribed operations correction workflow reported done 2026-10-13 13:59 UTC. Independent CI URL/founder SHA and hosted acceptance are not supplied.",
+  "acceptance": "Founder-reported local release/merge acknowledgements, including prescribed operations correction workflow reported done 2026-10-13 13:59 UTC. Independent CI URL/founder SHA and hosted acceptance are not supplied. Founder confirms the invitation-authority/Canton-inspection release passed and PR #139 merged on 2026-10-21; CT-00 inspection acceptance is reconciled separately from unimplemented Canton work.",
   "changes": [
     {
       "id": "CUR-003",
@@ -15,7 +15,12 @@
         "docs/runbooks/CURRENCY_PRECISION.md"
       ],
       "reason": "Exact BigInt/NUMERIC totals, deposits, balances and fees use snapshotted two-decimal/JPY precision. Native and browser currency waves are founder accepted. Refund/FX/commercial approval remain CUR-001/002/004/005, not missing arithmetic.",
-      "remaining": ["CUR-001", "CUR-002", "CUR-004", "CUR-005"]
+      "remaining": [
+        "CUR-001",
+        "CUR-002",
+        "CUR-004",
+        "CUR-005"
+      ]
     },
     {
       "id": "ARC-015",
@@ -28,7 +33,11 @@
         "e2e/catalogPages.spec.ts"
       ],
       "reason": "DataPages.tsx is a compatibility export barrel; inventory, source, contract, shipment, payment, evidence, audit, certificate and organization routes now have feature-owned components and accepted page regressions. Broader component/client/type cleanup remains ARC-016/017/018.",
-      "remaining": ["ARC-016", "ARC-017", "ARC-018"]
+      "remaining": [
+        "ARC-016",
+        "ARC-017",
+        "ARC-018"
+      ]
     },
     {
       "id": "IDN-003",
@@ -40,7 +49,10 @@
         "api/test/integration/privilegedLifecycle.integration.test.ts"
       ],
       "reason": "Application/review/verified/rejected states and audited ordinary/two-reviewer privileged suspension/restoration are implemented and founder accepted. Actual pilot enrollment is separately IDN-005/GEO-001.",
-      "remaining": ["IDN-005", "GEO-001"]
+      "remaining": [
+        "IDN-005",
+        "GEO-001"
+      ]
     },
     {
       "id": "IDN-012",
@@ -53,7 +65,11 @@
         "e2e/passkeys.spec.ts"
       ],
       "reason": "Deployed privileged-role MFA, restricted password sessions, fresh writes, passkey enrollment/revocation and reset preservation are implemented and founder accepted. Physical/hosted operator review and emergency recovery remain SAF-004/IDN-018/019; no hosted verification is inferred.",
-      "remaining": ["SAF-004", "IDN-018", "IDN-019"]
+      "remaining": [
+        "SAF-004",
+        "IDN-018",
+        "IDN-019"
+      ]
     },
     {
       "id": "IDN-014",
@@ -66,7 +82,11 @@
         "api/src/services/securityEventService.ts"
       ],
       "reason": "Failed login, reset, MFA ceremony and session-revocation security events are implemented and release accepted. External alert routing, immutable retention and recovery notifications remain SEC-017/OPS-006/IDN-018.",
-      "remaining": ["SEC-017", "OPS-006", "IDN-018"]
+      "remaining": [
+        "SEC-017",
+        "OPS-006",
+        "IDN-018"
+      ]
     },
     {
       "id": "UPL-017",
@@ -78,7 +98,9 @@
         "e2e/publicEvidencePages.spec.ts"
       ],
       "reason": "Published evidence uses an explicit metadata-only projection and current independent review/clean-validation eligibility; private access remains entity/party authorized. Native and browser public-field/eligibility cases are founder accepted. Hosted storage provisioning remains UPL-002.",
-      "remaining": ["UPL-002"]
+      "remaining": [
+        "UPL-002"
+      ]
     },
     {
       "id": "QLT-009",
@@ -90,7 +112,9 @@
         "e2e/marketplaceVisibility.spec.ts"
       ],
       "reason": "Actual buyer onboarding and sourcing creation/changed-commodity/reviewed-quantity/save/reload browser journeys exist and are founder release accepted. Saved-brief reopening/editing remains PRD-005; it is product follow-up, not an absent creation regression.",
-      "remaining": ["PRD-005"]
+      "remaining": [
+        "PRD-005"
+      ]
     },
     {
       "id": "QLT-013",
@@ -103,7 +127,10 @@
         "api/test/integration/operationsWorkers.integration.test.ts"
       ],
       "reason": "API retry/idempotency regressions cover critical offer acceptance, installment submission/confirmation, terms agreement, reminder generation and recovery concurrency without duplicate effects. Founder accepted the applicable releases. This does not claim every possible route/future provider operation is covered.",
-      "remaining": ["QLT-002", "SVC-011"]
+      "remaining": [
+        "QLT-002",
+        "SVC-011"
+      ]
     },
     {
       "id": "QLT-019",
@@ -127,7 +154,11 @@
         "docs/runbooks/OPERATIONS_JOBS.md"
       ],
       "reason": "Declared single-process global-four/tenant-two admissions, bounded reads/deadlines, capped scanner work/backpressure and four maximum-size upload/download RSS/rejection canaries are founder accepted. This closes the original bounded-memory criterion, not distributed or hosted capacity. Cross-instance/crash scaling remains PER-006, representative combined workload/SLOs PER-004, streaming efficiency PER-007.",
-      "remaining": ["PER-004", "PER-006", "PER-007"]
+      "remaining": [
+        "PER-004",
+        "PER-006",
+        "PER-007"
+      ]
     },
     {
       "id": "GOV-004",
@@ -145,7 +176,10 @@
       "id": "ARC-002",
       "from": "open",
       "to": "partial",
-      "evidence": ["api/src/services/authSessionService.ts", "api/src/services/tradeMoney.ts"],
+      "evidence": [
+        "api/src/services/authSessionService.ts",
+        "api/src/services/tradeMoney.ts"
+      ],
       "reason": "Shared authenticated actor, assurance actor and exact money helpers exist; shared organization-scope/quantity/identifier types are not adopted throughout.",
       "remaining": []
     },
@@ -186,7 +220,10 @@
       "id": "ARC-020",
       "from": "open",
       "to": "partial",
-      "evidence": ["eslint.config.mjs", "api/src/controllers/evidenceController.ts"],
+      "evidence": [
+        "eslint.config.mjs",
+        "api/src/controllers/evidenceController.ts"
+      ],
       "reason": "Strict no-any enforcement covers migrated security/MFA/transport/payment/delivery/trace/catalog/operations modules; legacy evidence/auth/controller paths still require cleanup.",
       "remaining": []
     },
@@ -194,7 +231,10 @@
       "id": "ARC-023",
       "from": "open",
       "to": "partial",
-      "evidence": ["api/src/errors.ts", "api/src/controllers/authController.ts"],
+      "evidence": [
+        "api/src/errors.ts",
+        "api/src/controllers/authController.ts"
+      ],
       "reason": "Shared AppError and stable bounded-resource codes exist; manual login/controller responses still omit codes, so a universal envelope is incomplete.",
       "remaining": []
     },
@@ -213,7 +253,10 @@
       "id": "TRD-014",
       "from": "open",
       "to": "partial",
-      "evidence": ["api/src/modules/trading/offers.ts", "api/src/modules/trading/fulfillment.ts"],
+      "evidence": [
+        "api/src/modules/trading/offers.ts",
+        "api/src/modules/trading/fulfillment.ts"
+      ],
       "reason": "Accepted goods price/quantity/currency, Incoterm and locations are preserved through the transactional trade/fulfillment path; full immutable assurance-requirement snapshots remain open.",
       "remaining": []
     },
@@ -267,7 +310,10 @@
       "id": "UX-004",
       "from": "open",
       "to": "partial",
-      "evidence": ["e2e/catalogPages.spec.ts", "e2e/workspaceOverview.spec.ts"],
+      "evidence": [
+        "e2e/catalogPages.spec.ts",
+        "e2e/workspaceOverview.spec.ts"
+      ],
       "reason": "Accepted paged register, aggregate and selection reads distinguish failure from empty results; a whole-route legacy failure audit remains open.",
       "remaining": []
     },
@@ -275,7 +321,10 @@
       "id": "UX-005",
       "from": "open",
       "to": "partial",
-      "evidence": ["web/src/pages/OperationsPage.tsx", "web/src/pages/InventoryPage.tsx"],
+      "evidence": [
+        "web/src/pages/OperationsPage.tsx",
+        "web/src/pages/InventoryPage.tsx"
+      ],
       "reason": "Loading/empty/read-retry/permission states exist in accepted feature pages; universal offline and consistent whole-app treatment remain open.",
       "remaining": []
     },
@@ -312,6 +361,37 @@
       ],
       "reason": "Multi-session shared-limit/job ownership regressions exist; complete horizontal deployment/restart and crash validation remains open.",
       "remaining": []
+    },
+    {
+      "id": "CT-00",
+      "from": "partial",
+      "to": "complete",
+      "evidence": [
+        "docs/research/canton/INTEGRATION_MAP.md",
+        "docs/research/canton/BT-CANTON-001_REQUIREMENTS.md",
+        "docs/releases/INVITATION_AUTHORITY_CANTON_BACKLOG_PR.md"
+      ],
+      "reason": "Founder confirms PR #139 full release passed and merged. The delivered repository inspection/map is accepted; unresolved topology/token/snapshot decisions belong to CT-01, and no Canton runtime or approval integration is claimed.",
+      "remaining": [
+        "CT-01",
+        "CT-02",
+        "CT-03",
+        "CT-04",
+        "CT-05",
+        "CT-06",
+        "CT-07",
+        "CT-08",
+        "CT-09",
+        "CT-10",
+        "CT-11",
+        "CT-12",
+        "CT-13",
+        "CT-14",
+        "CT-15",
+        "CT-16",
+        "CT-17",
+        "CT-18"
+      ]
     }
   ],
   "gateChanges": [
