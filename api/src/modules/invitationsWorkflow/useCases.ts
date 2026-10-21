@@ -9,6 +9,7 @@ import bcrypt from 'bcryptjs';
 
 import { recordAudit } from '../../services/auditWriter';
 import { createPendingInvitation } from '../../services/invitationIssuance';
+import { enqueueInvitationDelivery, cancelInvitationDelivery } from '../invitationDelivery/outbox';
 import { deliverInvitation } from '../../services/invitationDelivery';
 export type InvitationActor = Actor & { id: string; sessionId?: string };
 export interface InvitationDraft {
@@ -66,6 +67,7 @@ export async function createInvitation(
       email: draft.email,
       roleId: role.id,
       tokenHash: hashToken(token),
+      token,
       actorId: actor.id,
       actorOrganizationId: actor.organizationId,
       actorSessionId: actor.sessionId,
@@ -146,6 +148,7 @@ export async function acceptInvitation(token: string, draft: AccountDraft): Prom
     ]);
     await repository.assignRole(client, [userResult.rows[0].id, invitation.role_id]);
     await repository.markAccepted(client, [invitation.id]);
+    await cancelInvitationDelivery(client, invitation.id);
     await recordAudit(
       client,
       { id: userResult.rows[0].id, organizationId: invitation.organization_id },
@@ -195,6 +198,7 @@ export async function revokeInvitation(
       await repository.rollback(client);
       return { kind: 'active_invitation_missing', message: 'Active invitation not found' };
     }
+    await cancelInvitationDelivery(client, invitationId);
     await recordAudit(client, actor, 'member.invitation_revoked', 'user_invitation', invitationId);
     await repository.commit(client);
   } catch (error) {
@@ -233,6 +237,7 @@ export async function resendInvitation(
       await repository.rollback(client);
       return { kind: 'invitation_missing', message: 'Invitation not found' };
     }
+    await enqueueInvitationDelivery(client, actor, invitation.id, token);
     await recordAudit(client, actor, 'member.invitation_resent', 'user_invitation', invitation.id);
     await repository.commit(client);
   } catch (error) {

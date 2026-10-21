@@ -216,9 +216,11 @@ export default function PilotTeamPage() {
               <p className="mt-2 text-[10px] leading-4 text-text-muted">
                 {created.emailDelivery === 'sent'
                   ? 'Invitation submitted to the email provider. Ask the recipient to check their inbox and spam folder.'
-                  : created.emailDelivery === 'failed'
-                    ? 'Invitation saved, but email submission failed. Use Resend after checking email configuration.'
-                    : 'Email is disabled in this local demo. Use the test link below.'}
+                  : created.emailDelivery === 'pending'
+                    ? 'Invitation saved and queued for email delivery. You can return to this page to check its status.'
+                    : created.emailDelivery === 'failed'
+                      ? 'Invitation saved, but email submission is incomplete. Check the invitation register or contact support.'
+                      : 'Email is disabled in this local demo. Use the test link below.'}
               </p>
               <div className="mt-3 flex gap-2">
                 {created.inviteUrl && (

@@ -1,5 +1,9 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/modules/invitationDelivery/**/*.ts',
+  'api/src/services/invitationDelivery.ts',
+  'api/src/services/invitationDelivery.test.ts',
+  'api/test/integration/invitationDelivery.integration.test.ts',
   'api/src/modules/invitationsWorkflow/authority.ts',
   'api/src/modules/invitationsWorkflow/authority.test.ts',
   'api/test/integration/invitationPages.integration.test.ts',

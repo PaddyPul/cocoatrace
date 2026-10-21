@@ -562,3 +562,8 @@ api/src/modules/invitationsWorkflow/authority.ts text eol=lf
 api/src/modules/invitationsWorkflow/authority.test.ts text eol=lf
 api/test/integration/invitationPages.integration.test.ts text eol=lf
 api/src/controllers/invitationController.test.ts text eol=lf
+
+api/src/modules/invitationDelivery/** text eol=lf
+api/src/services/invitationDelivery.ts text eol=lf
+api/src/services/invitationDelivery.test.ts text eol=lf
+api/test/integration/invitationDelivery.integration.test.ts text eol=lf

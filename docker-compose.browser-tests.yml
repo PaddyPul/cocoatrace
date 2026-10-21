@@ -48,6 +48,7 @@ services:
       EVIDENCE_STORAGE_LOCAL_ROOT: /app/private-evidence
       EVIDENCE_UPLOAD_SIGNING_SECRET: browser-test-only-upload-signing-secret-32-characters
       EVIDENCE_SCANNER_DRIVER: development
+      INVITATION_DELIVERY_KEY: "1212121212121212121212121212121212121212121212121212121212121212"
       IDENTITY_EMAIL_ENABLED: "true"
       EMAIL_DRIVER: smtp
       EMAIL_FROM: identity@browser.test

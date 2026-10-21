@@ -45,6 +45,7 @@ services:
       NODE_ENV: production
       DEMO_MODE: "true"
       DATABASE_URL: postgresql://cocoa:cocoa_dev@postgres:5432/cocoatrace
+      INVITATION_DELIVERY_KEY: ${INVITATION_DELIVERY_KEY:-}
       JWT_SECRET: ${JWT_SECRET:-cocoatrace_dev_secret_change_in_production}
       PLATFORM_FEE_BPS: ${PLATFORM_FEE_BPS:-100}
       WEB_URL: http://localhost:3000

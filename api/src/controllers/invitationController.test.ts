@@ -1,3 +1,7 @@
+vi.mock('../modules/invitationDelivery/outbox', () => ({
+  enqueueInvitationDelivery: async () => undefined,
+  cancelInvitationDelivery: async () => undefined,
+}));
 vi.mock('../modules/invitationsWorkflow/authority', () => ({
   lockInvitationAuthority: async () => ({ isPlatformAdmin: false }),
   lockInvitationTarget: async () => true,

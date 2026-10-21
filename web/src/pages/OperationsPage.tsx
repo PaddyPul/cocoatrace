@@ -19,13 +19,14 @@ type Job = {
   consecutive_failures: number;
 };
 type Ticket = { id: string; last_error_code: string | null; attempts: number };
-type EmailQueue = 'payment_reminder' | 'recall' | 'fee_statement' | 'operator_alert';
+type EmailQueue = 'payment_reminder' | 'recall' | 'fee_statement' | 'invitation' | 'operator_alert';
 type EmailTicket = Ticket & { retryable: boolean };
 type Selection = Ticket & { queue: 'cleanup' | EmailQueue };
 const emailNames = {
   payment_reminder: 'Payment reminder',
   recall: 'Recall',
   fee_statement: 'Fee statement',
+  invitation: 'Invitation',
   operator_alert: 'Operator alert',
 };
 const names = [
@@ -34,6 +35,7 @@ const names = [
   'payment_reminders',
   'recall_email',
   'fee_statement_email',
+  'invitation_email',
 ];
 const unsafe = ['LIVE_EVIDENCE_REFERENCE', 'INVALID_OBJECT_KEY', 'STORAGE_PROVIDER_MISMATCH'];
 function record(value: unknown): value is Record<string, unknown> {
@@ -182,23 +184,34 @@ export default function OperationsPage() {
     const current = ++version.current;
     setLoading(true);
     try {
-      const [status, queue, payment, recall, observation, alerts, operatorAlerts, feeStatements] =
-        await Promise.all([
-          api<unknown>('GET', '/operations/status'),
-          api<unknown>('GET', '/operations/cleanup/dead'),
-          api<unknown>('GET', '/operations/email/payment_reminder/dead'),
-          api<unknown>('GET', '/operations/email/recall/dead'),
-          api<unknown>('GET', '/operations/backlog'),
-          api<unknown>('GET', '/operations/alerts'),
-          api<unknown>('GET', '/operations/alerts/dead'),
-          api<unknown>('GET', '/operations/email/fee_statement/dead'),
-        ]);
+      const [
+        status,
+        queue,
+        payment,
+        recall,
+        observation,
+        alerts,
+        operatorAlerts,
+        feeStatements,
+        invitations,
+      ] = await Promise.all([
+        api<unknown>('GET', '/operations/status'),
+        api<unknown>('GET', '/operations/cleanup/dead'),
+        api<unknown>('GET', '/operations/email/payment_reminder/dead'),
+        api<unknown>('GET', '/operations/email/recall/dead'),
+        api<unknown>('GET', '/operations/backlog'),
+        api<unknown>('GET', '/operations/alerts'),
+        api<unknown>('GET', '/operations/alerts/dead'),
+        api<unknown>('GET', '/operations/email/fee_statement/dead'),
+        api<unknown>('GET', '/operations/email/invitation/dead'),
+      ]);
       if (
         !statuses(status) ||
         !tickets(queue) ||
         !tickets(payment, true) ||
         !tickets(recall, true) ||
         !tickets(feeStatements, true) ||
+        !tickets(invitations, true) ||
         !tickets(operatorAlerts, true) ||
         !validBacklog(observation) ||
         !alertsValid(alerts)
@@ -213,6 +226,7 @@ export default function OperationsPage() {
           payment_reminder: payment,
           recall,
           fee_statement: feeStatements,
+          invitation: invitations,
           operator_alert: operatorAlerts,
         });
         setError('');

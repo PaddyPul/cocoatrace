@@ -272,6 +272,7 @@ describe('bounded private queue backlog observations', () => {
       'payment_reminder',
       'recall',
       'fee_statement',
+      'invitation',
     ]);
     const cleanup = response.body.queues.find((row: { name: string }) => row.name === 'cleanup');
     expect(cleanup.queued).toEqual({ count: 1000, more: true });

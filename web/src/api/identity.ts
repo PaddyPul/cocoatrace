@@ -79,7 +79,7 @@ export const accessApplications = {
       organizationId: string;
       invitationId: string;
       invitationExpiresAt: string;
-      emailDelivery: 'sent' | 'suppressed' | 'failed';
+      emailDelivery: 'sent' | 'suppressed' | 'failed' | 'pending';
       inviteUrl?: string;
     }>('POST', `/access-applications/${id}/approve`, reason ? { reason } : {}),
   reject: (id: string, reason?: string) =>

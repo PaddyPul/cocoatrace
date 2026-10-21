@@ -2,9 +2,24 @@ import { withCatalogRead, type Execute } from '../catalog/paging';
 
 export const backlogLimit = 1000;
 export const overdueAfterSeconds = 900;
-export const queueNames = ['cleanup', 'payment_reminder', 'recall', 'fee_statement'] as const;
+export const queueNames = [
+  'cleanup',
+  'payment_reminder',
+  'recall',
+  'fee_statement',
+  'invitation',
+] as const;
 export type QueueName = (typeof queueNames)[number];
 const sources = {
+  invitation: {
+    table: 'invitation_email_outbox',
+    state: 'status',
+    pending: "status IN ('queued','failed')",
+    leased: 'sending',
+    terminal: 'failed_terminal',
+    terminalOrder: 'id',
+    leaseOrder: 'lease_expires_at NULLS FIRST,id',
+  },
   cleanup: {
     table: 'evidence_object_cleanup',
     state: 'state',

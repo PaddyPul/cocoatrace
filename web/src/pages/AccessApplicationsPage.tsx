@@ -126,9 +126,11 @@ function AccessReview() {
           result.emailDelivery === 'failed' ? 'error' : 'success',
           result.emailDelivery === 'sent'
             ? 'Organization approved; invitation submitted to email provider'
-            : result.emailDelivery === 'failed'
-              ? 'Organization approved, but email submission failed. Use Resend admin invitation.'
-              : 'Organization approved; email is disabled in this demo',
+            : result.emailDelivery === 'pending'
+              ? 'Invitation saved and queued for email delivery'
+              : result.emailDelivery === 'failed'
+                ? 'Organization approved, but email submission failed. Use Resend admin invitation.'
+                : 'Organization approved; email is disabled in this demo',
         );
       } else {
         await accessApplications.reject(selected.id, reason.trim());
@@ -302,9 +304,11 @@ function AccessReview() {
                           result.emailDelivery === 'failed' ? 'error' : 'success',
                           result.emailDelivery === 'sent'
                             ? 'Admin invitation submitted to email provider'
-                            : result.emailDelivery === 'failed'
-                              ? 'Email submission failed; retry after checking the provider'
-                              : 'Email disabled; demo link created',
+                            : result.emailDelivery === 'pending'
+                              ? 'Invitation saved and queued for email delivery'
+                              : result.emailDelivery === 'failed'
+                                ? 'Email submission failed; retry after checking the provider'
+                                : 'Email disabled; demo link created',
                         );
                       } catch (err: unknown) {
                         setError(err instanceof Error ? err.message : 'Invitation resend failed.');

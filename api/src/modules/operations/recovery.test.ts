@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { safeEmailError } from './recovery';
 
 describe('terminal email error redaction', () => {
-  it.each(['SMTP_SUBMISSION_FAILED', 'FINAL_LEASE_EXPIRED'])('retains %s', (code) => {
+  it.each([
+    'SMTP_SUBMISSION_FAILED',
+    'FINAL_LEASE_EXPIRED',
+    'INVITATION_KEY_UNAVAILABLE',
+    'INVITATION_CREDENTIAL_INVALID',
+  ])('retains %s', (code) => {
     expect(safeEmailError(code)).toBe(code);
   });
   it('retains an absent error without inventing an incident', () => {

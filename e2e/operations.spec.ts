@@ -83,28 +83,30 @@ async function mock(page: Page, admin = true) {
             limit: 1000,
             overdueAfterSeconds: 900,
             needsAttention: true,
-            queues: ['cleanup', 'payment_reminder', 'recall', 'fee_statement'].map((name) => ({
-              name,
-              queued: {
-                count: backlogCapped && name === 'cleanup' ? 1000 : 0,
-                more: backlogCapped && name === 'cleanup',
-              },
-              leased: { count: name === 'recall' ? 1 : 0, more: false },
-              terminal: { count: 2, more: false },
-              retryingObserved: 0,
-              expiredLeasesObserved: name === 'recall' ? 1 : 0,
-              oldestDueAt:
-                backlogCapped && name === 'cleanup'
-                  ? new Date(Date.now() - 3600000).toISOString()
-                  : null,
-              incidents: [
-                'TERMINAL_WORK_PENDING',
-                ...(name === 'recall' ? ['EXPIRED_LEASE'] : []),
-                ...(backlogCapped && name === 'cleanup'
-                  ? ['OVERDUE_WORK', 'MONITOR_LIMIT_REACHED']
-                  : []),
-              ],
-            })),
+            queues: ['cleanup', 'payment_reminder', 'recall', 'fee_statement', 'invitation'].map(
+              (name) => ({
+                name,
+                queued: {
+                  count: backlogCapped && name === 'cleanup' ? 1000 : 0,
+                  more: backlogCapped && name === 'cleanup',
+                },
+                leased: { count: name === 'recall' ? 1 : 0, more: false },
+                terminal: { count: 2, more: false },
+                retryingObserved: 0,
+                expiredLeasesObserved: name === 'recall' ? 1 : 0,
+                oldestDueAt:
+                  backlogCapped && name === 'cleanup'
+                    ? new Date(Date.now() - 3600000).toISOString()
+                    : null,
+                incidents: [
+                  'TERMINAL_WORK_PENDING',
+                  ...(name === 'recall' ? ['EXPIRED_LEASE'] : []),
+                  ...(backlogCapped && name === 'cleanup'
+                    ? ['OVERDUE_WORK', 'MONITOR_LIMIT_REACHED']
+                    : []),
+                ],
+              }),
+            ),
           };
     } else if (path === '/api/operations/status') {
       if (failed) return route.fulfill({ status: 503, json: { error: 'Unavailable' } });
@@ -118,6 +120,7 @@ async function mock(page: Page, admin = true) {
               'payment_reminders',
               'recall_email',
               'fee_statement_email',
+              'invitation_email',
             ].map((name) => ({
               job_name: name,
               status: name === 'evidence_cleanup' ? 'failed' : 'succeeded',
@@ -333,6 +336,7 @@ for (const [queue, name] of [
   ['payment_reminder', 'Payment reminder'],
   ['recall', 'Recall'],
   ['fee_statement', 'Fee statement'],
+  ['invitation', 'Invitation'],
   ['operator_alert', 'Operator alert'],
 ]) {
   test(`${name} recovery preserves review through conflicts, assurance failure and refresh`, async ({
@@ -441,16 +445,18 @@ test('backlog contract rejects inconsistent counts, incidents and missing queue 
     limit: 1000,
     overdueAfterSeconds: 900,
     needsAttention: false,
-    queues: ['cleanup', 'payment_reminder', 'recall', 'fee_statement'].map((name) => ({
-      name,
-      queued: { count: 0, more: false },
-      leased: { count: 0, more: false },
-      terminal: { count: 0, more: false },
-      retryingObserved: 0,
-      expiredLeasesObserved: 0,
-      oldestDueAt: null as string | null,
-      incidents: [] as string[],
-    })),
+    queues: ['cleanup', 'payment_reminder', 'recall', 'fee_statement', 'invitation'].map(
+      (name) => ({
+        name,
+        queued: { count: 0, more: false },
+        leased: { count: 0, more: false },
+        terminal: { count: 0, more: false },
+        retryingObserved: 0,
+        expiredLeasesObserved: 0,
+        oldestDueAt: null as string | null,
+        incidents: [] as string[],
+      }),
+    ),
   };
   expect(validBacklog(healthy)).toBe(true);
   const corruptions = [

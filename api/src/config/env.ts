@@ -84,6 +84,7 @@ export type AppConfig = Readonly<{
   evidenceScannerRetries: number;
   operationsAlertsEnabled: boolean;
   operationsAlertRecipientUserIds: string[];
+  invitationDeliveryKey?: string;
   identityEmailEnabled: boolean;
   emailDriver: 'development' | 'smtp';
   emailFrom?: string;
@@ -170,6 +171,7 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
       EVIDENCE_SCANNER_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
       OPERATIONS_ALERTS_ENABLED: booleanValue.default(false),
       OPERATIONS_ALERT_RECIPIENT_USER_IDS: z.preprocess(value => value === undefined || value === '' ? [] : typeof value === 'string' ? value.split(',').map(id => id.trim()) : value, z.array(z.string().uuid()).max(5).refine(ids => new Set(ids.map(id => id.toLowerCase())).size === ids.length, 'operator IDs must be unique').transform(ids => ids.map(id => id.toLowerCase()))),
+      INVITATION_DELIVERY_KEY: z.preprocess(value => value === '' ? undefined : value, z.string().regex(/^[a-f0-9]{64}$/i).optional()),
       IDENTITY_EMAIL_ENABLED: booleanValue.default(false),
       EMAIL_DRIVER: z.enum(['development', 'smtp']).default('development'),
       EMAIL_FROM: optionalEmail,
@@ -354,6 +356,12 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
         if (values.DEMO_MODE) context.addIssue({code:z.ZodIssueCode.custom,path:['OPERATIONS_ALERTS_ENABLED'],message:'must remain disabled for synthetic demos'});
         if (values.SMTP_CONNECTION_TIMEOUT_MS > 10000) context.addIssue({code:z.ZodIssueCode.custom,path:['SMTP_CONNECTION_TIMEOUT_MS'],message:'must not exceed 10000 when operations alerts are enabled'});
       }
+      if (values.INVITATION_DELIVERY_KEY && [values.JWT_SECRET, values.EVIDENCE_UPLOAD_SIGNING_SECRET].includes(values.INVITATION_DELIVERY_KEY)) {
+        context.addIssue({code:z.ZodIssueCode.custom,path:['INVITATION_DELIVERY_KEY'],message:'must be independent of session and evidence signing secrets'});
+      }
+      if (values.IDENTITY_EMAIL_ENABLED && values.EMAIL_DRIVER === 'smtp' && !values.INVITATION_DELIVERY_KEY) {
+        context.addIssue({code:z.ZodIssueCode.custom,path:['INVITATION_DELIVERY_KEY'],message:'requires a dedicated random 32-byte hex key when identity SMTP is enabled'});
+      }
       if (values.EMAIL_DRIVER === 'smtp') {
         for (const name of ['EMAIL_FROM', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASSWORD'] as const) {
           if (!values[name])
@@ -443,6 +451,7 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     evidenceScannerRetries: values.EVIDENCE_SCANNER_RETRIES,
     operationsAlertsEnabled: values.OPERATIONS_ALERTS_ENABLED,
     operationsAlertRecipientUserIds: values.OPERATIONS_ALERT_RECIPIENT_USER_IDS,
+    invitationDeliveryKey: values.INVITATION_DELIVERY_KEY,
     identityEmailEnabled: values.IDENTITY_EMAIL_ENABLED,
     emailDriver: values.EMAIL_DRIVER,
     emailFrom: values.EMAIL_FROM,

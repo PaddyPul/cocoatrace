@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseConfig } from './env';
 
 const deployedBase = {
+  INVITATION_DELIVERY_KEY: '12'.repeat(32),
   DATABASE_URL: 'postgresql://user:password@database.internal:5432/cocoatrace',
   JWT_SECRET: 'a-production-grade-secret-with-32-characters',
   WEB_URL: 'https://app.cocoatrace.example',
@@ -216,5 +217,21 @@ describe('legacy fee compatibility fixture isolation', () => {
     expect(() => parseConfig({APP_ENV:'development',TEST_LEGACY_FEE_POLICY:'true'})).toThrow();
     expect(() => parseConfig({APP_ENV:'test',DATABASE_URL:'postgresql://test:test@localhost/business',TEST_LEGACY_FEE_POLICY:'true'})).toThrow();
     expect(() => parseConfig({...deployedBase,APP_ENV:'production',TEST_LEGACY_FEE_POLICY:'true'})).toThrow();
+  });
+});
+
+
+describe('invitation delivery encryption configuration', () => {
+  const smtp={APP_ENV:'development',IDENTITY_EMAIL_ENABLED:'true',EMAIL_DRIVER:'smtp',EMAIL_FROM:'identity@example.test',SMTP_HOST:'smtp.example.test',SMTP_USER:'fixture',SMTP_PASSWORD:'fixture'};
+  it('requires a dedicated encryption key before enabling identity SMTP', () => {
+    expect(()=>parseConfig(smtp)).toThrow(/INVITATION_DELIVERY_KEY/);
+    expect(parseConfig({...smtp,INVITATION_DELIVERY_KEY:'12'.repeat(32)}).invitationDeliveryKey).toBe('12'.repeat(32));
+  });
+  it.each(['short','g'.repeat(64),'12'.repeat(31)])('rejects invalid key format without reporting the key: %s', key => {
+    expect(()=>parseConfig({...smtp,INVITATION_DELIVERY_KEY:key})).toThrow(/INVITATION_DELIVERY_KEY/);
+  });
+  it('rejects reuse of a session or evidence key', () => {
+    expect(()=>parseConfig({...smtp,INVITATION_DELIVERY_KEY:'12'.repeat(32),JWT_SECRET:'12'.repeat(32)})).toThrow(/independent/);
+    expect(()=>parseConfig({...smtp,INVITATION_DELIVERY_KEY:'12'.repeat(32),EVIDENCE_UPLOAD_SIGNING_SECRET:'12'.repeat(32)})).toThrow(/independent/);
   });
 });

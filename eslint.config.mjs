@@ -55,6 +55,7 @@ export default tseslint.config(
       'api/src/modules/sourcing/**/*.ts',
       'api/src/modules/catalog/**/*.ts',
       'api/src/modules/operations/**/*.ts',
+      'api/src/modules/invitationDelivery/**/*.ts',
       'api/src/services/tradeNextAction*.ts',
       'api/src/modules/tradeActions/**/*.ts',
       'api/src/services/tradeActionRepository*.ts',
