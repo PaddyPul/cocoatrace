@@ -13,6 +13,10 @@ RUN npm run build --workspace=web
 
 # Stage 2: Static serving and API proxy need no image-processing modules.
 FROM nginxinc/nginx-unprivileged:stable-alpine-slim
+# Refresh security fixes when the upstream image has not yet been rebuilt.
+USER root
+RUN apk upgrade --no-cache musl musl-utils
+USER 101
 COPY --from=builder /app/web/dist /usr/share/nginx/html
 COPY web/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 3000
