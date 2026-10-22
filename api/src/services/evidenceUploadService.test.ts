@@ -109,6 +109,29 @@ describe('evidence business audit boundaries', () => {
     );
     expect(m.queue).not.toHaveBeenCalled();
   });
+  it('preserves recorded document expiry in completion and its audit without replacing the content hash', async () => {
+    const expiresAt = '2027-06-30T23:59:59.999Z';
+    m.query.mockImplementation(async (sql: string) => ({
+      rows: sql.startsWith('SELECT *')
+        ? [{ ...intent, document_expires_at: expiresAt }]
+        : [{ id: 'intent' }],
+      rowCount: 1,
+    }));
+    await complete();
+    const insert = m.sql.mock.calls.find(([sql]) =>
+      String(sql).includes('INSERT INTO evidence_items'),
+    );
+    expect(insert?.[1]?.[14]).toBe(expiresAt);
+    expect(m.audit).toHaveBeenCalledWith(
+      expect.anything(),
+      actor,
+      'evidence.upload.complete',
+      'evidence_item',
+      'evidence',
+      { documentExpiresAt: expiresAt },
+      { newStateHash: `sha256:${crypto.createHash('sha256').update(content).digest('hex')}` },
+    );
+  });
   it('rolls back completion and queues both provider objects on audit failure', async () => {
     m.audit.mockRejectedValueOnce(new Error('audit unavailable'));
     await expect(complete()).rejects.toThrow('audit unavailable');

@@ -29,7 +29,7 @@ function validNotice(value: any): value is Notice {
     typeof value.read === 'boolean' &&
     ['you', 'other', 'none'].includes(value.responsibleParty) &&
     typeof value.actionPath === 'string' &&
-    /^\/(offers\?tab=(received|sent)|deal-room\/[a-f0-9-]+|payments\/[a-f0-9-]+|shipments\/[a-f0-9-]+)$/.test(
+    /^\/(offers\?tab=(received|sent)|deal-room\/[a-f0-9-]+|payments\/[a-f0-9-]+|shipments\/[a-f0-9-]+|certs\?search=[a-f0-9-]+|evidence\?search=[a-f0-9-]+|recalls\?recallId=[a-f0-9-]+)$/.test(
       value.actionPath,
     )
   );

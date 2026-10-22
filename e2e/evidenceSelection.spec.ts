@@ -123,6 +123,7 @@ test('selection retains context, explanation and file across pages and search, a
     )
     .toBe(true);
   await expect(page.getByRole('button', { name: 'Attach evidence', exact: true })).toBeEnabled();
+  await page.getByLabel('Document expiry date', { exact: true }).fill('2027-06-30');
   const sent = page.waitForRequest(
     (request) =>
       request.url().endsWith('/api/evidence/upload-intents') && request.method() === 'POST',
@@ -132,6 +133,7 @@ test('selection retains context, explanation and file across pages and search, a
     linkedEntityType: 'farm',
     linkedEntityId: later,
     claimDescription: 'Source origin proof',
+    documentExpiresAt: '2027-06-30T23:59:59.999Z',
   });
   await expect(page.getByText(/Evidence attached to Later permitted record/)).toBeVisible();
 });

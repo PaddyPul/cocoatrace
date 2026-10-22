@@ -37,17 +37,19 @@ export default function EvidenceContributionPage() {
   const recordId = selected?.id || '';
   const [purpose, setPurpose] = useState('origin_document');
   const [description, setDescription] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
   const [file, setFile] = useState<File>();
   const [savedDraft, setSavedDraft] = useState('');
   const draftSnapshot = JSON.stringify([
     recordId,
     purpose,
     description,
+    expiryDate,
     file?.name || '',
     file?.size || 0,
     file?.lastModified || 0,
   ]);
-  const dirty = Boolean((description || file) && draftSnapshot !== savedDraft);
+  const dirty = Boolean((description || file || expiryDate) && draftSnapshot !== savedDraft);
   const discard = useDiscardChanges(dirty);
   const discardRef = useRef(discard);
   discardRef.current = discard;
@@ -59,6 +61,7 @@ export default function EvidenceContributionPage() {
     discardRef.current(() => {
       setSelected(record);
       setDescription('');
+      setExpiryDate('');
       setFile(undefined);
       setError('');
       setSuccess('');
@@ -75,11 +78,14 @@ export default function EvidenceContributionPage() {
         linkedEntityType: kind,
         linkedEntityId: selected.id,
         claimDescription: description.trim(),
+        documentExpiresAt: expiryDate
+          ? new Date(`${expiryDate}T23:59:59.999Z`).toISOString()
+          : undefined,
       });
       setSuccess(
         `Evidence attached to ${selected.label}. Uploading does not approve the claim; scanning and review status remain separate.`,
       );
-      setSavedDraft(JSON.stringify([recordId, purpose, description, '', 0, 0]));
+      setSavedDraft(JSON.stringify([recordId, purpose, description, expiryDate, '', 0, 0]));
       clearUnsaved();
       setFile(undefined);
     } catch (failure) {
@@ -119,6 +125,7 @@ export default function EvidenceContributionPage() {
                     discard(() => {
                       setSelected(null);
                       setDescription('');
+                      setExpiryDate('');
                       setFile(undefined);
                       setError('');
                       setSuccess('');
@@ -188,6 +195,20 @@ export default function EvidenceContributionPage() {
                       className="form-input mt-2"
                       onChange={(event) => setFile(event.target.files?.[0])}
                     />
+                  </label>
+                  <label>
+                    Document expiry date (optional, end of UTC day)
+                    <input
+                      type="date"
+                      aria-label="Document expiry date"
+                      value={expiryDate}
+                      onChange={(event) => setExpiryDate(event.target.value)}
+                      className="form-input mt-2"
+                    />
+                    <span className="text-xs">
+                      Recorded from the document; this does not approve or extend its validity.
+                      Renewal reminders appear in Notifications.
+                    </span>
                   </label>
                   <button
                     className="btn btn-primary"

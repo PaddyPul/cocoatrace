@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "reviewedAt": "2026-10-21",
+  "reviewedAt": "2026-10-22",
   "authorSourceCommit": "602620e07fad58bcd3d85dd5b04e6d6d42dd4f75",
-  "acceptance": "Founder-reported local release/merge acknowledgements, including prescribed operations correction workflow reported done 2026-10-13 13:59 UTC. Independent CI URL/founder SHA and hosted acceptance are not supplied. Founder confirms the invitation-authority/Canton-inspection release passed and PR #139 merged on 2026-10-21; CT-00 inspection acceptance is reconciled separately from unimplemented Canton work.",
+  "acceptance": "Founder-reported local release/merge acknowledgements, including prescribed operations correction workflow reported done 2026-10-13 13:59 UTC. Independent CI URL/founder SHA and hosted acceptance are not supplied. Founder confirms the invitation-authority/Canton-inspection release passed and PR #139 merged on 2026-10-21; CT-00 inspection acceptance is reconciled separately from unimplemented Canton work. Founder reports corrected evidence lifecycle release passed and merged as main PR #141 on 2026-10-22; UPL-014 engineering acceptance is reconciled without inferring hosted retention/backup erasure.",
   "changes": [
     {
       "id": "CUR-003",
@@ -241,13 +241,20 @@
     {
       "id": "UPL-014",
       "from": "open",
-      "to": "partial",
+      "to": "complete",
       "evidence": [
-        "api/src/controllers/evidenceController.ts",
-        "api/src/modules/operations/recovery.ts"
+        "api/src/modules/evidenceWorkflow/download.ts",
+        "api/src/modules/evidenceMaintenance/scanPending.ts",
+        "api/src/modules/evidenceCleanup/worker.ts",
+        "api/test/integration/evidenceCleanup.integration.test.ts",
+        "docs/engineering/EVIDENCE_LIFECYCLE_AUDIT.md"
       ],
-      "reason": "Upload/security/infection decisions and reviewed cleanup retries are audited; a complete scan/review/download/physical-deletion event matrix is not yet proved.",
-      "remaining": []
+      "reason": "Founder reports corrected exact-commit full release passed and merged as PR #141. The previously pending lifecycle audit matrix and native fault/recovery slice are accepted.",
+      "remaining": [
+        "SEC-017",
+        "UPL-013",
+        "UPL-018"
+      ]
     },
     {
       "id": "TRD-014",

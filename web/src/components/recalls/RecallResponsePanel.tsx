@@ -213,8 +213,20 @@ export default function RecallResponsePanel({
               >
                 <strong>{participant.organization_name}</strong>
                 <div className="mt-1">
-                  {participant.acknowledged_at ? 'Acknowledged' : 'Awaiting acknowledgement'} ·
-                  Contact: {participant.contact_status}
+                  {participant.acknowledged_at ? 'Acknowledged' : 'Awaiting acknowledgement'}
+                  {!participant.acknowledged_at && data.notice.acknowledgement_due_at && (
+                    <span>
+                      {' '}
+                      · Deadline {new Date(data.notice.acknowledgement_due_at).toISOString()} (UTC)
+                      {Date.now() >= Date.parse(data.notice.acknowledgement_due_at)
+                        ? ' · Overdue: contact or escalate'
+                        : ''}
+                    </span>
+                  )}
+                  {!participant.acknowledged_at && !data.notice.acknowledgement_due_at && (
+                    <span> · Deadline not recorded for this historical notice</span>
+                  )}
+                  {''} · Contact: {participant.contact_status}
                 </div>
                 {participant.eligible_contact_count === 0 && (
                   <p className="mt-1 text-amber-300">

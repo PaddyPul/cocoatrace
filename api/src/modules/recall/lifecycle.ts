@@ -14,6 +14,9 @@ import {
 } from './activationRepository';
 
 export async function activateRecall(actor: TradeActor, canManageAll: boolean, input: RecallInput) {
+  const hours = input.acknowledgementDeadlineHours ?? 24;
+  if (!Number.isInteger(hours) || hours < 1 || hours > 168)
+    throw new ValidationError('Acknowledgement deadline must be between 1 and 168 whole hours');
   return inTradeTransaction(async (client) => {
     const budget = new TraceBudget(TRACE_LIMITS.activationMs);
     await configureActivationTimeout(client);
@@ -65,6 +68,7 @@ export async function activateRecall(actor: TradeActor, canManageAll: boolean, i
     await registerRecallParticipants(client, recall.id);
     budget.step();
     await recordTradeAudit(client, actor, 'recall.activate', 'recall_notice', recall.id, {
+      acknowledgementDueAt: recall.acknowledgement_due_at,
       reason: input.reason,
       affectedBatchIds,
       affectedLotIds: impact.impactedLots.map((lot) => lot.id),

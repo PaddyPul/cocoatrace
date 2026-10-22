@@ -1394,6 +1394,19 @@
         "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
       ],
       "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /evidence/:id/download-links",
+      "source": "api/src/routes/evidence.ts",
+      "handler": "evidenceController.createEvidenceDownloadLink",
+      "status": "read-only",
+      "boundary": "Live authenticated evidence read policy authorizes issuance of a stateless 60-second user/organization/session-bound signature. No provider bytes or business mutation on issuance.",
+      "eventPolicy": "No outbox; byte release retains its critical access audit. Download redemption repeats current access and scan/payment gates.",
+      "evidence": [
+        "api/src/modules/evidenceWorkflow/downloadLinks.ts",
+        "api/test/integration/timedEvidenceRecall.integration.test.ts"
+      ],
+      "remaining": "Real hosted key/clock/HTTPS review is separate. Legacy canonical authenticated read remains live-authorized."
     }
   ],
   "background": [

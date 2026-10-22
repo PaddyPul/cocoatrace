@@ -32,11 +32,11 @@ const dependencies: DownloadDependencies = {
   audit: auditEvidenceAccess,
 };
 
-export async function prepareEvidenceDownload(
+export async function authorizeEvidenceDownload(
   actor: Actor & AuditActor,
   id: string,
   ports: DownloadDependencies = dependencies,
-): Promise<{ denial: DownloadDenial } | { lease: DownloadLease }> {
+): Promise<{ denial: DownloadDenial } | { item: DownloadEvidenceItem }> {
   const item = await ports.find(id);
   const entityAllowed = Boolean(
     item &&
@@ -51,6 +51,18 @@ export async function prepareEvidenceDownload(
   if (denial) return { denial };
   // The policy cannot allow a missing item; keep narrowing explicit at this boundary.
   if (!item) throw new Error('Missing authorized evidence');
+  return { item };
+}
+
+export async function prepareEvidenceDownload(
+  actor: Actor & AuditActor,
+  id: string,
+  ports: DownloadDependencies = dependencies,
+  revalidate: () => void | Promise<void> = () => undefined,
+): Promise<{ denial: DownloadDenial } | { lease: DownloadLease }> {
+  const authorized = await authorizeEvidenceDownload(actor, id, ports);
+  if ('denial' in authorized) return authorized;
+  const { item } = authorized;
   const release = ports.acquire(actor.organizationId);
   let pending = true;
   let ended = false;
@@ -71,7 +83,10 @@ export async function prepareEvidenceDownload(
       async read() {
         try {
           const content = await ports.read(item);
-          if (content) await ports.audit(actor, id, content.length);
+          if (content) {
+            await revalidate();
+            await ports.audit(actor, id, content.length);
+          }
           return content;
         } catch (error) {
           releaseOnce();

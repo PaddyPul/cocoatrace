@@ -1,4 +1,5 @@
 export interface Evidence {
+  document_expires_at?: string | null;
   id: string;
   file_name: string;
   type: string;

@@ -64,9 +64,9 @@ function CurrentNotifications() {
     <Layout currentPage="notifications">
       <div className="space-y-4">
         <p>
-          Current trade actions and waiting notices. This is not a historical inbox. Notices
-          disappear when the current action changes or ends. Review the deal for its full current
-          status.
+          Current trade actions, expiry reminders and recall deadlines. This is not a historical
+          inbox. Notices disappear when the current action changes or ends. Review the linked record
+          for its full current status.
         </p>
         <p aria-live="polite">
           {summary

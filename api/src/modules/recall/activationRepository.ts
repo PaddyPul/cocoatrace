@@ -5,6 +5,7 @@ import type { TraceBudget } from '../trace/limits';
 import { TRACE_LIMITS } from '../trace/limits';
 
 export type RecallInput = {
+  acknowledgementDeadlineHours?: number;
   referenceCode: string;
   title: string;
   reason: string;
@@ -24,6 +25,7 @@ export interface ActivatedRecallRow {
   initiated_by_user_id: string;
   initiated_by_organization_id: string;
   initiated_at: Date;
+  acknowledgement_due_at: Date | null;
 }
 export async function loadActivationSourceLots(client: PoolClient, batchIds: string[]) {
   return batchIds.length
@@ -46,8 +48,8 @@ export async function persistRecallActivation(
   const recall = (
     await client.query<ActivatedRecallRow>(
       `INSERT INTO recall_notices
-      (reference_code,title,reason,instructions,severity,status,initiated_by_user_id,initiated_by_organization_id)
-      VALUES($1,$2,$3,$4,$5,'active',$6,$7) RETURNING *`,
+      (reference_code,title,reason,instructions,severity,status,initiated_by_user_id,initiated_by_organization_id,acknowledgement_due_at)
+      VALUES($1,$2,$3,$4,$5,'active',$6,$7,NOW()+($8::int*INTERVAL '1 hour')) RETURNING *`,
       [
         input.referenceCode,
         input.title,
@@ -56,6 +58,7 @@ export async function persistRecallActivation(
         input.severity,
         actor.id,
         actor.organizationId,
+        input.acknowledgementDeadlineHours ?? 24,
       ],
     )
   ).rows[0];

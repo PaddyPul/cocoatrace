@@ -7,6 +7,7 @@ export interface PublicNotice {
   severity: 'advisory' | 'warning' | 'critical';
   status: 'active' | 'resolved';
   initiated_at: string;
+  acknowledgement_due_at?: string | null;
   resolved_at: string | null;
   issued_by: string;
 }
@@ -36,6 +37,7 @@ export interface RecallNotice {
   severity: 'advisory' | 'warning' | 'critical';
   status: 'draft' | 'active' | 'resolved';
   initiated_at: string;
+  acknowledgement_due_at?: string | null;
   resolved_at?: string;
   issued_by: string;
   batch_ids: string[];

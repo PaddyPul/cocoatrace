@@ -88,6 +88,33 @@ describe('evidence HTTP response adapter', () => {
     await respondWithEvidenceDownload(actor, 'id', res);
     expect(lease.read).toHaveBeenCalledTimes(1);
   });
+  it('awaits final live authorization before exposing attachment headers or bytes', async () => {
+    const lease = {
+      mime: 'application/pdf',
+      filename: 'proof.pdf',
+      read: vi.fn(async () => Buffer.from('private')),
+      responseEnded: vi.fn(),
+      fail: vi.fn(),
+    };
+    prepare.mockImplementation(async (_actor, _id, _ports, authorize) => ({
+      lease: {
+        ...lease,
+        read: async () => {
+          await authorize?.();
+          return Buffer.from('private');
+        },
+      },
+    }));
+    const { res, result } = response();
+    await expect(
+      respondWithEvidenceDownload(actor, 'id', res, async () => {
+        throw new Error('Access changed');
+      }),
+    ).rejects.toThrow('Access changed');
+    expect(result.send).not.toHaveBeenCalled();
+    expect(result.setHeader).not.toHaveBeenCalled();
+    expect(lease.fail).toHaveBeenCalledTimes(1);
+  });
   it('passes policy denials unchanged and advertises admission retry only', async () => {
     const { res, result } = response();
     prepare.mockResolvedValue({

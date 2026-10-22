@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { useDiscardChanges } from '../shared/UnsavedChanges';
 import { useEffect, useState } from 'react';
 import { recalls } from '../../api';
@@ -8,7 +9,8 @@ import { useCatalogPage } from './useCatalogPage';
 import PageNavigation from './PageNavigation';
 export default function RecallRegister() {
   const { user } = useAuthCtx();
-  const [search, setSearch] = useState(''),
+  const [params] = useSearchParams();
+  const [search, setSearch] = useState(() => params.get('recallId') || ''),
     [status, setStatus] = useState('all'),
     [severity, setSeverity] = useState('all');
   const [openResponseId, setOpenResponseId] = useState<string | null>(null);

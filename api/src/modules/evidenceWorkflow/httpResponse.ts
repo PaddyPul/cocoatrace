@@ -8,10 +8,12 @@ export async function respondWithEvidenceDownload(
   actor: Actor & AuditActor,
   id: string,
   res: Response,
+  revalidateLink: () => void | Promise<void> = () => undefined,
+  finalizeExpiry: () => void = () => undefined,
 ): Promise<void> {
   let prepared: Awaited<ReturnType<typeof prepareEvidenceDownload>>;
   try {
-    prepared = await prepareEvidenceDownload(actor, id);
+    prepared = await prepareEvidenceDownload(actor, id, undefined, revalidateLink);
   } catch (error) {
     // Admission errors historically advertise a short retry; other failures do not.
     if (error instanceof Error && 'code' in error && error.code === 'EVIDENCE_TRANSFER_BUSY')
@@ -33,6 +35,7 @@ export async function respondWithEvidenceDownload(
       res.status(404).json({ error: 'Stored file not found' });
       return;
     }
+    finalizeExpiry();
     res.setHeader('Content-Type', lease.mime);
     res.setHeader(
       'Content-Disposition',

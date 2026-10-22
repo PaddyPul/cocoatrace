@@ -1,3 +1,4 @@
+import { loadExpiryActions, loadRecallDeadlineActions } from './timeBoundActions';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { loadTradeActions } from '../../services/tradeActionRepository';
 import { loadTransportTimingNotices } from '../transportTiming/notices';
@@ -5,6 +6,10 @@ import { loadDispatchAcknowledgementActions } from '../dispatchAcknowledgement/a
 import { currentNotificationActions } from './currentActions';
 import type { AuthenticatedActor } from '../../services/authSessionService';
 import type { TradeAction } from '../../services/tradeNextAction';
+vi.mock('./timeBoundActions', () => ({
+  loadExpiryActions: vi.fn(),
+  loadRecallDeadlineActions: vi.fn(),
+}));
 vi.mock('../../services/tradeActionRepository', () => ({ loadTradeActions: vi.fn() }));
 vi.mock('../transportTiming/notices', () => ({ loadTransportTimingNotices: vi.fn() }));
 vi.mock('../dispatchAcknowledgement/actions', () => ({
@@ -28,6 +33,8 @@ const action = (id: string): TradeAction => ({
 });
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(loadExpiryActions).mockResolvedValue([]);
+  vi.mocked(loadRecallDeadlineActions).mockResolvedValue([]);
   vi.mocked(loadTradeActions).mockResolvedValue([]);
   vi.mocked(loadTransportTimingNotices).mockResolvedValue([]);
   vi.mocked(loadDispatchAcknowledgementActions).mockResolvedValue([]);

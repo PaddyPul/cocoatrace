@@ -13,7 +13,7 @@ export default function EvidenceRecordsPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [historyId, setHistoryId] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => params.get('search') || '');
   const entityType = params.get('entityType'),
     entityId = params.get('entityId');
   const page = useCatalogPage(evidence.page, {
@@ -88,7 +88,14 @@ export default function EvidenceRecordsPage() {
             <tbody>
               {page.items.map((item) => (
                 <tr key={item.id}>
-                  <td className="font-medium">{item.file_name}</td>
+                  <td className="font-medium">
+                    {item.file_name}
+                    {item.document_expires_at && (
+                      <span className="block text-xs">
+                        Recorded expiry: {new Date(item.document_expires_at).toISOString()} (UTC)
+                      </span>
+                    )}
+                  </td>
                   <td>{(item.type || '').replace(/_/g, ' ')}</td>
                   <td className="font-mono text-[10px] max-w-[200px] truncate">
                     {item.sha256_hash}

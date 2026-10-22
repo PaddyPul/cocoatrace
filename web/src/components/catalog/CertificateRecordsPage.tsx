@@ -1,6 +1,6 @@
 import { useUnsavedChanges, useDiscardChanges } from '../shared/UnsavedChanges';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { certificates as certApi } from '../../api';
 import type { Farm } from '../../domains/source/types';
 import { StatusBadge, fmtDate } from '../shared/helpers';
@@ -26,7 +26,8 @@ export default function CertificateRecordsPage() {
   } | null>(null);
   const [statusBusy, setStatusBusy] = useState(false);
   const [statusError, setStatusError] = useState('');
-  const [search, setSearch] = useState('');
+  const [params] = useSearchParams();
+  const [search, setSearch] = useState(() => params.get('search') || '');
   const [status, setStatus] = useState('all');
   const page = useCatalogPage(certApi.page, { search, status, limit: '50' });
   const { items: certs, loading, error } = page;
