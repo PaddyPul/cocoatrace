@@ -2,7 +2,7 @@
   "version": 1,
   "reviewedAt": "2026-10-22",
   "authorSourceCommit": "602620e07fad58bcd3d85dd5b04e6d6d42dd4f75",
-  "acceptance": "Founder-reported local release/merge acknowledgements, including prescribed operations correction workflow reported done 2026-10-13 13:59 UTC. Independent CI URL/founder SHA and hosted acceptance are not supplied. Founder confirms the invitation-authority/Canton-inspection release passed and PR #139 merged on 2026-10-21; CT-00 inspection acceptance is reconciled separately from unimplemented Canton work. Founder reports corrected evidence lifecycle release passed and merged as main PR #141 on 2026-10-22; UPL-014 engineering acceptance is reconciled without inferring hosted retention/backup erasure.",
+  "acceptance": "Founder-reported local release/merge acknowledgements, including prescribed operations correction workflow reported done 2026-10-13 13:59 UTC. Independent CI URL/founder SHA and hosted acceptance are not supplied. Founder confirms the invitation-authority/Canton-inspection release passed and PR #139 merged on 2026-10-21; CT-00 inspection acceptance is reconciled separately from unimplemented Canton work. Founder reports corrected evidence lifecycle release passed and merged as main PR #141 on 2026-10-22; UPL-014 engineering acceptance is reconciled without inferring hosted retention/backup erasure. Founder confirms timed evidence/recall full release passed and PR #143 merged on 2026-10-22; UPL-010, UPL-012 and RCL-004 accepted.",
   "changes": [
     {
       "id": "CUR-003",
@@ -398,6 +398,48 @@
         "CT-16",
         "CT-17",
         "CT-18"
+      ]
+    },
+    {
+      "id": "UPL-010",
+      "from": "partial",
+      "to": "complete",
+      "evidence": [
+        "docs/runbooks/TIMED_EVIDENCE_RECALL.md",
+        "api/test/integration/timedEvidenceRecall.integration.test.ts"
+      ],
+      "reason": "Founder reports full release passed and PR #143 merged; scoped criteria accepted.",
+      "remaining": [
+        "PRD-008",
+        "OPS-002"
+      ]
+    },
+    {
+      "id": "UPL-012",
+      "from": "partial",
+      "to": "complete",
+      "evidence": [
+        "docs/runbooks/TIMED_EVIDENCE_RECALL.md",
+        "api/test/integration/timedEvidenceRecall.integration.test.ts"
+      ],
+      "reason": "Founder reports full release passed and PR #143 merged; scoped criteria accepted.",
+      "remaining": [
+        "PRD-008",
+        "OPS-002"
+      ]
+    },
+    {
+      "id": "RCL-004",
+      "from": "partial",
+      "to": "complete",
+      "evidence": [
+        "docs/runbooks/TIMED_EVIDENCE_RECALL.md",
+        "api/test/integration/timedEvidenceRecall.integration.test.ts"
+      ],
+      "reason": "Founder reports full release passed and PR #143 merged; scoped criteria accepted.",
+      "remaining": [
+        "PRD-008",
+        "OPS-002"
       ]
     }
   ],

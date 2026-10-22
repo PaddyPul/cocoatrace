@@ -162,6 +162,25 @@ jobs:
       - name: Test fresh production startup and data-preserving upgrades
         run: npm run test:migrations:docker
 
+  secret-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test scripts/secret-scan.test.mjs scripts/release-candidate.test.mjs
+      - run: npm run check:secrets
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: secret-scan-safe-summary
+          path: secret-scan-test-results/summary.json
+          retention-days: 7
+
   recovery-rehearsal:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -173,8 +192,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node --test scripts/run-release-checks.test.mjs
-      - name: Rehearse isolated PostgreSQL backup and restore
+      - name: Rehearse isolated PostgreSQL and versioned private object restore
         run: npm run test:recovery:docker
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: recovery-safe-summary
+          path: recovery-test-results/summary.json
+          retention-days: 30
 
   synthetic-preview:
     runs-on: ubuntu-latest

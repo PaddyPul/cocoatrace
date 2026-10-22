@@ -7,11 +7,15 @@ export const releaseChecks = [
   ['Code quality', ['run', 'check:quality']],
   ['Workspace type checks', ['run', 'typecheck']],
   ['Dependency advisories', ['run', 'check:dependencies']],
+  ['Committed secret scan', ['run', 'check:secrets']],
   [
     'Runner checks',
     [
       '--test',
       'scripts/run-release-checks.test.mjs',
+      'scripts/release-candidate.test.mjs',
+      'scripts/recovery-objects.test.mjs',
+      'scripts/secret-scan.test.mjs',
       'scripts/build-metadata.test.mjs',
       'scripts/check-dependencies.test.mjs',
       'scripts/shell-quote-security.test.mjs',
@@ -96,11 +100,60 @@ export function runReleaseChecks(execute, checks = releaseChecks) {
   return { status: failed ? 'failed' : 'passed', checks: results };
 }
 
+export function captureCandidate(root) {
+  const git = (args) => {
+    const result = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+    if (result.status !== 0) throw new Error('Cannot inspect release candidate Git state');
+    return result.stdout.trim();
+  };
+  const commit = git(['rev-parse', 'HEAD']);
+  if (!/^[a-f0-9]{40}$/.test(commit)) throw new Error('Invalid release candidate commit');
+  if (git(['status', '--porcelain', '--untracked-files=all'])) {
+    throw new Error('Commit or remove pending changes before release verification');
+  }
+  return { commit, branch: git(['symbolic-ref', '--quiet', '--short', 'HEAD']) };
+}
+
+export function verifyCandidate(before, after) {
+  if (before.commit !== after.commit || before.branch !== after.branch) {
+    throw new Error('Release candidate changed during verification');
+  }
+}
+
+export function verifyRelease(root, execute, checks = releaseChecks) {
+  const directory = path.join(root, 'release-test-results');
+  fs.mkdirSync(directory, { recursive: true });
+  const summary = path.join(directory, 'summary.json');
+  fs.rmSync(summary, { force: true });
+  const startedAt = new Date().toISOString();
+  let candidate = null;
+  let result = { status: 'failed', checks: [] };
+  let candidateError;
+  try {
+    candidate = captureCandidate(root);
+    result = runReleaseChecks(execute, checks);
+    verifyCandidate(candidate, captureCandidate(root));
+  } catch (error) {
+    result.status = 'failed';
+    candidateError = error.message;
+  }
+  const report = {
+    ...result,
+    commit: candidate?.commit ?? null,
+    branch: candidate?.branch ?? null,
+    startedAt,
+    completedAt: new Date().toISOString(),
+    ...(candidateError ? { candidateError } : {}),
+  };
+  fs.writeFileSync(summary, JSON.stringify(report, null, 2));
+  return report;
+}
+
 function main() {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
   const npmCli = process.env.npm_execpath;
   if (!npmCli) throw new Error('Run through npm: npm run verify:release');
-  const result = runReleaseChecks((args, directNode) => {
+  const report = verifyRelease(root, (args, directNode) => {
     const child = spawnSync(process.execPath, directNode ? args : [npmCli, ...args], {
       cwd: root,
       stdio: 'inherit',
@@ -108,18 +161,11 @@ function main() {
     if (child.error) throw child.error;
     return child.status ?? 1;
   });
-  const revision = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
-  const report = {
-    ...result,
-    commit: revision.status === 0 ? revision.stdout.trim() : null,
-    completedAt: new Date().toISOString(),
-  };
-  const directory = path.join(root, 'release-test-results');
-  fs.mkdirSync(directory, { recursive: true });
-  fs.writeFileSync(path.join(directory, 'summary.json'), JSON.stringify(report, null, 2));
   console.log(`\nRelease checks: ${report.status}. Report: release-test-results/summary.json`);
+  if (report.candidateError) console.error(report.candidateError);
   process.exitCode = report.status === 'passed' ? 0 : 1;
 }
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     main();

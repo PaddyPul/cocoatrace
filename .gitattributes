@@ -567,3 +567,11 @@ api/src/modules/invitationDelivery/** text eol=lf
 api/src/services/invitationDelivery.ts text eol=lf
 api/src/services/invitationDelivery.test.ts text eol=lf
 api/test/integration/invitationDelivery.integration.test.ts text eol=lf
+
+# Release recovery and secret-scan gates
+scripts/secret-scan*.mjs text eol=lf
+scripts/release-candidate.test.mjs text eol=lf
+scripts/recovery-objects* text eol=lf
+scripts/run-recovery-tests.mjs text eol=lf
+security/secret-scan-exceptions.json text eol=lf
+security/gitleaks.toml text eol=lf

@@ -1,5 +1,11 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'scripts/secret-scan.mjs',
+  'scripts/secret-scan.test.mjs',
+  'scripts/release-candidate.test.mjs',
+  'scripts/recovery-objects.test.mjs',
+  'scripts/run-recovery-tests.mjs',
+  'security/secret-scan-exceptions.json',
   'api/src/modules/invitationDelivery/**/*.ts',
   'api/src/services/invitationDelivery.ts',
   'api/src/services/invitationDelivery.test.ts',
