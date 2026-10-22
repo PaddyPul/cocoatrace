@@ -1,0 +1,3 @@
+title = "BetterTrade default secret rules; no broad exclusions"
+[extend]
+useDefault = true

@@ -15,6 +15,18 @@ services:
       timeout: 3s
       retries: 30
 
+  moto-recovery-test:
+    image: motoserver/moto:5.2.3
+    environment:
+      MOTO_PORT: "5000"
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/')"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
   recovery-migrate:
     build:
       context: .

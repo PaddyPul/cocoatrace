@@ -12,7 +12,13 @@ const service = 'postgres-recovery-test';
 const sourceDatabase = 'cocoatrace_recovery_source';
 const restoredDatabase = 'cocoatrace_recovery_restored';
 const archive = '/tmp/cocoatrace-recovery-rehearsal.dump';
-const compose = ['compose', '-p', project, '-f', path.join(root, 'docker-compose.recovery-tests.yml')];
+const compose = [
+  'compose',
+  '-p',
+  project,
+  '-f',
+  path.join(root, 'docker-compose.recovery-tests.yml'),
+];
 
 function port(name, fallback) {
   const value = process.env[name] || fallback;
@@ -24,7 +30,10 @@ function port(name, fallback) {
 
 function run(args, options = {}) {
   const result = spawnSync(docker, args, { cwd: root, encoding: 'utf8', ...options });
-  if (result.error) throw new Error('Unable to run Docker. Install/start Docker Desktop and retry.', { cause: result.error });
+  if (result.error)
+    throw new Error('Unable to run Docker. Install/start Docker Desktop and retry.', {
+      cause: result.error,
+    });
   if (options.stdio !== 'inherit') {
     if (result.stdout) process.stdout.write(result.stdout);
     if (result.stderr) process.stderr.write(result.stderr);
@@ -82,15 +91,15 @@ INSERT INTO evidence_items(id,uploader_user_id,uploader_organization_id,type,fil
   sha256_hash,storage_key,storage_provider,detected_mime_type,validation_status,malware_scan_status,
   malware_scanner_engine,malware_scanned_at,review_status,linked_entity_type,linked_entity_id,claim_description)
 VALUES('50000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001',
-  '10000000-0000-4000-8000-000000000001','other','RECOVERY_REHEARSAL_ONLY_metadata.pdf',321,
-  'application/pdf','sha256:recovery-rehearsal-only','evidence/recovery-test/metadata-only','s3','application/pdf',
+  '10000000-0000-4000-8000-000000000001','other','RECOVERY_REHEARSAL_ONLY_document.pdf',56,
+  'application/pdf','8de54fe7997eef2ee0c09597c2b2328d71f4ef0f1f0ff49957e2b7c64ecb4501','evidence/recovery-test/document','s3','application/pdf',
   'validated','clean','recovery-test-scanner',NOW(),'pending','batch','40000000-0000-4000-8000-000000000001',
-  'RECOVERY REHEARSAL ONLY evidence metadata; no object bytes exist');
+  'RECOVERY REHEARSAL ONLY evidence with archived private versions');
 INSERT INTO audit_events(id,actor_user_id,actor_organization_id,action,entity_type,entity_id,new_state_hash,metadata)
 VALUES('60000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001',
   '10000000-0000-4000-8000-000000000001','recovery.rehearsal.fixture','harvest_batch',
   '40000000-0000-4000-8000-000000000001','sha256:recovery-rehearsal-only',
-  '{"fixture":"RECOVERY_REHEARSAL_ONLY","containsObjectBytes":false}'::jsonb);
+  '{"fixture":"RECOVERY_REHEARSAL_ONLY","containsObjectBytes":true}'::jsonb);
 `;
 
 const verifyFixtureSql = String.raw`
@@ -110,16 +119,16 @@ BEGIN
   SELECT COUNT(*) INTO evidence_rows FROM evidence_items
     WHERE id='50000000-0000-4000-8000-000000000001'
       AND linked_entity_type='batch' AND linked_entity_id='40000000-0000-4000-8000-000000000001'
-      AND storage_provider='s3' AND storage_key='evidence/recovery-test/metadata-only'
+      AND storage_provider='s3' AND storage_key='evidence/recovery-test/document'
       AND validation_status='validated' AND malware_scan_status='clean'
-      AND review_status='pending' AND file_size_bytes=321;
+      AND review_status='pending' AND file_size_bytes=56 AND sha256_hash='8de54fe7997eef2ee0c09597c2b2328d71f4ef0f1f0ff49957e2b7c64ecb4501';
   SELECT COUNT(*) INTO audit_rows FROM audit_events
     WHERE id='60000000-0000-4000-8000-000000000001'
       AND actor_user_id='20000000-0000-4000-8000-000000000001'
       AND actor_organization_id='10000000-0000-4000-8000-000000000001'
       AND entity_id='40000000-0000-4000-8000-000000000001'
       AND metadata->>'fixture'='RECOVERY_REHEARSAL_ONLY'
-      AND metadata->>'containsObjectBytes'='false';
+      AND metadata->>'containsObjectBytes'='true';
   IF linked_rows<>1 OR evidence_rows<>1 OR audit_rows<>1 THEN
     RAISE EXCEPTION 'Recovery fixture verification failed: linked %, evidence %, audit %',linked_rows,evidence_rows,audit_rows;
   END IF;
@@ -127,14 +136,17 @@ END $$;
 `;
 
 function migrationNames() {
-  return fs.readdirSync(path.join(root, 'api/src/migrations'))
-    .filter((name) => name.endsWith('.ts')).sort();
+  return fs
+    .readdirSync(path.join(root, 'api/src/migrations'))
+    .filter((name) => name.endsWith('.ts'))
+    .sort();
 }
 
 function databaseSchema(database) {
   // Fix search_path for consistent rendered defaults and constraint references.
   return psql(database, `SET search_path TO public; ${recoverySchemaSql}`, true)
-    .split(/\r?\n/).filter((line) => line && line !== 'SET');
+    .split(/\r?\n/)
+    .filter((line) => line && line !== 'SET');
 }
 
 function assertRestoredSchema(source, restored) {
@@ -143,55 +155,146 @@ function assertRestoredSchema(source, restored) {
     const unexpected = restored.filter((value) => !source.includes(value));
     console.error('Schema definitions missing after restore:', missing.slice(0, 20));
     console.error('Unexpected restored schema definitions:', unexpected.slice(0, 20));
-    throw new Error(`Restored logical schema differs: ${missing.length} missing, ${unexpected.length} unexpected definitions`);
+    throw new Error(
+      `Restored logical schema differs: ${missing.length} missing, ${unexpected.length} unexpected definitions`,
+    );
   }
 }
 
 function assertMigrationLedger(database, expected) {
-  const output = psql(database, "SELECT name FROM knex_migrations ORDER BY name;", true);
-  assert.deepEqual(output ? output.split(/\r?\n/) : [], expected, `${database} migration history differs from the forward migration set`);
+  const output = psql(database, 'SELECT name FROM knex_migrations ORDER BY name;', true);
+  assert.deepEqual(
+    output ? output.split(/\r?\n/) : [],
+    expected,
+    `${database} migration history differs from the forward migration set`,
+  );
 }
 
+function objectPhase(phase, metadata) {
+  const script = fs.readFileSync(path.join(root, 'scripts/recovery-objects.py'), 'utf8');
+  requireSuccess(
+    composeRun(
+      ['exec', '-T', 'moto-recovery-test', 'python', '-', phase, ...(metadata ? [metadata] : [])],
+      { input: script },
+    ),
+    `Private object recovery ${phase} failed`,
+  );
+}
+
+const reportDirectory = path.join(root, 'recovery-test-results');
+fs.mkdirSync(reportDirectory, { recursive: true });
+const reportPath = path.join(reportDirectory, 'summary.json');
+fs.rmSync(reportPath, { force: true });
+const recoveryStartedAt = new Date().toISOString();
+let recoveryPassed = false;
 let started = false;
 try {
   assertDisposableTarget();
   const dbPort = port('COCOATRACE_RECOVERY_DB_PORT', '15436');
   started = true;
-  requireSuccess(composeRun(['down', '--volumes', '--remove-orphans'], { stdio: 'inherit' }), 'Could not reset the isolated recovery project');
-  requireSuccess(composeRun(['up', '-d', '--wait', service], {
-    stdio: 'inherit', env: { ...process.env, COCOATRACE_RECOVERY_DB_PORT: dbPort },
-  }), 'Disposable recovery PostgreSQL failed startup');
-  requireSuccess(composeRun(['build', 'recovery-migrate'], { stdio: 'inherit' }), 'Recovery migration image build failed');
-  requireSuccess(composeRun(['run', '--rm', 'recovery-migrate'], { stdio: 'inherit' }), 'Forward migrations failed in the source rehearsal database');
+  requireSuccess(
+    composeRun(['down', '--volumes', '--remove-orphans'], { stdio: 'inherit' }),
+    'Could not reset the isolated recovery project',
+  );
+  requireSuccess(
+    composeRun(['up', '-d', '--wait', service, 'moto-recovery-test'], {
+      stdio: 'inherit',
+      env: { ...process.env, COCOATRACE_RECOVERY_DB_PORT: dbPort },
+    }),
+    'Disposable recovery PostgreSQL failed startup',
+  );
+  requireSuccess(
+    composeRun(['build', 'recovery-migrate'], { stdio: 'inherit' }),
+    'Recovery migration image build failed',
+  );
+  requireSuccess(
+    composeRun(['run', '--rm', 'recovery-migrate'], { stdio: 'inherit' }),
+    'Forward migrations failed in the source rehearsal database',
+  );
 
   assert.equal(psql(sourceDatabase, 'SELECT current_database();', true), sourceDatabase);
   const expectedMigrations = migrationNames();
   assertMigrationLedger(sourceDatabase, expectedMigrations);
+  objectPhase('prepare');
   psql(sourceDatabase, fixtureSql);
   psql(sourceDatabase, verifyFixtureSql);
   const sourceSchema = databaseSchema(sourceDatabase);
 
-  requireSuccess(postgresTool('pg_dump', [
-    '--format=custom', '--no-owner', '--no-privileges', '--file', archive,
-    '--username', 'recovery_test', '--dbname', sourceDatabase,
-  ], { stdio: 'inherit' }), 'Custom-format PostgreSQL backup failed');
-  requireSuccess(postgresTool('pg_restore', ['--list', archive], { stdio: 'inherit' }), 'Backup archive cannot be read by pg_restore');
+  requireSuccess(
+    postgresTool(
+      'pg_dump',
+      [
+        '--format=custom',
+        '--no-owner',
+        '--no-privileges',
+        '--file',
+        archive,
+        '--username',
+        'recovery_test',
+        '--dbname',
+        sourceDatabase,
+      ],
+      { stdio: 'inherit' },
+    ),
+    'Custom-format PostgreSQL backup failed',
+  );
+  requireSuccess(
+    postgresTool('pg_restore', ['--list', archive], { stdio: 'inherit' }),
+    'Backup archive cannot be read by pg_restore',
+  );
 
   // Both names are constants guarded above. This PostgreSQL instance belongs to
   // the dedicated Compose project and uses tmpfs; no external database is used.
-  requireSuccess(postgresTool('dropdb', ['--if-exists', '--username', 'recovery_test', restoredDatabase], { stdio: 'inherit' }), 'Could not reset the restored rehearsal database');
-  requireSuccess(postgresTool('createdb', ['--username', 'recovery_test', restoredDatabase], { stdio: 'inherit' }), 'Could not create the fresh restore target');
-  requireSuccess(postgresTool('pg_restore', [
-    '--exit-on-error', '--no-owner', '--no-privileges', '--username', 'recovery_test',
-    '--dbname', restoredDatabase, archive,
-  ], { stdio: 'inherit' }), 'Restore into the fresh rehearsal database failed');
+  requireSuccess(
+    postgresTool('dropdb', ['--if-exists', '--username', 'recovery_test', restoredDatabase], {
+      stdio: 'inherit',
+    }),
+    'Could not reset the restored rehearsal database',
+  );
+  requireSuccess(
+    postgresTool('createdb', ['--username', 'recovery_test', restoredDatabase], {
+      stdio: 'inherit',
+    }),
+    'Could not create the fresh restore target',
+  );
+  requireSuccess(
+    postgresTool(
+      'pg_restore',
+      [
+        '--exit-on-error',
+        '--no-owner',
+        '--no-privileges',
+        '--username',
+        'recovery_test',
+        '--dbname',
+        restoredDatabase,
+        archive,
+      ],
+      { stdio: 'inherit' },
+    ),
+    'Restore into the fresh rehearsal database failed',
+  );
 
   assert.equal(psql(restoredDatabase, 'SELECT current_database();', true), restoredDatabase);
   assertMigrationLedger(restoredDatabase, expectedMigrations);
+  objectPhase('restore');
   psql(restoredDatabase, verifyFixtureSql);
+  const restoredEvidence = psql(
+    restoredDatabase,
+    `SELECT json_build_object(
+    'storageKey',storage_key,'sha256',sha256_hash,'size',file_size_bytes,'mimeType',mime_type)::text
+    FROM evidence_items WHERE id='50000000-0000-4000-8000-000000000001';`,
+    true,
+  );
+  objectPhase('verify', restoredEvidence);
   assertRestoredSchema(sourceSchema, databaseSchema(restoredDatabase));
-  console.log('PASS: forward-migrated schema, migration history, linked fixtures, evidence metadata and audit history restored into a separate fresh database');
-  console.log('NOTE: this rehearsal validates PostgreSQL only; private evidence object bytes and provider-managed backup automation are outside its scope.');
+  recoveryPassed = true;
+  console.log(
+    'PASS: forward-migrated schema, migration history, linked fixtures, evidence metadata and audit history restored into a separate fresh database',
+  );
+  console.log(
+    'NOTE: isolated synthetic PostgreSQL/Moto recovery only; managed-provider backups, actual customer volumes and agreed RPO/RTO require hosted rehearsal.',
+  );
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   process.exitCode = 1;
@@ -201,8 +304,43 @@ try {
       const cleanup = composeRun(['down', '--volumes', '--remove-orphans'], { stdio: 'inherit' });
       if (cleanup.status !== 0) process.exitCode = process.exitCode || cleanup.status || 1;
     } catch (error) {
-      console.error(`Recovery rehearsal cleanup failed: ${error instanceof Error ? error.message : error}`);
+      console.error(
+        `Recovery rehearsal cleanup failed: ${error instanceof Error ? error.message : error}`,
+      );
       process.exitCode = 1;
     }
   }
+  const revision = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
+  fs.writeFileSync(
+    reportPath,
+    JSON.stringify(
+      {
+        status: recoveryPassed && !process.exitCode ? 'passed' : 'failed',
+        commit: revision.status === 0 ? revision.stdout.trim() : null,
+        startedAt: recoveryStartedAt,
+        completedAt: new Date().toISOString(),
+        scope: 'isolated synthetic PostgreSQL16 and Moto5.2.3; not managed-provider recovery',
+        verified: recoveryPassed
+          ? [
+              'logical-schema',
+              'migration-ledger',
+              'linked-records',
+              'audit-history',
+              'evidence-hash-size-key',
+              'private-object-bytes',
+              'historical-versions',
+              'version-id-map',
+              'delete-marker',
+              'encryption',
+              'private-acl',
+              'public-access-block',
+              'corrupt-head-rejected',
+              'missing-version-rejected',
+            ]
+          : [],
+      },
+      null,
+      2,
+    ),
+  );
 }
