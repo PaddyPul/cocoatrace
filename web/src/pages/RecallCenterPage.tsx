@@ -32,6 +32,7 @@ export default function RecallCenterPage() {
   const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [deadlineHours, setDeadlineHours] = useState('24');
   const [referenceCode, setReferenceCode] = useState('');
   const [activationReview, setActivationReview] = useState<{
     referenceCode: string;
@@ -39,6 +40,7 @@ export default function RecallCenterPage() {
     reason: string;
     instructions: string;
     severity: 'advisory' | 'warning' | 'critical';
+    acknowledgementDeadlineHours: number;
     lots: { lotId: string; quantityKg: number | undefined }[];
   } | null>(null);
   const [title, setTitle] = useState('');
@@ -63,6 +65,7 @@ export default function RecallCenterPage() {
       reason !== '' ||
       recallQuantity !== '' ||
       recallLotId !== (lots[0]?.id || '') ||
+      deadlineHours !== '24' ||
       severity !== 'warning' ||
       instructions !==
         'Stop distribution and hold the affected lot. Contact the issuing organization for instructions.');
@@ -76,6 +79,7 @@ export default function RecallCenterPage() {
         setTitle('');
         setReason('');
         setRecallQuantity('');
+        setDeadlineHours('24');
         setSeverity('warning');
         setInstructions(
           'Stop distribution and hold the affected lot. Contact the issuing organization for instructions.',
@@ -159,6 +163,14 @@ export default function RecallCenterPage() {
       setError('Suspect quantity must be a positive number.');
       return;
     }
+    if (
+      !Number.isInteger(Number(deadlineHours)) ||
+      Number(deadlineHours) < 1 ||
+      Number(deadlineHours) > 168
+    ) {
+      setError('Acknowledgement deadline must be between 1 and 168 whole hours.');
+      return;
+    }
     setError('');
     setActivationReview({
       referenceCode,
@@ -166,6 +178,7 @@ export default function RecallCenterPage() {
       reason,
       instructions,
       severity,
+      acknowledgementDeadlineHours: Number(deadlineHours),
       lots: [{ lotId: recallLotId, quantityKg: quantity }],
     });
   };
@@ -177,6 +190,7 @@ export default function RecallCenterPage() {
       await recallsApi.create(activationReview);
       setActivationReview(null);
       clearUnsaved();
+      setDeadlineHours('24');
       setSeverity('warning');
       setInstructions(
         'Stop distribution and hold the affected lot. Contact the issuing organization for instructions.',
@@ -613,6 +627,23 @@ export default function RecallCenterPage() {
                 value={instructions}
                 onChange={(event) => setInstructions(event.target.value)}
               />
+              <label>
+                Acknowledgement deadline (hours after activation)
+                <input
+                  type="number"
+                  min="1"
+                  max="168"
+                  step="1"
+                  aria-label="Acknowledgement deadline hours"
+                  value={deadlineHours}
+                  onChange={(event) => setDeadlineHours(event.target.value)}
+                  className="form-input"
+                />
+                <span className="text-xs">
+                  Default 24 hours; choose urgency for this recall. Overdue notices require contact
+                  or escalation and never release safety holds.
+                </span>
+              </label>
               <select
                 className="form-select"
                 value={severity}
@@ -678,7 +709,7 @@ export default function RecallCenterPage() {
         title="Review recall activation"
         message={
           activationReview
-            ? `Activate ${activationReview.referenceCode}: ${activationReview.title}. Suspect lot ${activationReview.lots[0].lotId}, ${activationReview.lots[0].quantityKg === undefined ? 'full lot' : `${activationReview.lots[0].quantityKg} kg`}; severity ${activationReview.severity}. Reason: ${activationReview.reason}. Instructions: ${activationReview.instructions}. Activation publishes the notice, holds affected material and descendants, withdraws affected supply and queues eligible contact notices. The server recalculates affected scope; resolution requires verified recovery.`
+            ? `Activate ${activationReview.referenceCode}: ${activationReview.title}. Suspect lot ${activationReview.lots[0].lotId}, ${activationReview.lots[0].quantityKg === undefined ? 'full lot' : `${activationReview.lots[0].quantityKg} kg`}; severity ${activationReview.severity}; acknowledgement deadline ${activationReview.acknowledgementDeadlineHours} hours after activation. Reason: ${activationReview.reason}. Instructions: ${activationReview.instructions}. Activation publishes the notice, holds affected material and descendants, withdraws affected supply and queues eligible contact notices. The server recalculates affected scope; resolution requires verified recovery.`
             : ''
         }
         confirmLabel="Confirm recall activation"

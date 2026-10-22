@@ -289,6 +289,7 @@ test('recall activation reviews scope before writing and retains the draft after
   });
   await page.goto('/recalls');
   await page.getByRole('button', { name: 'Activate recall', exact: true }).click();
+  await page.getByLabel('Acknowledgement deadline hours', { exact: true }).fill('12');
   await page.getByPlaceholder('Reference code *', { exact: true }).fill('REVIEW-1');
   await page
     .getByPlaceholder('Public notice title *', { exact: true })
@@ -298,6 +299,7 @@ test('recall activation reviews scope before writing and retains the draft after
   const review = page.getByRole('dialog', { name: 'Review recall activation', exact: true });
   await expect(review).toContainText('lot-review');
   await expect(review).toContainText('holds affected material');
+  await expect(review).toContainText('acknowledgement deadline 12 hours');
   expect(writes).toBe(0);
   await review.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(page.getByPlaceholder('Reason *', { exact: true })).toHaveValue(
@@ -307,4 +309,7 @@ test('recall activation reviews scope before writing and retains the draft after
   await review.getByRole('button', { name: 'Confirm recall activation', exact: true }).click();
   await expect(review.getByRole('alert')).toContainText('Recall scope changed');
   expect(writes).toBe(1);
+  await expect(page.getByLabel('Acknowledgement deadline hours', { exact: true })).toHaveValue(
+    '12',
+  );
 });

@@ -34,6 +34,7 @@ export const evidence = {
       linkedEntityType: string;
       linkedEntityId: string;
       claimDescription?: string;
+      documentExpiresAt?: string;
     },
   ) => {
     return api<{ uploadUrl: string }>('POST', '/evidence/upload-intents', {
@@ -44,6 +45,7 @@ export const evidence = {
       linkedEntityType: data.linkedEntityType,
       linkedEntityId: data.linkedEntityId,
       claimDescription: data.claimDescription,
+      documentExpiresAt: data.documentExpiresAt,
     }).then(async ({ uploadUrl }) => {
       const res = await fetch(API_BASE + uploadUrl, {
         method: 'PUT',
@@ -57,11 +59,26 @@ export const evidence = {
     });
   },
   download: async (id: string, fileName: string) => {
-    const res = await fetch(`${API_BASE}/evidence/${id}/download`, {
+    const link = await api<{ downloadUrl: string; expiresAt: string }>(
+      'POST',
+      `/evidence/${id}/download-links`,
+      {},
+    );
+    if (
+      typeof link.downloadUrl !== 'string' ||
+      !link.downloadUrl.startsWith(`/evidence/${id}/download?`)
+    )
+      throw new Error('Invalid private download response');
+    const res = await fetch(`${API_BASE}${link.downloadUrl}`, {
       credentials: 'include',
       headers: getToken() ? { Authorization: `Bearer ${getToken()}` } : {},
     });
-    if (!res.ok) throw new Error('Could not download document');
+    if (!res.ok) {
+      const detail = await res.json().catch(() => null);
+      throw new Error(
+        typeof detail?.error === 'string' ? detail.error : 'Could not download document',
+      );
+    }
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');

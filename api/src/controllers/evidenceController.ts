@@ -1,3 +1,8 @@
+import {
+  issueDownloadLink,
+  verifyDownloadLink,
+  revalidateDownloadAccess,
+} from '../modules/evidenceWorkflow/downloadLinks';
 import { Request, Response } from 'express';
 import { respondWithEvidenceDownload } from '../modules/evidenceWorkflow/httpResponse';
 import { completeUploadIntent, createUploadIntent } from '../services/evidenceUploadService';
@@ -30,5 +35,16 @@ export async function uploadEvidenceContent(req: Request, res: Response): Promis
 }
 
 export async function downloadEvidence(req: Request, res: Response): Promise<void> {
-  await respondWithEvidenceDownload(req.user!, req.params.id, res);
+  verifyDownloadLink(req.user!, req.params.id, req.query);
+  await respondWithEvidenceDownload(
+    req.user!,
+    req.params.id,
+    res,
+    () => revalidateDownloadAccess(req.authToken!, req.params.id, req.query),
+    () => verifyDownloadLink(req.user!, req.params.id, req.query),
+  );
+}
+
+export async function createEvidenceDownloadLink(req: Request, res: Response): Promise<void> {
+  res.status(201).json(await issueDownloadLink(req.user!, req.params.id));
 }

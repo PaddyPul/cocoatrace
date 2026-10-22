@@ -74,6 +74,7 @@ export const recalls = {
   list: () => api<import('../types').RecallNotice[]>('GET', '/recalls'),
   create: (data: {
     referenceCode: string;
+    acknowledgementDeadlineHours?: number;
     title: string;
     reason: string;
     instructions: string;

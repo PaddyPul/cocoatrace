@@ -216,6 +216,10 @@
     {
       "path": "api/src/migrations/052_invitation_delivery_outbox.ts",
       "sha256": "40d75c2fd1828d95dea85ea4d4cef2ca84c64f8d9ff31a30de76543ee2b733eb"
+    },
+    {
+      "path": "api/src/migrations/053_timed_evidence_recall.ts",
+      "sha256": "f4de75fcff0a2ad5b9b00c3d0cecd3823571eaa07c6795accd9f78def0dc1bb2"
     }
   ]
 }

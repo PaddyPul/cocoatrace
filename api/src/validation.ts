@@ -225,6 +225,7 @@ export const certificateActionSchema = z.object({
 });
 
 export const createEvidenceUploadIntentSchema = z.object({
+  documentExpiresAt: z.string().datetime({ offset: true }).optional(),
   type: z.string().trim().min(1).max(100),
   fileName: z.string().trim().min(1).max(255),
   mimeType: z.enum(['application/pdf','image/jpeg','image/png']),
@@ -267,6 +268,7 @@ export const productProfileSchema = z.object({
 });
 
 export const createRecallSchema = z.object({
+  acknowledgementDeadlineHours: z.number().int().min(1).max(168).default(24),
   referenceCode: z.string().min(3).max(80),
   title: z.string().min(3).max(160),
   reason: z.string().min(3).max(1000),

@@ -25,7 +25,7 @@ import { canAccessEvidenceEntity, EvidenceEntityType } from './resourcePolicy';
 
 const evidenceColumns = `id,type,file_name,file_size_bytes,mime_type,detected_mime_type,
   sha256_hash,validation_status,malware_scan_status,malware_scanner_engine,malware_scanned_at,
-  review_status,linked_entity_type,linked_entity_id,claim_description,created_at`;
+  review_status,linked_entity_type,linked_entity_id,claim_description,document_expires_at,created_at`;
 const intentLifetimeSeconds = 15 * 60;
 
 export type CreateEvidenceUploadIntent = {
@@ -36,6 +36,7 @@ export type CreateEvidenceUploadIntent = {
   linkedEntityType: EvidenceEntityType;
   linkedEntityId: string;
   claimDescription?: string;
+  documentExpiresAt?: string;
 };
 
 export async function requireDocumentRole(
@@ -188,8 +189,8 @@ export async function createUploadIntent(actor: JwtPayload, rawInput: CreateEvid
     await client.query(
       `INSERT INTO evidence_upload_intents
         (id,uploader_user_id,uploader_organization_id,evidence_type,original_file_name,claimed_mime_type,
-         declared_size_bytes,linked_entity_type,linked_entity_id,claim_description,quarantine_object_key,expires_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+         declared_size_bytes,linked_entity_type,linked_entity_id,claim_description,quarantine_object_key,expires_at,document_expires_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
       [
         id,
         actor.id,
@@ -203,6 +204,7 @@ export async function createUploadIntent(actor: JwtPayload, rawInput: CreateEvid
         input.claimDescription || '',
         quarantineObjectKey,
         expiresAt,
+        input.documentExpiresAt ?? null,
       ],
     );
     await registerObject(client, {
@@ -213,7 +215,14 @@ export async function createUploadIntent(actor: JwtPayload, rawInput: CreateEvid
       uploadIntentId: id,
       reason: 'upload_quarantine',
     });
-    await recordAudit(client, actor, 'evidence.upload_intent.create', 'evidence_upload_intent', id);
+    await recordAudit(
+      client,
+      actor,
+      'evidence.upload_intent.create',
+      'evidence_upload_intent',
+      id,
+      input.documentExpiresAt ? { documentExpiresAt: input.documentExpiresAt } : {},
+    );
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined);
@@ -426,8 +435,8 @@ export async function completeUploadIntent(
         `INSERT INTO evidence_items
           (uploader_user_id,uploader_organization_id,type,file_name,file_size_bytes,mime_type,detected_mime_type,
            sha256_hash,storage_key,storage_provider,validation_status,malware_scan_status,malware_scanner_engine,
-           malware_scanned_at,review_status,linked_entity_type,linked_entity_id,claim_description)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'validated','clean',$11,NOW(),'submitted',$12,$13,$14) RETURNING ${evidenceColumns}`,
+           malware_scanned_at,review_status,linked_entity_type,linked_entity_id,claim_description,document_expires_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'validated','clean',$11,NOW(),'submitted',$12,$13,$14,$15) RETURNING ${evidenceColumns}`,
         [
           intent.uploader_user_id,
           intent.uploader_organization_id,
@@ -443,6 +452,7 @@ export async function completeUploadIntent(
           intent.linked_entity_type,
           intent.linked_entity_id,
           intent.claim_description,
+          intent.document_expires_at ?? null,
         ],
       );
       evidence = inserted.rows[0];
@@ -459,7 +469,9 @@ export async function completeUploadIntent(
         'evidence.upload.complete',
         'evidence_item',
         evidence.id,
-        {},
+        intent.document_expires_at
+          ? { documentExpiresAt: new Date(intent.document_expires_at).toISOString() }
+          : {},
         { newStateHash: hash },
       );
       await client.query('COMMIT');

@@ -12,7 +12,7 @@ import { Execute, literal, pageResult, parsePage, text, withCatalogRead } from '
 // Metadata only: never expose storage paths, signed URLs or uploader identity.
 const columns = `id,type,file_name,file_size_bytes,mime_type,detected_mime_type,
   sha256_hash,validation_status,malware_scan_status,malware_scanner_engine,malware_scanned_at,
-  review_status,replaces_evidence_id,superseded_by_evidence_id,linked_entity_type,linked_entity_id,claim_description,created_at`;
+  review_status,replaces_evidence_id,superseded_by_evidence_id,linked_entity_type,linked_entity_id,claim_description,document_expires_at,created_at`;
 
 async function scope(execute: Execute, actor: Actor, parameters: Record<string, unknown>) {
   const entityType = text(parameters.entityType, 'entity type', 32);

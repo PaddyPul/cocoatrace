@@ -35,6 +35,12 @@ router.get(
   evidenceController.downloadEvidence,
 );
 router.post(
+  '/evidence/:id/download-links',
+  requireAuth,
+  requirePermission('evidence.read'),
+  evidenceController.createEvidenceDownloadLink,
+);
+router.post(
   '/evidence/upload-intents',
   requireAuth,
   requirePermission('evidence.upload'),

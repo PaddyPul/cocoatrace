@@ -99,12 +99,14 @@
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
     "api/src/routes/evidence.ts": {
-      "scope": "Metadata/download inherits linked-resource and document-release policy. Upload capability validates signature, intent, live actor, scope, byte/storage admission before parsing or storage.",
+      "scope": "Metadata/download inherits linked-resource and document-release policy. Upload capability validates signature, intent, live actor, scope, byte/storage admission before parsing or storage. Download-link issuance and redemption require current evidence read authority; user/session binding, bounded expiry and final post-provider reauthorization do not grant anonymous sharing.",
       "evidence": [
         "api/src/controllers/evidenceController.ts",
         "api/src/middleware/evidenceContent.ts",
         "api/test/integration/multiTenantApi.integration.test.ts",
-        "api/test/integration/evidenceTransferBudgets.integration.test.ts"
+        "api/test/integration/evidenceTransferBudgets.integration.test.ts",
+        "api/src/modules/evidenceWorkflow/downloadLinks.ts",
+        "api/test/integration/timedEvidenceRecall.integration.test.ts"
       ],
       "remaining": "Evidence pointers identify existing policy/regression suites; they are not proof of every route/resource/role combination. Universal foreign-ID, multi-role, suspension and deployment acceptance remains under QLT-002/SEC-006."
     },
@@ -3624,6 +3626,25 @@
       ],
       "entryControls": [],
       "handler": "contractController.confirmPaymentTerms",
+      "authentication": "session"
+    },
+    {
+      "method": "POST",
+      "path": "/evidence/:id/download-links",
+      "source": "api/src/routes/evidence.ts",
+      "guards": [
+        {
+          "kind": "session"
+        },
+        {
+          "kind": "all",
+          "permissions": [
+            "evidence.read"
+          ]
+        }
+      ],
+      "entryControls": [],
+      "handler": "evidenceController.createEvidenceDownloadLink",
       "authentication": "session"
     },
     {

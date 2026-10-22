@@ -127,6 +127,31 @@ describe('private evidence download boundary', () => {
     prepared.lease.responseEnded();
     expect(deps.audit).not.toHaveBeenCalled();
   });
+  it('holds transfer admission through final asynchronous authorization after a client disconnect', async () => {
+    const { deps, release } = ports();
+    let finish = () => {};
+    let entered = () => {};
+    const started = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
+    const waiting = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    const prepared = await prepareEvidenceDownload(actor, 'id', deps, async () => {
+      entered();
+      await waiting;
+    });
+    if (!('lease' in prepared)) throw new Error('Expected lease');
+    const read = prepared.lease.read();
+    await started;
+    prepared.lease.responseEnded();
+    expect(release).not.toHaveBeenCalled();
+    expect(deps.audit).not.toHaveBeenCalled();
+    finish();
+    await read;
+    expect(release).toHaveBeenCalledTimes(1);
+    expect(deps.audit).toHaveBeenCalledTimes(1);
+  });
   it('retains the original uploads root and rejects root/sibling/traversal paths', () => {
     expect(legacyUploadsRoot).toBe(path.resolve(__dirname, '../../../uploads'));
     expect(containedLegacyPath(path.join(legacyUploadsRoot, 'private.pdf'))).toBe(

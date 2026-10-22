@@ -121,7 +121,12 @@ test('evidence download reads the latest shared bearer token after feature extra
   environment(async () => {
     setAuthToken('download-session');
     globalThis.fetch = async (url, options) => {
-      assert.equal(url, '/api/evidence/doc/download');
+      if (url === '/api/evidence/doc/download-links')
+        return Response.json({
+          downloadUrl: '/evidence/doc/download?expires=1234567890&signature=test',
+          expiresAt: '2026-10-22T00:00:00Z',
+        });
+      assert.equal(url, '/api/evidence/doc/download?expires=1234567890&signature=test');
       assert.equal(options.headers.Authorization, 'Bearer download-session');
       assert.equal(options.credentials, 'include');
       return new Response('', { status: 403 });
