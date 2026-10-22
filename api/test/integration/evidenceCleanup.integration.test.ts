@@ -2,6 +2,10 @@ import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import {
+  scanPendingEvidence,
+  EVIDENCE_MAINTENANCE_ACTOR,
+} from '../../src/modules/evidenceMaintenance/scanPending';
 import app from '../../src/app';
 import * as auditWriter from '../../src/services/auditWriter';
 import { config } from '../../src/config/env';
@@ -119,6 +123,8 @@ beforeAll(async () => {
 });
 afterEach(async () => {
   vi.restoreAllMocks();
+  await query('DROP TRIGGER IF EXISTS integration_evidence_lifecycle_failure ON audit_events');
+  await query('DROP FUNCTION IF EXISTS integration_reject_evidence_lifecycle_audit()');
   const ownKeys = keys.splice(0);
   try {
     await query('DELETE FROM evidence_object_cleanup WHERE organization_id=$1', [organizationId]);
@@ -469,5 +475,200 @@ describe('durable private evidence cleanup and conservative tenant quota', () =>
         ).rows[0].count,
       ).toBe(1);
     }
+  });
+});
+
+async function rejectLifecycleAudit(action: string) {
+  // Identifiers are fixed; values are restricted to the test-owned UUID and known actions.
+  if (!/^evidence\.[a-z_.]+$/.test(action)) throw new Error('Invalid test action');
+  await query(`CREATE FUNCTION integration_reject_evidence_lifecycle_audit() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN
+      IF NEW.actor_organization_id='${organizationId}'::uuid AND NEW.action='${action}' THEN
+        RAISE EXCEPTION 'Injected lifecycle audit failure';
+      END IF;
+      RETURN NEW;
+    END $$`);
+  await query(`CREATE TRIGGER integration_evidence_lifecycle_failure BEFORE INSERT ON audit_events
+    FOR EACH ROW EXECUTE FUNCTION integration_reject_evidence_lifecycle_audit()`);
+}
+async function lifecycleEvents(entityId: string, action: string) {
+  return (
+    await query(
+      'SELECT actor_user_id,actor_organization_id,metadata FROM audit_events WHERE entity_id=$1 AND action=$2',
+      [entityId, action],
+    )
+  ).rows;
+}
+describe('audited private evidence lifecycle', () => {
+  it('records release readiness without filenames or object keys and refuses bytes when its audit fails', async () => {
+    const key = `evidence/${config.environment}/${crypto.randomUUID()}`;
+    keys.push(key);
+    await evidenceStorage().put(key, content, 'application/pdf');
+    const id = await proof(key);
+    const response = await request(app)
+      .get(`/evidence/${id}/download`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    const events = await lifecycleEvents(id, 'evidence.download.release_ready');
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      actor_user_id: userId,
+      actor_organization_id: organizationId,
+      metadata: { bytes: content.length, outcome: 'release_ready' },
+    });
+    expect(JSON.stringify(events)).not.toContain(key);
+    expect(JSON.stringify(events)).not.toContain('cleanup.pdf');
+    await rejectLifecycleAudit('evidence.download.release_ready');
+    const failed = await request(app)
+      .get(`/evidence/${id}/download`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(failed.status).toBe(500);
+    expect(failed.headers['content-disposition']).toBeUndefined();
+    expect(await lifecycleEvents(id, 'evidence.download.release_ready')).toHaveLength(1);
+    await query("UPDATE evidence_items SET malware_scan_status='infected' WHERE id=$1", [id]);
+    expect(
+      (await request(app).get(`/evidence/${id}/download`).set('Authorization', `Bearer ${token}`))
+        .status,
+    ).toBe(423);
+    expect(await lifecycleEvents(id, 'evidence.download.release_ready')).toHaveLength(1);
+  });
+  it('commits maintenance decisions with system attribution and does not repeat already clean decisions', async () => {
+    const key = `evidence/${config.environment}/${crypto.randomUUID()}`;
+    keys.push(key);
+    const id = await proof(key, 'legacy_unscanned');
+    const options = {
+      scanner: {
+        healthcheck: vi.fn(async () => undefined),
+        scan: vi.fn(async () => ({ status: 'clean' as const, engine: 'fixture' })),
+      },
+      storage: {
+        provider: evidenceStorage().provider,
+        get: vi.fn(async () => content),
+        delete: vi.fn(),
+      },
+      logger,
+    };
+    await scanPendingEvidence(options);
+    const events = await lifecycleEvents(id, 'evidence.maintenance.clean');
+    expect(events).toHaveLength(1);
+    expect(events[0].actor_user_id).toBe(EVIDENCE_MAINTENANCE_ACTOR);
+    expect(events[0].actor_organization_id).toBe(organizationId);
+    await scanPendingEvidence(options);
+    expect(await lifecycleEvents(id, 'evidence.maintenance.clean')).toHaveLength(1);
+  });
+  it('rolls a clean maintenance decision back if its audit fails and records the fail-closed outcome', async () => {
+    const key = `evidence/${config.environment}/${crypto.randomUUID()}`;
+    keys.push(key);
+    const id = await proof(key, 'legacy_unscanned');
+    await rejectLifecycleAudit('evidence.maintenance.clean');
+    await scanPendingEvidence({
+      scanner: {
+        healthcheck: vi.fn(async () => undefined),
+        scan: vi.fn(async () => ({ status: 'clean' as const, engine: 'fixture' })),
+      },
+      storage: { get: vi.fn(async () => content), delete: vi.fn() },
+      logger,
+    });
+    expect(
+      (await query('SELECT malware_scan_status FROM evidence_items WHERE id=$1', [id])).rows[0]
+        .malware_scan_status,
+    ).toBe('scan_failed');
+    expect(await lifecycleEvents(id, 'evidence.maintenance.clean')).toHaveLength(0);
+    expect(await lifecycleEvents(id, 'evidence.maintenance.scan_failed')).toHaveLength(1);
+  });
+  it('does not queue infected bytes for deletion when the infected-decision audit rolls back', async () => {
+    const key = `evidence/${config.environment}/${crypto.randomUUID()}`;
+    keys.push(key);
+    const id = await proof(key, 'legacy_unscanned');
+    await rejectLifecycleAudit('evidence.maintenance.infected');
+    const remove = vi.fn();
+    await scanPendingEvidence({
+      scanner: {
+        healthcheck: vi.fn(async () => undefined),
+        scan: vi.fn(async () => ({
+          status: 'infected' as const,
+          engine: 'fixture',
+          signature: 'private-signature',
+        })),
+      },
+      storage: {
+        provider: evidenceStorage().provider,
+        get: vi.fn(async () => content),
+        delete: remove,
+      },
+      logger,
+    });
+    expect(
+      (await query('SELECT malware_scan_status FROM evidence_items WHERE id=$1', [id])).rows[0]
+        .malware_scan_status,
+    ).toBe('scan_failed');
+    expect(await lifecycleEvents(id, 'evidence.maintenance.infected')).toHaveLength(0);
+    expect(await ledger(key)).toBeUndefined();
+    expect(remove).not.toHaveBeenCalled();
+  });
+  it('stops maintenance if the fail-closed state and its audit cannot commit together', async () => {
+    const key = `evidence/${config.environment}/${crypto.randomUUID()}`;
+    keys.push(key);
+    const id = await proof(key, 'legacy_unscanned');
+    await rejectLifecycleAudit('evidence.maintenance.scan_failed');
+    await expect(
+      scanPendingEvidence({
+        scanner: {
+          healthcheck: vi.fn(async () => undefined),
+          scan: vi.fn(async () => {
+            throw new Error('private scanner failure');
+          }),
+        },
+        storage: { get: vi.fn(async () => content), delete: vi.fn() },
+        logger,
+      }),
+    ).rejects.toMatchObject({ code: 'EVIDENCE_SCAN_STATE_PERSIST_FAILED' });
+    expect(
+      (await query('SELECT malware_scan_status FROM evidence_items WHERE id=$1', [id])).rows[0]
+        .malware_scan_status,
+    ).toBe('legacy_unscanned');
+    expect(await lifecycleEvents(id, 'evidence.maintenance.scan_failed')).toHaveLength(0);
+  });
+  it('rolls abandoned-upload terminalization and cleanup scheduling back when their audit fails', async () => {
+    const upload = await admitted();
+    await query(
+      "UPDATE evidence_upload_intents SET expires_at=NOW()-INTERVAL '1 second' WHERE id=$1",
+      [upload.intentId],
+    );
+    await rejectLifecycleAudit('evidence.upload.abandoned');
+    await expect(runCleanupBatch({ logger })).rejects.toThrow();
+    expect(
+      (await query('SELECT status FROM evidence_upload_intents WHERE id=$1', [upload.intentId]))
+        .rows[0].status,
+    ).toBe('pending');
+    expect((await ledger(upload.key)).state).toBe('held');
+    await query('DROP TRIGGER integration_evidence_lifecycle_failure ON audit_events');
+    await runCleanupBatch({ logger });
+    expect(
+      (await query('SELECT status FROM evidence_upload_intents WHERE id=$1', [upload.intentId]))
+        .rows[0].status,
+    ).toBe('expired');
+    expect(await lifecycleEvents(upload.intentId, 'evidence.upload.abandoned')).toHaveLength(1);
+    await runCleanupBatch({ logger });
+    expect(await lifecycleEvents(upload.intentId, 'evidence.upload.abandoned')).toHaveLength(1);
+  });
+  it('retains cleanup ownership after provider deletion if its completion audit fails, then recovers once', async () => {
+    const key = await job();
+    const before = await ledger(key);
+    await rejectLifecycleAudit('evidence.cleanup.deleted');
+    await expect(cleanupObjectNow(key, { logger })).rejects.toThrow();
+    expect((await ledger(key)).state).toBe('processing');
+    expect(await evidenceStorage().get(key)).toBeNull();
+    expect(await lifecycleEvents(before.id, 'evidence.cleanup.deleted')).toHaveLength(0);
+    await query('DROP TRIGGER integration_evidence_lifecycle_failure ON audit_events');
+    await query(
+      "UPDATE evidence_object_cleanup SET lease_expires_at=NOW()-INTERVAL '1 second' WHERE id=$1",
+      [before.id],
+    );
+    await runCleanupBatch({ logger });
+    expect((await ledger(key)).state).toBe('done');
+    expect(await lifecycleEvents(before.id, 'evidence.cleanup.deleted')).toHaveLength(1);
+    expect(await cleanupObjectNow(key, { logger })).toBe(false);
+    expect(await lifecycleEvents(before.id, 'evidence.cleanup.deleted')).toHaveLength(1);
   });
 });

@@ -1,0 +1,1437 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-10-22",
+  "scope": "Every discovered HTTP write-shaped route is enumerated, including non-mutating POST calculations. Unreviewed actions are explicit. Background inventory is curated, not exhaustive discovery.",
+  "routes": [
+    {
+      "key": "DELETE /auth/mfa/keys/:id",
+      "source": "api/src/modules/mfa/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/mfa/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "DELETE /listings/:id",
+      "source": "api/src/routes/listings.ts",
+      "handler": "listingController.deleteListing",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/listings.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "PATCH /admin/support/requests/:id",
+      "source": "api/src/modules/support/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/support/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "PATCH /contracts/:id/compliance",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "contractController.updateComplianceReference",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "PATCH /contracts/:id/eudr",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "contractController.updateEudrReference",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "PATCH /contracts/:id/payment-terms",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "contractController.updatePaymentTerms",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "PATCH /listings/:id",
+      "source": "api/src/routes/listings.ts",
+      "handler": "listingController.updateListing",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/listings.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "PATCH /recalls/:id/participants/:organizationId/contact",
+      "source": "api/src/routes/publicProducts.ts",
+      "handler": "recallResponse.contact",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/publicProducts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "PATCH /shipments/:id/details",
+      "source": "api/src/routes/shipments.ts",
+      "handler": "shipmentController.updateShipmentDetails",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/shipments.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "PATCH /sourcing-requests/:id",
+      "source": "api/src/routes/sourcing.ts",
+      "handler": "controller.updateRequest",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/sourcing.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "PATCH /team/members/:id/role",
+      "source": "api/src/modules/teamMembers/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/teamMembers/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /access-applications/:id/approve",
+      "source": "api/src/modules/organizationAccess/routes.ts",
+      "handler": "controller.approve",
+      "status": "covered",
+      "boundary": "Invitation/business mutation and critical audit commit together; issuing/resending/approval also enqueue encrypted generation-bound delivery. Accept/revoke scrub queued credentials.",
+      "eventPolicy": "Delivery outbox required only for issuance/resend/approval. SMTP submission occurs after commit; bounded at-least-once recovery.",
+      "evidence": [
+        "api/src/modules/organizationAccess/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md",
+        "api/test/integration/invitationDelivery.integration.test.ts",
+        "api/src/modules/invitationDelivery/outbox.ts"
+      ],
+      "remaining": "IDN-021: real staging inbox and hosted key/recovery acceptance remain separate."
+    },
+    {
+      "key": "POST /access-applications/:id/reject",
+      "source": "api/src/modules/organizationAccess/routes.ts",
+      "handler": "controller.reject",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/organizationAccess/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /admin/access-controls/:kind/:id",
+      "source": "api/src/modules/accessControls/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/accessControls/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /admin/access-review",
+      "source": "api/src/modules/accessReview/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/accessReview/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /auth/invitations/:token/accept",
+      "source": "api/src/routes/invitations.ts",
+      "handler": "controller.acceptInvitation",
+      "status": "covered",
+      "boundary": "Invitation/business mutation and critical audit commit together; issuing/resending/approval also enqueue encrypted generation-bound delivery. Accept/revoke scrub queued credentials.",
+      "eventPolicy": "Delivery outbox required only for issuance/resend/approval. SMTP submission occurs after commit; bounded at-least-once recovery.",
+      "evidence": [
+        "api/src/routes/invitations.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md",
+        "api/test/integration/invitationDelivery.integration.test.ts",
+        "api/src/modules/invitationDelivery/outbox.ts"
+      ],
+      "remaining": "IDN-021: real staging inbox and hosted key/recovery acceptance remain separate."
+    },
+    {
+      "key": "POST /auth/login",
+      "source": "api/src/routes/auth.ts",
+      "handler": "authController.login",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/auth.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /auth/logout",
+      "source": "api/src/routes/auth.ts",
+      "handler": "authController.logout",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/auth.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /auth/mfa/authentication/options",
+      "source": "api/src/modules/mfa/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/mfa/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /auth/mfa/authentication/verify",
+      "source": "api/src/modules/mfa/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/mfa/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /auth/mfa/registration/options",
+      "source": "api/src/modules/mfa/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/mfa/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /auth/mfa/registration/verify",
+      "source": "api/src/modules/mfa/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/mfa/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /auth/password/change",
+      "source": "api/src/routes/auth.ts",
+      "handler": "authController.updatePassword",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/auth.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /auth/password/forgot",
+      "source": "api/src/routes/auth.ts",
+      "handler": "authController.forgotPassword",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/auth.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /auth/password/reset",
+      "source": "api/src/routes/auth.ts",
+      "handler": "authController.completePasswordReset",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/auth.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /auth/request-access",
+      "source": "api/src/modules/organizationAccess/routes.ts",
+      "handler": "controller.requestAccess",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/organizationAccess/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /auth/request-access/verify",
+      "source": "api/src/modules/organizationAccess/routes.ts",
+      "handler": "controller.verifyEmail",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/organizationAccess/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /batches",
+      "source": "api/src/routes/batches.ts",
+      "handler": "batchController.createBatch",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/batches.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /batches/:id/attest",
+      "source": "api/src/routes/batches.ts",
+      "handler": "batchController.attestBatch",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/batches.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /batches/:id/push-to-marketplace",
+      "source": "api/src/routes/batches.ts",
+      "handler": "batchController.pushToMarketplace",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/batches.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /certificates",
+      "source": "api/src/routes/certificates.ts",
+      "handler": "certController.issueCertificate",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/certificates.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /certificates/:id/:action",
+      "source": "api/src/routes/certificates.ts",
+      "handler": "certController.updateCertificateStatus",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/certificates.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/acceptance",
+      "source": "api/src/modules/agreements/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/agreements/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/cancellation",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "cancellationController.request",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/cancellation/:requestId/approve",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "cancellationController.approve",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/cancellation/:requestId/reject",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "cancellationController.reject",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/delivery/accept",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "deliveryController.accept",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/delivery/discrepancy",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "deliveryController.report",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/delivery/resolution",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "deliveryController.propose",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/delivery/resolution/approve",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "deliveryController.approve",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/fee/credit",
+      "source": "api/src/routes/feeEnforcement.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/feeEnforcement.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/fee/refund/confirm",
+      "source": "api/src/routes/feeRefunds.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/feeRefunds.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/fee/refund/reject",
+      "source": "api/src/routes/feeRefunds.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/feeRefunds.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/fee/refund/request",
+      "source": "api/src/routes/feeRefunds.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/feeRefunds.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/fee/refund/send",
+      "source": "api/src/routes/feeRefunds.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/feeRefunds.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/fee/statement-delivery",
+      "source": "api/src/routes/fees.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/fees.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/fee/submissions/:submissionId/review",
+      "source": "api/src/routes/fees.ts",
+      "handler": "controller.review",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/fees.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/fee/submit",
+      "source": "api/src/routes/fees.ts",
+      "handler": "controller.submit",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/fees.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/fee/terms",
+      "source": "api/src/routes/feeEnforcement.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/feeEnforcement.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/fee/write-off",
+      "source": "api/src/routes/fees.ts",
+      "handler": "controller.writeOff",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/fees.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/payment-requests",
+      "source": "api/src/routes/payments.ts",
+      "handler": "paymentController.createPaymentRequest",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/payments.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /contracts/:id/payment-terms/confirm",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "contractController.confirmPaymentTerms",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /evidence/:id/replacement",
+      "source": "api/src/routes/documentReview.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/documentReview.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /evidence/:id/review",
+      "source": "api/src/routes/documentReview.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/documentReview.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /evidence/upload-intents",
+      "source": "api/src/routes/evidence.ts",
+      "handler": "evidenceController.createEvidenceUploadIntent",
+      "status": "covered",
+      "boundary": "Upload intent/reservation/audit and completion/retention/audit share database transactions. Provider bytes are outside PostgreSQL and compensated through durable cleanup.",
+      "eventPolicy": "Cleanup ownership is registered before provider writes; terminal upload failures retain recovery work.",
+      "evidence": [
+        "api/src/routes/evidence.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md",
+        "api/src/services/evidenceUploadService.ts",
+        "api/test/integration/evidenceCleanup.integration.test.ts"
+      ],
+      "remaining": "UPL-013/018: retention/backup policy and private restore acceptance remain open."
+    },
+    {
+      "key": "POST /farms",
+      "source": "api/src/routes/farms.ts",
+      "handler": "farmController.createFarm",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/farms.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /farms/:id/plots",
+      "source": "api/src/routes/farms.ts",
+      "handler": "farmController.createPlot",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/farms.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /holdings",
+      "source": "api/src/routes/holdings.ts",
+      "handler": "holdingController.createHolding",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/holdings.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /holdings/:id/split",
+      "source": "api/src/routes/holdings.ts",
+      "handler": "holdingController.splitHolding",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/holdings.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /holdings/:id/transfer",
+      "source": "api/src/routes/holdings.ts",
+      "handler": "holdingController.transferHolding",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/holdings.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /inventory/direct",
+      "source": "api/src/routes/batches.ts",
+      "handler": "batchController.createDirectInventory",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/batches.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /invitations",
+      "source": "api/src/routes/invitations.ts",
+      "handler": "controller.createInvitation",
+      "status": "covered",
+      "boundary": "Invitation/business mutation and critical audit commit together; issuing/resending/approval also enqueue encrypted generation-bound delivery. Accept/revoke scrub queued credentials.",
+      "eventPolicy": "Delivery outbox required only for issuance/resend/approval. SMTP submission occurs after commit; bounded at-least-once recovery.",
+      "evidence": [
+        "api/src/routes/invitations.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md",
+        "api/test/integration/invitationDelivery.integration.test.ts",
+        "api/src/modules/invitationDelivery/outbox.ts"
+      ],
+      "remaining": "IDN-021: real staging inbox and hosted key/recovery acceptance remain separate."
+    },
+    {
+      "key": "POST /invitations/:id/resend",
+      "source": "api/src/routes/invitations.ts",
+      "handler": "controller.resendInvitation",
+      "status": "covered",
+      "boundary": "Invitation/business mutation and critical audit commit together; issuing/resending/approval also enqueue encrypted generation-bound delivery. Accept/revoke scrub queued credentials.",
+      "eventPolicy": "Delivery outbox required only for issuance/resend/approval. SMTP submission occurs after commit; bounded at-least-once recovery.",
+      "evidence": [
+        "api/src/routes/invitations.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md",
+        "api/test/integration/invitationDelivery.integration.test.ts",
+        "api/src/modules/invitationDelivery/outbox.ts"
+      ],
+      "remaining": "IDN-021: real staging inbox and hosted key/recovery acceptance remain separate."
+    },
+    {
+      "key": "POST /invitations/:id/revoke",
+      "source": "api/src/routes/invitations.ts",
+      "handler": "controller.revokeInvitation",
+      "status": "covered",
+      "boundary": "Invitation/business mutation and critical audit commit together; issuing/resending/approval also enqueue encrypted generation-bound delivery. Accept/revoke scrub queued credentials.",
+      "eventPolicy": "Delivery outbox required only for issuance/resend/approval. SMTP submission occurs after commit; bounded at-least-once recovery.",
+      "evidence": [
+        "api/src/routes/invitations.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md",
+        "api/test/integration/invitationDelivery.integration.test.ts",
+        "api/src/modules/invitationDelivery/outbox.ts"
+      ],
+      "remaining": "IDN-021: real staging inbox and hosted key/recovery acceptance remain separate."
+    },
+    {
+      "key": "POST /listings",
+      "source": "api/src/routes/listings.ts",
+      "handler": "listingController.createListing",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/listings.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /listings/:id/offers",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "contractController.makeOffer",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /listings/:id/renew",
+      "source": "api/src/modules/listingLifecycle/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/listingLifecycle/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /notifications/:fingerprint/read",
+      "source": "api/src/modules/notifications/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/notifications/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /offers/:id/accept",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "contractController.acceptOffer",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /offers/:id/reject",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "contractController.rejectOffer",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /offers/:id/withdraw",
+      "source": "api/src/routes/contracts.ts",
+      "handler": "withdrawOffer",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/contracts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /operations/alerts/:id/retry",
+      "source": "api/src/routes/operations.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/operations.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /operations/cleanup/:id/retry",
+      "source": "api/src/routes/operations.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/operations.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /operations/email/:queue/:id/retry",
+      "source": "api/src/routes/operations.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/operations.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /organizations",
+      "source": "api/src/routes/organizations.ts",
+      "handler": "orgController.createOrganization",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/organizations.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /payment-installments/:id/confirm",
+      "source": "api/src/routes/payments.ts",
+      "handler": "paymentController.confirmInstallmentPayment",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/payments.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /payment-installments/:id/reject",
+      "source": "api/src/routes/payments.ts",
+      "handler": "paymentController.rejectInstallmentPayment",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/payments.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /payment-installments/:id/submit",
+      "source": "api/src/routes/payments.ts",
+      "handler": "paymentController.submitInstallmentPayment",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/payments.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /payment-issues/:id/approve-resolution",
+      "source": "api/src/routes/payments.ts",
+      "handler": "paymentOperationsController.approve",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/payments.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /payment-issues/:id/propose-resolution",
+      "source": "api/src/routes/payments.ts",
+      "handler": "paymentOperationsController.propose",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/payments.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /payment-requests/:id/issues",
+      "source": "api/src/routes/payments.ts",
+      "handler": "paymentOperationsController.openIssue",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/payments.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /payment-requests/:id/pay",
+      "source": "api/src/routes/payments.ts",
+      "handler": "paymentController.payPaymentRequest",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/payments.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /payment-requests/:id/remind",
+      "source": "api/src/routes/payments.ts",
+      "handler": "paymentOperationsController.remind",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/payments.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /payment-requests/:id/security",
+      "source": "api/src/routes/payments.ts",
+      "handler": "paymentController.submitPaymentSecurity",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/payments.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /payment-requests/:id/security/confirm",
+      "source": "api/src/routes/payments.ts",
+      "handler": "paymentController.confirmPaymentSecurity",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/payments.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /payment-requests/:id/submit-documents",
+      "source": "api/src/routes/payments.ts",
+      "handler": "paymentController.submitPaymentDocuments",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/payments.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /pilot-feedback",
+      "source": "api/src/routes/workspace.ts",
+      "handler": "controller.createFeedback",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/workspace.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /product-profiles",
+      "source": "api/src/routes/publicProducts.ts",
+      "handler": "controller.upsertProfile",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/publicProducts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /product-profiles/:id/publish",
+      "source": "api/src/routes/publicProducts.ts",
+      "handler": "controller.publishProfile",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/publicProducts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /public/products/:slug/scans",
+      "source": "api/src/routes/publicProducts.ts",
+      "handler": "controller.recordScan",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/publicProducts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /recalls",
+      "source": "api/src/routes/publicProducts.ts",
+      "handler": "controller.createRecall",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/publicProducts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /recalls/:id/acknowledge",
+      "source": "api/src/routes/publicProducts.ts",
+      "handler": "recallResponse.acknowledge",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/publicProducts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /recalls/:id/resolve",
+      "source": "api/src/routes/publicProducts.ts",
+      "handler": "recallResponse.resolve",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/publicProducts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /shipments/:id/dispatch-acknowledgement",
+      "source": "api/src/modules/dispatchAcknowledgement/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/dispatchAcknowledgement/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /shipments/:id/milestones",
+      "source": "api/src/routes/shipments.ts",
+      "handler": "shipmentController.recordMilestone",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/shipments.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /shipments/:id/timing",
+      "source": "api/src/modules/transportTiming/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/transportTiming/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /sourcing-requests",
+      "source": "api/src/routes/sourcing.ts",
+      "handler": "controller.createRequest",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/sourcing.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /sourcing-requests/:id/closeout",
+      "source": "api/src/routes/sourcing.ts",
+      "handler": "controller.closeoutRequest",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/sourcing.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /sourcing-requests/structure",
+      "source": "api/src/routes/sourcing.ts",
+      "handler": "controller.structureRequest",
+      "status": "read-only",
+      "boundary": "Request computes a response; does not commit the proposed recall or sourcing request.",
+      "eventPolicy": "No business mutation/outbox required for this calculation.",
+      "evidence": [
+        "api/src/routes/sourcing.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "Do not reuse this exemption for creation routes or future persisted computation."
+    },
+    {
+      "key": "POST /support/requests",
+      "source": "api/src/modules/support/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/support/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /team/members/:id/deactivate",
+      "source": "api/src/modules/teamMembers/routes.ts",
+      "handler": "inline",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/modules/teamMembers/routes.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "POST /traceability/recall-impact",
+      "source": "api/src/routes/traceability.ts",
+      "handler": "controller.calculateRecallImpact",
+      "status": "read-only",
+      "boundary": "Request computes a response; does not commit the proposed recall or sourcing request.",
+      "eventPolicy": "No business mutation/outbox required for this calculation.",
+      "evidence": [
+        "api/src/routes/traceability.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "Do not reuse this exemption for creation routes or future persisted computation."
+    },
+    {
+      "key": "POST /transfers/:id/accept",
+      "source": "api/src/routes/holdings.ts",
+      "handler": "holdingController.acceptTransfer",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/holdings.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "PUT /evidence/upload-intents/:id/content",
+      "source": "api/src/routes/evidence.ts",
+      "handler": "evidenceContentHandler",
+      "status": "covered",
+      "boundary": "Upload intent/reservation/audit and completion/retention/audit share database transactions. Provider bytes are outside PostgreSQL and compensated through durable cleanup.",
+      "eventPolicy": "Cleanup ownership is registered before provider writes; terminal upload failures retain recovery work.",
+      "evidence": [
+        "api/src/routes/evidence.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md",
+        "api/src/services/evidenceUploadService.ts",
+        "api/test/integration/evidenceCleanup.integration.test.ts"
+      ],
+      "remaining": "UPL-013/018: retention/backup policy and private restore acceptance remain open."
+    },
+    {
+      "key": "PUT /onboarding",
+      "source": "api/src/routes/workspace.ts",
+      "handler": "controller.updateOnboarding",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/workspace.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    },
+    {
+      "key": "PUT /recalls/:id/recovery/:holdingId",
+      "source": "api/src/routes/publicProducts.ts",
+      "handler": "recallResponse.recovery",
+      "status": "review-required",
+      "boundary": "Existing application policy and feature transaction must be reviewed per action; route registration alone does not prove atomic audit.",
+      "eventPolicy": "Explicit event/outbox requirement remains to be classified per action; do not assume every write needs delivery.",
+      "evidence": [
+        "api/src/routes/publicProducts.ts",
+        "docs/engineering/BUSINESS_AUDIT_ATOMICITY.md"
+      ],
+      "remaining": "ARC-013: confirm mutation/audit boundary, external-effect requirement, denial and rollback regression for this exact action."
+    }
+  ],
+  "background": [
+    {
+      "name": "Evidence maintenance",
+      "boundary": "Scan decision and audit are a single data-modifying CTE; infected decision, audit and cleanup reservation share the transaction.",
+      "evidence": [
+        "api/src/modules/evidenceMaintenance/scanPending.ts",
+        "api/src/modules/evidenceMaintenance/scanPending.test.ts"
+      ],
+      "remaining": "Whole background-job/action inventory and hosted fault rehearsal remain ARC-013/OPS-010 follow-ups."
+    },
+    {
+      "name": "Evidence cleanup",
+      "boundary": "Provider deletion precedes an atomic completion/audit statement. A failed completion leaves durable lease/ownership for retry; no distributed rollback is claimed.",
+      "evidence": [
+        "api/src/modules/evidenceCleanup/worker.ts",
+        "api/test/integration/evidenceCleanup.integration.test.ts"
+      ],
+      "remaining": "Whole background-job/action inventory and hosted fault rehearsal remain ARC-013/OPS-010 follow-ups."
+    },
+    {
+      "name": "Evidence download (GET side effect)",
+      "boundary": "Authenticated authorized private bytes require a persisted release-ready audit before HTTP byte release; missing/denied files produce no successful-access event.",
+      "evidence": [
+        "api/src/modules/evidenceWorkflow/download.ts",
+        "api/src/modules/evidenceWorkflow/download.test.ts"
+      ],
+      "remaining": "Whole background-job/action inventory and hosted fault rehearsal remain ARC-013/OPS-010 follow-ups."
+    },
+    {
+      "name": "Invitation worker",
+      "boundary": "Generation-bound claims, live authorization and credential scrubbing; SMTP outcome and outbox recovery explicitly tracked.",
+      "evidence": [
+        "api/src/modules/invitationDelivery/worker.ts",
+        "api/test/integration/invitationDelivery.integration.test.ts"
+      ],
+      "remaining": "Whole background-job/action inventory and hosted fault rehearsal remain ARC-013/OPS-010 follow-ups."
+    }
+  ]
+}

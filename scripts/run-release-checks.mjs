@@ -37,6 +37,7 @@ export const releaseChecks = [
   ['Frontend HTTP boundaries', ['run', 'test:web-boundaries']],
   ['Workspace filters and support context', ['run', 'test:workspace-tools']],
   ['Authorization route register', ['run', 'check:authorization']],
+  ['Mutation audit inventory', ['run', 'check:mutation-audits']],
   ['Branding and compatibility', ['run', 'check:branding']],
   ['Pilot load evidence contracts', ['run', 'test:pilot-load']],
   ['Recall drill evidence contracts', ['run', 'test:recall-drill']],

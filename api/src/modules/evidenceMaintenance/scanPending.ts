@@ -1,5 +1,6 @@
 import path from 'path';
 import type { PoolClient } from 'pg';
+import { hashObject } from '../../services/audit';
 import { getClient } from '../../db';
 import { AppError } from '../../errors';
 import logger from '../../logger';
@@ -14,6 +15,9 @@ import {
   readBoundedEvidenceFile,
   type EvidenceStorage,
 } from '../../services/evidenceStorage';
+
+// Reserved non-human actor; never attribute automated decisions to the uploader.
+export const EVIDENCE_MAINTENANCE_ACTOR = '00000000-0000-4000-8000-000000000002';
 
 const jobLock = "hashtextextended('bettertrade.evidence.scan-pending',0)";
 export const defaultScanPendingBatchSize = 50;
@@ -92,9 +96,17 @@ async function markScanFailed(
 ): Promise<void> {
   try {
     await client.query(
-      `UPDATE evidence_items SET malware_scan_status='scan_failed',malware_scanned_at=NOW()
-       WHERE id=$1 AND malware_scan_status IN ('legacy_unscanned','scan_failed')`,
-      [item.id],
+      `WITH changed AS (
+         UPDATE evidence_items SET malware_scan_status='scan_failed',malware_scanned_at=NOW()
+         WHERE id=$1 AND malware_scan_status IN ('legacy_unscanned','scan_failed')
+         RETURNING id,uploader_organization_id
+       )
+       INSERT INTO audit_events
+         (actor_user_id,actor_organization_id,action,entity_type,entity_id,new_state_hash,metadata)
+       SELECT $2::uuid,uploader_organization_id,'evidence.maintenance.scan_failed','evidence',id,
+         $3::text,jsonb_build_object('source','maintenance','outcome','scan_failed')
+       FROM changed RETURNING entity_id AS id`,
+      [item.id, EVIDENCE_MAINTENANCE_ACTOR, hashObject({ id: item.id, outcome: 'scan_failed' })],
     );
     log.error(
       { evidenceId: item.id, errorCode: safeErrorCode(error), statusPersisted: true },
@@ -173,10 +185,23 @@ export async function scanPendingEvidence(
           await client.query('BEGIN');
           try {
             const updated = await client.query(
-              `UPDATE evidence_items SET malware_scan_status='infected',malware_scanner_engine=$2,
-                malware_scanned_at=NOW() WHERE id=$1
-                AND malware_scan_status IN ('legacy_unscanned','scan_failed') RETURNING id`,
-              [item.id, result.engine],
+              `WITH changed AS (
+                UPDATE evidence_items SET malware_scan_status='infected',malware_scanner_engine=$2,
+                  malware_scanned_at=NOW() WHERE id=$1
+                  AND malware_scan_status IN ('legacy_unscanned','scan_failed')
+                RETURNING id,uploader_organization_id
+              )
+              INSERT INTO audit_events
+                (actor_user_id,actor_organization_id,action,entity_type,entity_id,new_state_hash,metadata)
+              SELECT $3::uuid,uploader_organization_id,'evidence.maintenance.infected','evidence',id,
+                $4::text,jsonb_build_object('source','maintenance','outcome','infected')
+              FROM changed RETURNING entity_id AS id`,
+              [
+                item.id,
+                result.engine,
+                EVIDENCE_MAINTENANCE_ACTOR,
+                hashObject({ id: item.id, outcome: 'infected' }),
+              ],
             );
             if (updated.rows.length === 0) {
               await client.query('ROLLBACK');
@@ -228,13 +253,26 @@ export async function scanPendingEvidence(
             );
           }
         } else {
-          await client.query(
-            `UPDATE evidence_items SET malware_scan_status='clean',malware_scanner_engine=$2,
-              malware_scanned_at=NOW() WHERE id=$1
-              AND malware_scan_status IN ('legacy_unscanned','scan_failed')`,
-            [item.id, result.engine],
+          const updated = await client.query(
+            `WITH changed AS (
+              UPDATE evidence_items SET malware_scan_status='clean',malware_scanner_engine=$2,
+                malware_scanned_at=NOW() WHERE id=$1
+                AND malware_scan_status IN ('legacy_unscanned','scan_failed')
+              RETURNING id,uploader_organization_id
+            )
+            INSERT INTO audit_events
+              (actor_user_id,actor_organization_id,action,entity_type,entity_id,new_state_hash,metadata)
+            SELECT $3::uuid,uploader_organization_id,'evidence.maintenance.clean','evidence',id,
+              $4::text,jsonb_build_object('source','maintenance','outcome','clean')
+            FROM changed RETURNING entity_id AS id`,
+            [
+              item.id,
+              result.engine,
+              EVIDENCE_MAINTENANCE_ACTOR,
+              hashObject({ id: item.id, outcome: 'clean' }),
+            ],
           );
-          summary.clean += 1;
+          if (updated.rows.length) summary.clean += 1;
         }
       } catch (error) {
         summary.failed += 1;

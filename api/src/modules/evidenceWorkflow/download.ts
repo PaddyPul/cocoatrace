@@ -6,7 +6,8 @@ import {
 } from '../../services/resourcePolicy';
 import { evidenceConcurrency } from '../security/evidenceConcurrency';
 import { DownloadDenial, DownloadEvidenceItem, downloadDenial } from './policy';
-import { findDownloadEvidence } from './repository';
+import type { AuditActor } from '../../services/auditWriter';
+import { auditEvidenceAccess, findDownloadEvidence } from './repository';
 import { readEvidenceContent } from './storage';
 
 export interface DownloadLease {
@@ -21,16 +22,18 @@ export interface DownloadDependencies {
   canAccess: typeof canAccessEvidenceEntity;
   acquire(organizationId: string): () => void;
   read(item: DownloadEvidenceItem): Promise<Buffer | null>;
+  audit(actor: AuditActor, id: string, bytes: number): Promise<void>;
 }
 const dependencies: DownloadDependencies = {
   find: findDownloadEvidence,
   canAccess: canAccessEvidenceEntity,
   acquire: (id) => evidenceConcurrency.acquire(id),
   read: readEvidenceContent,
+  audit: auditEvidenceAccess,
 };
 
 export async function prepareEvidenceDownload(
-  actor: Actor,
+  actor: Actor & AuditActor,
   id: string,
   ports: DownloadDependencies = dependencies,
 ): Promise<{ denial: DownloadDenial } | { lease: DownloadLease }> {
@@ -67,7 +70,9 @@ export async function prepareEvidenceDownload(
       filename: item.file_name,
       async read() {
         try {
-          return await ports.read(item);
+          const content = await ports.read(item);
+          if (content) await ports.audit(actor, id, content.length);
+          return content;
         } catch (error) {
           releaseOnce();
           throw error;
