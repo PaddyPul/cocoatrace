@@ -1,10 +1,11 @@
 import { Response } from 'express';
+import type { AuditActor } from '../../services/auditWriter';
 import { Actor } from '../../services/resourcePolicy';
 import { prepareEvidenceDownload } from './download';
 
 // Express lifecycle stays here; authorization and storage have no HTTP dependency.
 export async function respondWithEvidenceDownload(
-  actor: Actor,
+  actor: Actor & AuditActor,
   id: string,
   res: Response,
 ): Promise<void> {

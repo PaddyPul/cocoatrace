@@ -2,7 +2,7 @@
 
 The durable-invitation candidate implements the previously planned outbox for all three producers: team issuance, resend and first-admin organization approval. It also revalidates initial issuance/approval authority and adds recoverable encrypted credentials, generation/recipient binding, bounded claims/retries, worker status, metadata-only backlog/terminal review, and audited operator recovery. See [the runbook](../runbooks/INVITATION_DELIVERY.md).
 
-Candidate acceptance requires the exact-commit full release, migration fresh/upgrade, native invitation-delivery cases and browser checks. Author unit/type/build checks alone do not close this work.
+Founder reports full release passed and merged on 2026-10-22; main PR #140 contains the corrected native fixtures and Vitest 4.1.12. This invitation engineering slice is accepted. Real staging inbox and hosted recovery acceptance remain separate.
 
 Remaining after acceptance:
 

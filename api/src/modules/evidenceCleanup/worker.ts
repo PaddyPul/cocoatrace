@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import type { PoolClient } from 'pg';
 import { config } from '../../config/env';
 import { getClient, query } from '../../db';
+import { hashObject } from '../../services/audit';
 import { AppError } from '../../errors';
 import logger from '../../logger';
 import { evidenceStorage, type EvidenceStorage } from '../../services/evidenceStorage';
@@ -92,7 +93,15 @@ async function sweepStaleIntents(client: PoolClient, limit: number): Promise<num
                 updated_at=NOW()
            FROM candidates WHERE i.id=candidates.id
              AND candidates.status IN ('pending','uploading','scanning')
-         RETURNING i.id
+         RETURNING i.id,i.uploader_organization_id,i.status
+       ), audited AS (
+         INSERT INTO audit_events
+           (actor_user_id,actor_organization_id,action,entity_type,entity_id,new_state_hash,metadata)
+         SELECT '00000000-0000-4000-8000-000000000002'::uuid,uploader_organization_id,
+           'evidence.upload.abandoned','evidence_upload_intent',id,
+           'sha256:'||encode(sha256(convert_to(id::text||':'||status,'UTF8')),'hex'),
+           jsonb_build_object('source','cleanup_sweep','outcome',status)
+         FROM terminalized RETURNING id
        )
        UPDATE evidence_object_cleanup c
           SET state=CASE
@@ -254,11 +263,25 @@ async function processJob(
     return retryOrDead(client, job, token, safeErrorCode(error), random);
   }
   const completed = await client.query(
-    `UPDATE evidence_object_cleanup
+    `WITH completed AS (
+     UPDATE evidence_object_cleanup
        SET state='done',deleted_at=NOW(),last_error_code=NULL,lease_token=NULL,
            lease_expires_at=NULL,updated_at=NOW()
-     WHERE id=$1 AND state='processing' AND lease_token=$2 AND attempts=$3`,
-    [job.id, token, job.attempts],
+     WHERE id=$1 AND state='processing' AND lease_token=$2 AND attempts=$3
+     RETURNING id,organization_id,reason
+     )
+     INSERT INTO audit_events
+       (actor_user_id,actor_organization_id,action,entity_type,entity_id,new_state_hash,metadata)
+     SELECT '00000000-0000-4000-8000-000000000002'::uuid,organization_id,
+       'evidence.cleanup.deleted','evidence_object_cleanup',id,
+       $4::text,jsonb_build_object('source','cleanup','outcome','provider_delete_acknowledged','reason',reason)
+     FROM completed RETURNING entity_id`,
+    [
+      job.id,
+      token,
+      job.attempts,
+      hashObject({ id: job.id, outcome: 'provider_delete_acknowledged' }),
+    ],
   );
   return completed.rowCount === 1 ? 'deleted' : 'lost';
 }

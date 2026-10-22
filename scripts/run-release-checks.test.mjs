@@ -188,3 +188,12 @@ test('pilot load evidence is invalidated before native execution and must pass a
   assert.deepEqual(releaseChecks[final][1], ['run', 'check:pilot-load']);
   assert.ok(names.indexOf('Pilot load evidence contracts') >= 0);
 });
+
+test('mutation audit inventory gates infrastructure acceptance', () => {
+  const index = releaseChecks.findIndex((check) => check[0] === 'Mutation audit inventory');
+  assert.ok(
+    index >= 0 &&
+      index < releaseChecks.findIndex((check) => check[0] === 'Fresh and upgrade migrations'),
+  );
+  assert.deepEqual(releaseChecks[index][1], ['run', 'check:mutation-audits']);
+});

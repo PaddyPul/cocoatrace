@@ -6,7 +6,7 @@ import { prepareEvidenceDownload } from './download';
 import { respondWithEvidenceDownload } from './httpResponse';
 vi.mock('./download', () => ({ prepareEvidenceDownload: vi.fn() }));
 const prepare = vi.mocked(prepareEvidenceDownload);
-const actor = { organizationId: 'buyer', permissions: ['contract.read'] };
+const actor = { id: 'user', organizationId: 'buyer', permissions: ['contract.read'] };
 function response() {
   const events = new EventEmitter();
   const result = Object.assign(events, {

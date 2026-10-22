@@ -20,7 +20,7 @@ const item: DownloadEvidenceItem = {
   mime_type: null,
   file_name: 'private.pdf',
 };
-const actor = { organizationId: 'buyer', permissions: ['contract.read'] };
+const actor = { id: 'user', organizationId: 'buyer', permissions: ['contract.read'] };
 function ports(read: DownloadDependencies['read'] = async () => Buffer.from('private')) {
   const release = vi.fn();
   return {
@@ -30,6 +30,7 @@ function ports(read: DownloadDependencies['read'] = async () => Buffer.from('pri
       canAccess: vi.fn(async () => true),
       acquire: vi.fn(() => release),
       read: vi.fn(read),
+      audit: vi.fn(async () => undefined),
     },
   };
 }
@@ -40,6 +41,7 @@ describe('private evidence download boundary', () => {
     expect(await prepareEvidenceDownload(actor, 'id', deps)).toEqual({
       denial: { status: 403, body: { error: 'You do not have access to this document' } },
     });
+    expect(deps.audit).not.toHaveBeenCalled();
     expect(deps.acquire).not.toHaveBeenCalled();
     expect(deps.read).not.toHaveBeenCalled();
     expect(downloadDenial(undefined, 'buyer', false)?.status).toBe(404);
@@ -106,6 +108,24 @@ describe('private evidence download boundary', () => {
     prepared.lease.fail();
     prepared.lease.responseEnded();
     expect(release).toHaveBeenCalledTimes(1);
+  });
+  it('audits only available authorized bytes and fails closed if access audit cannot persist', async () => {
+    const { deps, release } = ports();
+    deps.audit.mockRejectedValueOnce(new Error('audit unavailable'));
+    const prepared = await prepareEvidenceDownload(actor, 'id', deps);
+    if (!('lease' in prepared)) throw new Error('Expected lease');
+    await expect(prepared.lease.read()).rejects.toThrow('audit unavailable');
+    expect(deps.audit).toHaveBeenCalledWith(actor, 'id', 7);
+    expect(release).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(deps.audit.mock.calls)).not.toContain('private.pdf');
+  });
+  it('does not record release readiness when private storage has no bytes', async () => {
+    const { deps } = ports(async () => null);
+    const prepared = await prepareEvidenceDownload(actor, 'id', deps);
+    if (!('lease' in prepared)) throw new Error('Expected lease');
+    expect(await prepared.lease.read()).toBeNull();
+    prepared.lease.responseEnded();
+    expect(deps.audit).not.toHaveBeenCalled();
   });
   it('retains the original uploads root and rejects root/sibling/traversal paths', () => {
     expect(legacyUploadsRoot).toBe(path.resolve(__dirname, '../../../uploads'));

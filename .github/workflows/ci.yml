@@ -30,6 +30,7 @@ jobs:
       - run: npm run check:risks
       - run: npm run check:pilot-evidence
       - run: npm run check:authorization
+      - run: npm run check:mutation-audits
       - run: npm run check:branding
       - run: npm run test:locale
       - run: npm run test:web-boundaries
