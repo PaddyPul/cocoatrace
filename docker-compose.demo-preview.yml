@@ -37,8 +37,8 @@ services:
       DEMO_PREVIEW_ENABLED: "true"
       DATABASE_URL: postgresql://preview:${PREVIEW_DB_PASSWORD}@postgres:5432/cocoatrace_demo_preview
       JWT_SECRET: ${PREVIEW_JWT_SECRET:?Use preview runner}
-      WEB_URL: ${PREVIEW_WEB_URL:-http://127.0.0.1:14000}
-      PUBLIC_WEB_URL: ${PREVIEW_WEB_URL:-http://127.0.0.1:14000}
+      WEB_URL: ${PREVIEW_WEB_URL:-http://localhost:14000}
+      PUBLIC_WEB_URL: ${PREVIEW_WEB_URL:-http://localhost:14000}
       COOKIE_SECURE: ${PREVIEW_COOKIE_SECURE:-false}
       EVIDENCE_STORAGE_DRIVER: local
       EVIDENCE_STORAGE_LOCAL_ROOT: /app/private-evidence

@@ -8,5 +8,7 @@ describe('synthetic preview target guard',()=>{
   [url.replace('/cocoatrace_demo_preview','/cocoatrace'),'demo',true,'true'],
   [url.replace('@postgres','@remote.example'),'demo',true,'true'],
   [url.replace('preview:','customer:'),'demo',true,'true'],
+  [url+'?host=remote.example','demo',true,'true'],[url+'#override','demo',true,'true'],
+  [url.replace(':5432/', ':5433/'),'demo',true,'true'],
  ] as const)('rejects unsafe target/mode %s %s',(target,env,demo,enabled)=>expect(()=>assertPreviewTarget(target,env,demo,enabled)).toThrow());
 });

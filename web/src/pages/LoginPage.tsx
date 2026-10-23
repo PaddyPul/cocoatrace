@@ -15,8 +15,8 @@ import { workspace } from '../api';
 import { webConfig } from '../config';
 
 const QUICK_USERS = [
-  { label: 'New buyer', email: 'newbuyer@cocoatrace.io' },
-  { label: 'New supplier', email: 'newsupplier@cocoatrace.io' },
+  { label: 'Buyer demo', email: 'newbuyer@cocoatrace.io' },
+  { label: 'Supplier demo', email: 'newsupplier@cocoatrace.io' },
   { label: 'Pilot manager', email: 'pilot@cocoatrace.io' },
   { label: 'Admin', email: 'admin@cocoatrace.io' },
   { label: 'Farmer', email: 'kwame@farm.gh' },
@@ -208,9 +208,9 @@ export default function LoginPage() {
                 className="rounded-2xl border border-brand-300/25 bg-brand-300/10 p-4 text-left transition hover:bg-brand-300/15"
               >
                 <Search size={19} className="text-brand-300" />
-                <span className="mt-4 block text-sm font-bold">Experience as a new buyer</span>
+                <span className="mt-4 block text-sm font-bold">Rehearse buyer setup</span>
                 <span className="mt-1 block text-[11px] leading-5 text-white/45">
-                  Onboard, state a need and compare verified supply.
+                  Restart setup in the shared buyer demo. Previous trades are retained.
                 </span>
               </button>
               <button
@@ -220,9 +220,9 @@ export default function LoginPage() {
                 className="rounded-2xl border border-amber-300/20 bg-amber-300/[.07] p-4 text-left transition hover:bg-amber-300/10"
               >
                 <ShoppingBag size={19} className="text-amber-200" />
-                <span className="mt-4 block text-sm font-bold">Experience as a new supplier</span>
+                <span className="mt-4 block text-sm font-bold">Rehearse supplier setup</span>
                 <span className="mt-1 block text-[11px] leading-5 text-white/45">
-                  Onboard, package a lot and reach qualified buyers.
+                  Restart setup in the shared supplier demo. Previous trades are retained.
                 </span>
               </button>
             </div>

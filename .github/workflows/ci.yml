@@ -219,6 +219,14 @@ jobs:
         run: npm run demo:rehearsal:start
       - name: Check synthetic preview
         run: npm run demo:preview:check
+      - name: Reset only the marked synthetic rehearsal for first-run regression
+        run: npm run demo:rehearsal:reset -- DELETE_SYNTHETIC_PREVIEW
+      - name: Install browser for actual rehearsal passkey regression
+        run: npx playwright install --with-deps chromium
+      - name: Verify fresh demo accounts and localhost administrator passkey flow
+        run: node scripts/check-local-rehearsal.mjs
+        env:
+          CI_SYNTHETIC_PREVIEW_CHECK: "true"
       - name: Stop only the synthetic preview project
         if: always()
         run: npm run demo:preview:stop

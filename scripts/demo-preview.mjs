@@ -33,7 +33,7 @@ export function validateState(state) {
  }
  if(new Set(['PREVIEW_DB_PASSWORD','PREVIEW_JWT_SECRET','PREVIEW_UPLOAD_SECRET'].map(name=>state[name])).size!==3)
   throw new Error('Preview secrets must be independent');
- if(state.PREVIEW_WEB_URL!=='http://127.0.0.1:14000'&&parseTunnelUrl(state.PREVIEW_WEB_URL)!==state.PREVIEW_WEB_URL)
+ if(state.PREVIEW_WEB_URL!=='http://localhost:14000'&&state.PREVIEW_WEB_URL!=='http://127.0.0.1:14000'&&parseTunnelUrl(state.PREVIEW_WEB_URL)!==state.PREVIEW_WEB_URL)
   throw new Error('Unexpected preview hostname');
  if(!['true','false'].includes(state.PREVIEW_COOKIE_SECURE)) throw new Error('Invalid cookie setting');
  if(state.PREVIEW_ALLOWED_EMAILS) validateEmails(state.PREVIEW_ALLOWED_EMAILS);
@@ -44,7 +44,7 @@ function load(create=false) {
  if(fs.existsSync(stateFile)) return validateState(JSON.parse(fs.readFileSync(stateFile,'utf8')));
  if(!create) throw new Error('Start the preview first: npm run demo:preview:start');
  const state=Object.fromEntries(['PREVIEW_DB_PASSWORD','PREVIEW_JWT_SECRET','PREVIEW_UPLOAD_SECRET'].map(name=>[name,crypto.randomBytes(32).toString('hex')]));
- Object.assign(state,{PREVIEW_WEB_URL:'http://127.0.0.1:14000',PREVIEW_COOKIE_SECURE:'false'});save(state);return state;
+ Object.assign(state,{PREVIEW_WEB_URL:'http://localhost:14000',PREVIEW_COOKIE_SECURE:'false'});save(state);return state;
 }
 const docker=process.platform==='win32'?'docker.exe':'docker';
 function run(args,state,capture=false) {
@@ -55,11 +55,11 @@ function run(args,state,capture=false) {
 }
 function compose(args,state,capture=false) {
  // Never reads the developer's .env or base application Compose project.
- return run(['compose','--env-file',path.join(root,'scripts/preview-empty.env'),'-p','cocoatrace-demo-preview','-f',path.join(root,'docker-compose.demo-preview.yml'),...(process.argv[2]==='rehearse'?['-f',path.join(root,'docker-compose.demo-rehearsal.yml')]:[]),'--profile','share',...args],state,capture);
+ return run(['compose','--env-file',path.join(root,'scripts/preview-empty.env'),'-p','cocoatrace-demo-preview','-f',path.join(root,'docker-compose.demo-preview.yml'),...(['rehearse','reset-rehearsal'].includes(process.argv[2])?['-f',path.join(root,'docker-compose.demo-rehearsal.yml')]:[]),'--profile','share',...args],state,capture);
 }
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function smoke() {
- const base='http://127.0.0.1:14000';
+ const base='http://localhost:14000';
  const ready=await fetch(`${base}/api/health/ready`,{signal:AbortSignal.timeout(15000)});
  if(!ready.ok) throw new Error('Preview readiness failed (database, private storage or malware scanner)');
  const page=await fetch(base,{signal:AbortSignal.timeout(15000)});
@@ -107,17 +107,30 @@ export async function verifyEmailGate(url,{fetchImpl=fetch,pauseImpl=pause,attem
 
 async function main() {
  const action=process.argv[2];
- if(!['start','rehearse','share','stop','status','check'].includes(action)) throw new Error('Use demo:preview:start|rehearse|share|stop|status|check');
+ if(!['start','rehearse','reset-rehearsal','share','stop','status','check'].includes(action)) throw new Error('Use demo:preview:start|rehearse|share|stop|status|check');
+ if(action==='reset-rehearsal' && (process.argv.length!==4 || process.argv[3]!=='DELETE_SYNTHETIC_PREVIEW'))
+  throw new Error('Reset deletes only the dedicated synthetic preview, including trades, files, accounts and passkeys. Run with DELETE_SYNTHETIC_PREVIEW to confirm.');
  const state=load(action==='start'||action==='rehearse');
+ if(action==='reset-rehearsal') {
+  state.PREVIEW_REHEARSAL_INVITATION_KEY ||= crypto.randomBytes(32).toString('hex');
+  if(!/^[a-f0-9]{64}$/.test(state.PREVIEW_REHEARSAL_INVITATION_KEY)) throw new Error('Invalid local rehearsal key');
+  compose(['build','api'],state);
+  // Read-only proof of the marked, dedicated database BEFORE deleting volumes.
+  compose(['run','--rm','--no-deps','api','node','--import','tsx','api/scripts/check-demo-preview-reset.ts'],state);
+  compose(['down','--volumes','--remove-orphans'],state);
+  state.PREVIEW_WEB_URL='http://localhost:14000';state.PREVIEW_COOKIE_SECURE='false';delete state.PREVIEW_ALLOWED_EMAILS;save(state);
+  compose(['up','-d','--build','--wait','postgres','clamav','api','web','mailpit'],state);
+  await smoke();console.log('Fresh synthetic rehearsal ready: http://localhost:14000. Previous preview accounts, trades, files and passkeys were removed. Capture: http://127.0.0.1:18026');return;
+ }
  if(action==='stop') {compose(['down','--remove-orphans'],state);console.log('Preview and tunnel stopped; synthetic data retained.');return;}
  if(action==='status') {compose(['ps'],state);console.log('Configured workspace:',state.PREVIEW_WEB_URL);return;}
  if(action==='check') {await smoke();return;}
  if(action==='start'||action==='rehearse') {
   if(action==='rehearse') {state.PREVIEW_REHEARSAL_INVITATION_KEY ||= crypto.randomBytes(32).toString('hex');if(!/^[a-f0-9]{64}$/.test(state.PREVIEW_REHEARSAL_INVITATION_KEY))throw new Error('Invalid local rehearsal key');}
   compose(['stop','tunnel'],state);
-  state.PREVIEW_WEB_URL='http://127.0.0.1:14000';state.PREVIEW_COOKIE_SECURE='false';delete state.PREVIEW_ALLOWED_EMAILS;save(state);
+  state.PREVIEW_WEB_URL='http://localhost:14000';state.PREVIEW_COOKIE_SECURE='false';delete state.PREVIEW_ALLOWED_EMAILS;save(state);
   compose(['up','-d','--build','--wait','postgres','clamav','api','web',...(action==='rehearse'?['mailpit']:[])],state);
-  await smoke();if(action==='rehearse')console.log('Local captured outbox: http://127.0.0.1:18026 - messages stay on this PC; no external relay configured.');console.log('Open http://127.0.0.1:14000 — synthetic demo only; nothing is publicly shared.');return;
+  await smoke();if(action==='rehearse')console.log('Local captured outbox: http://127.0.0.1:18026 - messages stay on this PC; no external relay configured.');console.log('Open http://localhost:14000 — synthetic demo only; nothing is publicly shared.');return;
  }
  state.PREVIEW_ALLOWED_EMAILS=sharingEmails(process.argv.slice(3));
  compose(['stop','tunnel'],state);

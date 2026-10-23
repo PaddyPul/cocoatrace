@@ -579,3 +579,7 @@ security/gitleaks.toml text eol=lf
 api/src/services/emailBranding*.ts text eol=lf
 docker-compose.demo-rehearsal.yml text eol=lf
 scripts/email-rehearsal.test.mjs text eol=lf
+
+api/src/modules/mfa/origin*.ts text eol=lf
+scripts/check-local-rehearsal.mjs text eol=lf
+e2e/passkeyOrigin.spec.ts text eol=lf
