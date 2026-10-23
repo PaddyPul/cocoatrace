@@ -81,12 +81,28 @@ try {
     if (!enrolled.mfa?.enrolled || !enrolled.mfa?.verified || !enrolled.mfa?.fresh)
       throw new Error('Passkey enrollment did not establish fresh administrator assurance');
     await page.goto('/account/passkeys');
+    const signedOut = page.waitForResponse(
+      (r) => new URL(r.url()).pathname === '/api/auth/logout' && r.request().method() === 'POST',
+    );
     await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+    const logoutResponse = await signedOut;
+    if (logoutResponse.status() !== 204 || (await logoutResponse.finished()))
+      throw new Error('Synthetic administrator sign-out did not complete');
     await signIn();
     await expect(
       page.getByRole('button', { name: 'Verify passkey and continue', exact: true }),
     ).toBeVisible();
+    // /home already renders the MFA gate after password sign-in. Its URL is
+    // not evidence that the asynchronous WebAuthn ceremony has completed.
+    const authenticated = page.waitForResponse(
+      (r) =>
+        new URL(r.url()).pathname === '/api/auth/mfa/authentication/verify' &&
+        r.request().method() === 'POST',
+    );
     await page.getByRole('button', { name: 'Verify passkey and continue', exact: true }).click();
+    const authenticationResponse = await authenticated;
+    if (authenticationResponse.status() !== 200 || (await authenticationResponse.finished()))
+      throw new Error('Synthetic administrator passkey verification did not complete');
     await expect(page).toHaveURL(/\/home/);
     const verified = await (await context.request.get('/api/me')).json();
     if (!verified.mfa?.verified || !verified.mfa?.fresh)
