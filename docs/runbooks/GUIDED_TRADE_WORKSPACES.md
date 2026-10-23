@@ -63,3 +63,10 @@ The initial full browser release found two real journeys that still assumed all 
 Certificate detail tests use a read-only navigation helper for the observed `net::ERR_NETWORK_CHANGED` failure. It retries the same local page navigation once, logs a fixed message without the URL, and propagates a second failure. It never retries test actions, API mutations, assertion failures, timeouts or other network errors. HTTP error responses are returned unchanged for the test to assess. Whole-test retries stay disabled. The helper is deliberately scoped to the certificate detail suite; it is not a claim that host-network instability is eliminated.
 
 Apply this follow-up after the Zod correction on the existing guided-workspaces branch and capture a new candidate before rerunning the full release. No new migration, application runtime change or dependency change is introduced. Native PostgreSQL journeys still require the Windows full-release gate; mocked tab regressions do not substitute for them.
+
+
+## Body-parser advisory correction — 2026-10-23
+
+The subsequent release stopped at GHSA-27r3-jxmh-p828 in Express's transitive body-parser 1.20.8. Update the lockfile to patched 1.20.9 within Express 4.22.3's existing compatible range. The package manifests, parser options, limits, routes and migrations are unchanged. No exception or audit suppression is added. Reference: https://github.com/expressjs/body-parser/security/advisories/GHSA-27r3-jxmh-p828 .
+
+Author clean npm ci, production and full dependency gates (no accepted findings), all 1,671 API unit cases and API build pass. These include existing ingress limit and error-envelope tests; no new exploit reproduction is claimed. Apply this follow-up after the browser-journey correction, run npm ci, capture the updated candidate before verification and repeat the full release. Previous candidate evidence must not authorize pushing this new SHA. SEC-014 and INV-003 remain IN PROGRESS.
