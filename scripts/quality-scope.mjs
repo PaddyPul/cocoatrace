@@ -1,5 +1,7 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/services/emailBranding*.ts',
+  'scripts/email-rehearsal.test.mjs',
   'scripts/secret-scan.mjs',
   'scripts/secret-scan.test.mjs',
   'scripts/release-candidate.test.mjs',

@@ -67,7 +67,8 @@
     "check:controller-boundaries": "node scripts/controller-boundaries.mjs && node --test scripts/controller-boundaries.test.mjs",
     "check:workspace-states": "node scripts/route-resilience.mjs && node --test scripts/route-resilience.test.mjs",
     "check:mutation-audits": "node scripts/mutation-audit-coverage.mjs && node --test scripts/mutation-audit-coverage.test.mjs",
-    "check:secrets": "node scripts/secret-scan.mjs"
+    "check:secrets": "node scripts/secret-scan.mjs",
+    "demo:rehearsal:start": "node scripts/demo-preview.mjs rehearse"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

@@ -575,3 +575,7 @@ scripts/recovery-objects* text eol=lf
 scripts/run-recovery-tests.mjs text eol=lf
 security/secret-scan-exceptions.json text eol=lf
 security/gitleaks.toml text eol=lf
+
+api/src/services/emailBranding*.ts text eol=lf
+docker-compose.demo-rehearsal.yml text eol=lf
+scripts/email-rehearsal.test.mjs text eol=lf

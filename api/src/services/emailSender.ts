@@ -4,6 +4,7 @@ import os from 'os';
 import tls from 'tls';
 import { config } from '../config/env';
 import logger from '../logger';
+import { brandedEmail } from './emailBranding';
 
 export type IdentityEmailCategory = 'email_verification' | 'invitation' | 'password_reset' | 'recall' | 'payment_reminder' | 'operations_alert' | 'fee_statement';
 
@@ -55,11 +56,13 @@ function dotStuff(value: string): string {
   return value.replace(/\r?\n/g, '\r\n').replace(/(^|\r\n)\./g, '$1..');
 }
 
-function buildMessage(message: EmailMessage, from: string, messageId: string): string {
+export function buildMessage(input: EmailMessage, from: string, messageId: string): string {
+  const message = brandedEmail(input, { publicWebUrl: config.publicWebUrl, environment: config.environment, deployed: config.isDeployed, supportEmail: config.emailSupportAddress });
   const to = recipients(message.to);
   const headers = [
-    `From: ${safeHeader(from, 'Email sender')}`,
+    `From: BetterTrade <${safeHeader(from, 'Email sender')}>`,
     `To: ${to.join(', ')}`,
+    ...(config.emailSupportAddress ? [`Reply-To: ${safeHeader(config.emailSupportAddress, 'Email support address')}`] : []),
     `Subject: ${encodedSubject(message.subject)}`,
     `Date: ${new Date().toUTCString()}`,
     `Message-ID: <${messageId}>`,
@@ -83,9 +86,9 @@ function buildMessage(message: EmailMessage, from: string, messageId: string): s
     dotStuff(message.text),
     `--${boundary}`,
     'Content-Type: text/html; charset=UTF-8',
-    'Content-Transfer-Encoding: 8bit',
+    'Content-Transfer-Encoding: base64',
     '',
-    dotStuff(message.html),
+    Buffer.from(message.html, 'utf8').toString('base64').match(/.{1,76}/g)!.join('\r\n'),
     `--${boundary}--`,
   ].join('\r\n');
 }
@@ -202,11 +205,12 @@ export class SmtpEmailSender implements EmailSender {
     const from = config.emailFrom!;
     const timeout = config.smtpConnectionTimeoutMs;
     const addresses = recipients(message.to);
+    const messageId = `${crypto.randomUUID()}@${from.split('@')[1]}`;
+    const content = buildMessage(message, from, messageId);
     let socket: net.Socket = config.smtpSecure
       ? await connectSecure(host, config.smtpPort, timeout, config.smtpTlsRejectUnauthorized)
       : await connectPlain(host, config.smtpPort, timeout);
     const state: SocketState = { buffer: '' };
-    const messageId = `${crypto.randomUUID()}@${from.split('@')[1]}`;
 
     try {
       const greeting = await readResponse(socket, state, timeout);
@@ -233,7 +237,7 @@ export class SmtpEmailSender implements EmailSender {
       await command(socket, state, `MAIL FROM:<${from}>`, [250], timeout);
       for (const address of addresses) await command(socket, state, `RCPT TO:<${address}>`, [250, 251], timeout);
       await command(socket, state, 'DATA', [354], timeout);
-      await write(socket, `${buildMessage(message, from, messageId)}\r\n.\r\n`);
+      await write(socket, `${content}\r\n.\r\n`);
       const accepted = await readResponse(socket, state, timeout);
       if (accepted.code !== 250) throw new Error(`SMTP message was rejected with status ${accepted.code}`);
       await command(socket, state, 'QUIT', [221], timeout).catch(() => undefined);

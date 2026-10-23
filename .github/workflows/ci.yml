@@ -215,8 +215,8 @@ jobs:
         run: node --test scripts/demo-preview.test.mjs
       - name: Start synthetic preview and check readiness and identities
         run: npm run demo:preview:start
-      - name: Repeat start without overwriting the synthetic workspace
-        run: npm run demo:preview:start
+      - name: Start local captured-email rehearsal without overwriting the synthetic workspace
+        run: npm run demo:rehearsal:start
       - name: Check synthetic preview
         run: npm run demo:preview:check
       - name: Stop only the synthetic preview project

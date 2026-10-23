@@ -88,6 +88,7 @@ export type AppConfig = Readonly<{
   identityEmailEnabled: boolean;
   emailDriver: 'development' | 'smtp';
   emailFrom?: string;
+  emailSupportAddress?: string;
   smtpHost?: string;
   smtpPort: number;
   smtpSecure: boolean;
@@ -175,6 +176,7 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
       IDENTITY_EMAIL_ENABLED: booleanValue.default(false),
       EMAIL_DRIVER: z.enum(['development', 'smtp']).default('development'),
       EMAIL_FROM: optionalEmail,
+      EMAIL_SUPPORT_ADDRESS: optionalEmail,
       SMTP_HOST: optionalText,
       SMTP_PORT: z.coerce.number().int().min(1).max(65_535).default(587),
       SMTP_SECURE: booleanValue.default(false),
@@ -455,6 +457,7 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
     identityEmailEnabled: values.IDENTITY_EMAIL_ENABLED,
     emailDriver: values.EMAIL_DRIVER,
     emailFrom: values.EMAIL_FROM,
+    emailSupportAddress: values.EMAIL_SUPPORT_ADDRESS,
     smtpHost: values.SMTP_HOST,
     smtpPort: values.SMTP_PORT,
     smtpSecure: values.SMTP_SECURE,

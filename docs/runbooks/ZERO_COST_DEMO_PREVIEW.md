@@ -33,3 +33,7 @@ No uptime guarantee or static address is promised. The machine, electricity and 
 Authoring: 173 API unit tests, nine Node runner tests, API/web builds, browser type checks and Compose parsing passed. PostgreSQL WASM checks passed both the previous logical restore regression and fresh-preview seed/identity/inventory compatibility. Native preview containers and real Cloudflare authentication cannot be exercised in the authoring environment; require native CI and the first local start/share before marking BST-001 complete.
 
 Official provider documentation checked 2026-10-02: https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/
+
+## Local email rehearsal
+
+For private email capture without public sharing, use `npm run demo:rehearsal:start` and [LOCAL_INVESTOR_REHEARSAL.md](LOCAL_INVESTOR_REHEARSAL.md). It adds a loopback-only Mailpit viewer at127.0.0.1:18026 and real local SMTP submission. Ordinary start/share commands retain email-disabled configuration. Do not expose the outbox or use captured credentials outside this synthetic workspace.

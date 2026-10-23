@@ -24,7 +24,7 @@ const server = http.createServer((req, res) => {
       { ID: 'new', Subject: 'Verify email', To: [{ Address: 'PERSON@browser.test' }] },
     ] }));
   } else {
-    res.end(JSON.stringify({ Text: `${mode === 'foreign' ? 'https://foreign.invalid' : appOrigin}/verify-access?token=synthetic` }));
+    res.end(JSON.stringify({ Text: `${mode === 'foreign' ? 'https://foreign.invalid' : appOrigin}/verify-access?token=synthetic\nLocal/demo - test message`, HTML: mode === 'unbranded' ? '' : `<p>BetterTrade ${new URL(appOrigin).host}</p><a href="${appOrigin}/verify-access?token=synthetic">Verify email address</a>`, From: { Name: 'BetterTrade' } }));
   }
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -71,4 +71,13 @@ test('inbox HTTP rejection fails immediately with status but no message contents
 test('captured identity links remain restricted to the disposable app origin', async () => {
   mode = 'foreign';
   await assert.rejects(emailLink('person@browser.test', 'verification'), /outside the disposable test origin/);
+});
+
+test('captured identity emails require branded HTML without exposing message contents on failure', async () => {
+  mode = 'unbranded';
+  await assert.rejects(emailLink('person@browser.test', 'verification'), error => {
+    assert.match(error.message, /missing expected brand/);
+    assert.doesNotMatch(error.message, /synthetic|token=|person@/);
+    return true;
+  });
 });

@@ -16,6 +16,9 @@ const { config } = vi.hoisted(() => ({
     smtpPassword: 'contract-secret',
     smtpConnectionTimeoutMs: 1000,
     emailFrom: 'sender@example.test',
+    publicWebUrl: 'http://localhost:3000',
+    environment: 'test',
+    isDeployed: false,
   },
 }));
 vi.mock('../config/env', () => ({ config }));

@@ -36,10 +36,15 @@ export async function emailLink(address: string, category: 'verification' | 'inv
     if (inboxFailure) throw inboxFailure;
     const response = await inbox.get(`/api/v1/message/${encodeURIComponent(selected!.ID)}`);
     if (!response.ok()) throw new Error(`Disposable inbox message read failed (HTTP ${response.status()}).`);
-    const message = await response.json() as { Text: string };
+    const message = await response.json() as { Text: string; HTML: string; From: { Name: string } };
     const link = message.Text.match(/https?:\/\/[^\s<>]+/)?.[0];
     if (!link) throw new Error('Captured identity email did not contain a link');
     if (new URL(link).origin !== baseURL) throw new Error('Identity email points outside the disposable test origin');
+    if (message.From?.Name !== 'BetterTrade' || typeof message.HTML !== 'string' ||
+        !message.HTML.includes('BetterTrade') || !message.HTML.includes(new URL(baseURL).host) ||
+        !message.HTML.includes('href=') || !message.Text.includes('test message')) {
+      throw new Error('Captured identity email is missing expected brand, environment or action presentation');
+    }
     return { id: selected!.ID, link };
   } finally {
     await inbox.dispose();
