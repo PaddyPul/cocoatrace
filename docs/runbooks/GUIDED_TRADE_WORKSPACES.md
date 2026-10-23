@@ -54,3 +54,12 @@ Author checks are recorded in the PR document. The exact candidate must still pa
 The first Windows release stopped at GHSA-mrhx-c7xc-m3w5. The correction pins `zod` to patched **4.6.6**, updates the lockfile, record-schema API and sanitized issue mapping, and removes create defaults from optional sourcing edit fields. Existing saved requirements must not be reset during a partial edit. Regression tests verify oversized constrained collections are rejected before entries are traversed, sourcing origins return a bounded collection error, and enum/format/symbol-path errors stay sanitized. No dependency exception or gate suppression is introduced.
 
 References: https://github.com/advisories/GHSA-mrhx-c7xc-m3w5 and https://zod.dev/v4/changelog . Apply the correction on the existing guided-workspaces branch, install from the committed lockfile with `npm ci`, capture the new candidate before verification, and run the whole release again. Do not reuse evidence from the earlier failed candidate or push until the exact new SHA passes. This correction adds no migration; migration 054 remains part of the underlying candidate.
+
+
+## Browser journey correction — 2026-10-23
+
+The initial full browser release found two real journeys that still assumed all controls were visible at once. The GHS/JPY completed-trade fee journey now opens `?tab=fees` both before and after settlement. The damaged-delivery journey opens `?tab=delivery` for buyer and supplier, preserving that tab through reloads. Their existing fee amount, receipt verification, custody, discrepancy resolution and final settlement assertions are unchanged.
+
+Certificate detail tests use a read-only navigation helper for the observed `net::ERR_NETWORK_CHANGED` failure. It retries the same local page navigation once, logs a fixed message without the URL, and propagates a second failure. It never retries test actions, API mutations, assertion failures, timeouts or other network errors. HTTP error responses are returned unchanged for the test to assess. Whole-test retries stay disabled. The helper is deliberately scoped to the certificate detail suite; it is not a claim that host-network instability is eliminated.
+
+Apply this follow-up after the Zod correction on the existing guided-workspaces branch and capture a new candidate before rerunning the full release. No new migration, application runtime change or dependency change is introduced. Native PostgreSQL journeys still require the Windows full-release gate; mocked tab regressions do not substitute for them.

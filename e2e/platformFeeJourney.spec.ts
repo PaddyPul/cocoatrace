@@ -57,7 +57,7 @@ for (const currency of ['GHS', 'JPY'])
       const { contract, shipment, paymentRequest } = await acceptance.json();
       expect(contract.currency_minor_units).toBe(currency === 'JPY' ? 0 : 2);
       expect(paymentRequest.amount_total).toBe(currency === 'JPY' ? '51.00' : '20.00');
-      await seller.goto(`/deal-room/${contract.id}`);
+      await seller.goto(`/deal-room/${contract.id}?tab=fees`);
       const fee = seller.getByRole('region', { name: 'Platform fee statement' });
       await expect(fee.getByText('Estimated fee. No fee payment is due yet.')).toBeVisible();
       await expect(
@@ -121,7 +121,7 @@ for (const currency of ['GHS', 'JPY'])
       await expect(
         seller.getByText('Review and pay the platform fee', { exact: true }),
       ).toBeVisible();
-      await seller.goto(`/deal-room/${contract.id}`);
+      await seller.goto(`/deal-room/${contract.id}?tab=fees`);
       await expect(
         fee.getByRole('status', { name: 'Fee collection status', exact: true }),
       ).toContainText('Platform fee outstanding — collection not verified');

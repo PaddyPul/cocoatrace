@@ -31,7 +31,13 @@ export const releaseChecks = [
   ],
   [
     'Browser inbox isolation',
-    ['--import', 'tsx', '--test', 'scripts/inbox-isolation.test.mjs'],
+    [
+      '--import',
+      'tsx',
+      '--test',
+      'scripts/inbox-isolation.test.mjs',
+      'scripts/browser-navigation.test.mjs',
+    ],
     true,
   ],
   ['Language foundation tests', ['run', 'test:locale']],

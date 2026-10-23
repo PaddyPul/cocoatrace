@@ -1,11 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
 
-async function setup(page: Page) {
+async function setup(page: Page, side: 'seller' | 'buyer' = 'seller') {
   const actor = {
     id: 'seller-user',
-    organizationId: 'seller',
-    orgType: 'exporter',
-    roles: ['supplier_admin'],
+    organizationId: side,
+    orgType: side === 'seller' ? 'exporter' : 'importer',
+    roles: [side === 'seller' ? 'supplier_admin' : 'buyer_admin'],
     permissions: ['*'],
     name: 'Seller',
   };
@@ -50,7 +50,7 @@ async function setup(page: Page) {
   await page.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path === '/api/me')
-      return route.fulfill({ json: { ...actor, organization_id: 'seller', org_type: 'exporter' } });
+      return route.fulfill({ json: { ...actor, organization_id: side, org_type: actor.orgType } });
     if (path === '/api/onboarding')
       return route.fulfill({ json: { status: 'completed', primary_goal: 'sell' } });
     if (path === '/api/contracts/deal') return route.fulfill({ json: contract });
@@ -161,5 +161,98 @@ test('an unavailable bank-security route chunk shows a recoverable loading expla
   await page.getByRole('button', { name: 'Reload page', exact: true }).click();
   await expect(page.getByText('This page could not finish loading', { exact: true })).toHaveCount(
     0,
+  );
+});
+
+test('estimated legacy fee is reachable before settlement even while payment protection is the next action', async ({
+  page,
+}) => {
+  const { contract } = await setup(page);
+  Object.assign(contract, {
+    nextAction: {
+      id: 'deal:deal:terms',
+      kind: 'terms',
+      operation: 'configure_terms',
+      requiresAction: true,
+      title: 'Configure payment protection',
+      description: 'Supplier proposes terms.',
+      actionPath: '/contracts/deal?tab=payments',
+      actionLabel: 'Configure protection',
+    },
+  });
+  await page.route('**/api/contracts/deal/fee', (route) =>
+    route.fulfill({
+      json: {
+        statementNumber: 'FEE-TEST',
+        documentType: 'commercial_fee_statement',
+        taxNotice: 'Not a tax invoice',
+        submissions: [],
+        fee: {
+          id: 'fee',
+          contract_id: 'deal',
+          status: 'estimated',
+          amount_total: '10.00',
+          currency: 'EUR',
+          currency_minor_units: 2,
+          rate_bps: 100,
+          fee_payer: 'seller',
+          payer_organization_id: 'seller',
+          seller_name: 'Seller',
+          buyer_name: 'Buyer',
+          contract_status: 'accepted',
+          receipt_verified: false,
+          amount_matches: true,
+          payer_matches: true,
+        },
+      },
+    }),
+  );
+  await page.goto('/deal-room/deal?tab=fees');
+  await expect(page.getByRole('tab', { name: 'Platform fee', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await expect(
+    page
+      .getByRole('region', { name: 'Platform fee statement', exact: true })
+      .getByText('Estimated fee. No fee payment is due yet.', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Configure payment protection', exact: true }),
+  ).toBeVisible();
+});
+
+test('delivery discrepancy controls remain reachable while goods payment has priority, including after reload', async ({
+  page,
+}) => {
+  const { contract } = await setup(page, 'buyer');
+  contract.current_milestone = 'delivered';
+  contract.status = 'delivered';
+  contract.payment_plan = 'pay_after_delivery';
+  Object.assign(contract, {
+    nextAction: {
+      id: 'deal:deal:payment',
+      kind: 'payment',
+      requiresAction: true,
+      title: 'Pay for delivered goods',
+      description: 'Goods payment is due.',
+      actionPath: '/payments/payment',
+      actionLabel: 'Record payment',
+    },
+  });
+  await page.route('**/api/contracts/deal/delivery', (route) =>
+    route.fulfill({ json: { contract, acceptance: null, discrepancy: null } }),
+  );
+  await page.goto('/deal-room/deal?tab=delivery');
+  const inspection = page.getByRole('region', { name: 'Delivery acceptance', exact: true });
+  await inspection.getByLabel('Discrepancy type', { exact: true }).selectOption('damage');
+  await expect(inspection.getByLabel('Discrepancy type', { exact: true })).toHaveValue('damage');
+  // Do not abandon a draft: restore it before explicitly testing the reload route.
+  await inspection.getByLabel('Discrepancy type', { exact: true }).selectOption('shortage');
+  await page.reload();
+  await expect(inspection.getByLabel('Discrepancy type', { exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Delivery', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
   );
 });

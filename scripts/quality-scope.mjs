@@ -1,5 +1,7 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'e2e/support/navigation.ts',
+  'scripts/browser-navigation.test.mjs',
   'e2e/guidedTradeWorkspaces.spec.ts',
   'api/src/modules/payments/automaticDocuments*.ts',
   'api/src/modules/payments/documentSubmission.test.ts',
