@@ -12,6 +12,7 @@ type Props = {
   proofRequired: boolean;
   submittedReference?: string;
   run: (key: string, mutation: () => Promise<unknown>, message: string) => Promise<void>;
+  onShowDelivery?: () => void;
 };
 
 export default function DealNextAction({
@@ -20,6 +21,7 @@ export default function DealNextAction({
   proofRequired,
   submittedReference,
   run,
+  onShowDelivery,
 }: Props) {
   const navigate = useNavigate();
   const [reference, setReference] = useState('');
@@ -55,14 +57,25 @@ export default function DealNextAction({
   let control: React.ReactNode = null;
   if (action.requiresAction && action.kind === 'delivery')
     control = (
-      <a className="btn btn-primary" href="#delivery-acceptance">
+      <a
+        className="btn btn-primary"
+        href="#delivery-acceptance"
+        onClick={
+          onShowDelivery
+            ? (event) => {
+                event.preventDefault();
+                onShowDelivery();
+              }
+            : undefined
+        }
+      >
         Inspect delivered goods
       </a>
     );
   if (action.requiresAction) {
     switch (action.operation) {
       case 'configure_terms':
-        control = go(`/contracts/${contractId}`, 'Configure protection');
+        control = go(`/contracts/${contractId}?tab=payments`, 'Configure protection');
         break;
       case 'confirm_terms':
         control = (
@@ -157,7 +170,7 @@ export default function DealNextAction({
         }
         break;
       case 'documents':
-        control = go(`/contracts/${contractId}`, 'Open trade documents');
+        control = go(`/contracts/${contractId}?tab=documents`, 'Open trade documents');
         break;
       case 'bank_security':
         control = go(action.actionPath, 'Open bank security');

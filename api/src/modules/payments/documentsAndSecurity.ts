@@ -1,3 +1,5 @@
+import type { PoolClient } from 'pg';
+import { hashObject } from '../../services/audit';
 import { assertNoFeeRefundHold } from '../feeRefunds/boundary';
 import { documentsCanBePresentedAt } from './documentPolicy';
 import { activatePaymentInstallments } from './dueDates';
@@ -12,7 +14,31 @@ import { inTradeTransaction, recordTradeAudit, TradeActor } from '../trading/tra
 import { lockPayment, requireAgreed } from './locking';
 import { assertNoActivePaymentIssue } from './issueGuard';
 
-export async function presentDocuments(actor: TradeActor, id: string) {
+export function presentDocuments(actor: TradeActor, id: string) {
+  return presentDocumentSet(actor.organizationId, id, async (client, required) => {
+    await recordTradeAudit(client, actor, 'payment.documents.present', 'payment_request', id, {
+      required,
+    });
+  });
+}
+
+/** Internal worker only. System attribution never impersonates a supplier user. */
+export function automaticallyPresentDocuments(organizationId: string, id: string) {
+  return presentDocumentSet(organizationId, id, async (client, required) => {
+    const metadata = { required, source: 'automatic_readiness' };
+    await client.query(
+      `INSERT INTO audit_events (actor_user_id,actor_organization_id,action,entity_type,entity_id,new_state_hash,metadata)
+       VALUES(NULL,$1,'payment.documents.present','payment_request',$2,$3,$4)`,
+      [organizationId, id, hashObject(metadata), JSON.stringify(metadata)],
+    );
+  });
+}
+
+async function presentDocumentSet(
+  organizationId: string,
+  id: string,
+  recordPresentation: (client: PoolClient, required: string[]) => Promise<void>,
+) {
   const availability = await preflightEvidence(
     async (execute) =>
       (
@@ -24,14 +50,16 @@ export async function presentDocuments(actor: TradeActor, id: string) {
     AND (e.type IN('commercial_invoice','packing_list','transport_document') OR (e.type='insurance_certificate' AND UPPER(c.incoterm) IN('CIF','CIP')))
     AND e.validation_status='validated' AND e.malware_scan_status='clean' AND e.review_status<>'rejected'
     AND e.storage_key IS NOT NULL AND ${evidenceAvailabilityUsableSql('e')} ORDER BY e.id DESC LIMIT 65`,
-          [id, actor.organizationId],
+          [id, organizationId],
         )
       ).rows,
   );
   return inTradeTransaction(async (client) => {
-    const { contract, payment } = await lockPayment(client, actor, id, 'seller');
+    const { contract, payment } = await lockPayment(client, { organizationId }, id, 'seller');
     requireAgreed(contract);
     await assertNoActivePaymentIssue(client, payment.id);
+    if (contract.status === 'settled' && !payment.documents_presented_at)
+      throw new ConflictError('This trade has already settled');
     if (payment.documents_presented_at) return payment;
     if (
       !['deposit_balance', 'documentary_collection', 'bank_secured'].includes(contract.payment_plan)
@@ -54,7 +82,7 @@ export async function presentDocuments(actor: TradeActor, id: string) {
         'The goods must be handed to the transport provider before presenting documents',
       );
     }
-    if (!shipment?.transport_document_reference)
+    if (!shipment?.transport_document_reference?.trim())
       throw new ValidationError('Record the applicable transport-document reference first');
     const required = ['commercial_invoice', 'packing_list', 'transport_document'];
     if (['CIF', 'CIP'].includes(String(contract.incoterm).toUpperCase()))
@@ -63,7 +91,7 @@ export async function presentDocuments(actor: TradeActor, id: string) {
       `SELECT ${evidenceAvailabilityProjection()} FROM evidence_items WHERE linked_entity_type='contract' AND linked_entity_id=$1
       AND uploader_organization_id=$2 AND type=ANY($3::text[]) AND validation_status='validated'
       AND malware_scan_status='clean' AND review_status<>'rejected' AND storage_key IS NOT NULL AND ${evidenceAvailabilityUsableSql()} ORDER BY id DESC LIMIT 65 FOR SHARE`,
-      [contract.id, actor.organizationId, required],
+      [contract.id, organizationId, required],
     );
     assertWorkflowEvidenceLimit(documents.rows);
     const present = new Set<string>();
@@ -78,13 +106,11 @@ export async function presentDocuments(actor: TradeActor, id: string) {
     await activatePaymentInstallments(client, id, 'documents_presented');
     const updated = (
       await client.query(
-        "UPDATE payment_requests SET status='payment_due',documents_presented_at=NOW(),updated_at=NOW() WHERE id=$1 RETURNING *",
+        "UPDATE payment_requests SET status='payment_due',documents_presented_at=NOW(),documents_submission_error_code=NULL,documents_submission_checked_at=NOW(),updated_at=NOW() WHERE id=$1 RETURNING *",
         [id],
       )
     ).rows[0];
-    await recordTradeAudit(client, actor, 'payment.documents.present', 'payment_request', id, {
-      required,
-    });
+    await recordPresentation(client, required);
     return updated;
   });
 }

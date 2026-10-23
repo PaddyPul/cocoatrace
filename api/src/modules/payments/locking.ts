@@ -7,7 +7,7 @@ import type { TradeActor } from '../trading/transaction';
 // Settlement also locks the contract, so installment-first locking can deadlock.
 export async function lockPayment(
   client: PoolClient,
-  actor: TradeActor,
+  actor: Pick<TradeActor, 'organizationId'>,
   id: string,
   party: 'buyer' | 'seller',
   installment = false,

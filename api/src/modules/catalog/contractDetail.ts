@@ -15,7 +15,7 @@ export async function readContractDetail(actor: AuthenticatedActor, id: string) 
             coordinator.name as transport_coordinator_name,
             pay.id as payment_request_id, pay.status as payment_status, pay.amount_total as payment_amount,
             pay.currency as payment_currency, pay.payment_reference_external, pay.dispatch_required_amount, pay.amount_confirmed,
-            pay.security_status,pay.security_provider,pay.security_reference,pay.release_status,pay.documents_presented_at,
+            pay.documents_submission_error_code,pay.documents_submission_checked_at,pay.security_status,pay.security_provider,pay.security_reference,pay.release_status,pay.documents_presented_at,
             fee.id as platform_fee_invoice_id,fee.fee_payer,fee.rate_bps as platform_fee_rate_bps,fee.amount_total as platform_fee_amount,fee.status as platform_fee_status
      FROM sales_contracts c
      JOIN organizations s ON s.id = c.seller_organization_id
@@ -40,7 +40,7 @@ export async function readContractDetail(actor: AuthenticatedActor, id: string) 
     };
     const documents = await execute(
       `SELECT e.id, e.type, e.file_name, e.file_size_bytes, e.mime_type, e.sha256_hash,
-            e.claim_description, e.review_status, e.validation_status, e.malware_scan_status, e.created_at, o.name as uploader_name
+            e.claim_description, e.review_status, e.validation_status, e.malware_scan_status, e.created_at, e.uploader_organization_id, o.name as uploader_name
      FROM evidence_items e
      JOIN organizations o ON o.id=e.uploader_organization_id
      WHERE e.linked_entity_type='contract' AND e.linked_entity_id=$1

@@ -31,14 +31,26 @@ export type StructuredSourcingBrief = {
 
 function titleCase(value: string) { return value.replace(/\b\w/g, (letter) => letter.toUpperCase()); }
 
+// Read the material phrase from ordinary procurement grammar, not a crop whitelist.
+// Ambiguous prose remains a required manual-review field.
+function materialPhrase(text: string): string {
+  const quantity = /\b\d[\d,]*(?:\.\d+)?\s*(?:metric\s*(?:tonnes?|tons?)|tonnes?|tons?|mt|kilograms?|kgs?)\b\s*(?:of\s+)?(.+?)(?=\s+(?:from|delivered|delivery|with|for|to|by|required|moisture)\b|[,.!;\n]|$)/iu;
+  const request = /\b(?:need|buy|source|looking for)\s+(?:some\s+)?(.+?)(?=\s+(?:from|delivered|delivery|with|for|to|by|required|moisture)\b|[,.!;\n]|$)/iu;
+  const phrase = (text.match(quantity)?.[1] || text.match(request)?.[1] || '')
+    .toLowerCase().replace(/^(?:(?:fully[ -]fermented|fully|organic|conventional|fresh|raw|dried|high[ -]quality|certified)\s+)+/u, '').trim();
+  if (!phrase || phrase.length > 80 || phrase.split(/\s+/).length > 8 || !/^[\p{L}\p{N}][\p{L}\p{N}\s'’()/-]*$/u.test(phrase) || /\b(?:unfamiliar|unspecified|unknown|whatever|something|material|products?|goods|crops?)\b/u.test(phrase)) return '';
+  return phrase;
+}
+
 export function structureSourcingBrief(brief: string): StructuredSourcingBrief {
   const text = brief.trim();
   const lower = text.toLowerCase();
   const facts: StructuredSourcingBrief['extractedFacts'] = [];
   const unresolved: string[] = [];
-  const commodityEntry = commodities.find(([, aliases]) => aliases.some((alias) => new RegExp(`\\b${alias}\\b`).test(lower)));
-  const commodity = commodityEntry?.[0] || '';
-  if (commodity) facts.push({ field: 'commodity', value: commodity, confidence: 'high' }); else unresolved.push('Commodity');
+  const phrase = materialPhrase(text);
+  const commodityEntry = commodities.find(([, aliases]) => aliases.some((alias) => phrase ? phrase === alias : new RegExp(`\\b${alias}\\b`).test(lower)));
+  const commodity = commodityEntry?.[0] || phrase;
+  if (commodity) facts.push({ field: 'commodity', value: commodity, confidence: commodityEntry ? 'high' : 'medium' }); else unresolved.push('Commodity');
 
   const quantityMatch = lower.match(/(\d[\d,]*(?:\.\d+)?)\s*(metric\s*(?:tonnes?|tons?)|tonnes?|tons?|mt|kilograms?|kgs?|kg)\b/);
   let quantityKg: number | null = null;

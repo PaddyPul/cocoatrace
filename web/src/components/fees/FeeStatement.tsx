@@ -1,3 +1,4 @@
+import WorkspaceTabs, { WorkspacePanel } from '../trading/WorkspaceTabs';
 import { useUnsavedChanges } from '../shared/UnsavedChanges';
 import FeeRefunds from './FeeRefunds';
 import FeeStatementDelivery from './FeeStatementDelivery';
@@ -25,6 +26,7 @@ export default function FeeStatement({
 }) {
   const { user, canDo } = useAuthCtx();
   const admin = canDo('finance.manage');
+  const [selectedTab, setSelectedTab] = useState<string | null>(null);
   const [data, setData] = useState<Statement | null>(null),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false);
@@ -120,6 +122,20 @@ export default function FeeStatement({
                             : 'Fee estimate — payable when the trade completes'
                           : 'Fee collection status needs platform finance review';
 
+  const feeTabs = [
+    { id: 'action', label: 'Payment action' },
+    { id: 'terms', label: 'Collection terms' },
+    { id: 'statement', label: 'Statement' },
+    { id: 'adjustments', label: 'Refunds & concerns' },
+    { id: 'history', label: 'History & email' },
+  ];
+  const feeTab =
+    selectedTab ||
+    (f?.refund_status && f.refund_status !== 'rejected'
+      ? 'adjustments'
+      : f?.status === 'estimated' && canSubmit
+        ? 'terms'
+        : 'action');
   return (
     <section
       aria-label="Platform fee statement"
@@ -171,22 +187,6 @@ export default function FeeStatement({
             )}
           </div>
 
-          {f.policy_version === 'seller-predispatch-v3' && (
-            <FeeEnforcement contractId={contractId} onChanged={() => void load()} />
-          )}
-          <p className="text-xs">{data.statementNumber}</p>
-          <p className="text-sm">
-            {fmtMoney(Number(f.amount_total), f.currency, f.currency_minor_units)} · {f.fee_payer}{' '}
-            pays · {f.rate_bps / 100}% · {f.status.split('_').join(' ')}
-          </p>
-          <p className="text-xs text-text-muted">
-            This statement uses its recorded rate and payer. New trades record them at acceptance.
-            {f.policy_version === 'seller-predispatch-v3'
-              ? 'This trade uses pre-dispatch fee collection after explicit seller agreement.'
-              : 'The fee becomes due after the trade completes.'}{' '}
-            Platform fee collection is separate from the buyer’s goods payment.
-          </p>
-          <p className="text-xs text-text-muted">{data.taxNotice}</p>
           {(f.amount_matches === false ||
             f.payer_matches === false ||
             !f.payer_organization_id) && (
@@ -217,162 +217,237 @@ export default function FeeStatement({
             </p>
           )}
           {f.amount_total === '0.00' && <p role="status">Zero-value fee. No payment required.</p>}
-          <button
-            className="btn btn-sm"
-            disabled={busy}
-            onClick={() =>
-              void run(async () => {
-                const value = await platformFees.download(contractId);
-                downloadJson(`${value.statementNumber}.json`, value);
-              })
-            }
-          >
-            Download fee statement
-          </button>
-          {pending && <p role="status">Fee payment submitted — awaiting platform verification.</p>}
-          {due && !pending && canSubmit && (
-            <div>
-              <label className="form-label" htmlFor="fee-reference">
-                Fee payment reference
-              </label>
-              <input
-                id="fee-reference"
-                className="form-input"
-                value={reference}
-                maxLength={200}
-                onChange={(e) => setReference(e.target.value)}
-              />
-              <p className="text-xs text-text-muted my-2">
-                Submit only after paying the stated amount through the external channel agreed with
-                the platform. Entering a reference does not verify receipt.
-              </p>
-              <button
-                className="btn btn-sm"
-                disabled={busy || [...reference.trim()].length < 3}
-                onClick={() =>
-                  void run(
-                    () => platformFees.submit(contractId, reference),
-                    () => setReference(''),
-                  )
-                }
-              >
-                Submit fee payment reference
-              </button>
-            </div>
+          <div className="rounded-xl border border-brand-400/30 p-3" aria-label="Fee next action">
+            <strong>
+              {pending
+                ? admin && !payer
+                  ? 'Platform admin: verify the submitted fee receipt'
+                  : 'Waiting for the platform admin to verify the fee receipt'
+                : f.status === 'paid' && f.receipt_verified
+                  ? 'Fee receipt verified — continue your trade'
+                  : f.status === 'estimated' && canSubmit
+                    ? 'Seller: review and accept the fee terms'
+                    : due && canSubmit
+                      ? 'Payer: pay externally, then submit your fee reference'
+                      : 'Review the recorded fee state below'}
+            </strong>
+            <p className="text-xs mt-1">
+              Platform fees are separate from goods payments. A submitted reference is not a
+              verified receipt.
+            </p>
+          </div>
+          {feeTab !== 'action' && (due || pending) && (
+            <button className="btn btn-primary" onClick={() => setSelectedTab('action')}>
+              {pending
+                ? admin && !payer
+                  ? 'Open receipt verification'
+                  : 'View submitted fee reference'
+                : 'Go to fee payment action'}
+            </button>
           )}
-          {admin && !payer && due && (
-            <div className="space-y-2">
+          <WorkspaceTabs
+            label="Fee workspace"
+            tabs={feeTabs}
+            active={feeTab}
+            onChange={setSelectedTab}
+          >
+            <WorkspacePanel active={feeTab} id="action">
+              {' '}
               {pending && (
-                <>
-                  <p className="text-xs">Payer reference: {pending.reference}</p>
-                  <label className="form-label" htmlFor="fee-received">
-                    Amount actually received
+                <p role="status">Fee payment submitted — awaiting platform verification.</p>
+              )}
+              {due && !pending && canSubmit && (
+                <div>
+                  <label className="form-label" htmlFor="fee-reference">
+                    Fee payment reference
                   </label>
                   <input
-                    id="fee-received"
+                    id="fee-reference"
                     className="form-input"
-                    inputMode="decimal"
-                    value={amount}
-                    onChange={(e) => {
-                      setAmount(e.target.value);
-                      setAmountEdited(e.target.value !== data?.fee.amount_total);
-                    }}
-                  />
-                  <label className="form-label" htmlFor="fee-currency">
-                    Received currency
-                  </label>
-                  <input
-                    id="fee-currency"
-                    className="form-input"
-                    maxLength={3}
-                    value={currency}
-                    onChange={(e) => {
-                      setCurrency(e.target.value);
-                      setCurrencyEdited(e.target.value !== data?.fee.currency);
-                    }}
-                  />
-                  <label className="form-label" htmlFor="fee-receipt">
-                    Platform bank receipt reference
-                  </label>
-                  <input
-                    id="fee-receipt"
-                    className="form-input"
+                    value={reference}
                     maxLength={200}
-                    value={receipt}
-                    onChange={(e) => setReceipt(e.target.value)}
+                    onChange={(e) => setReference(e.target.value)}
                   />
+                  <p className="text-xs text-text-muted my-2">
+                    Submit only after paying the stated amount through the external channel agreed
+                    with the platform. Entering a reference does not verify receipt.
+                  </p>
                   <button
                     className="btn btn-sm"
-                    disabled={busy || receipt.trim().length < 3}
+                    disabled={busy || [...reference.trim()].length < 3}
                     onClick={() =>
                       void run(
-                        () =>
-                          platformFees.verify(contractId, pending.id, amount, currency, receipt),
-                        () => {
-                          setReceipt('');
-                          setAmountEdited(false);
-                          setCurrencyEdited(false);
-                        },
+                        () => platformFees.submit(contractId, reference),
+                        () => setReference(''),
                       )
                     }
                   >
-                    Verify platform receipt
+                    Submit fee payment reference
                   </button>
-                </>
+                </div>
               )}
-              <label className="form-label" htmlFor="fee-review-reason">
-                Finance decision reason
-              </label>
-              <textarea
-                id="fee-review-reason"
-                className="form-input"
-                maxLength={2000}
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-              />
-              {pending ? (
-                <button
-                  className="btn btn-sm"
-                  disabled={busy || [...reason.trim()].length < 10}
-                  onClick={() =>
-                    void run(
-                      () => platformFees.reject(contractId, pending.id, reason),
-                      () => setReason(''),
-                    )
-                  }
-                >
-                  Reject fee submission
-                </button>
-              ) : (
-                <button
-                  className="btn btn-sm"
-                  disabled={busy || [...reason.trim()].length < 10}
-                  onClick={() =>
-                    void run(
-                      () => platformFees.writeOff(contractId, reason),
-                      () => setReason(''),
-                    )
-                  }
-                >
-                  Write off unpaid fee
-                </button>
+              {admin && !payer && due && (
+                <div className="space-y-2">
+                  {pending && (
+                    <>
+                      <p className="text-xs">Payer reference: {pending.reference}</p>
+                      <label className="form-label" htmlFor="fee-received">
+                        Amount actually received
+                      </label>
+                      <input
+                        id="fee-received"
+                        className="form-input"
+                        inputMode="decimal"
+                        value={amount}
+                        onChange={(e) => {
+                          setAmount(e.target.value);
+                          setAmountEdited(e.target.value !== data?.fee.amount_total);
+                        }}
+                      />
+                      <label className="form-label" htmlFor="fee-currency">
+                        Received currency
+                      </label>
+                      <input
+                        id="fee-currency"
+                        className="form-input"
+                        maxLength={3}
+                        value={currency}
+                        onChange={(e) => {
+                          setCurrency(e.target.value);
+                          setCurrencyEdited(e.target.value !== data?.fee.currency);
+                        }}
+                      />
+                      <label className="form-label" htmlFor="fee-receipt">
+                        Platform bank receipt reference
+                      </label>
+                      <input
+                        id="fee-receipt"
+                        className="form-input"
+                        maxLength={200}
+                        value={receipt}
+                        onChange={(e) => setReceipt(e.target.value)}
+                      />
+                      <button
+                        className="btn btn-sm"
+                        disabled={busy || receipt.trim().length < 3}
+                        onClick={() =>
+                          void run(
+                            () =>
+                              platformFees.verify(
+                                contractId,
+                                pending.id,
+                                amount,
+                                currency,
+                                receipt,
+                              ),
+                            () => {
+                              setReceipt('');
+                              setAmountEdited(false);
+                              setCurrencyEdited(false);
+                            },
+                          )
+                        }
+                      >
+                        Verify platform receipt
+                      </button>
+                    </>
+                  )}
+                  <label className="form-label" htmlFor="fee-review-reason">
+                    Finance decision reason
+                  </label>
+                  <textarea
+                    id="fee-review-reason"
+                    className="form-input"
+                    maxLength={2000}
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                  />
+                  {pending ? (
+                    <button
+                      className="btn btn-sm"
+                      disabled={busy || [...reason.trim()].length < 10}
+                      onClick={() =>
+                        void run(
+                          () => platformFees.reject(contractId, pending.id, reason),
+                          () => setReason(''),
+                        )
+                      }
+                    >
+                      Reject fee submission
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-sm"
+                      disabled={busy || [...reason.trim()].length < 10}
+                      onClick={() =>
+                        void run(
+                          () => platformFees.writeOff(contractId, reason),
+                          () => setReason(''),
+                        )
+                      }
+                    >
+                      Write off unpaid fee
+                    </button>
+                  )}
+                </div>
               )}
-            </div>
-          )}
-          {data.refundSupported && (
-            <FeeRefunds contractId={contractId} onChanged={() => void load()} />
-          )}
-          {data.statementDeliverySupported && (payer || admin) && (
-            <FeeStatementDelivery contractId={contractId} />
-          )}
-          {data.submissions
-            .filter((s) => s.status !== 'submitted')
-            .map((s) => (
-              <p key={s.id} className="text-xs">
-                Submission {s.status}: {s.reference}
-                {s.rejection_reason ? ` — ${s.rejection_reason}` : ''}
+            </WorkspacePanel>
+            <WorkspacePanel active={feeTab} id="terms">
+              {' '}
+              {f.policy_version === 'seller-predispatch-v3' && (
+                <FeeEnforcement contractId={contractId} onChanged={() => void load()} />
+              )}
+            </WorkspacePanel>
+            <WorkspacePanel active={feeTab} id="statement">
+              {' '}
+              <p className="text-xs">{data.statementNumber}</p>
+              <p className="text-sm">
+                {fmtMoney(Number(f.amount_total), f.currency, f.currency_minor_units)} ·{' '}
+                {f.fee_payer} pays · {f.rate_bps / 100}% · {f.status.split('_').join(' ')}
               </p>
-            ))}
+              <p className="text-xs text-text-muted">
+                This statement uses its recorded rate and payer. New trades record them at
+                acceptance.
+                {f.policy_version === 'seller-predispatch-v3'
+                  ? 'This trade uses pre-dispatch fee collection after explicit seller agreement.'
+                  : 'The fee becomes due after the trade completes.'}{' '}
+                Platform fee collection is separate from the buyer’s goods payment.
+              </p>
+              <p className="text-xs text-text-muted">{data.taxNotice}</p>
+              <button
+                className="btn btn-sm"
+                disabled={busy}
+                onClick={() =>
+                  void run(async () => {
+                    const value = await platformFees.download(contractId);
+                    downloadJson(`${value.statementNumber}.json`, value);
+                  })
+                }
+              >
+                Download fee statement
+              </button>
+            </WorkspacePanel>
+            <WorkspacePanel active={feeTab} id="adjustments">
+              {' '}
+              {data.refundSupported && (
+                <FeeRefunds contractId={contractId} onChanged={() => void load()} />
+              )}
+            </WorkspacePanel>
+            <WorkspacePanel active={feeTab} id="history">
+              {' '}
+              {data.statementDeliverySupported && (payer || admin) && (
+                <FeeStatementDelivery contractId={contractId} />
+              )}
+              {data.submissions
+                .filter((s) => s.status !== 'submitted')
+                .map((s) => (
+                  <p key={s.id} className="text-xs">
+                    Submission {s.status}: {s.reference}
+                    {s.rejection_reason ? ` — ${s.rejection_reason}` : ''}
+                  </p>
+                ))}
+            </WorkspacePanel>
+          </WorkspaceTabs>
         </>
       )}
     </section>

@@ -236,7 +236,9 @@ test('supply refresh preserves a drafted offer, blocks stale submission and clea
     page.getByRole('button', { name: 'Send evidence-backed offer', exact: true }),
   ).toBeEnabled();
   await expect(quantity).toHaveValue('6');
-  await expect(page.getByRole('alert').filter({ hasText: 'Provenance unavailable' })).toBeVisible();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Source records unavailable' }),
+  ).toBeVisible();
   await expect(page.getByText('Checks unavailable', { exact: true })).toBeVisible();
   status = 403;
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));

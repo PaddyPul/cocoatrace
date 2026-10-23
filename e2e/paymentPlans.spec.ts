@@ -62,7 +62,7 @@ async function submitAndVerify(buyer: Page, seller: Page, contractId: string, pr
   ).toHaveCount(0);
 }
 async function shareDocuments(seller: Page, contractId: string) {
-  await seller.goto(`/contracts/${contractId}`);
+  await seller.goto(`/contracts/${contractId}?tab=documents`);
   for (const type of ['commercial_invoice', 'packing_list', 'transport_document']) {
     await seller.getByRole('button', { name: 'Add document', exact: true }).click();
     await field(seller, 'Document type').selectOption(type);
@@ -74,10 +74,11 @@ async function shareDocuments(seller: Page, contractId: string) {
     await modal(seller).getByRole('button', { name: 'Share document', exact: true }).click();
     await expect(seller.getByText(`${type}.pdf`, { exact: true })).toBeVisible();
   }
-  await seller.getByRole('button', { name: 'Present documents for payment', exact: true }).click();
   await expect(
-    seller.getByRole('button', { name: 'Present documents for payment', exact: true }),
-  ).toHaveCount(0);
+    seller.getByText('Documents submitted. Continue with the recorded payment workflow.', {
+      exact: true,
+    }),
+  ).toBeVisible({ timeout: 90000 });
 }
 
 for (const plan of [
@@ -130,7 +131,7 @@ for (const plan of [
       const accepted = await seller.request.post(`/api/offers/${offer.id}/accept`);
       expect(accepted.status()).toBe(200);
       const { contract, shipment, paymentRequest } = await accepted.json();
-      await seller.goto(`/contracts/${contract.id}`);
+      await seller.goto(`/contracts/${contract.id}?tab=payments`);
       await seller.getByRole('button', { name: 'Set payment protection', exact: true }).click();
       await field(seller, 'Plan').selectOption(plan);
       const proof = plan === 'deposit_balance';
@@ -185,7 +186,7 @@ for (const plan of [
       if (plan !== 'pay_after_delivery') {
         await seller.goto(`/deal-room/${contract.id}`);
         await expect(
-          seller.getByText('Present the trade document set', { exact: true }),
+          seller.getByText('Complete the trade document set', { exact: true }),
         ).toBeVisible();
         await shareDocuments(seller, contract.id);
         await submitAndVerify(buyer, seller, contract.id, proof);

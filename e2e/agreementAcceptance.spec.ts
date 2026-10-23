@@ -81,7 +81,7 @@ test('reviews an explicit version before acknowledging and shows independent par
       });
     return route.fulfill({ status: 503, json: { error: 'Supporting data unavailable' } });
   });
-  await page.goto(`/contracts/${id}`);
+  await page.goto(`/contracts/${id}?tab=activity`);
   await page.getByRole('button', { name: 'Review agreement version' }).click();
   const panel = page.getByRole('region', { name: 'Agreement acknowledgement' });
   await expect(panel).toContainText('not a signed legal contract');

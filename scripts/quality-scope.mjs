@@ -1,5 +1,11 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'e2e/guidedTradeWorkspaces.spec.ts',
+  'api/src/modules/payments/automaticDocuments*.ts',
+  'api/src/modules/payments/documentSubmission.test.ts',
+  'api/src/migrations/054_automatic_document_presentation.ts',
+  'web/src/components/trading/DocumentReadiness.tsx',
+  'web/src/components/trading/WorkspaceTabs.tsx',
   'e2e/investorRehearsalFeedback.spec.ts',
   'web/src/components/fees/FeeRegister.tsx',
   'web/src/components/fees/FinanceReviewQueue.tsx',

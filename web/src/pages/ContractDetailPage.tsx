@@ -1,8 +1,10 @@
+import WorkspaceTabs, { WorkspacePanel } from '../components/trading/WorkspaceTabs';
+import DocumentReadiness from '../components/trading/DocumentReadiness';
 import ConfirmDialog from '../components/shared/ConfirmDialog';
 import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { contracts, evidence, payments } from '../api';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { contracts, evidence } from '../api';
 import AgreementAcceptance from '../components/trading/AgreementAcceptance';
 import DealActivity from '../components/trading/DealActivity';
 import FeeStatement from '../components/fees/FeeStatement';
@@ -60,6 +62,8 @@ const PAYMENT_PLANS = [
 export default function ContractDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [tabParams] = useSearchParams();
+  const [selectedWorkspaceTab, setSelectedWorkspaceTab] = useState<string | null>(null);
   const { user, canDo } = useAuthCtx();
   const { toast } = useToast();
   const [data, setData] = useState<any>(null);
@@ -78,7 +82,6 @@ export default function ContractDetailPage() {
   const [documentNote, setDocumentNote] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
-  const [presenting, setPresenting] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [paymentEvidenceRequired, setPaymentEvidenceRequired] = useState(false);
   const [paymentPlan, setPaymentPlan] = useState('deposit_balance');
@@ -203,7 +206,9 @@ export default function ContractDetailPage() {
         (doc: any) =>
           doc.validation_status === 'validated' &&
           doc.malware_scan_status === 'clean' &&
-          doc.review_status !== 'rejected',
+          doc.review_status !== 'rejected' &&
+          (!doc.uploader_organization_id ||
+            doc.uploader_organization_id === data?.seller_organization_id),
       )
       .map((doc: any) => doc.type),
   );
@@ -215,9 +220,6 @@ export default function ContractDetailPage() {
     'unloaded',
     'delivered',
   ].includes(data?.current_milestone);
-  const transportDocumentsReady =
-    (shipmentDispatched || ['handed_over', 'loaded'].includes(data?.current_milestone)) &&
-    Boolean(data?.transport_document_reference);
   const shipmentArrived = ['arrived', 'customs_cleared', 'unloaded', 'delivered'].includes(
     data?.current_milestone,
   );
@@ -268,20 +270,6 @@ export default function ContractDetailPage() {
       setUploadError(e.message);
     } finally {
       setUploading(false);
-    }
-  };
-
-  const handlePresentDocuments = async () => {
-    if (!data?.payment_request_id) return;
-    setPresenting(true);
-    try {
-      await payments.submitDocuments(data.payment_request_id);
-      await loadContract();
-      toast('success', 'Document set presented. The buyer can now record payment.');
-    } catch (e: any) {
-      toast('error', e.message);
-    } finally {
-      setPresenting(false);
     }
   };
 
@@ -346,6 +334,22 @@ export default function ContractDetailPage() {
     );
 
   const c = data;
+  const agreementTabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'documents', label: 'Documents' },
+    { id: 'payments', label: 'Goods payment' },
+    { id: 'transport', label: 'Transport' },
+    { id: 'fees', label: 'Platform fee' },
+    { id: 'delivery', label: 'Delivery' },
+    { id: 'activity', label: 'Activity' },
+  ];
+  const requestedTab =
+    selectedWorkspaceTab ||
+    tabParams.get('tab') ||
+    (c.nextAction?.kind === 'documents' ? 'documents' : 'overview');
+  const activeTab = agreementTabs.some((tab) => tab.id === requestedTab)
+    ? requestedTab
+    : 'overview';
   const totalValue = Number(
     c.payment_amount ?? Number(c.quantity_kg || 0) * Number(c.price_per_kg || 0),
   );
@@ -393,351 +397,380 @@ export default function ContractDetailPage() {
         </button>
       }
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-5">
-          <AgreementAcceptance contractId={c.id} />
-          <DealActivity contractId={c.id} />
-          <FeeStatement contractStatus={c.status} contractId={c.id} />
-          <ContractCancellation
-            contractId={id!}
-            organizationId={user?.organizationId || ''}
-            onChanged={loadContract}
-          />
-          <DeliveryAcceptance
-            contractId={c.id}
-            organizationId={user?.organizationId || ''}
-            onChanged={loadContract}
-          />
-          <div className="bg-brand-500/10 border border-brand-500/30 rounded p-4">
-            <div className="text-[10px] text-brand-400 uppercase tracking-wider mb-1">
-              Your next action
-            </div>
-            <div data-testid="contract-next-action" data-action-id={c.nextAction?.id}>
-              <div className="text-sm font-semibold">
-                {c.nextAction?.title || 'Next action unavailable'}
-              </div>
-              <p className="mt-1 text-xs">
-                {c.nextAction?.description || 'Refresh the trade agreement before continuing.'}
-              </p>
-              <button className="btn btn-sm mt-2" onClick={() => navigate(`/deal-room/${c.id}`)}>
-                Open guided deal
-              </button>
-            </div>
+      <div className="mb-5">
+        {' '}
+        <div className="bg-brand-500/10 border border-brand-500/30 rounded p-4">
+          <div className="text-[10px] text-brand-400 uppercase tracking-wider mb-1">
+            Your next action
           </div>
-
-          <div className="bg-surface border border-border rounded p-5">
-            <div className="flex items-start justify-between mb-5">
-              <div>
-                <h1 className="text-lg font-bold">Trade agreement</h1>
-                <p className="font-mono text-xs text-text-muted mt-0.5">{c.id}</p>
-              </div>
-              <StatusBadge domain="trade" status={c.status} />
+          <div data-testid="contract-next-action" data-action-id={c.nextAction?.id}>
+            <div className="text-sm font-semibold">
+              {c.nextAction?.title || 'Next action unavailable'}
             </div>
-            <p className="text-xs text-text-muted mb-4" data-testid="agreement-record-notice">
-              Unsigned platform record: this trade agreement records the parties’ agreed commercial
-              terms. Signatures are not captured here, and this record is not a signed contract
-              document. Its legal effect depends on the applicable terms and law.
+            <p className="mt-1 text-xs">
+              {c.nextAction?.description || 'Refresh the trade agreement before continuing.'}
             </p>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Seller" value={c.seller_name} />
-              <Field label="Buyer" value={c.buyer_name} />
-              <Field label="Quantity" value={`${Number(c.quantity_kg || 0).toLocaleString()} kg`} />
-              <Field
-                label="Price"
-                value={`${fmtMoney(Number(c.price_per_kg || 0), c.currency, 4)}/kg`}
-              />
-              <Field
-                label="Total value"
-                value={fmtMoney(totalValue, c.currency, c.currency_minor_units)}
-                highlight
-              />
-              <Field label="Incoterm" value={c.incoterm || '—'} />
-              {c.compliance_reference && (
-                <div className="col-span-2">
-                  <Field
-                    label={`${c.compliance_scheme || 'Compliance'} reference`}
-                    value={c.compliance_reference}
-                    mono
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-surface border border-border rounded p-5">
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <ShieldCheck size={16} className="text-brand-400" /> Payment protection
-              </h3>
-              <StatusBadge domain="terms" status={c.payment_terms_status} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Field
-                label="Payment proof"
-                value={c.payment_evidence_required ? 'Required for each installment' : 'Optional'}
-              />
-              <Field
-                label="Plan"
-                value={String(c.payment_plan || 'not selected')
-                  .split('_')
-                  .join(' ')}
-              />
-              <Field
-                label="Required before dispatch"
-                value={fmtMoney(
-                  Number(c.dispatch_required_amount || 0),
-                  c.currency,
-                  c.currency_minor_units,
-                )}
-              />
-              <Field
-                label="Seller-confirmed receipt"
-                value={fmtMoney(
-                  Number(c.amount_confirmed || 0),
-                  c.currency,
-                  c.currency_minor_units,
-                )}
-              />
-              <Field
-                label="Platform fee (seller)"
-                value={fmtMoney(
-                  Number(c.platform_fee_amount || 0),
-                  c.currency,
-                  c.currency_minor_units,
-                )}
-              />
-            </div>
-            <p className="text-[11px] text-text-muted mt-3">
-              BetterTrade records references and confirmations but does not custody funds. Dispatch
-              is blocked server-side until the selected protection condition is verified.
-            </p>
-          </div>
-
-          <div className="bg-surface border border-border rounded p-5">
-            <h3 className="text-sm font-semibold mb-4">Trade fulfilment</h3>
-            <p className="text-xs text-text-muted mb-4">
-              Current transport milestone:{' '}
-              <StatusBadge domain="transport" status={c.current_milestone} />. Arrival and delivery
-              do not confirm payment or buyer acceptance.
-            </p>
-            <div className="space-y-3">
-              {steps.map((step) => (
-                <div
-                  key={step.label}
-                  className="flex items-center gap-3 text-xs"
-                  aria-label={`${step.done ? 'Completed' : 'Pending'}: ${step.label}`}
-                >
-                  {step.done ? (
-                    <CheckCircle2 size={16} className="text-green-400 shrink-0" />
-                  ) : (
-                    <Circle size={16} className="text-text-muted shrink-0" />
-                  )}
-                  <span className={step.done ? 'text-text-primary' : 'text-text-muted'}>
-                    {step.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-surface border border-border rounded p-5">
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <div>
-                <h3 className="text-sm font-semibold flex items-center gap-2">
-                  <FileText size={16} className="text-brand-400" /> Shared trade documents
-                </h3>
-                <p className="text-[11px] text-text-muted mt-1">
-                  Both buyer and seller can open documents attached to this trade agreement.
-                </p>
-              </div>
-              {canDo('evidence.upload') && (
-                <button className="btn btn-sm" onClick={() => setShowUpload(true)}>
-                  <Upload size={14} /> Add document
-                </button>
-              )}
-            </div>
-            {(c.documents || []).length ? (
-              <div className="divide-y divide-border">
-                {c.documents.map((doc: any) => (
-                  <div key={doc.id} className="py-3 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-xs font-medium truncate">{doc.file_name}</div>
-                      <div className="text-[10px] text-text-muted">
-                        {doc.type.split('_').join(' ')} · {doc.uploader_name} ·{' '}
-                        {fmtDate(doc.created_at)}
-                      </div>
-                    </div>
-                    <button
-                      className="btn btn-sm shrink-0"
-                      onClick={() =>
-                        evidence
-                          .download(doc.id, doc.file_name)
-                          .catch((e) => toast('error', e.message))
-                      }
-                    >
-                      <Download size={13} /> Download
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-xs text-text-muted py-5 text-center">
-                No trade documents shared yet.
-              </div>
-            )}
-            {isSeller && missingDocuments.length > 0 && (
-              <div className="mt-3 text-[11px] text-amber-400">
-                Required before payment:{' '}
-                {missingDocuments.map((type) => type.split('_').join(' ')).join(', ')}.
-              </div>
-            )}
-          </div>
-
-          {c.shipment_id && (
-            <div className="bg-surface border border-border rounded p-5">
-              <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                <Ship size={16} className="text-brand-400" /> Transport workspace
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <Field
-                  label="Coordinator"
-                  value={c.transport_coordinator_name || 'Assigned from Incoterm'}
-                />
-                <Field
-                  label="External provider"
-                  value={c.service_provider_name || 'Not recorded'}
-                />
-                <Field
-                  label="Mode"
-                  value={
-                    c.transport_mode === 'unspecified'
-                      ? 'Not selected'
-                      : String(c.transport_mode).split('_').join(' ')
-                  }
-                />
-                <Field
-                  label="Booking reference"
-                  value={c.booking_reference || 'Not recorded'}
-                  mono
-                />
-                <Field
-                  label="Transport document"
-                  value={c.transport_document_reference || 'Not issued'}
-                  mono
-                />
-                <Field label="ETA" value={fmtDate(c.eta_arrival)} />
-                <div>
-                  <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
-                    Status
-                  </div>
-                  <StatusBadge domain="transport" status={c.current_milestone} />
-                </div>
-              </div>
-              <button
-                className="btn btn-sm mt-4"
-                onClick={() => navigate(`/shipments/${c.shipment_id}`)}
-              >
-                Open transport workspace <ChevronRight size={14} />
-              </button>
-            </div>
-          )}
-          {c.listing_id && (
-            <div className="bg-surface border border-border rounded p-5">
-              <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                <Tag size={16} className="text-brand-400" /> Source listing
-              </h3>
-              <button className="btn btn-sm" onClick={() => navigate(`/listing/${c.listing_id}`)}>
-                View listing <ChevronRight size={14} />
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          <div className="bg-surface border border-border rounded p-5 sticky top-6">
-            <h4 className="text-xs font-semibold mb-3">Trade agreement actions</h4>
-            <div className="space-y-2">
-              {isBuyer && !c.compliance_reference && (
-                <button
-                  className="btn w-full justify-center text-xs"
-                  onClick={() => setShowCompliance(true)}
-                >
-                  <FileText size={14} /> Add compliance reference
-                </button>
-              )}
-              {isSeller &&
-                !['cancelled', 'settled'].includes(c.status) &&
-                c.payment_terms_status !== 'agreed' && (
-                  <button
-                    className="btn btn-primary w-full justify-center text-xs"
-                    onClick={() => setShowTerms(true)}
-                  >
-                    <ShieldCheck size={14} /> Set payment protection
-                  </button>
-                )}
-              {isBuyer &&
-                !['cancelled', 'settled'].includes(c.status) &&
-                c.payment_terms_status === 'proposed' && (
-                  <button
-                    className="btn btn-primary w-full justify-center text-xs"
-                    onClick={() => {
-                      setTermsReviewError('');
-                      setTermsReview(
-                        `Contract ${c.id}: payment plan ${c.payment_plan}; proposed terms ${c.payment_terms_status}. Confirm you reviewed the payment protection and instalment schedule shown here. This records your agreement; it does not transfer or verify funds.`,
-                      );
-                    }}
-                    disabled={termsLoading}
-                  >
-                    <ShieldCheck size={14} />{' '}
-                    {termsLoading ? 'Confirming…' : 'Confirm payment terms'}
-                  </button>
-                )}
-              {c.shipment_id && (
-                <button
-                  className={`btn ${isTransportCoordinator && !c.service_provider_name ? 'btn-primary' : ''} w-full justify-center text-xs`}
-                  onClick={() => navigate(`/shipments/${c.shipment_id}`)}
-                >
-                  <Ship size={14} />{' '}
-                  {isTransportCoordinator ? 'Manage transport' : 'View transport'}
-                </button>
-              )}
-              {isSeller &&
-                c.status !== 'cancelled' &&
-                ['deposit_balance', 'documentary_collection', 'bank_secured'].includes(
-                  c.payment_plan,
-                ) &&
-                !c.documents_presented_at &&
-                c.payment_terms_status === 'agreed' && (
-                  <button
-                    className="btn btn-primary w-full justify-center text-xs"
-                    onClick={handlePresentDocuments}
-                    disabled={presenting || missingDocuments.length > 0 || !transportDocumentsReady}
-                  >
-                    <Euro size={14} />{' '}
-                    {presenting ? 'Presenting…' : 'Present documents for payment'}
-                  </button>
-                )}
-              {c.payment_request_id && (
-                <button
-                  className="btn w-full justify-center text-xs"
-                  onClick={() => navigate(`/payments/${c.payment_request_id}`)}
-                >
-                  <Euro size={14} />{' '}
-                  {isBuyer && c.payment_status === 'requested'
-                    ? 'Record bank payment'
-                    : 'View payment workflow'}
-                </button>
-              )}
-              <button
-                className="btn w-full justify-center text-xs"
-                onClick={() => downloadContract(c, toast)}
-              >
-                <FileText size={14} /> Download agreement record (JSON)
-              </button>
-            </div>
+            <button className="btn btn-sm mt-2" onClick={() => navigate(`/deal-room/${c.id}`)}>
+              Open guided deal
+            </button>
           </div>
         </div>
       </div>
+      <WorkspaceTabs
+        label="Trade agreement workspace"
+        tabs={agreementTabs}
+        active={activeTab}
+        onChange={setSelectedWorkspaceTab}
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <WorkspacePanel active={activeTab} id="overview">
+              {' '}
+              <div className="bg-surface border border-border rounded p-5">
+                <div className="flex items-start justify-between mb-5">
+                  <div>
+                    <h1 className="text-lg font-bold">Trade agreement</h1>
+                    <p className="font-mono text-xs text-text-muted mt-0.5">{c.id}</p>
+                  </div>
+                  <StatusBadge domain="trade" status={c.status} />
+                </div>
+                <p className="text-xs text-text-muted mb-4" data-testid="agreement-record-notice">
+                  Unsigned platform record: this trade agreement records the parties’ agreed
+                  commercial terms. Signatures are not captured here, and this record is not a
+                  signed contract document. Its legal effect depends on the applicable terms and
+                  law.
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Seller" value={c.seller_name} />
+                  <Field label="Buyer" value={c.buyer_name} />
+                  <Field
+                    label="Quantity"
+                    value={`${Number(c.quantity_kg || 0).toLocaleString()} kg`}
+                  />
+                  <Field
+                    label="Price"
+                    value={`${fmtMoney(Number(c.price_per_kg || 0), c.currency, 4)}/kg`}
+                  />
+                  <Field
+                    label="Total value"
+                    value={fmtMoney(totalValue, c.currency, c.currency_minor_units)}
+                    highlight
+                  />
+                  <Field label="Incoterm" value={c.incoterm || '—'} />
+                  {c.compliance_reference && (
+                    <div className="col-span-2">
+                      <Field
+                        label={`${c.compliance_scheme || 'Compliance'} reference`}
+                        value={c.compliance_reference}
+                        mono
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="bg-surface border border-border rounded p-5">
+                <h3 className="text-sm font-semibold mb-4">Trade fulfilment</h3>
+                <p className="text-xs text-text-muted mb-4">
+                  Current transport milestone:{' '}
+                  <StatusBadge domain="transport" status={c.current_milestone} />. Arrival and
+                  delivery do not confirm payment or buyer acceptance.
+                </p>
+                <div className="space-y-3">
+                  {steps.map((step) => (
+                    <div
+                      key={step.label}
+                      className="flex items-center gap-3 text-xs"
+                      aria-label={`${step.done ? 'Completed' : 'Pending'}: ${step.label}`}
+                    >
+                      {step.done ? (
+                        <CheckCircle2 size={16} className="text-green-400 shrink-0" />
+                      ) : (
+                        <Circle size={16} className="text-text-muted shrink-0" />
+                      )}
+                      <span className={step.done ? 'text-text-primary' : 'text-text-muted'}>
+                        {step.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {c.listing_id && (
+                <div className="bg-surface border border-border rounded p-5">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <Tag size={16} className="text-brand-400" /> Source listing
+                  </h3>
+                  <button
+                    className="btn btn-sm"
+                    onClick={() => navigate(`/listing/${c.listing_id}`)}
+                  >
+                    View listing <ChevronRight size={14} />
+                  </button>
+                </div>
+              )}
+            </WorkspacePanel>
+            <WorkspacePanel active={activeTab} id="documents">
+              <DocumentReadiness contract={c} onRefresh={loadContract} />
+              <div className="bg-surface border border-border rounded p-5">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div>
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <FileText size={16} className="text-brand-400" /> Shared trade documents
+                    </h3>
+                    <p className="text-[11px] text-text-muted mt-1">
+                      Both buyer and seller can open documents attached to this trade agreement.
+                    </p>
+                  </div>
+                  {canDo('evidence.upload') && (
+                    <button className="btn btn-sm" onClick={() => setShowUpload(true)}>
+                      <Upload size={14} /> Add document
+                    </button>
+                  )}
+                </div>
+                {(c.documents || []).length ? (
+                  <div className="divide-y divide-border">
+                    {c.documents.map((doc: any) => (
+                      <div key={doc.id} className="py-3 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-xs font-medium truncate">{doc.file_name}</div>
+                          <div className="text-[10px] text-text-muted">
+                            {doc.type.split('_').join(' ')} · Validation:{' '}
+                            {doc.validation_status || 'unknown'} · Scan:{' '}
+                            {doc.malware_scan_status || 'unknown'} · Review:{' '}
+                            {doc.review_status || 'pending'} · {doc.uploader_name} ·{' '}
+                            {fmtDate(doc.created_at)}
+                          </div>
+                        </div>
+                        <button
+                          className="btn btn-sm shrink-0"
+                          onClick={() =>
+                            evidence
+                              .download(doc.id, doc.file_name)
+                              .catch((e) => toast('error', e.message))
+                          }
+                        >
+                          <Download size={13} /> Download
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-xs text-text-muted py-5 text-center">
+                    No trade documents shared yet.
+                  </div>
+                )}
+                {isSeller && missingDocuments.length > 0 && (
+                  <div className="mt-3 text-[11px] text-amber-400">
+                    Required before payment:{' '}
+                    {missingDocuments.map((type) => type.split('_').join(' ')).join(', ')}.
+                  </div>
+                )}
+              </div>
+            </WorkspacePanel>
+            <WorkspacePanel active={activeTab} id="payments">
+              {' '}
+              <div className="bg-surface border border-border rounded p-5">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <h3 className="text-sm font-semibold flex items-center gap-2">
+                    <ShieldCheck size={16} className="text-brand-400" /> Payment protection
+                  </h3>
+                  <StatusBadge domain="terms" status={c.payment_terms_status} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field
+                    label="Payment proof"
+                    value={
+                      c.payment_evidence_required ? 'Required for each installment' : 'Optional'
+                    }
+                  />
+                  <Field
+                    label="Plan"
+                    value={String(c.payment_plan || 'not selected')
+                      .split('_')
+                      .join(' ')}
+                  />
+                  <Field
+                    label="Required before dispatch"
+                    value={fmtMoney(
+                      Number(c.dispatch_required_amount || 0),
+                      c.currency,
+                      c.currency_minor_units,
+                    )}
+                  />
+                  <Field
+                    label="Seller-confirmed receipt"
+                    value={fmtMoney(
+                      Number(c.amount_confirmed || 0),
+                      c.currency,
+                      c.currency_minor_units,
+                    )}
+                  />
+                  <Field
+                    label="Platform fee (seller)"
+                    value={fmtMoney(
+                      Number(c.platform_fee_amount || 0),
+                      c.currency,
+                      c.currency_minor_units,
+                    )}
+                  />
+                </div>
+                <p className="text-[11px] text-text-muted mt-3">
+                  BetterTrade records references and confirmations but does not custody funds.
+                  Dispatch is blocked server-side until the selected protection condition is
+                  verified.
+                </p>
+              </div>
+              {c.payment_request_id && (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => navigate(`/payments/${c.payment_request_id}`)}
+                >
+                  Open goods payment and bank security
+                </button>
+              )}
+            </WorkspacePanel>
+            <WorkspacePanel active={activeTab} id="transport">
+              {' '}
+              {c.shipment_id && (
+                <div className="bg-surface border border-border rounded p-5">
+                  <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                    <Ship size={16} className="text-brand-400" /> Transport workspace
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field
+                      label="Coordinator"
+                      value={c.transport_coordinator_name || 'Assigned from Incoterm'}
+                    />
+                    <Field
+                      label="External provider"
+                      value={c.service_provider_name || 'Not recorded'}
+                    />
+                    <Field
+                      label="Mode"
+                      value={
+                        c.transport_mode === 'unspecified'
+                          ? 'Not selected'
+                          : String(c.transport_mode).split('_').join(' ')
+                      }
+                    />
+                    <Field
+                      label="Booking reference"
+                      value={c.booking_reference || 'Not recorded'}
+                      mono
+                    />
+                    <Field
+                      label="Transport document"
+                      value={c.transport_document_reference || 'Not issued'}
+                      mono
+                    />
+                    <Field label="ETA" value={fmtDate(c.eta_arrival)} />
+                    <div>
+                      <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
+                        Status
+                      </div>
+                      <StatusBadge domain="transport" status={c.current_milestone} />
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-sm mt-4"
+                    onClick={() => navigate(`/shipments/${c.shipment_id}`)}
+                  >
+                    Open transport workspace <ChevronRight size={14} />
+                  </button>
+                </div>
+              )}
+            </WorkspacePanel>
+            <WorkspacePanel active={activeTab} id="fees">
+              <FeeStatement contractStatus={c.status} contractId={c.id} />
+            </WorkspacePanel>
+            <WorkspacePanel active={activeTab} id="delivery">
+              <DeliveryAcceptance
+                contractId={c.id}
+                organizationId={user?.organizationId || ''}
+                onChanged={loadContract}
+              />
+            </WorkspacePanel>
+            <WorkspacePanel active={activeTab} id="activity">
+              <AgreementAcceptance contractId={c.id} />
+              <DealActivity contractId={c.id} />
+              <ContractCancellation
+                contractId={id!}
+                organizationId={user?.organizationId || ''}
+                onChanged={loadContract}
+              />
+            </WorkspacePanel>
+          </div>{' '}
+          <div className="space-y-4">
+            <div className="bg-surface border border-border rounded p-5 sticky top-6">
+              <h4 className="text-xs font-semibold mb-3">Trade agreement actions</h4>
+              <div className="space-y-2">
+                {activeTab === 'overview' && isBuyer && !c.compliance_reference && (
+                  <button
+                    className="btn w-full justify-center text-xs"
+                    onClick={() => setShowCompliance(true)}
+                  >
+                    <FileText size={14} /> Add compliance reference
+                  </button>
+                )}
+                {activeTab === 'payments' &&
+                  isSeller &&
+                  !['cancelled', 'settled'].includes(c.status) &&
+                  c.payment_terms_status !== 'agreed' && (
+                    <button
+                      className="btn btn-primary w-full justify-center text-xs"
+                      onClick={() => setShowTerms(true)}
+                    >
+                      <ShieldCheck size={14} /> Set payment protection
+                    </button>
+                  )}
+                {activeTab === 'payments' &&
+                  isBuyer &&
+                  !['cancelled', 'settled'].includes(c.status) &&
+                  c.payment_terms_status === 'proposed' && (
+                    <button
+                      className="btn btn-primary w-full justify-center text-xs"
+                      onClick={() => {
+                        setTermsReviewError('');
+                        setTermsReview(
+                          `Contract ${c.id}: payment plan ${c.payment_plan}; proposed terms ${c.payment_terms_status}. Confirm you reviewed the payment protection and instalment schedule shown here. This records your agreement; it does not transfer or verify funds.`,
+                        );
+                      }}
+                      disabled={termsLoading}
+                    >
+                      <ShieldCheck size={14} />{' '}
+                      {termsLoading ? 'Confirming…' : 'Confirm payment terms'}
+                    </button>
+                  )}
+                {['overview', 'transport', 'documents'].includes(activeTab) && c.shipment_id && (
+                  <button
+                    className={`btn ${isTransportCoordinator && !c.service_provider_name ? 'btn-primary' : ''} w-full justify-center text-xs`}
+                    onClick={() => navigate(`/shipments/${c.shipment_id}`)}
+                  >
+                    <Ship size={14} />{' '}
+                    {isTransportCoordinator ? 'Manage transport' : 'View transport'}
+                  </button>
+                )}
+                {['overview', 'payments'].includes(activeTab) && c.payment_request_id && (
+                  <button
+                    className="btn w-full justify-center text-xs"
+                    onClick={() => navigate(`/payments/${c.payment_request_id}`)}
+                  >
+                    <Euro size={14} />{' '}
+                    {isBuyer && c.payment_status === 'requested'
+                      ? 'Record bank payment'
+                      : 'View payment workflow'}
+                  </button>
+                )}
+                <button
+                  className="btn w-full justify-center text-xs"
+                  onClick={() => downloadContract(c, toast)}
+                >
+                  <FileText size={14} /> Download agreement record (JSON)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </WorkspaceTabs>
 
       {showCompliance && (
         <Modal title="Compliance Reference" onClose={() => !complianceLoading && closeCompliance()}>

@@ -82,6 +82,7 @@ async function fixture(page: Page, finance = false) {
     await route.fulfill({ json });
   });
   await page.goto('/platform-fees/contract');
+  await page.getByRole('tab', { name: 'Collection terms', exact: true }).click();
   return {
     state,
     actions,

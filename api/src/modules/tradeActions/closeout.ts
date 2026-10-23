@@ -53,7 +53,7 @@ export function closeoutActions({
       priority: 35,
       requiresAction: !deal.fee_payment_submitted,
       title: deal.fee_payment_submitted
-        ? 'Platform fee awaiting receipt verification'
+        ? 'Awaiting platform admin fee receipt verification'
         : 'Review and pay the platform fee',
       description:
         'The trade is complete. Platform fee collection is separate from the goods payment.',
@@ -95,11 +95,14 @@ export function closeoutActions({
         title: !deal.fee_terms_accepted
           ? 'Review platform fee terms before dispatch'
           : deal.fee_payment_submitted
-            ? 'Platform fee awaiting receipt verification'
+            ? 'Awaiting platform admin fee receipt verification'
             : 'Pay the platform fee before dispatch',
-        description:
-          'The recorded new-trade fee must have seller consent and verified receipt or active platform finance credit before dispatch. Goods payment is separate.',
-        actionLabel: 'Review fee requirements',
+        description: deal.fee_payment_submitted
+          ? 'Your fee payment reference is submitted. The platform admin must independently verify receipt. You do not need to submit it again. Goods payment is separate.'
+          : 'The seller must accept the recorded fee terms and pay the fee before dispatch. The platform admin verifies receipt; goods payment is separate.',
+        actionLabel: deal.fee_payment_submitted
+          ? 'View submitted fee reference'
+          : 'Review fee requirements',
         actionPath: room,
         contractId: deal.id,
       },

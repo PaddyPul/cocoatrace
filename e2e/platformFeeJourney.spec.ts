@@ -164,11 +164,12 @@ for (const currency of ['GHS', 'JPY'])
         .fill(`BROWSER-RECEIPT-${contract.id}`);
       await admin.getByRole('button', { name: 'Verify platform receipt' }).click();
       await expect(admin.getByText('Platform receipt verified.', { exact: true })).toBeVisible();
+      await admin.getByRole('tab', { name: 'Statement', exact: true }).click();
       const downloadEvent = admin.waitForEvent('download');
       await admin.getByRole('button', { name: 'Download fee statement' }).click();
       expect((await downloadEvent).suggestedFilename()).toMatch(/^CT-FEE-.*\.json$/);
       await seller.reload();
-      await seller.getByText('Platform fee details and receipt', { exact: true }).click();
+      await seller.getByRole('tab', { name: 'Platform fee', exact: true }).click();
       await expect(fee.getByText('Platform receipt verified.', { exact: true })).toBeVisible();
       const after = await tradeSnapshot(contract.id);
       expect(after.fees[0].status).toBe('paid');

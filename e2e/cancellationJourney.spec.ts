@@ -17,7 +17,7 @@ test('buyer requests cancellation, supplier approves and exact inventory is rele
     expect(offerResponse.status()).toBe(201);const offer=await offerResponse.json();
     const accepted=await supplier.request.post(`/api/offers/${offer.id}/accept`);expect(accepted.status()).toBe(200);
     const {contract}=await accepted.json();
-    await buyer.goto(`/deal-room/${contract.id}`);
+    await buyer.goto(`/deal-room/${contract.id}?tab=activity`);
     const panel=buyer.getByRole('region',{name:'Trade cancellation'});
     await panel.getByLabel('Reason for cancellation').fill('short');
     await expect(panel.getByRole('button',{name:'Request cancellation'})).toBeDisabled();
@@ -26,7 +26,7 @@ test('buyer requests cancellation, supplier approves and exact inventory is rele
     await expect(panel.getByText('Awaiting the other organization’s decision. Inventory remains committed.')).toBeVisible();
     await expect(panel.getByRole('button',{name:'Approve cancellation and release inventory'})).toHaveCount(0);
     expect((await tradeSnapshot(contract.id)).holdings.find(row=>row.id===contract.holding_id)?.status).toBe('committed');
-    await supplier.goto(`/deal-room/${contract.id}`);
+    await supplier.goto(`/deal-room/${contract.id}?tab=activity`);
     await supplier.getByRole('button',{name:'Approve cancellation and release inventory'}).click();
     await expect(supplier.getByRole('heading',{name:'Trade cancelled',exact:true})).toBeVisible();
     await buyer.reload();

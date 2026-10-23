@@ -128,7 +128,13 @@ export default function ListingDetailPage() {
           } catch (error) {
             if (alive) {
               setPack(null);
-              setPackError(error instanceof Error ? error.message : 'Provenance unavailable');
+              setPackError(
+                error instanceof ApiError && error.status === 403
+                  ? 'Source records are private. This account cannot open the full source dossier. Review the published claim summaries below and ask the supplier to share any additional evidence needed before committing.'
+                  : error instanceof Error
+                    ? error.message
+                    : 'Provenance unavailable',
+              );
             }
           }
         }
@@ -304,9 +310,9 @@ export default function ListingDetailPage() {
         )}
         {packError && (
           <div role="alert" className="mb-4 rounded border border-amber-400/30 p-3 text-sm">
-            Provenance unavailable. {packError}
+            Source records unavailable. {packError}
             <button className="btn ml-2" onClick={() => retryRead.current()}>
-              Retry provenance
+              Retry source records
             </button>
           </div>
         )}

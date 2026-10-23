@@ -8,6 +8,7 @@ export const jobNames = [
   'recall_email',
   'fee_statement_email',
   'invitation_email',
+  'document_presentation',
 ] as const;
 export type JobName = (typeof jobNames)[number];
 export type JobResult = {

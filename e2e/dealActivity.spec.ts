@@ -67,7 +67,7 @@ test('deal activity pages safely and a failed refresh never invents an empty his
     }
     return route.fulfill({ status: 503, json: { error: 'Unavailable unrelated fixture' } });
   });
-  await page.goto('/deal-room/deal');
+  await page.goto('/deal-room/deal?tab=activity');
   const panel = page.getByRole('region', { name: 'Deal activity', exact: true });
   await panel.getByRole('button', { name: 'Show recorded activity', exact: true }).click();
   await expect(panel.getByText('Payment terms confirmed', { exact: true })).toBeVisible();
