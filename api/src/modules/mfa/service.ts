@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { requirePasskeyDomain } from './origin';
 import type { PoolClient } from 'pg';
 import {
   generateRegistrationOptions,
@@ -79,6 +80,7 @@ export async function listKeys(actor: AuthenticatedActor) {
   });
 }
 export async function options(actor: AuthenticatedActor, purpose: Purpose, password?: string) {
+  requirePasskeyDomain(origin);
   return inDatabaseTransaction(async (client) => {
     const { user } = await lockIdentity(client, actor);
     const enrolled = await keys(client, actor.id);
@@ -135,6 +137,7 @@ export async function verify(
   response: RegistrationResponseJSON | AuthenticationResponseJSON,
   label = 'Passkey',
 ) {
+  requirePasskeyDomain(origin);
   const success = await inDatabaseTransaction(async (client) => {
     const { user } = await lockIdentity(client, actor);
     // Consumption commits even after an invalid response: replay and parallel retries cannot reuse it.

@@ -4,9 +4,9 @@ Deployment is on hold. No Oracle resources, trial credits, paid AI calls, domain
 
 ## Start and stop
 
-After installing this candidate and passing its exact-commit full release, start Docker Desktop and run `npm run demo:rehearsal:start` from the repository root. It uses the existing dedicated cocoatrace-demo-preview project, independent database/evidence volumes and secrets, real ClamAV, plus the local rehearsal overlay. First startup downloads images/signatures and builds the app. It stops any old sharing tunnel and configures the application for the one canonical origin http://127.0.0.1:14000. Do not alternate localhost and127.0.0.1 for sessions/passkeys.
+After installing this candidate and passing its exact-commit full release, start Docker Desktop and run `npm run demo:rehearsal:start` from the repository root. It uses the existing dedicated cocoatrace-demo-preview project, independent database/evidence volumes and secrets, real ClamAV, plus the local rehearsal overlay. First startup downloads images/signatures and builds the app. It stops any old sharing tunnel and configures the application for the one canonical origin http://localhost:14000. Do not alternate localhost and127.0.0.1 for sessions/passkeys.
 
-- Application: http://127.0.0.1:14000
+- Application: http://localhost:14000
 - Captured app outbox: http://127.0.0.1:18026
 - Synthetic buyer: newbuyer@cocoatrace.io
 - Synthetic supplier: newsupplier@cocoatrace.io
@@ -22,7 +22,7 @@ The runner generates an independent invitation-delivery encryption key in ignore
 ## 1. Email and identity rehearsal
 
 1. Open the local app and capture viewer. From the app's request-access flow, submit a synthetic new organization and email address such as rehearsal-owner@example.test. It need not be a real mailbox.
-2. Open its verification message in Mailpit. Check BetterTrade sender name, subject, organization context, test-environment label, readable mobile/desktop layout, action button and visible127.0.0.1:14000 destination. The plain-text tab retains the usable URL.
+2. Open its verification message in Mailpit. Check BetterTrade sender name, subject, organization context, test-environment label, readable mobile/desktop layout, action button and visible localhost:14000 destination. The plain-text tab retains the usable URL.
 3. Follow verification in the same canonical app origin. Use the demo administrator to approve the organization through the normal review UI. Open the resulting first-admin invitation in the capture viewer and complete enrollment.
 4. Invite a synthetic teammate. Resend, confirm the old link is unavailable, revoke a replacement and confirm revocation still applies. Create a fresh invitation if joining is needed. Do not alter tokens in the database.
 5. Request a password reset, open the captured message, set a new password and confirm the consumed link cannot be reused. This acts only on synthetic accounts.
@@ -57,3 +57,17 @@ Run the story with a second distinct set of synthetic records to check repeatabi
 ## Future real sending
 
 Sending and receiving are separate services. An SMTP relay submits outgoing email; a hosted mailbox receives replies. Neither is needed for local capture. For actual branded investor emails, select an owned sender domain, provider-approved From address and real support/reply address, authenticate using the provider's exact DNS records, and verify received headers/inbox rendering. Do not pretend to send from an unowned BetterTrade domain. Gmail/free-mail domains cannot be authenticated as your own domain through a third-party sender. Provider-shared test senders are testing identities, not BetterTrade domain ownership. Public clickable app links also require a reachable approved HTTPS deployment, which remains on hold.
+
+## Corrected local origin and explicit fresh start (2026-10-23)
+
+Use http://localhost:14000 for every persona and new email action. The app still binds only to127.0.0.1 at Docker level; that is network isolation, not the browser passkey domain. Restart with demo:rehearsal:start to update the saved legacy origin without deleting records. Sign in again at localhost. Old127.0.0.1 links/sessions belong to the former origin; generate fresh invitations/reset messages rather than follow old captured messages. Never disable MFA, loosen expected-origin checks or use browser security bypass flags.
+
+Shared demo login buttons reuse the same accounts. Restarting setup changes onboarding only; previous trades are deliberately retained. To deliberately return the dedicated local rehearsal to first-use state, run:
+
+```powershell
+npm run demo:rehearsal:reset -- DELETE_SYNTHETIC_PREVIEW
+```
+
+This deletes the dedicated preview's synthetic database, private evidence, captured email container and scanner volumes, including users, custom records, trades and passkeys. It recreates the original seed plus fresh operational prune, so default synthetic identities return without inherited trades. Enroll the administrator's passkey again after reset. It never targets the ordinary application/test Compose projects. Do not use reset if you want to keep any current rehearsal records; use start instead.
+
+Deletion requires the exact confirmation, the fixed preview project/Compose files and a read-only database check proving the dedicated marked synthetic target. A failed preflight does not remove volumes. The runner retains its generated connection secrets for the newly initialized volumes. No reset occurs on login, normal start or pull. CI runs the confirmed reset before checking empty buyer/supplier trade actions and real virtual-authenticator administrator enrollment/re-login/fresh assurance on localhost. Physical Windows Hello/security-key acceptance and an actual fee receipt remain founder rehearsal evidence.

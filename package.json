@@ -68,7 +68,8 @@
     "check:workspace-states": "node scripts/route-resilience.mjs && node --test scripts/route-resilience.test.mjs",
     "check:mutation-audits": "node scripts/mutation-audit-coverage.mjs && node --test scripts/mutation-audit-coverage.test.mjs",
     "check:secrets": "node scripts/secret-scan.mjs",
-    "demo:rehearsal:start": "node scripts/demo-preview.mjs rehearse"
+    "demo:rehearsal:start": "node scripts/demo-preview.mjs rehearse",
+    "demo:rehearsal:reset": "node scripts/demo-preview.mjs reset-rehearsal"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

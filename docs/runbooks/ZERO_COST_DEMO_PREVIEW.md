@@ -10,13 +10,13 @@ This is a temporary demo on the founder's existing computer. It is not live stag
 - `npm run demo:preview:status`: show only this project's services and configured origin.
 - `npm run demo:preview:stop`: stop this project and public tunnel, retaining synthetic records and private evidence.
 
-Local URL: http://127.0.0.1:14000. Synthetic buyer: newbuyer@cocoatrace.io; supplier: newsupplier@cocoatrace.io; demo passwords: Password123!. Use the New buyer/New supplier buttons. These are shared synthetic identities, not individual customer accounts. Create demo conventional inventory and follow the existing automated-tested trade workflow; no inherited operational mock records are included at first start.
+Local URL: http://localhost:14000. Synthetic buyer: newbuyer@cocoatrace.io; supplier: newsupplier@cocoatrace.io; demo passwords: Password123!. Use the New buyer/New supplier buttons. These are shared synthetic identities, not individual customer accounts. Create demo conventional inventory and follow the existing automated-tested trade workflow; no inherited operational mock records are included at first start.
 
 ## Boundaries
 
 Only the frontend binds to the host, on loopback. Database, API, scanner and evidence storage have no published ports. Dedicated Compose project `cocoatrace-demo-preview` and its own volumes do not reuse the normal app or test databases. The guarded fixture initializer refuses production/staging, other hosts/database/users, disabled demo mode, and an unmarked nonempty database. No developer .env, OpenAI key or external SMTP credentials are passed to this stack.
 
-Secrets are generated in ignored `.demo-preview/environment.json`. Retain this directory for restarts: deleting it while keeping volumes breaks database credentials. It is excluded from Docker build context. Do not upload it or share it. There is deliberately no automatic reset/delete command. To start a separate fresh demo later, design an explicitly reviewed reset rather than point seed scripts at application databases.
+Secrets are generated in ignored `.demo-preview/environment.json`. Retain this directory for restarts: deleting it while keeping volumes breaks database credentials. It is excluded from Docker build context. Do not upload it or share it. Normal start never resets data. For an explicitly confirmed reset of this marked synthetic project only, see LOCAL_INVESTOR_REHEARSAL.md and demo:rehearsal:reset. Never point seed scripts at other application databases.
 
 The persistent banner requires synthetic records, simulated payments and no personal data or real documents. All selected visitors share these accounts and data, and may use other synthetic demo roles. Invite only the intended small audience; this is a supervised walkthrough, not customer enrollment. Upload only disposable test PDFs/images; real malware scanning stays enabled.
 

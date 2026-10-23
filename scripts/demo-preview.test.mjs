@@ -55,3 +55,10 @@ test('accepts the observed Quick Tunnel email-login host and rejects lookalikes'
   assert.equal(isEmailGate(302,location,'','https://abc.trycloudflare.com'),false);
  }
 });
+
+test('accepts the passkey-capable localhost origin and legacy state only for migration', () => {
+ const state={PREVIEW_DB_PASSWORD:'a'.repeat(64),PREVIEW_JWT_SECRET:'b'.repeat(64),PREVIEW_UPLOAD_SECRET:'c'.repeat(64),PREVIEW_WEB_URL:'http://localhost:14000',PREVIEW_COOKIE_SECURE:'false'};
+ assert.equal(validateState(state),state);
+ assert.equal(validateState({...state,PREVIEW_WEB_URL:'http://127.0.0.1:14000'}).PREVIEW_WEB_URL,'http://127.0.0.1:14000');
+ for(const url of ['http://localhost.evil.test:14000','http://localhost:14001','http://192.168.1.2:14000'])assert.throws(()=>validateState({...state,PREVIEW_WEB_URL:url}));
+});

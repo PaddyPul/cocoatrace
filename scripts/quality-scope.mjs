@@ -1,5 +1,8 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/modules/mfa/origin*.ts',
+  'scripts/check-local-rehearsal.mjs',
+  'e2e/passkeyOrigin.spec.ts',
   'api/src/services/emailBranding*.ts',
   'scripts/email-rehearsal.test.mjs',
   'scripts/secret-scan.mjs',

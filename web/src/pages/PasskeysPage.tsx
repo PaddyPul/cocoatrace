@@ -12,6 +12,11 @@ interface Key {
 }
 export default function PasskeysPage() {
   const { user, logout } = useAuthCtx();
+  const hostname = window.location.hostname;
+  const ipOrigin = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname) || hostname.startsWith('[');
+  const localOrigin = ['127.0.0.1', '[::1]'].includes(hostname);
+  const localUrl = new URL('/account/passkeys', window.location.origin);
+  localUrl.hostname = 'localhost';
   const [keys, setKeys] = useState<Key[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [readError, setReadError] = useState('');
@@ -44,6 +49,10 @@ export default function PasskeysPage() {
     void loadKeys();
   }, [loadKeys]);
   async function act(work: () => Promise<void>) {
+    if (ipOrigin) {
+      setError('Open BetterTrade using its domain name before using a passkey.');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
@@ -67,6 +76,22 @@ export default function PasskeysPage() {
           Keep a second key on another device. Password resets keep your passkeys. If all keys are
           lost, access stays restricted until support completes a reviewed recovery.
         </p>
+        {ipOrigin && (
+          <div role="alert" className="mt-4 text-amber-200">
+            <p>Passkeys cannot use an IP address as their domain.</p>
+            {localOrigin ? (
+              <p>
+                Use the local hostname and sign in again:{' '}
+                <a className="underline" href={localUrl.toString()}>
+                  Open localhost for passkeys
+                </a>
+                . Existing records are retained.
+              </p>
+            ) : (
+              <p>Open the configured HTTPS domain for this application.</p>
+            )}
+          </div>
+        )}
         {loading && (
           <p role="status" className="mt-4">
             Loading passkeys…
@@ -95,7 +120,7 @@ export default function PasskeysPage() {
         {keys && keys.length > 0 && (
           <button
             className="btn btn-primary mt-5"
-            disabled={busy}
+            disabled={busy || ipOrigin}
             onClick={() => act(verifyPasskey)}
           >
             Verify passkey and continue
@@ -138,7 +163,10 @@ export default function PasskeysPage() {
               onChange={(event) => setPassword(event.target.value)}
             />
           </label>
-          <button className="btn btn-primary" disabled={busy || loading || keys === null}>
+          <button
+            className="btn btn-primary"
+            disabled={busy || loading || keys === null || ipOrigin}
+          >
             {keys?.length ? 'Add a backup passkey' : 'Enroll passkey'}
           </button>
         </form>
@@ -147,7 +175,7 @@ export default function PasskeysPage() {
             <li key={key.id} className="flex items-center justify-between gap-3">
               <span>{key.label}</span>
               <button
-                disabled={busy}
+                disabled={busy || ipOrigin}
                 className="btn btn-secondary"
                 onClick={() =>
                   act(async () => {
