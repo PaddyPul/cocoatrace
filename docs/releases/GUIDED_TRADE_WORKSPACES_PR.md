@@ -4,12 +4,13 @@ Buyers and suppliers can find the next trade action without scrolling through fe
 
 ## Tracking
 
-- Backlog ID(s): INV-003; PAY-007 and LOG-004 regression coverage
+- Backlog ID(s): INV-003, SEC-014; PAY-007 and LOG-004 regression coverage
 - Issue/ADR: Founder cocoyam investor rehearsal and six screenshots, 2026-10-23
 - Target phase/environment: Phase 0 local investor rehearsal; hosted deployment remains on hold
 
 ## Change summary
 
+- Pin patched Zod 4.6.6 for GHSA-mrhx-c7xc-m3w5; adapt record schemas and sanitized validation issues, and retain PATCH omission semantics. No advisory exception added.
 - Replace corridor-specific workspace wording and remove obsolete customer demo shortcuts; retain separate platform admin access.
 - Extract material phrases beyond a crop whitelist, retaining review and validation for ambiguous input.
 - Explain private source records and recoverable lazy-page loading failures.
@@ -48,7 +49,7 @@ Buyers and suppliers can find the next trade action without scrolling through fe
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: Author passed 1,667 API unit tests across 175 files, 47 production-build Chromium cases across 12 affected mocked-API suites, and a separate demo-mode login case. API/web builds, workspace/browser types, strict native payment-suite compilation, quality, migration integrity, 90 KiB initial JavaScript budget, authorization, mutation audits, branding, route-state/regression/risk/pilot evidence, locale, frontend boundaries, workspace tools and backlog checks pass. New native database cases cover concurrent submission, deadline preservation, tenant denial and audit-failure rollback; they have not run here. Full Windows release and required GitHub CI are mandatory. Docker/PostgreSQL and hosted staging have not been run in the author workspace.
+- Evidence/results: Author passed 1,671 API unit tests across 175 files, 47 production-build Chromium cases across 12 affected mocked-API suites, and a separate demo-mode login case. API/web builds, workspace/browser types, strict native payment-suite compilation, quality, migration integrity, 90 KiB initial JavaScript budget, authorization, mutation audits, branding, route-state/regression/risk/pilot evidence, locale, frontend boundaries, workspace tools and backlog checks pass. The dependency correction passes both production and complete dependency advisories with no accepted findings. Four additional regressions cover collection short-circuiting and safe Zod 4 error mapping; existing sourcing edit tests ensure omitted fields are not overwritten. New native database cases cover concurrent submission, deadline preservation, tenant denial and audit-failure rollback; they have not run here. Full Windows release and required GitHub CI are mandatory. Docker/PostgreSQL and hosted staging have not been run in the author workspace.
 
 ## Product and operations
 
@@ -62,6 +63,7 @@ Buyers and suppliers can find the next trade action without scrolling through fe
 ## Follow-up work
 
 - INV-003: exact-commit full release, GitHub CI and founder fresh cocoyam rehearsal, including fallback paths and final settlement.
+- SEC-014: continue dependency/container monitoring and remaining supply-chain acceptance.
 - BRD-005: sender-domain authentication and external branded email rendering remain separate.
 - GEO-001: supported-country/named-place policy remains separate from global workspace branding.
 

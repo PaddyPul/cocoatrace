@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { describe, it, expect } from 'vitest';
 import { loginSchema, createFarmSchema, createPlotSchema, createBatchSchema, createCertificateSchema, createRecallSchema, createInvitationSchema, acceptInvitationSchema, createSourcingRequestSchema, productProfileSchema, createOfferSchema } from './validation';
 
@@ -174,5 +175,25 @@ describe('createRecallSchema', () => {
 
   it('rejects a recall with no batch or lot scope', () => {
     expect(() => createRecallSchema.parse(notice)).toThrow(/At least one affected batch or suspect lot/);
+  });
+});
+
+
+describe('oversized constrained collection regression GHSA-mrhx-c7xc-m3w5', () => {
+  it('rejects an oversized collection before evaluating its entries', () => {
+    let validatedEntries = 0;
+    const schema = z.array(z.string().superRefine(() => { validatedEntries++; })).max(30);
+    const result = schema.safeParse(Array.from({ length: 10000 }, () => 'private-entry'));
+    expect(result.success).toBe(false);
+    expect(validatedEntries).toBe(0);
+    if (!result.success) expect(result.error.issues).toHaveLength(1);
+  });
+  it('rejects oversized sourcing origins with one collection error rather than one error per entry', () => {
+    const result = createSourcingRequestSchema.safeParse({
+      title: 'Cocoyam sourcing', commodity: 'cocoyam', quantityKg: 10000,
+      deliveryLocation: 'Berlin', originCountries: Array.from({ length: 10000 }, () => 'invalid-country'),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues).toMatchObject([{ code: 'too_big', path: ['originCountries'] }]);
   });
 });

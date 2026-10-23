@@ -5,6 +5,15 @@ import type { Execute } from '../catalog/paging';
 export const editSourcingSchema = createSourcingRequestSchema
   .partial()
   .extend({
+    // Zod 4 applies nested defaults through optional fields. PATCH must not reset
+    // omitted saved requirements to the create defaults.
+    originCountries: createSourcingRequestSchema.shape.originCountries.unwrap().optional(),
+    qualityRequirements: createSourcingRequestSchema.shape.qualityRequirements.unwrap().optional(),
+    assuranceRequirements: createSourcingRequestSchema.shape.assuranceRequirements
+      .unwrap()
+      .optional(),
+    incoterm: createSourcingRequestSchema.shape.incoterm.unwrap().optional(),
+    visibility: createSourcingRequestSchema.shape.visibility.unwrap().optional(),
     quantityKg: z
       .number()
       .finite()

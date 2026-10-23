@@ -6,7 +6,12 @@ import { AppError } from '../errors';
 import { assignRequestId } from '../requestContext';
 import { TraceIncompleteError } from '../modules/trace/limits';
 import validate from './validate';
-import { apiErrorHandler, errorEnvelope, normalizeErrorEnvelope } from './errorEnvelope';
+import {
+  apiErrorHandler,
+  errorEnvelope,
+  normalizeErrorEnvelope,
+  safeValidationDetails,
+} from './errorEnvelope';
 
 function fixture() {
   const app = express();
@@ -132,5 +137,26 @@ describe('JSON failure envelope through Express', () => {
       code: 'NOT_FOUND',
       requestId: result.headers['x-request-id'],
     });
+  });
+});
+
+describe('Zod 4 safe issue compatibility', () => {
+  it('maps enum, literal and format issues without reflecting submitted values', () => {
+    for (const [schema, message] of [
+      [z.enum(['CIF', 'FOB']), 'Choose a supported value'],
+      [z.literal('accepted'), 'Choose a supported value'],
+      [z.string().email(), 'Value has an invalid format'],
+    ] as const) {
+      const result = schema.safeParse('private-submitted-value');
+      expect(result.success).toBe(false);
+      if (!result.success)
+        expect(safeValidationDetails(result.error)).toEqual([{ path: '', message }]);
+    }
+  });
+  it('redacts symbol path segments and custom validation messages', () => {
+    const error = new z.ZodError([
+      { code: 'custom', path: [Symbol('private-path')], message: 'private-message' },
+    ]);
+    expect(safeValidationDetails(error)).toEqual([{ path: 'field', message: 'Value is invalid' }]);
   });
 });

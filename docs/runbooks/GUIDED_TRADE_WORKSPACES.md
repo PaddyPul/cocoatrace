@@ -47,3 +47,10 @@ The web container serves the HTML entry with revalidation/no-store and hashed as
 ## Required acceptance
 
 Author checks are recorded in the PR document. The exact candidate must still pass the full Windows release, including the native PostgreSQL/storage regression, real payment-plan journeys, migration checks, container build and synthetic preview. Then require GitHub CI before merging. Repeat a cocoyam buyer/supplier rehearsal through actual fee verification, bank security, automatic document submission, payment receipt, inspection and settlement. INV-003 remains IN PROGRESS until founder acceptance and its remaining fallback criteria are met.
+
+
+## Zod advisory correction — 2026-10-23
+
+The first Windows release stopped at GHSA-mrhx-c7xc-m3w5. The correction pins `zod` to patched **4.6.6**, updates the lockfile, record-schema API and sanitized issue mapping, and removes create defaults from optional sourcing edit fields. Existing saved requirements must not be reset during a partial edit. Regression tests verify oversized constrained collections are rejected before entries are traversed, sourcing origins return a bounded collection error, and enum/format/symbol-path errors stay sanitized. No dependency exception or gate suppression is introduced.
+
+References: https://github.com/advisories/GHSA-mrhx-c7xc-m3w5 and https://zod.dev/v4/changelog . Apply the correction on the existing guided-workspaces branch, install from the committed lockfile with `npm ci`, capture the new candidate before verification, and run the whole release again. Do not reuse evidence from the earlier failed candidate or push until the exact new SHA passes. This correction adds no migration; migration 054 remains part of the underlying candidate.
