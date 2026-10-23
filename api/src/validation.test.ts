@@ -64,14 +64,23 @@ describe('pilot invitation schemas', () => {
 });
 
 describe('createBatchSchema', () => {
+  it('requires explicit batch and plot crops instead of silently inventing cocoa', () => {
+    const batch = { farmId: '550e8400-e29b-41d4-a716-446655440000', harvestDate: '2026-10-23', quantityKg: 100 };
+    expect(createBatchSchema.safeParse(batch).success).toBe(false);
+    expect(createBatchSchema.safeParse({ ...batch, crop: ' ' }).success).toBe(false);
+    const plot = { plotCode: 'YAM-1', areaHectares: 1 };
+    for (const crops of [undefined, [], [' ']]) expect(createPlotSchema.safeParse({ ...plot, crops }).success).toBe(false);
+    expect(createPlotSchema.parse({ ...plot, crops: [' yam '] }).crops).toEqual(['yam']);
+  });
   it('accepts valid batch data', () => {
     const result = createBatchSchema.parse({
+      crop: 'yam',
       farmId: '550e8400-e29b-41d4-a716-446655440000',
       harvestDate: '2024-10-01',
       quantityKg: 1000,
     });
     expect(result.quantityKg).toBe(1000);
-    expect(result.crop).toBe('cocoa');
+    expect(result.crop).toBe('yam');
   });
 
   it('rejects negative quantity', () => {
@@ -105,7 +114,7 @@ describe('createCertificateSchema', () => {
 
 describe('plot geolocation', () => {
   it('preserves zero coordinates and rejects partial or impossible coordinate pairs', () => {
-    const input = {plotCode:'ZERO',areaHectares:1,gpsLat:0,gpsLng:0};
+    const input = {plotCode:'ZERO',areaHectares:1,crops:['yam'],gpsLat:0,gpsLng:0};
     expect(createPlotSchema.parse(input).gpsLat).toBe(0);
     expect(createPlotSchema.safeParse({...input,gpsLng:undefined}).success).toBe(false);
     expect(createPlotSchema.safeParse({...input,gpsLat:91}).success).toBe(false);

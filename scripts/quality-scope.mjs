@@ -1,5 +1,10 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'e2e/investorRehearsalFeedback.spec.ts',
+  'web/src/components/fees/FeeRegister.tsx',
+  'web/src/components/fees/FinanceReviewQueue.tsx',
+  'web/src/components/trading/QuantityCoverage.tsx',
+  'e2e/tradeDocumentProgress.spec.ts',
   'api/src/modules/mfa/origin*.ts',
   'scripts/check-local-rehearsal.mjs',
   'e2e/passkeyOrigin.spec.ts',

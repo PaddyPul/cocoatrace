@@ -248,9 +248,22 @@ export default function DealRoomPage() {
         run={run}
       />
 
-      <div className="mt-5">
+      {delivered && (
+        <div id="delivery-acceptance" className="mt-5 scroll-mt-6">
+          <DeliveryAcceptance
+            contractId={deal.id}
+            organizationId={user?.organizationId || ''}
+            onChanged={refresh}
+          />
+        </div>
+      )}
+      <details
+        className="mt-5 rounded-2xl border border-border p-4"
+        open={!delivered || deal.nextAction?.id?.endsWith(':fee')}
+      >
+        <summary className="cursor-pointer font-semibold">Platform fee details and receipt</summary>
         <FeeStatement contractStatus={deal.status} contractId={deal.id} />
-      </div>
+      </details>
       <div className="mt-5">
         <AgreementAcceptance contractId={deal.id} />
         <DealActivity contractId={deal.id} />
@@ -260,15 +273,6 @@ export default function DealRoomPage() {
           onChanged={refresh}
         />
       </div>
-      {delivered && (
-        <div className="mt-5">
-          <DeliveryAcceptance
-            contractId={deal.id}
-            organizationId={user?.organizationId || ''}
-            onChanged={refresh}
-          />
-        </div>
-      )}
       <div className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]">
         <section className="space-y-5">
           <div className="rounded-3xl border border-border bg-surface p-5 sm:p-6">

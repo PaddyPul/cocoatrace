@@ -45,7 +45,13 @@ export async function plotSummary(
   if (Object.keys(parameters).length) throw new ValidationError('Plot totals accept no parameters');
   await authorize(execute, actor, farmId);
   return (
-    await execute('SELECT COUNT(*)::int AS count FROM farm_plots WHERE farm_id=$1::uuid', [farmId])
+    await execute(
+      `SELECT COUNT(*)::int AS count,
+      ARRAY(SELECT DISTINCT lower(trim(crop)) FROM farm_plots p CROSS JOIN LATERAL unnest(p.crops) crop
+        WHERE p.farm_id=$1::uuid AND trim(crop)<>'' ORDER BY 1 LIMIT 101) AS crops
+      FROM farm_plots WHERE farm_id=$1::uuid`,
+      [farmId],
+    )
   ).rows[0];
 }
 export async function farmPlotCollection(execute: Execute, farmId: string, mode: unknown) {

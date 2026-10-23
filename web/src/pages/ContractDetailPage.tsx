@@ -34,7 +34,7 @@ const SELLER_DOCUMENTS = [
   ['quality_certificate', 'Quality certificate'],
   ['inspection_certificate', 'Inspection certificate'],
   ['certificate_of_origin', 'Certificate of origin'],
-  ['insurance_certificate', 'Cargo insurance certificate'],
+  ['insurance_certificate', 'Insurance certificate (cargo cover for CIF/CIP)'],
   ['transport_document', 'Transport document (B/L, waybill or consignment note)'],
   ['export_permit', 'Export permit'],
   ['other', 'Other trade agreement document'],
@@ -208,15 +208,17 @@ export default function ContractDetailPage() {
       .map((doc: any) => doc.type),
   );
   const missingDocuments = requiredDocuments.filter((type) => !presentDocumentTypes.has(type));
-  const shipmentLoaded = [
-    'handed_over',
-    'loaded',
+  const shipmentDispatched = [
     'departed',
     'arrived',
     'customs_cleared',
+    'unloaded',
     'delivered',
   ].includes(data?.current_milestone);
-  const transportDocumentsReady = shipmentLoaded && Boolean(data?.transport_document_reference);
+  const transportDocumentsReady = shipmentDispatched && Boolean(data?.transport_document_reference);
+  const shipmentArrived = ['arrived', 'customs_cleared', 'unloaded', 'delivered'].includes(
+    data?.current_milestone,
+  );
 
   const handleComplianceUpdate = async () => {
     if (!id || !complianceScheme.trim() || !complianceRef.trim()) {
@@ -364,6 +366,8 @@ export default function ContractDetailPage() {
       done: missingDocuments.length === 0,
     },
     { label: 'Cargo dispatched and transport document issued', done: transportDocumentsReady },
+    { label: 'Cargo arrived at destination', done: shipmentArrived },
+    { label: 'Cargo delivered', done: c.current_milestone === 'delivered' },
     {
       label: 'Buyer sends payment and seller verifies receipt',
       done: c.payment_status === 'settled',
@@ -506,9 +510,18 @@ export default function ContractDetailPage() {
 
           <div className="bg-surface border border-border rounded p-5">
             <h3 className="text-sm font-semibold mb-4">Trade fulfilment</h3>
+            <p className="text-xs text-text-muted mb-4">
+              Current transport milestone:{' '}
+              <StatusBadge domain="transport" status={c.current_milestone} />. Arrival and delivery
+              do not confirm payment or buyer acceptance.
+            </p>
             <div className="space-y-3">
               {steps.map((step) => (
-                <div key={step.label} className="flex items-center gap-3 text-xs">
+                <div
+                  key={step.label}
+                  className="flex items-center gap-3 text-xs"
+                  aria-label={`${step.done ? 'Completed' : 'Pending'}: ${step.label}`}
+                >
                   {step.done ? (
                     <CheckCircle2 size={16} className="text-green-400 shrink-0" />
                   ) : (
@@ -760,8 +773,11 @@ export default function ContractDetailPage() {
         <Modal title="Share Trade Document" onClose={() => !uploading && closeUpload()}>
           <div className="space-y-3">
             <div>
-              <label className="form-label">Document type</label>
+              <label className="form-label" htmlFor="trade-document-type">
+                Document type
+              </label>
               <select
+                id="trade-document-type"
                 className="form-select"
                 value={documentType}
                 onChange={(e) => setDocumentType(e.target.value)}
@@ -772,10 +788,20 @@ export default function ContractDetailPage() {
                   </option>
                 ))}
               </select>
+              {isSeller && requiredDocuments.includes('insurance_certificate') && (
+                <p className="text-xs text-text-muted mt-2">
+                  {data?.incoterm} requires an insurance certificate. Choose “Insurance certificate
+                  (cargo cover for CIF/CIP)”. Files uploaded as “Other” do not satisfy this
+                  requirement; upload the certificate again with the correct type.
+                </p>
+              )}
             </div>
             <div>
-              <label className="form-label">File</label>
+              <label className="form-label" htmlFor="trade-document-file">
+                File
+              </label>
               <input
+                id="trade-document-file"
                 type="file"
                 className="form-input"
                 onChange={(e) => setDocumentFile(e.target.files?.[0] || null)}

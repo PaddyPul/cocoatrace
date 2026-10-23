@@ -1,5 +1,6 @@
 import { ActionCenter } from '../components/trading/ActionCenter';
 import SupplyPathChoice from '../components/supply/SupplyPathChoice';
+import FinanceReviewQueue from '../components/fees/FinanceReviewQueue';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, TriangleAlert, Building2, FileCheck2, Handshake, PackageCheck, Search, ShieldCheck, Sparkles, Sprout } from 'lucide-react';
@@ -43,6 +44,7 @@ export default function ExperienceHomePage() {
 
   const switchMode = (next: Mode) => { if (user?.id) localStorage.setItem(`ct_experience_mode:${user.id}`, next); setParams({ mode: next }); };
   return <Layout currentPage="home" actions={canBuy && canSell ? <div className="hidden rounded-xl border border-border bg-surface-darker p-1 sm:flex"><ModeButton active={mode === 'buy'} onClick={() => switchMode('buy')} icon={Search}>Buy</ModeButton><ModeButton active={mode === 'sell'} onClick={() => switchMode('sell')} icon={Sprout}>Sell</ModeButton></div> : undefined}>
+    {canDo('finance.manage') && <FinanceReviewQueue />}
     {!loading && (actionError || catalogError || !data.requestSummary || !data.offerSummary || !data.contractSummary) && <button className="btn mb-4" onClick={() => { setLoading(true); setRetry(value => value + 1); }}>Retry workspace totals</button>}
     {!loading && !data.requestSummary && <p role="alert" className="mb-4">Sourcing totals could not be refreshed. Reload to retry; no zero count is assumed.</p>}
     {!loading && !data.offerSummary && <p role="alert" className="mb-4">Offer totals could not be refreshed. Reload to retry; no zero count is assumed.</p>}

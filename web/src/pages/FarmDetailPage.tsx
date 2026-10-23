@@ -28,14 +28,12 @@ export default function FarmDetailPage() {
   const [showPlot, setShowPlot] = useState(false);
   const [plotCode, setPlotCode] = useState('');
   const [plotArea, setPlotArea] = useState(0);
-  const [plotCrops, setPlotCrops] = useState('cocoa');
+  const [plotCrops, setPlotCrops] = useState('');
   const [plotGpsLat, setPlotGpsLat] = useState('');
   const [plotGpsLng, setPlotGpsLng] = useState('');
   const [plotLoading, setPlotLoading] = useState(false);
   const [plotError, setPlotError] = useState('');
-  const plotDirty = Boolean(
-    plotCode || plotArea || plotCrops !== 'cocoa' || plotGpsLat || plotGpsLng,
-  );
+  const plotDirty = Boolean(plotCode || plotArea || plotCrops.trim() || plotGpsLat || plotGpsLng);
   const clearPlotDraft = useUnsavedChanges(showPlot && plotDirty, 'New farm plot');
   const discardPlot = useDiscardChanges(plotDirty);
   const closePlot = () =>
@@ -43,7 +41,7 @@ export default function FarmDetailPage() {
       setShowPlot(false);
       setPlotCode('');
       setPlotArea(0);
-      setPlotCrops('cocoa');
+      setPlotCrops('');
       setPlotGpsLat('');
       setPlotGpsLng('');
       setPlotError('');
@@ -74,8 +72,8 @@ export default function FarmDetailPage() {
   }, [id, readVersion]);
 
   const handleCreatePlot = async () => {
-    if (!id || !plotCode || !plotArea) {
-      setPlotError('Plot code and area required');
+    if (!id || !plotCode || !plotArea || !plotCrops.split(',').some((crop) => crop.trim())) {
+      setPlotError('Plot code, area and at least one crop are required');
       return;
     }
     setPlotLoading(true);
@@ -84,7 +82,10 @@ export default function FarmDetailPage() {
       await farmsApi.createPlot(id, {
         plotCode,
         areaHectares: Number(plotArea),
-        crops: plotCrops.split(',').map((s) => s.trim()),
+        crops: plotCrops
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
         gpsLat: plotGpsLat ? Number(plotGpsLat) : undefined,
         gpsLng: plotGpsLng ? Number(plotGpsLng) : undefined,
       });
@@ -92,7 +93,7 @@ export default function FarmDetailPage() {
       setShowPlot(false);
       setPlotCode('');
       setPlotArea(0);
-      setPlotCrops('cocoa');
+      setPlotCrops('');
       setPlotGpsLat('');
       setPlotGpsLng('');
       setPlotVersion((value) => value + 1);
@@ -170,7 +171,7 @@ export default function FarmDetailPage() {
               <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-border text-xs">
                 <div>
                   <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
-                    COCOBOD ID
+                    Farming cooperative ID
                   </div>
                   <div className="font-mono">{farm.official_traceability_id || '—'}</div>
                 </div>
@@ -260,7 +261,7 @@ export default function FarmDetailPage() {
               />
               <input
                 className="form-input"
-                placeholder="Crops (comma-separated, default: cocoa)"
+                placeholder="Crops on this plot (e.g. yam, maize) *"
                 value={plotCrops}
                 onChange={(e) => setPlotCrops(e.target.value)}
               />
@@ -298,7 +299,12 @@ export default function FarmDetailPage() {
                 <button
                   className="btn btn-primary flex-1 justify-center"
                   onClick={handleCreatePlot}
-                  disabled={plotLoading || !plotCode || !plotArea}
+                  disabled={
+                    plotLoading ||
+                    !plotCode ||
+                    !plotArea ||
+                    !plotCrops.split(',').some((crop) => crop.trim())
+                  }
                 >
                   {plotLoading ? 'Creating…' : 'Add Plot'}
                 </button>

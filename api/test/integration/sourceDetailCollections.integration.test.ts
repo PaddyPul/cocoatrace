@@ -106,7 +106,9 @@ describe('source detail collections', () => {
         (p: { id: string }) => p.id,
       ),
     ).toEqual([late]);
-    expect((await get(`/farms/${farm}/plots/summary`)).body.count).toBe(1005);
+    await query("UPDATE farm_plots SET crops=CASE WHEN plot_code='PLOT-1005' THEN ARRAY[' YAM ','maize'] ELSE ARRAY['yam'] END WHERE farm_id=$1", [farm]);
+    expect((await get(`/farms/${farm}/plots/summary`)).body).toMatchObject({ count: 1005, crops: ['maize', 'yam'] });
+    await query("UPDATE farm_plots SET crops=ARRAY['cocoa'] WHERE farm_id=$1", [farm]);
     expect((await get(`/farms/${farm}/plots/page`, {}, other)).status).toBe(404);
     expect(
       (

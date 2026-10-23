@@ -35,7 +35,7 @@ export default function FarmsPage() {
   const [showPlot, setShowPlot] = useState(false);
   const [plotCode, setPlotCode] = useState('');
   const [plotArea, setPlotArea] = useState(0);
-  const [plotCrops, setPlotCrops] = useState('cocoa');
+  const [plotCrops, setPlotCrops] = useState('');
   const [plotGpsLat, setPlotGpsLat] = useState('');
   const [plotGpsLng, setPlotGpsLng] = useState('');
   const [plotLoading, setPlotLoading] = useState(false);
@@ -45,7 +45,7 @@ export default function FarmsPage() {
   useUnsavedChanges(
     Boolean(
       (showCreate && (cfName || cfRegion || cfDistrict || cfCommunity || cfTraceId)) ||
-        (showPlot && (plotCode || plotArea || plotCrops !== 'cocoa' || plotGpsLat || plotGpsLng)),
+        (showPlot && (plotCode || plotArea || plotCrops.trim() || plotGpsLat || plotGpsLng)),
     ),
     'Farm and plot entry',
   );
@@ -54,7 +54,7 @@ export default function FarmsPage() {
     Boolean(cfName || cfRegion || cfDistrict || cfCommunity || cfTraceId),
   );
   const discardPlot = useDiscardChanges(
-    Boolean(plotCode || plotArea || plotCrops !== 'cocoa' || plotGpsLat || plotGpsLng),
+    Boolean(plotCode || plotArea || plotCrops.trim() || plotGpsLat || plotGpsLng),
   );
   const closeFarm = () =>
     discardFarm(() => {
@@ -71,7 +71,7 @@ export default function FarmsPage() {
       setShowPlot(false);
       setPlotCode('');
       setPlotArea(0);
-      setPlotCrops('cocoa');
+      setPlotCrops('');
       setPlotGpsLat('');
       setPlotGpsLng('');
       setPlotError('');
@@ -110,8 +110,13 @@ export default function FarmsPage() {
   };
 
   const handleCreatePlot = async () => {
-    if (!createdFarmId || !plotCode || !plotArea) {
-      setPlotError('Plot code and area required');
+    if (
+      !createdFarmId ||
+      !plotCode ||
+      !plotArea ||
+      !plotCrops.split(',').some((crop) => crop.trim())
+    ) {
+      setPlotError('Plot code, area and at least one crop are required');
       return;
     }
     setPlotLoading(true);
@@ -120,14 +125,17 @@ export default function FarmsPage() {
       await farmsApi.createPlot(createdFarmId, {
         plotCode,
         areaHectares: Number(plotArea),
-        crops: plotCrops.split(',').map((s) => s.trim()),
+        crops: plotCrops
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
         gpsLat: plotGpsLat ? Number(plotGpsLat) : undefined,
         gpsLng: plotGpsLng ? Number(plotGpsLng) : undefined,
       });
       setShowPlot(false);
       setPlotCode('');
       setPlotArea(0);
-      setPlotCrops('cocoa');
+      setPlotCrops('');
       setPlotGpsLat('');
       setPlotGpsLng('');
       setCompletedFarmId(createdFarmId);
@@ -184,7 +192,7 @@ export default function FarmsPage() {
                 <th>Region</th>
                 <th>Country</th>
                 <th>District</th>
-                <th>COCOBOD ID</th>
+                <th>Farming cooperative ID</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -286,7 +294,7 @@ export default function FarmsPage() {
               />
               <input
                 className="form-input"
-                placeholder="COCOBOD ID"
+                placeholder="Farming cooperative ID"
                 value={cfTraceId}
                 onChange={(e) => setCfTraceId(e.target.value)}
               />
@@ -379,7 +387,7 @@ export default function FarmsPage() {
               />
               <input
                 className="form-input"
-                placeholder="Crops (comma-separated, default: cocoa)"
+                placeholder="Crops on this plot (e.g. yam, maize) *"
                 value={plotCrops}
                 onChange={(e) => setPlotCrops(e.target.value)}
               />
@@ -419,7 +427,12 @@ export default function FarmsPage() {
                 <button
                   className="btn btn-primary flex-1 justify-center"
                   onClick={handleCreatePlot}
-                  disabled={plotLoading || !plotCode || !plotArea}
+                  disabled={
+                    plotLoading ||
+                    !plotCode ||
+                    !plotArea ||
+                    !plotCrops.split(',').some((crop) => crop.trim())
+                  }
                 >
                   {plotLoading ? 'Creating…' : 'Add Plot'}
                 </button>

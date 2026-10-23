@@ -1,4 +1,9 @@
 const commodities = [
+  ['yam', ['yams', 'yam']],
+  ['cassava', ['cassava']],
+  ['maize', ['maize', 'corn']],
+  ['rice', ['rice']],
+  ['plantain', ['plantains', 'plantain']],
   ['shea nuts', ['shea nut', 'shea nuts', 'shea kernel', 'shea kernels']],
   ['cocoa', ['cocoa bean', 'cocoa beans', 'cacao', 'cocoa']],
   ['coffee', ['coffee beans', 'coffee']],
@@ -31,7 +36,7 @@ export function structureSourcingBrief(brief: string): StructuredSourcingBrief {
   const lower = text.toLowerCase();
   const facts: StructuredSourcingBrief['extractedFacts'] = [];
   const unresolved: string[] = [];
-  const commodityEntry = commodities.find(([, aliases]) => aliases.some((alias) => lower.includes(alias)));
+  const commodityEntry = commodities.find(([, aliases]) => aliases.some((alias) => new RegExp(`\\b${alias}\\b`).test(lower)));
   const commodity = commodityEntry?.[0] || '';
   if (commodity) facts.push({ field: 'commodity', value: commodity, confidence: 'high' }); else unresolved.push('Commodity');
 

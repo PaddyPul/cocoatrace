@@ -171,8 +171,13 @@ export default function SourcingBriefPage() {
     try {
       if (!structured && !savedRequest)
         throw new Error('Structure and review the requirements before continuing.');
-      if (!commodity || !Number(quantity) || !delivery)
-        throw new Error('Commodity, quantity and delivery location are required.');
+      const missing = [
+        !commodity.trim() && 'Commodity or material',
+        (!Number.isFinite(Number(quantity)) || Number(quantity) <= 0) &&
+          'Quantity greater than zero (kg)',
+        !delivery.trim() && 'Delivery location',
+      ].filter(Boolean);
+      if (missing.length) throw new Error(`Complete these reviewed fields: ${missing.join(', ')}.`);
       const status = visibility === 'private' ? 'draft' : 'open';
       const data = {
         title: title || `${organic ? 'Organic ' : ''}${commodity} for ${delivery}`,
@@ -469,7 +474,10 @@ export default function SourcingBriefPage() {
               <CheckField checked={eudr} set={setEudr} label="EUDR data pack" />
             </div>
             {error && (
-              <div className="mt-4 rounded-xl border border-red-500/30 bg-red-900/10 p-3 text-xs text-red-300">
+              <div
+                role="alert"
+                className="mt-4 rounded-xl border border-red-500/30 bg-red-900/10 p-3 text-xs text-red-300"
+              >
                 {error}
               </div>
             )}
