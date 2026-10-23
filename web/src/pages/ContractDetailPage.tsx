@@ -215,7 +215,9 @@ export default function ContractDetailPage() {
     'unloaded',
     'delivered',
   ].includes(data?.current_milestone);
-  const transportDocumentsReady = shipmentDispatched && Boolean(data?.transport_document_reference);
+  const transportDocumentsReady =
+    (shipmentDispatched || ['handed_over', 'loaded'].includes(data?.current_milestone)) &&
+    Boolean(data?.transport_document_reference);
   const shipmentArrived = ['arrived', 'customs_cleared', 'unloaded', 'delivered'].includes(
     data?.current_milestone,
   );
@@ -365,7 +367,10 @@ export default function ContractDetailPage() {
       label: 'Buyer and seller assemble the applicable trade documents',
       done: missingDocuments.length === 0,
     },
-    { label: 'Cargo dispatched and transport document issued', done: transportDocumentsReady },
+    {
+      label: 'Cargo dispatched and transport document issued',
+      done: shipmentDispatched && Boolean(data?.transport_document_reference),
+    },
     { label: 'Cargo arrived at destination', done: shipmentArrived },
     { label: 'Cargo delivered', done: c.current_milestone === 'delivered' },
     {

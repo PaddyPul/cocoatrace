@@ -10,6 +10,7 @@ The yam sourcing rehearsal no longer silently labels new plots/harvests as cocoa
 
 ## Change summary
 
+- Release correction: document presentation remains permitted after handover/loading with complete validated documents and a transport reference; dispatch presentation still waits for departure. Add direct handover/loading browser regressions. Existing fee-journey tests explicitly expand completed receipt details; the plot draft fixture supplies its required crop. A separate ERR_NETWORK_CHANGED navigation failure in the founder run remains an environment symptom, not a passing test.
 - Blank plot crop entry, cooperative-ID labels, farm-plot crop suggestions for batches and required explicit crop API inputs.
 - Yam and additional staple-crop extraction; precise missing-field errors for reviewed sourcing requirements.
 - Requested/available/shortfall context in matches and offer entry, with partial-order acknowledgement.
@@ -50,6 +51,7 @@ The yam sourcing rehearsal no longer silently labels new plots/harvests as cocoa
 - [x] Web production build
 - [ ] Staging verification
 - Evidence/results: 1,651 API unit tests and 23 Chromium scenarios pass. Browser scenarios use production web output and mocked APIs. Browser typecheck passes. Full Windows Docker release, GitHub checks and founder acceptance remain required. No native database, physical passkey or staging execution claimed here.
+- Correction evidence: 18 focused production-web Chromium checks pass, including direct handover/loading presentation and plot-draft failure/discard regressions; web build, browser typecheck and quality checks pass. Actual bank/deposit/documentary and completed-fee journeys still require the corrected full Windows release. The founder's first release failed and was not pushed.
 
 ## Product and operations
 

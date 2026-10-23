@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-async function fixture(page: Page, milestone = 'arrived') {
+async function fixture(page: Page, milestone = 'arrived', insurance = false) {
   const actor = {
     id: 'seller-user',
     organizationId: 'seller',
@@ -10,16 +10,20 @@ async function fixture(page: Page, milestone = 'arrived') {
     name: 'Seller',
   };
   await page.addInitScript((user) => localStorage.setItem('ct_user', JSON.stringify(user)), actor);
-  const documents = ['commercial_invoice', 'packing_list', 'transport_document', 'other'].map(
-    (type) => ({
-      id: type,
-      type,
-      file_name: `${type}.pdf`,
-      validation_status: 'validated',
-      malware_scan_status: 'clean',
-      review_status: 'pending',
-    }),
-  );
+  const documents = [
+    'commercial_invoice',
+    'packing_list',
+    'transport_document',
+    'other',
+    ...(insurance ? ['insurance_certificate'] : []),
+  ].map((type) => ({
+    id: type,
+    type,
+    file_name: `${type}.pdf`,
+    validation_status: 'validated',
+    malware_scan_status: 'clean',
+    review_status: 'pending',
+  }));
   let uploadedType = '';
   await page.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -42,6 +46,8 @@ async function fixture(page: Page, milestone = 'arrived') {
           incoterm: 'CIF',
           status: 'accepted',
           payment_terms_status: 'agreed',
+          payment_plan: 'deposit_balance',
+          payment_request_id: 'payment',
           documents,
           current_milestone: milestone,
           shipment_id: 'shipment',
@@ -69,6 +75,21 @@ async function fixture(page: Page, milestone = 'arrived') {
       return route.fulfill({ json: { id: 'uploaded' } });
     }
     return route.fulfill({ status: 503, json: { error: 'Supporting data unavailable' } });
+  });
+}
+
+for (const milestone of ['handed_over', 'loaded']) {
+  test(`CIF documents can be presented at ${milestone} without falsely reporting dispatch`, async ({
+    page,
+  }) => {
+    await fixture(page, milestone, true);
+    await page.goto('/contracts/deal');
+    await expect(
+      page.getByRole('button', { name: 'Present documents for payment', exact: true }),
+    ).toBeEnabled();
+    await expect(
+      page.locator('[aria-label="Pending: Cargo dispatched and transport document issued"]'),
+    ).toBeVisible();
   });
 }
 

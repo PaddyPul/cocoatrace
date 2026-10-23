@@ -50,6 +50,9 @@ test('plot edits survive a failed save and cancelled discard; confirmed discard 
   await page.getByRole('button', { name: '+ Add Plot', exact: true }).click();
   const code = page.getByPlaceholder('Plot code * (e.g. PLOT-A-01)', { exact: true });
   await code.fill('Unsaved plot');
+  await page
+    .getByPlaceholder('Crops on this plot (e.g. yam, maize) *', { exact: true })
+    .fill('yam');
   await page.getByPlaceholder('Area (hectares) *', { exact: true }).fill('2');
   await page.getByRole('button', { name: 'Add Plot', exact: true }).click();
   await expect(page.getByText('Plot service unavailable', { exact: true })).toBeVisible();
@@ -58,11 +61,17 @@ test('plot edits survive a failed save and cancelled discard; confirmed discard 
   await expect(review).toBeVisible();
   await review.getByRole('button', { name: 'Stay and keep editing', exact: true }).click();
   await expect(code).toHaveValue('Unsaved plot');
+  await expect(
+    page.getByPlaceholder('Crops on this plot (e.g. yam, maize) *', { exact: true }),
+  ).toHaveValue('yam');
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   await review.getByRole('button', { name: 'Discard changes', exact: true }).click();
   await expect(code).not.toBeVisible();
   await page.getByRole('button', { name: '+ Add Plot', exact: true }).click();
   await expect(code).toHaveValue('');
+  await expect(
+    page.getByPlaceholder('Crops on this plot (e.g. yam, maize) *', { exact: true }),
+  ).toHaveValue('');
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(review).not.toBeVisible();
 });

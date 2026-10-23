@@ -31,6 +31,8 @@ Previously recorded crop/identifier values are not retagged. Inspect historical 
 
 ## Validation and limits
 
+Release correction after the founder's first full run: the UI must distinguish physical dispatch from eligibility to present documents. The API permits document presentation at handover/loading and later stages. Arrival/dispatch timeline wording must not move that payment trigger later. New browser regressions explicitly cover handover/loading with complete CIF documents; fee and plot-draft journeys now interact with the intended collapsed/required-field UI.
+
 Author checks: 1,651 API unit tests; 23 production-web Chromium checks with mocked APIs; API build; web production build; browser typecheck. Further quality/backlog/budget checks are recorded in the PR body. Added native PostgreSQL regressions cover mixed crops after the first plot page and pending-fee date/search/paging/tenant isolation; Docker/native execution is a required Windows/CI release gate, not claimed as author-run evidence.
 
 Founder reported the earlier trade completed on PR #146 main before these changes. This accepts that run only. INV-003 stays IN PROGRESS pending the corrected fresh rehearsal, safety/fallback checks and remaining investor acceptance. No whole-backlog percentage increase is claimed.
