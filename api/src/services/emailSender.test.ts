@@ -16,7 +16,7 @@ class CapturingSender implements EmailSender {
 const changedEnvironment = [
   'APP_ENV', 'IDENTITY_EMAIL_ENABLED', 'EMAIL_DRIVER', 'EMAIL_FROM', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE',
   'SMTP_REQUIRE_TLS', 'SMTP_TLS_REJECT_UNAUTHORIZED', 'SMTP_USER', 'SMTP_PASSWORD',
-  'PUBLIC_WEB_URL', 'WEB_URL',
+  'PUBLIC_WEB_URL', 'WEB_URL', 'EMAIL_SUPPORT_ADDRESS',
 ] as const;
 
 afterEach(() => {
@@ -143,6 +143,13 @@ describe('SMTP adapter', () => {
       expect(receivedMessage).toContain('Subject: CocoaTrace test');
       expect(receivedMessage).toContain('Line one\r\n..Line two');
       expect(receivedMessage).not.toContain('smtp-password');
+      expect(receivedMessage).toContain('From: BetterTrade <');
+      const encodedHtml = receivedMessage.split('Content-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n')[1]?.split('\r\n--')[0];
+      if (!encodedHtml) throw new Error('SMTP message is missing wrapped HTML');
+      expect(encodedHtml.split('\r\n').every(line => line.length <= 76)).toBe(true);
+      const html = Buffer.from(encodedHtml, 'base64').toString('utf8');
+      expect(html).toContain('BetterTrade');
+      expect(html).toContain('Line one<br>.Line two');
     } finally {
       await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     }

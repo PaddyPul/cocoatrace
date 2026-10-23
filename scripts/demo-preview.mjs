@@ -55,7 +55,7 @@ function run(args,state,capture=false) {
 }
 function compose(args,state,capture=false) {
  // Never reads the developer's .env or base application Compose project.
- return run(['compose','--env-file',path.join(root,'scripts/preview-empty.env'),'-p','cocoatrace-demo-preview','-f',path.join(root,'docker-compose.demo-preview.yml'),'--profile','share',...args],state,capture);
+ return run(['compose','--env-file',path.join(root,'scripts/preview-empty.env'),'-p','cocoatrace-demo-preview','-f',path.join(root,'docker-compose.demo-preview.yml'),...(process.argv[2]==='rehearse'?['-f',path.join(root,'docker-compose.demo-rehearsal.yml')]:[]),'--profile','share',...args],state,capture);
 }
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function smoke() {
@@ -107,16 +107,17 @@ export async function verifyEmailGate(url,{fetchImpl=fetch,pauseImpl=pause,attem
 
 async function main() {
  const action=process.argv[2];
- if(!['start','share','stop','status','check'].includes(action)) throw new Error('Use demo:preview:start|share|stop|status|check');
- const state=load(action==='start');
+ if(!['start','rehearse','share','stop','status','check'].includes(action)) throw new Error('Use demo:preview:start|rehearse|share|stop|status|check');
+ const state=load(action==='start'||action==='rehearse');
  if(action==='stop') {compose(['down','--remove-orphans'],state);console.log('Preview and tunnel stopped; synthetic data retained.');return;}
  if(action==='status') {compose(['ps'],state);console.log('Configured workspace:',state.PREVIEW_WEB_URL);return;}
  if(action==='check') {await smoke();return;}
- if(action==='start') {
+ if(action==='start'||action==='rehearse') {
+  if(action==='rehearse') {state.PREVIEW_REHEARSAL_INVITATION_KEY ||= crypto.randomBytes(32).toString('hex');if(!/^[a-f0-9]{64}$/.test(state.PREVIEW_REHEARSAL_INVITATION_KEY))throw new Error('Invalid local rehearsal key');}
   compose(['stop','tunnel'],state);
   state.PREVIEW_WEB_URL='http://127.0.0.1:14000';state.PREVIEW_COOKIE_SECURE='false';delete state.PREVIEW_ALLOWED_EMAILS;save(state);
-  compose(['up','-d','--build','--wait','postgres','clamav','api','web'],state);
-  await smoke();console.log('Open http://127.0.0.1:14000 — synthetic demo only; nothing is publicly shared.');return;
+  compose(['up','-d','--build','--wait','postgres','clamav','api','web',...(action==='rehearse'?['mailpit']:[])],state);
+  await smoke();if(action==='rehearse')console.log('Local captured outbox: http://127.0.0.1:18026 - messages stay on this PC; no external relay configured.');console.log('Open http://127.0.0.1:14000 — synthetic demo only; nothing is publicly shared.');return;
  }
  state.PREVIEW_ALLOWED_EMAILS=sharingEmails(process.argv.slice(3));
  compose(['stop','tunnel'],state);

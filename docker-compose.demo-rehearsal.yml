@@ -1,0 +1,31 @@
+# Local-only overlay selected by npm run demo:rehearsal:start.
+# No SMTP relay is configured; the capture service has no internet-facing port.
+services:
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "127.0.0.1:18026:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  api:
+    environment:
+      IDENTITY_EMAIL_ENABLED: "true"
+      EMAIL_DRIVER: smtp
+      EMAIL_FROM: demo@bettertrade.test
+      INVITATION_DELIVERY_KEY: ${PREVIEW_REHEARSAL_INVITATION_KEY:?Use the local rehearsal runner}
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_USER: rehearsal
+      SMTP_PASSWORD: local-capture-only
+      SMTP_SECURE: "false"
+      SMTP_REQUIRE_TLS: "false"
+      SMTP_TLS_REJECT_UNAUTHORIZED: "true"
+    depends_on:
+      mailpit:
+        condition: service_healthy
