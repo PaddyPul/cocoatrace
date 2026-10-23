@@ -1,7 +1,7 @@
 import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { batches as batchesApi } from '../api';
+import { batches as batchesApi, farms as farmsApi } from '../api';
 import type { Batch } from '../domains/source/types';
 import { StatusBadge, fmtDate } from '../components/shared/helpers';
 import { useAuthCtx } from '../components/auth/AuthProvider';
@@ -29,7 +29,7 @@ export default function BatchesPage() {
   // Create batch modal
   const [showCreate, setShowCreate] = useState(false);
   const [cbFarmId, setCbFarmId] = useState('');
-  const [cbCrop, setCbCrop] = useState('cocoa');
+  const [cbCrop, setCbCrop] = useState('');
   const [cbHarvestDate, setCbHarvestDate] = useState('');
   const [cbQty, setCbQty] = useState(0);
   const [cbMoisture, setCbMoisture] = useState('');
@@ -37,23 +37,57 @@ export default function BatchesPage() {
   const [cbLoading, setCbLoading] = useState(false);
   const [cbError, setCbError] = useState('');
   const [createdBatchId, setCreatedBatchId] = useState<string | null>(null);
+  const [cropChoices, setCropChoices] = useState<string[]>([]);
+  const [cropReadError, setCropReadError] = useState('');
+  const [cropLoading, setCropLoading] = useState(false);
+  useEffect(() => {
+    let active = true;
+    setCropChoices([]);
+    setCropReadError('');
+    if (!cbFarmId) {
+      setCropLoading(false);
+      return;
+    }
+    setCropLoading(true);
+    farmsApi
+      .plotsSummary(cbFarmId)
+      .then((result) => {
+        if (!active) return;
+        if (!Array.isArray(result.crops) || !result.crops.every((crop) => typeof crop === 'string'))
+          throw new Error('Plot crop details unavailable');
+        const crops = [...new Set(result.crops.map((crop) => crop.trim()).filter(Boolean))];
+        setCropChoices(crops);
+        if (crops.length === 1) setCbCrop(crops[0]);
+      })
+      .catch(() => {
+        if (active)
+          setCropReadError(
+            'Plot crops could not be loaded. Enter and verify the crop against the selected farm plots.',
+          );
+      })
+      .finally(() => {
+        if (active) setCropLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [cbFarmId]);
 
   useUnsavedChanges(
     Boolean(
-      showCreate &&
-        (cbFarmId || cbCrop !== 'cocoa' || cbHarvestDate || cbQty || cbMoisture || cbGrade),
+      showCreate && (cbFarmId || cbCrop.trim() || cbHarvestDate || cbQty || cbMoisture || cbGrade),
     ),
     'Harvest batch',
   );
 
   const discardBatch = useDiscardChanges(
-    Boolean(cbFarmId || cbCrop !== 'cocoa' || cbHarvestDate || cbQty || cbMoisture || cbGrade),
+    Boolean(cbFarmId || cbCrop.trim() || cbHarvestDate || cbQty || cbMoisture || cbGrade),
   );
   const closeBatch = () =>
     discardBatch(() => {
       setShowCreate(false);
       setCbFarmId('');
-      setCbCrop('cocoa');
+      setCbCrop('');
       setCbHarvestDate('');
       setCbQty(0);
       setCbMoisture('');
@@ -62,8 +96,9 @@ export default function BatchesPage() {
     });
 
   const handleCreateBatch = async () => {
-    if (!cbFarmId || !cbHarvestDate || !cbQty || cbQty <= 0) {
-      setCbError('Farm, harvest date, and quantity required');
+    if (cropLoading) return;
+    if (!cbFarmId || !cbCrop.trim() || !cbHarvestDate || !cbQty || cbQty <= 0) {
+      setCbError('Farm, crop, harvest date, and quantity are required');
       return;
     }
     setCbLoading(true);
@@ -71,7 +106,7 @@ export default function BatchesPage() {
     try {
       const batch = await batchesApi.create({
         farmId: cbFarmId,
-        crop: cbCrop,
+        crop: cbCrop.trim(),
         harvestDate: cbHarvestDate,
         quantityKg: Number(cbQty),
         moisturePercent: cbMoisture ? Number(cbMoisture) : undefined,
@@ -79,6 +114,7 @@ export default function BatchesPage() {
       });
       setShowCreate(false);
       setCbFarmId('');
+      setCbCrop('');
       setCbHarvestDate('');
       setCbQty(0);
       setCbMoisture('');
@@ -222,7 +258,10 @@ export default function BatchesPage() {
                 value={cbFarmId}
                 owned
                 disabled={cbLoading}
-                onChange={(farm) => setCbFarmId(farm?.id || '')}
+                onChange={(farm) => {
+                  setCbFarmId(farm?.id || '');
+                  setCbCrop('');
+                }}
               />
               <input
                 type="date"
@@ -239,10 +278,29 @@ export default function BatchesPage() {
               />
               <input
                 className="form-input"
-                placeholder="Crop (default: cocoa)"
+                aria-label="Batch crop"
+                placeholder="Crop from the selected farm plots *"
+                list="farm-crop-options"
                 value={cbCrop}
                 onChange={(e) => setCbCrop(e.target.value)}
+                disabled={cropLoading}
               />
+              <datalist id="farm-crop-options">
+                {cropChoices.map((crop) => (
+                  <option key={crop} value={crop} />
+                ))}
+              </datalist>
+              {cropLoading && <p role="status">Reading crops from the farm plots…</p>}
+              {cropReadError && <p role="alert">{cropReadError}</p>}
+              {!cropLoading && !cropReadError && cbFarmId && (
+                <p className="text-xs text-text-muted">
+                  {cropChoices.length === 1
+                    ? 'Crop filled from the selected farm’s plots. Confirm it describes this harvest.'
+                    : cropChoices.length > 1
+                      ? 'This farm has multiple crops. Choose or enter the crop harvested for this batch.'
+                      : 'No crop is recorded on the farm plots. Enter the crop harvested for this batch.'}
+                </p>
+              )}
               <input
                 type="number"
                 step="0.1"

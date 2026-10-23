@@ -342,7 +342,7 @@ export default function BatchDetailPage() {
                   <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
                     Crop
                   </div>
-                  <div className="font-medium">{batch.crop || 'cocoa'}</div>
+                  <div className="font-medium">{batch.crop || 'Crop not recorded'}</div>
                 </div>
               </div>
             </div>

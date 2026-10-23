@@ -53,6 +53,12 @@ export default function DealNextAction({
     </button>
   );
   let control: React.ReactNode = null;
+  if (action.requiresAction && action.kind === 'delivery')
+    control = (
+      <a className="btn btn-primary" href="#delivery-acceptance">
+        Inspect delivered goods
+      </a>
+    );
   if (action.requiresAction) {
     switch (action.operation) {
       case 'configure_terms':

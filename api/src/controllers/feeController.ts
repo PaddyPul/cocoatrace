@@ -10,6 +10,7 @@ import {
   type FeeReview,
 } from '../modules/fees/ledger';
 import { readFeeReconciliation } from '../modules/fees/reconciliationRead';
+import { readFeeRegister } from '../modules/fees/register';
 function id(value: unknown) {
   const result = z.string().uuid().safeParse(value);
   if (!result.success) throw new ValidationError('A valid identifier is required');
@@ -35,7 +36,13 @@ export async function writeOff(req: Request, res: Response) {
   res.json(await writeOffFee(req.user!, id(req.params.id), req.body.reason));
 }
 export async function list(req: Request, res: Response) {
-  res.set('Cache-Control', 'no-store').json(await listFees(req.user!));
+  const { view, ...parameters } = req.query;
+  if (view !== undefined && view !== 'page') throw new ValidationError('Invalid fee register view');
+  res
+    .set('Cache-Control', 'no-store')
+    .json(
+      view === 'page' ? await readFeeRegister(req.user!, parameters) : await listFees(req.user!),
+    );
 }
 export async function download(req: Request, res: Response) {
   const result = await statement(req.user!, id(req.params.id));

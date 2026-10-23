@@ -124,20 +124,22 @@ test('fee register distinguishes pending and malformed reads from a confirmed em
         await waiting;
         return route.fulfill({ status: 503, json: { error: 'Fee register unavailable' } });
       }
-      return route.fulfill({ json: reads === 2 ? { items: [] } : [] });
+      return route.fulfill({
+        json: reads === 2 ? { items: [] } : { items: [], hasMore: false, nextCursor: null },
+      });
     }
     return route.fulfill({ json: {} });
   });
   await page.goto('/platform-fees');
-  await expect(page.getByRole('status')).toContainText('Loading fee register');
-  await expect(page.getByText(/No fee statements for your organization yet/)).toHaveCount(0);
+  await expect(page.getByText('Loading fee register…', { exact: true })).toBeVisible();
+  await expect(page.getByText(/No fee statements match these filters/)).toHaveCount(0);
   release();
   await expect(page.getByRole('alert')).toContainText('Fee register unavailable');
-  await page.getByRole('button', { name: 'Retry fee register', exact: true }).click();
+  await page.getByRole('button', { name: 'Refresh fee register', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('Invalid fee register response');
-  await expect(page.getByText(/No fee statements for your organization yet/)).toHaveCount(0);
-  await page.getByRole('button', { name: 'Retry fee register', exact: true }).click();
-  await expect(page.getByText(/No fee statements for your organization yet/)).toBeVisible();
+  await expect(page.getByText(/No fee statements match these filters/)).toHaveCount(0);
+  await page.getByRole('button', { name: 'Refresh fee register', exact: true }).click();
+  await expect(page.getByText(/No fee statements match these filters/)).toBeVisible();
   expect(reads).toBe(3);
   expect(writes).toEqual([]);
 });

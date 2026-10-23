@@ -64,7 +64,7 @@ export const createFarmSchema = z.object({
 export const createPlotSchema = z.object({
   plotCode: z.string().min(1),
   areaHectares: z.number().positive(),
-  crops: z.array(z.string()).default(['cocoa']),
+  crops: z.array(z.string().trim().min(1).max(80)).min(1).max(100),
   gpsLat: z.number().finite().min(-90).max(90).optional(),
   gpsLng: z.number().finite().min(-180).max(180).optional(),
   geolocationSource: z.string().default('farmer_submitted'),
@@ -73,7 +73,7 @@ export const createPlotSchema = z.object({
 export const createBatchSchema = z.object({
   farmId: z.string().uuid(),
   plotIds: z.array(z.string()).default([]),
-  crop: z.string().default('cocoa'),
+  crop: z.string().trim().min(1).max(80),
   harvestDate: z.string(),
   quantityKg: z.number().positive(),
   moisturePercent: z.number().optional(),

@@ -1,4 +1,5 @@
 import SavedFilterControls from '../components/savedFilters/SavedFilterControls';
+import QuantityCoverage from '../components/trading/QuantityCoverage';
 import { useCatalogPage } from '../components/catalog/useCatalogPage';
 import PageNavigation from '../components/catalog/PageNavigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -519,7 +520,9 @@ export default function MarketplacePage() {
       ) : error ? (
         <div className="mt-5 rounded-2xl border border-red-500/30 bg-red-900/10 p-4 text-xs text-red-300">
           <p role="alert">{error}</p>
-          <button className="btn mt-3" onClick={page.refresh}>Retry supply search</button>
+          <button className="btn mt-3" onClick={page.refresh}>
+            Retry supply search
+          </button>
         </div>
       ) : result.length ? (
         <div className="mt-5 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
@@ -606,6 +609,12 @@ export default function MarketplacePage() {
                 {issues.length > 0 && (
                   <div className="mt-3 text-[10px] text-amber-300">Gaps: {issues.join(', ')}</div>
                 )}
+                {activeRequest && (
+                  <QuantityCoverage
+                    requested={Number(activeRequest.quantity_kg)}
+                    available={Number(item.available_quantity_kg)}
+                  />
+                )}
                 {item.activeRecall && (
                   <p className="mt-3 text-xs text-red-300">
                     Recall hold: offers and material movement are blocked.
@@ -614,7 +623,11 @@ export default function MarketplacePage() {
                 <div className="mt-5 flex gap-2">
                   <button
                     className="btn btn-primary flex-1 justify-center"
-                    onClick={() => navigate(`/listing/${item.id}`)}
+                    onClick={() =>
+                      navigate(
+                        `/listing/${item.id}${activeRequest ? `?request=${encodeURIComponent(activeRequest.id)}` : ''}`,
+                      )
+                    }
                   >
                     View supply details <ArrowRight size={14} />
                   </button>

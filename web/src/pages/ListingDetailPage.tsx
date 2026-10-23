@@ -1,8 +1,9 @@
 import { useUnsavedChanges } from '../components/shared/UnsavedChanges';
 import ExternalNegotiationNotice from '../components/trading/ExternalNegotiationNotice';
+import QuantityCoverage from '../components/trading/QuantityCoverage';
 import { useEffect, useRef, useState } from 'react';
 import { ApiError } from '../api/errors';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,8 +21,8 @@ import {
   Sprout,
   TriangleAlert,
 } from 'lucide-react';
-import { listings, offers, provenance as provenanceApi } from '../api';
-import type { Listing } from '../domains/marketplace/types';
+import { listings, offers, sourcing, provenance as provenanceApi } from '../api';
+import type { Listing, SourcingRequest } from '../domains/marketplace/types';
 import type { ProvenancePack } from '../domains/provenance/types';
 import TrustClaims, { isReviewed, trustLabel } from '../components/shared/TrustClaims';
 import Layout from '../components/layout/Layout';
@@ -33,6 +34,41 @@ import { useToast } from '../components/shared/ToastProvider';
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const requestId = params.get('request');
+  const [request, setRequest] = useState<SourcingRequest | null>(null);
+  const [requestError, setRequestError] = useState('');
+  const [requestLoading, setRequestLoading] = useState(Boolean(requestId));
+  const [partialAccepted, setPartialAccepted] = useState(false);
+  useEffect(() => {
+    let active = true;
+    setRequest(null);
+    setRequestError('');
+    setPartialAccepted(false);
+    setRequestLoading(Boolean(requestId));
+    if (requestId)
+      sourcing
+        .page({ mine: 'true', id: requestId, limit: '1' })
+        .then((result) => {
+          if (!active) return;
+          const row = result.items?.find((item) => item.id === requestId);
+          if (!row || !Number.isFinite(Number(row.quantity_kg)) || Number(row.quantity_kg) <= 0)
+            throw new Error();
+          setRequest(row);
+        })
+        .catch(() => {
+          if (active)
+            setRequestError(
+              'Sourcing quantity context could not be loaded. Return to matched supply and retry before offering.',
+            );
+        })
+        .finally(() => {
+          if (active) setRequestLoading(false);
+        });
+    return () => {
+      active = false;
+    };
+  }, [requestId]);
   const { canDo } = usePermission();
   const { toast } = useToast();
   const [listing, setListing] = useState<Listing | null>(null);
@@ -42,6 +78,7 @@ export default function ListingDetailPage() {
   const [packError, setPackError] = useState('');
   const retryRead = useRef<() => void>(() => {});
   const [quantity, setQuantity] = useState(0);
+  const partialOrder = Boolean(request && quantity > 0 && quantity < Number(request.quantity_kg));
   const [price, setPrice] = useState(0);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
@@ -156,6 +193,12 @@ export default function ListingDetailPage() {
     }
     if (listing?.activeRecall) {
       setOfferError('This supply is on recall hold. New offers are blocked.');
+      return;
+    }
+    if (requestLoading || requestError || (partialOrder && !partialAccepted)) {
+      setOfferError(
+        'Review the sourcing quantity and acknowledge the partial order before sending.',
+      );
       return;
     }
     if (!listing || quantity <= 0 || price <= 0 || quantity > listing.available_quantity_kg) {
@@ -455,6 +498,26 @@ export default function ListingDetailPage() {
               Commercial decision
             </div>
             <h3 className="mt-1 text-xl font-bold">Build an offer</h3>
+            {requestLoading && <p role="status">Loading requested quantity…</p>}
+            {requestError && <p role="alert">{requestError}</p>}
+            {request && (
+              <QuantityCoverage
+                requested={Number(request.quantity_kg)}
+                available={Number(quantity)}
+                offer
+              />
+            )}
+            {partialOrder && (
+              <label className="mt-3 flex items-start gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={partialAccepted}
+                  onChange={(e) => setPartialAccepted(e.target.checked)}
+                />
+                I understand this is a partial order and the remaining quantity must be sourced
+                separately.
+              </label>
+            )}
             {sent ? (
               <div className="mt-6 rounded-2xl border border-brand-400/25 bg-brand-400/5 p-5 text-center">
                 <CheckCircle2 size={28} className="mx-auto text-brand-400" />
@@ -482,7 +545,10 @@ export default function ListingDetailPage() {
                       className="form-input"
                       value={quantity}
                       max={listing.available_quantity_kg}
-                      onChange={(event) => setQuantity(Number(event.target.value))}
+                      onChange={(event) => {
+                        setQuantity(Number(event.target.value));
+                        setPartialAccepted(false);
+                      }}
                     />
                   </Field>
                   <Field label={`Price per kg (${listing.currency})`}>
@@ -510,7 +576,15 @@ export default function ListingDetailPage() {
                   <button
                     className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-400 px-5 text-sm font-bold text-emerald-950"
                     onClick={submit}
-                    disabled={busy || Boolean(error) || listing.activeRecall || unavailable}
+                    disabled={
+                      busy ||
+                      Boolean(error) ||
+                      listing.activeRecall ||
+                      unavailable ||
+                      requestLoading ||
+                      Boolean(requestError) ||
+                      (partialOrder && !partialAccepted)
+                    }
                   >
                     {listing.activeRecall ? (
                       'Offers blocked — recall hold'

@@ -14,6 +14,15 @@ const allowed = () =>
         : [],
   }));
 describe('bounded farm plots', () => {
+  it('reads distinct normalized crops across the authorized farm with a bounded result', async () => {
+    const execute = allowed();
+    await plotSummary(execute, actor, id, {});
+    const sql = execute.mock.calls.at(-1)?.[0];
+    expect(sql).toContain('unnest(p.crops)');
+    expect(sql).toContain('lower(trim(crop))');
+    expect(sql).toContain('LIMIT 101');
+    expect(execute.mock.calls.at(-1)?.[1]).toEqual([id]);
+  });
   it('rechecks farm access and literal search before limiting', async () => {
     const execute = allowed();
     await plotPage(execute, actor, id, { search: '%_', limit: '2' });

@@ -47,6 +47,7 @@ test('source farm and plot do not create inventory until a real harvest is recor
   await page.getByRole('button', { name: '+ Add Plot', exact: true }).click();
   await page.getByPlaceholder('Plot code * (e.g. PLOT-A-01)', { exact: true }).fill('SOURCE-1');
   await page.getByPlaceholder('Area (hectares) *', { exact: true }).fill('10');
+  await page.getByPlaceholder('Crops on this plot (e.g. yam, maize) *', { exact: true }).fill('cocoa');
   await page.getByPlaceholder('GPS Lat', { exact: true }).fill('9.4');
   await page.getByPlaceholder('GPS Lng', { exact: true }).fill('-0.8');
   await page.locator('.modal').getByRole('button', { name: 'Add Plot', exact: true }).click();

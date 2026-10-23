@@ -1,4 +1,5 @@
 import { api } from './http';
+import type { CatalogPage } from './http';
 
 export interface FeeStatement {
   refundSupported?: boolean;
@@ -7,6 +8,10 @@ export interface FeeStatement {
   taxNotice: string;
   documentType: string;
   fee: {
+    created_at?: string;
+    invoiced_at?: string | null;
+    latest_submission_at?: string | null;
+    pending_submission_count?: number;
     refund_status?: 'requested' | 'sent' | 'confirmed' | 'rejected' | null;
     receipt_verified: boolean;
     amount_matches: boolean;
@@ -51,6 +56,33 @@ export interface FeeReconciliation {
 }
 
 export const platformFees = {
+  page: async (parameters: Record<string, string> = {}) => {
+    const value = await api<CatalogPage<FeeStatement['fee']>>(
+      'GET',
+      `/platform-fees?${new URLSearchParams({ view: 'page', ...parameters })}`,
+    );
+    if (
+      !value ||
+      typeof value.hasMore !== 'boolean' ||
+      (value.hasMore
+        ? typeof value.nextCursor !== 'string' || !value.nextCursor
+        : value.nextCursor !== null) ||
+      !Array.isArray(value.items) ||
+      value.items.some(
+        (fee) =>
+          !fee ||
+          typeof fee.id !== 'string' ||
+          typeof fee.contract_id !== 'string' ||
+          typeof fee.status !== 'string' ||
+          typeof fee.currency !== 'string' ||
+          !Number.isFinite(Number(fee.amount_total)) ||
+          !Number.isInteger(fee.pending_submission_count) ||
+          Number(fee.pending_submission_count) < 0,
+      )
+    )
+      throw new Error('Invalid fee register response. Refresh to retry.');
+    return value;
+  },
   list: () => api<FeeStatement['fee'][]>('GET', '/platform-fees'),
   statement: (id: string) => api<FeeStatement>('GET', `/contracts/${id}/fee`),
   download: (id: string) => api<FeeStatement>('GET', `/contracts/${id}/fee/statement`),

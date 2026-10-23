@@ -141,7 +141,7 @@ export default function HoldingDetailPage() {
                 Holding {holding.id.slice(0, 8)}…
               </h1>
               <p className="text-sm text-text-muted">
-                {holding.farm_name || 'Unknown'} · {holding.crop || 'cocoa'}
+                {holding.farm_name || 'Unknown'} · {holding.crop || 'Crop not recorded'}
               </p>
               <div className="grid grid-cols-4 gap-4 mt-4 pt-4 border-t border-border text-xs">
                 <div>
@@ -220,7 +220,7 @@ export default function HoldingDetailPage() {
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-text-muted">Crop</span>
-                <span className="font-medium">{holding.crop || 'cocoa'}</span>
+                <span className="font-medium">{holding.crop || 'Crop not recorded'}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-text-muted">Harvest</span>

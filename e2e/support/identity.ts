@@ -79,8 +79,14 @@ export async function createWorkspace(page: Page, browser: Browser, role: 'buyer
     await reviewPage.goto('/access-applications');
     await reviewPage.locator('article').filter({ hasText: identity.organization }).getByRole('button', { name: 'Review', exact: true }).click();
     await reviewPage.getByLabel('Review reason or note').fill('Browser regression fixture approval');
+    const approvalEvent = reviewPage.waitForResponse(response =>
+      /\/api\/access-applications\/[^/]+\/approve$/.test(new URL(response.url()).pathname)
+      && response.request().method() === 'POST');
     await reviewPage.getByRole('button', { name: 'Approve and invite' }).click();
-    await expect(reviewPage.getByText('Organization approved; invitation submitted to email provider', { exact: true })).toBeVisible();
+    const approval = await approvalEvent;
+    expect(approval.status(), 'Fixture approval must return HTTP 200; check reviewer authorization or rate limits on failure').toBe(200);
+    const { emailDelivery } = await approval.json();
+    expect(['sent', 'pending'], 'Fixture invitation must be submitted or durably queued; failed/disabled delivery cannot activate a workspace').toContain(emailDelivery);
   } finally { await reviewer.close(); }
   const invitation = await emailLink(identity.email, 'invitation');
   await acceptInvitation(page, invitation.link, identity.name);

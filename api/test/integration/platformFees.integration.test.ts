@@ -153,6 +153,35 @@ afterAll(async () => {
   await pool.end();
 });
 describe('commercial fee statements and controlled collection', () => {
+  it('pages and filters pending fee receipts across authorized statements with UTC dates and tenant isolation', async () => {
+    const first = await deal(false), second = await deal(false);
+    await query("UPDATE platform_fee_invoices SET created_at='2026-10-23T10:00:00.123456Z',invoiced_at='2026-10-23T10:00:00Z',status='invoiced' WHERE id=ANY($1::uuid[])", [[first.feeId, second.feeId]]);
+    for (const item of [first, second]) await query(
+      "INSERT INTO platform_fee_submissions(fee_id,submitted_by_user_id,submitted_by_organization_id,reference) VALUES($1,$2,$3,'synthetic-pending-review')",
+      [item.feeId, seller.userId, seller.organizationId],
+    );
+    const filters = 'view=page&review=pending&from=2026-10-23&to=2026-10-23&limit=1';
+    const page = await get(`/platform-fees?${filters}`, seller);
+    expect(page.status).toBe(200);
+    expect(page.body.items).toHaveLength(1);
+    expect(page.body.hasMore).toBe(true);
+    expect(page.body.items[0]).toMatchObject({ pending_submission_count: 1, receipt_verified: false });
+    expect(page.body.items[0].created_at).toBeTruthy();
+    expect(page.body.items[0].latest_submission_at).toBeTruthy();
+    const next = await get(`/platform-fees?${filters}&cursor=${page.body.nextCursor}`, seller);
+    expect(next.status).toBe(200);
+    expect(next.body.items[0].id).not.toBe(page.body.items[0].id);
+    const search = await get(`/platform-fees?view=page&review=pending&search=${first.contractId}`, admin);
+    expect(search.status).toBe(200);
+    expect(search.body.items.map((row: { id: string }) => row.id)).toEqual([first.feeId]);
+    const unrelated = await get(`/platform-fees?view=page&search=${first.contractId}`, outsider);
+    expect(unrelated.status).toBe(200);
+    expect(unrelated.body.items).toEqual([]);
+    expect((await get(`/platform-fees?${filters}&cursor=${page.body.nextCursor}`, outsider)).status).toBe(400);
+    expect((await get('/platform-fees?view=page&from=2026-02-30', seller)).status).toBe(400);
+    await query("UPDATE platform_fee_submissions SET status='rejected',rejection_reason='Synthetic review completed',reviewed_by_user_id=$2,reviewed_at=NOW() WHERE fee_id=$1", [first.feeId, admin.userId]);
+    expect((await get(`/platform-fees?view=page&review=pending&search=${first.contractId}`, admin)).body.items).toEqual([]);
+  });
   it('creates an exact decimal fee snapshot and makes it due only on completed trade', async () => {
     const d = await deal(false, 0.125),
       r = await get(path(d), seller);

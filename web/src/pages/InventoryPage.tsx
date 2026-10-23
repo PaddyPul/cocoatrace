@@ -139,7 +139,7 @@ export default function InventoryPage() {
                   >
                     <td className="font-mono text-[11px]">{h.id.slice(0, 13)}…</td>
                     <td className="text-text-primary font-medium">{h.farm_name || '—'}</td>
-                    <td>{h.crop || 'cocoa'}</td>
+                    <td>{h.crop || 'Crop not recorded'}</td>
                     <td>{(h.quantity_kg || 0).toLocaleString()}</td>
                     <td className="text-[11px]">{h.warehouse_location || '—'}</td>
                     <td>

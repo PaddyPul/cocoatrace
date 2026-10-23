@@ -25,7 +25,8 @@ export interface FarmSummary {
 export const farms = {
   plotsPage: (id: string, parameters: Record<string, string>) =>
     api<CatalogPage<FarmPlot>>('GET', `/farms/${id}/plots/page?${new URLSearchParams(parameters)}`),
-  plotsSummary: (id: string) => api<{ count: number }>('GET', `/farms/${id}/plots/summary`),
+  plotsSummary: (id: string) =>
+    api<{ count: number; crops?: string[] }>('GET', `/farms/${id}/plots/summary`),
   list: () => api<import('../types').Farm[]>('GET', '/farms'),
   page: (parameters: Record<string, string> = {}) =>
     api<CatalogPage<import('../types').Farm>>(
@@ -54,7 +55,7 @@ export const farms = {
     data: {
       plotCode: string;
       areaHectares: number;
-      crops?: string[];
+      crops: string[];
       gpsLat?: number;
       gpsLng?: number;
       geolocationSource?: string;
@@ -83,7 +84,7 @@ export const batches = {
   create: (data: {
     farmId: string;
     plotIds?: string[];
-    crop?: string;
+    crop: string;
     harvestDate: string;
     quantityKg: number;
     moisturePercent?: number;
