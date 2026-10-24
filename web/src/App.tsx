@@ -54,6 +54,7 @@ const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
 const PilotTeamPage = lazy(() => import('./pages/PilotTeamPage'));
 const AcceptInvitationPage = lazy(() => import('./pages/AcceptInvitationPage'));
 const ExperienceHomePage = lazy(() => import('./pages/ExperienceHomePage'));
+const SourcingRequestsPage = lazy(() => import('./pages/SourcingRequestsPage'));
 const SourcingBriefPage = lazy(() => import('./pages/SourcingBriefPage'));
 const CompareOffersPage = lazy(() => import('./pages/CompareOffersPage'));
 const PublishSupplyPage = lazy(() => import('./pages/PublishSupplyPage'));
@@ -138,7 +139,7 @@ function RootRedirect() {
 
 function AppShell() {
   return (
-    <>
+    <div className="flex h-dvh flex-col">
       {webConfig.demoPreview && (
         <div role="note" className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-950">
           Supervised demo: synthetic records and simulated payments. Do not enter personal data or
@@ -150,465 +151,475 @@ function AppShell() {
           <UnsavedChangesProvider>
             <LanguageProvider>
               <EnvironmentNotice />
-              <ToastProvider>
-                <ErrorBoundary>
-                  <Suspense
-                    fallback={
-                      <main className="grid min-h-[60vh] place-items-center" role="status">
-                        Loading page…
-                      </main>
-                    }
-                  >
-                    <Routes>
-                      <Route path="/" element={<RootRedirect />} />
-                      <Route
-                        path="/login"
-                        element={
-                          <PublicRoute>
-                            <LoginPage />
-                          </PublicRoute>
-                        }
-                      />
-                      <Route
-                        path="/request-access"
-                        element={
-                          <PublicRoute>
-                            <RequestAccessPage />
-                          </PublicRoute>
-                        }
-                      />
-                      <Route
-                        path="/verify-access"
-                        element={
-                          <ErrorBoundary>
-                            <AccessVerificationPage />
-                          </ErrorBoundary>
-                        }
-                      />
-                      <Route
-                        path="/verify-access/:token"
-                        element={
-                          <ErrorBoundary>
-                            <AccessVerificationPage />
-                          </ErrorBoundary>
-                        }
-                      />
-                      <Route
-                        path="/forgot-password"
-                        element={
-                          <PublicRoute>
-                            <ForgotPasswordPage />
-                          </PublicRoute>
-                        }
-                      />
-                      <Route
-                        path="/reset-password"
-                        element={
-                          <PublicRoute>
-                            <ResetPasswordPage />
-                          </PublicRoute>
-                        }
-                      />
-                      <Route
-                        path="/reset-password/:token"
-                        element={
-                          <PublicRoute>
-                            <ResetPasswordPage />
-                          </PublicRoute>
-                        }
-                      />
-                      <Route path="/service-status" element={<ServiceStatusPage />} />
-                      <Route path="/platform-role" element={<PlatformRolePage />} />
-                      <Route
-                        path="/p/:slug"
-                        element={
-                          <ErrorBoundary>
-                            <PublicProductPage />
-                          </ErrorBoundary>
-                        }
-                      />
-                      <Route
-                        path="/accept-invite/:token"
-                        element={
-                          <ErrorBoundary>
-                            <AcceptInvitationPage />
-                          </ErrorBoundary>
-                        }
-                      />
-                      <Route
-                        path="/dashboard"
-                        element={
-                          <ProtectedRoute>
-                            <ControlTowerPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/home"
-                        element={
-                          <ProtectedRoute>
-                            <ExperienceHomePage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/source/new"
-                        element={
-                          <ProtectedRoute>
-                            <SourcingBriefPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/source/compare"
-                        element={
-                          <ProtectedRoute>
-                            <CompareOffersPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/supply/new"
-                        element={
-                          <ProtectedRoute>
-                            <PublishSupplyPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/inventory/new"
-                        element={
-                          <ProtectedRoute>
-                            <DirectInventoryPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/deal-room/:id"
-                        element={
-                          <ProtectedRoute>
-                            <DealRoomPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/demo"
-                        element={
-                          webConfig.demoMode ? (
+              <div className="min-h-0 flex-1 overflow-auto">
+                <ToastProvider>
+                  <ErrorBoundary>
+                    <Suspense
+                      fallback={
+                        <main className="grid min-h-[60vh] place-items-center" role="status">
+                          Loading page…
+                        </main>
+                      }
+                    >
+                      <Routes>
+                        <Route path="/" element={<RootRedirect />} />
+                        <Route
+                          path="/login"
+                          element={
+                            <PublicRoute>
+                              <LoginPage />
+                            </PublicRoute>
+                          }
+                        />
+                        <Route
+                          path="/request-access"
+                          element={
+                            <PublicRoute>
+                              <RequestAccessPage />
+                            </PublicRoute>
+                          }
+                        />
+                        <Route
+                          path="/verify-access"
+                          element={
+                            <ErrorBoundary>
+                              <AccessVerificationPage />
+                            </ErrorBoundary>
+                          }
+                        />
+                        <Route
+                          path="/verify-access/:token"
+                          element={
+                            <ErrorBoundary>
+                              <AccessVerificationPage />
+                            </ErrorBoundary>
+                          }
+                        />
+                        <Route
+                          path="/forgot-password"
+                          element={
+                            <PublicRoute>
+                              <ForgotPasswordPage />
+                            </PublicRoute>
+                          }
+                        />
+                        <Route
+                          path="/reset-password"
+                          element={
+                            <PublicRoute>
+                              <ResetPasswordPage />
+                            </PublicRoute>
+                          }
+                        />
+                        <Route
+                          path="/reset-password/:token"
+                          element={
+                            <PublicRoute>
+                              <ResetPasswordPage />
+                            </PublicRoute>
+                          }
+                        />
+                        <Route path="/service-status" element={<ServiceStatusPage />} />
+                        <Route path="/platform-role" element={<PlatformRolePage />} />
+                        <Route
+                          path="/p/:slug"
+                          element={
+                            <ErrorBoundary>
+                              <PublicProductPage />
+                            </ErrorBoundary>
+                          }
+                        />
+                        <Route
+                          path="/accept-invite/:token"
+                          element={
+                            <ErrorBoundary>
+                              <AcceptInvitationPage />
+                            </ErrorBoundary>
+                          }
+                        />
+                        <Route
+                          path="/dashboard"
+                          element={
                             <ProtectedRoute>
-                              <InvestorDemoPage />
+                              <ControlTowerPage />
                             </ProtectedRoute>
-                          ) : (
-                            <Navigate to="/home" replace />
-                          )
-                        }
-                      />
-                      <Route
-                        path="/products"
-                        element={
-                          <ProtectedRoute>
-                            <ProductsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/onboarding"
-                        element={
-                          <ProtectedRoute>
-                            <OnboardingPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/pilot/limitations"
-                        element={
-                          <ProtectedRoute>
-                            <PilotLimitationsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/pilot"
-                        element={
-                          <ProtectedRoute>
-                            <PilotTeamPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/marketplace"
-                        element={
-                          <ProtectedRoute>
-                            <MarketplacePage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/listing/:id"
-                        element={
-                          <ProtectedRoute>
-                            <ListingDetailPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/farms"
-                        element={
-                          <ProtectedRoute>
-                            <FarmsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/farms/:id"
-                        element={
-                          <ProtectedRoute>
-                            <FarmDetailPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/batches"
-                        element={
-                          <ProtectedRoute>
-                            <BatchesPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/batches/:id"
-                        element={
-                          <ProtectedRoute>
-                            <BatchDetailPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/holdings"
-                        element={
-                          <ProtectedRoute>
-                            <HoldingsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/holdings/:id"
-                        element={
-                          <ProtectedRoute>
-                            <HoldingDetailPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/offers"
-                        element={
-                          <ProtectedRoute>
-                            <OffersPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/contracts"
-                        element={
-                          <ProtectedRoute>
-                            <ContractsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/contracts/:id"
-                        element={
-                          <ProtectedRoute>
-                            <ContractDetailPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/shipments"
-                        element={
-                          <ProtectedRoute>
-                            <ShipmentsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/shipments/:id"
-                        element={
-                          <ProtectedRoute>
-                            <ShipmentDetailPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/platform-fees"
-                        element={
-                          <ProtectedRoute>
-                            <PlatformFeesPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/platform-fees/:id"
-                        element={
-                          <ProtectedRoute>
-                            <PlatformFeesPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/payments"
-                        element={
-                          <ProtectedRoute>
-                            <PaymentsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/payments/:id"
-                        element={
-                          <ProtectedRoute>
-                            <PaymentDetailPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/evidence/contribute"
-                        element={
-                          <ProtectedRoute>
-                            <EvidenceContributionPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/evidence/review"
-                        element={
-                          <ProtectedRoute>
-                            <EvidenceReviewPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/evidence"
-                        element={
-                          <ProtectedRoute>
-                            <EvidencePage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/recalls"
-                        element={
-                          <ProtectedRoute>
-                            <RecallCenterPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/audit"
-                        element={
-                          <ProtectedRoute>
-                            <AuditPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/certs"
-                        element={
-                          <ProtectedRoute>
-                            <CertsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/my-listings"
-                        element={
-                          <ProtectedRoute>
-                            <MyListingsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/organizations"
-                        element={
-                          <ProtectedRoute>
-                            <OrganizationsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/notifications"
-                        element={
-                          <ProtectedRoute>
-                            <NotificationsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/support"
-                        element={
-                          <ProtectedRoute>
-                            <SupportPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/access-review"
-                        element={
-                          <ProtectedRoute>
-                            <AccessReviewPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/access-controls"
-                        element={
-                          <ProtectedRoute>
-                            <AccessControlsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/access-applications"
-                        element={
-                          <ProtectedRoute>
-                            <AccessApplicationsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/operations"
-                        element={
-                          <ProtectedRoute>
-                            <OperationsPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/account/passkeys"
-                        element={
-                          <ProtectedRoute>
-                            <PasskeysPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/account/security"
-                        element={
-                          <ProtectedRoute>
-                            <ChangePasswordPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route path="*" element={<Navigate to="/home" replace />} />
-                    </Routes>
-                  </Suspense>
-                </ErrorBoundary>
-              </ToastProvider>
+                          }
+                        />
+                        <Route
+                          path="/home"
+                          element={
+                            <ProtectedRoute>
+                              <ExperienceHomePage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/sourcing-requests"
+                          element={
+                            <ProtectedRoute>
+                              <SourcingRequestsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/source/new"
+                          element={
+                            <ProtectedRoute>
+                              <SourcingBriefPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/source/compare"
+                          element={
+                            <ProtectedRoute>
+                              <CompareOffersPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/supply/new"
+                          element={
+                            <ProtectedRoute>
+                              <PublishSupplyPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/inventory/new"
+                          element={
+                            <ProtectedRoute>
+                              <DirectInventoryPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/deal-room/:id"
+                          element={
+                            <ProtectedRoute>
+                              <DealRoomPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/demo"
+                          element={
+                            webConfig.demoMode ? (
+                              <ProtectedRoute>
+                                <InvestorDemoPage />
+                              </ProtectedRoute>
+                            ) : (
+                              <Navigate to="/home" replace />
+                            )
+                          }
+                        />
+                        <Route
+                          path="/products"
+                          element={
+                            <ProtectedRoute>
+                              <ProductsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/onboarding"
+                          element={
+                            <ProtectedRoute>
+                              <OnboardingPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/pilot/limitations"
+                          element={
+                            <ProtectedRoute>
+                              <PilotLimitationsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/pilot"
+                          element={
+                            <ProtectedRoute>
+                              <PilotTeamPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/marketplace"
+                          element={
+                            <ProtectedRoute>
+                              <MarketplacePage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/listing/:id"
+                          element={
+                            <ProtectedRoute>
+                              <ListingDetailPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/farms"
+                          element={
+                            <ProtectedRoute>
+                              <FarmsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/farms/:id"
+                          element={
+                            <ProtectedRoute>
+                              <FarmDetailPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/batches"
+                          element={
+                            <ProtectedRoute>
+                              <BatchesPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/batches/:id"
+                          element={
+                            <ProtectedRoute>
+                              <BatchDetailPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/holdings"
+                          element={
+                            <ProtectedRoute>
+                              <HoldingsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/holdings/:id"
+                          element={
+                            <ProtectedRoute>
+                              <HoldingDetailPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/offers"
+                          element={
+                            <ProtectedRoute>
+                              <OffersPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/contracts"
+                          element={
+                            <ProtectedRoute>
+                              <ContractsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/contracts/:id"
+                          element={
+                            <ProtectedRoute>
+                              <ContractDetailPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/shipments"
+                          element={
+                            <ProtectedRoute>
+                              <ShipmentsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/shipments/:id"
+                          element={
+                            <ProtectedRoute>
+                              <ShipmentDetailPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/platform-fees"
+                          element={
+                            <ProtectedRoute>
+                              <PlatformFeesPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/platform-fees/:id"
+                          element={
+                            <ProtectedRoute>
+                              <PlatformFeesPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/payments"
+                          element={
+                            <ProtectedRoute>
+                              <PaymentsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/payments/:id"
+                          element={
+                            <ProtectedRoute>
+                              <PaymentDetailPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/evidence/contribute"
+                          element={
+                            <ProtectedRoute>
+                              <EvidenceContributionPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/evidence/review"
+                          element={
+                            <ProtectedRoute>
+                              <EvidenceReviewPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/evidence"
+                          element={
+                            <ProtectedRoute>
+                              <EvidencePage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/recalls"
+                          element={
+                            <ProtectedRoute>
+                              <RecallCenterPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/audit"
+                          element={
+                            <ProtectedRoute>
+                              <AuditPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/certs"
+                          element={
+                            <ProtectedRoute>
+                              <CertsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/my-listings"
+                          element={
+                            <ProtectedRoute>
+                              <MyListingsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/organizations"
+                          element={
+                            <ProtectedRoute>
+                              <OrganizationsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/notifications"
+                          element={
+                            <ProtectedRoute>
+                              <NotificationsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/support"
+                          element={
+                            <ProtectedRoute>
+                              <SupportPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/access-review"
+                          element={
+                            <ProtectedRoute>
+                              <AccessReviewPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/access-controls"
+                          element={
+                            <ProtectedRoute>
+                              <AccessControlsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/access-applications"
+                          element={
+                            <ProtectedRoute>
+                              <AccessApplicationsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/operations"
+                          element={
+                            <ProtectedRoute>
+                              <OperationsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/account/passkeys"
+                          element={
+                            <ProtectedRoute>
+                              <PasskeysPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/account/security"
+                          element={
+                            <ProtectedRoute>
+                              <ChangePasswordPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route path="*" element={<Navigate to="/home" replace />} />
+                      </Routes>
+                    </Suspense>
+                  </ErrorBoundary>
+                </ToastProvider>
+              </div>
             </LanguageProvider>
           </UnsavedChangesProvider>
         </Suspense>
       </AuthProvider>
-    </>
+    </div>
   );
 }
 

@@ -89,7 +89,9 @@ async function setup(page: Page, admin = false) {
     const path = new URL(route.request().url()).pathname;
     if (path === '/api/me') return route.fulfill({ json: user });
     if (path === '/api/onboarding')
-      return route.fulfill({ json: { status: 'completed', primary_goal: 'sell' } });
+      return route.fulfill({
+        json: { status: 'completed', primary_goal: admin ? 'review' : 'sell' },
+      });
     if (path === '/api/trade-actions') return route.fulfill({ json: [] });
     if (path === '/api/platform-fees')
       return route.fulfill({ json: { ...emptyPage, items: [fee] } });

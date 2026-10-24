@@ -7,18 +7,11 @@
   "routes": [
     {
       "route": "/marketplace",
-      "remaining": [
-        "Individual listing-row schema validation is not comprehensive."
-      ],
+      "remaining": ["Individual listing-row schema validation is not comprehensive."],
       "page": "MarketplacePage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/MarketplacePage.tsx"
-        ],
-        "browser_suites": [
-          "e2e/catalogPages.spec.ts",
-          "e2e/sourcingRequestPages.spec.ts"
-        ],
+        "implementation": ["web/src/pages/MarketplacePage.tsx"],
+        "browser_suites": ["e2e/catalogPages.spec.ts", "e2e/sourcingRequestPages.spec.ts"],
         "checked_states": [
           "useCatalogPage pending, malformed-envelope rejection, explicit read retry; filtered misses do not imply no inventory"
         ]
@@ -31,12 +24,8 @@
       ],
       "page": "ListingDetailPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/ListingDetailPage.tsx"
-        ],
-        "browser_suites": [
-          "e2e/sourceDetailFailures.spec.ts"
-        ],
+        "implementation": ["web/src/pages/ListingDetailPage.tsx"],
+        "browser_suites": ["e2e/sourceDetailFailures.spec.ts"],
         "checked_states": [
           "Source fragment owns read retry, provenance partial-state and offer-draft recovery"
         ]
@@ -49,12 +38,8 @@
       ],
       "page": "CompareOffersPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/CompareOffersPage.tsx"
-        ],
-        "browser_suites": [
-          "e2e/sourceDetailFailures.spec.ts"
-        ],
+        "implementation": ["web/src/pages/CompareOffersPage.tsx"],
+        "browser_suites": ["e2e/sourceDetailFailures.spec.ts"],
         "checked_states": [
           "Source fragment owns explicit shortlist/read errors, missing-selected-record distinction and retry"
         ]
@@ -62,14 +47,10 @@
     },
     {
       "route": "/offers",
-      "remaining": [
-        "Per-row malformed-field validation remains incomplete."
-      ],
+      "remaining": ["Per-row malformed-field validation remains incomplete."],
       "page": "OffersPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/OffersPage.tsx"
-        ],
+        "implementation": ["web/src/pages/OffersPage.tsx"],
         "browser_suites": [
           "e2e/offerPages.spec.ts",
           "e2e/recoveryDrafts.spec.ts",
@@ -87,13 +68,8 @@
       ],
       "page": "MyListingsPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/MyListingsPage.tsx"
-        ],
-        "browser_suites": [
-          "e2e/listingExpiry.spec.ts",
-          "e2e/catalogPages.spec.ts"
-        ],
+        "implementation": ["web/src/pages/MyListingsPage.tsx"],
+        "browser_suites": ["e2e/listingExpiry.spec.ts", "e2e/catalogPages.spec.ts"],
         "checked_states": [
           "Read error explicit; retained same-scope rows support unsaved renewal review; denial clears rows"
         ]
@@ -101,14 +77,10 @@
     },
     {
       "route": "/source/new",
-      "remaining": [
-        "Complete malformed saved-brief field coverage remains unverified."
-      ],
+      "remaining": ["Complete malformed saved-brief field coverage remains unverified."],
       "page": "SourcingBriefPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/SourcingBriefPage.tsx"
-        ],
+        "implementation": ["web/src/pages/SourcingBriefPage.tsx"],
         "browser_suites": [
           "e2e/sourcingEdit.spec.ts",
           "e2e/sourcingLabels.spec.ts",
@@ -121,18 +93,11 @@
     },
     {
       "route": "/supply/new",
-      "remaining": [
-        "Comprehensive malformed holding-row validation remains incomplete."
-      ],
+      "remaining": ["Comprehensive malformed holding-row validation remains incomplete."],
       "page": "PublishSupplyPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/PublishSupplyPage.tsx"
-        ],
-        "browser_suites": [
-          "e2e/catalogPages.spec.ts",
-          "e2e/supplierPublishingJourney.spec.ts"
-        ],
+        "implementation": ["web/src/pages/PublishSupplyPage.tsx"],
+        "browser_suites": ["e2e/catalogPages.spec.ts", "e2e/supplierPublishingJourney.spec.ts"],
         "checked_states": [
           "Inventory pending/read error/filtered miss/confirmed empty are distinct; Search inventory explicitly retries; publication error preserves entered commercial fields; inventory page/search/holding changes require reviewed discard and reset commercial terms only after confirmation"
         ]
@@ -145,13 +110,8 @@
       ],
       "page": "ContractRecordsPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/ContractRecordsPage.tsx"
-        ],
-        "browser_suites": [
-          "e2e/catalogPages.spec.ts",
-          "e2e/detailReadRecovery.spec.ts"
-        ],
+        "implementation": ["web/src/pages/ContractRecordsPage.tsx"],
+        "browser_suites": ["e2e/catalogPages.spec.ts", "e2e/detailReadRecovery.spec.ts"],
         "checked_states": [
           "Paged pending/error/retry/filtered empty; aggregate failure stays unknown with independent retry"
         ]
@@ -164,9 +124,7 @@
       ],
       "page": "ContractDetailPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/ContractDetailPage.tsx"
-        ],
+        "implementation": ["web/src/pages/ContractDetailPage.tsx"],
         "browser_suites": [
           "e2e/detailReadRecovery.spec.ts",
           "e2e/tradeReadRecovery.spec.ts",
@@ -180,17 +138,11 @@
     },
     {
       "route": "/payments",
-      "remaining": [
-        "Per-row malformed-field validation remains incomplete."
-      ],
+      "remaining": ["Per-row malformed-field validation remains incomplete."],
       "page": "PaymentRecordsPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/PaymentRecordsPage.tsx"
-        ],
-        "browser_suites": [
-          "e2e/paymentPages.spec.ts"
-        ],
+        "implementation": ["web/src/pages/PaymentRecordsPage.tsx"],
+        "browser_suites": ["e2e/paymentPages.spec.ts"],
         "checked_states": [
           "Paged pending/error/retry/filtered empty; aggregate failure stays unknown with independent retry"
         ]
@@ -203,13 +155,8 @@
       ],
       "page": "PaymentDetailPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/PaymentDetailPage.tsx"
-        ],
-        "browser_suites": [
-          "e2e/detailReadRecovery.spec.ts",
-          "e2e/paymentPlans.spec.ts"
-        ],
+        "implementation": ["web/src/pages/PaymentDetailPage.tsx"],
+        "browser_suites": ["e2e/detailReadRecovery.spec.ts", "e2e/paymentPlans.spec.ts"],
         "checked_states": [
           "Read retry distinguishes unavailable and denial; reviewed receipt errors remain in modal with typed values"
         ]
@@ -222,12 +169,8 @@
       ],
       "page": "ShipmentRecordsPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/ShipmentRecordsPage.tsx"
-        ],
-        "browser_suites": [
-          "e2e/paymentPages.spec.ts"
-        ],
+        "implementation": ["web/src/pages/ShipmentRecordsPage.tsx"],
+        "browser_suites": ["e2e/paymentPages.spec.ts"],
         "checked_states": [
           "Paged pending/error/retry/filtered empty; aggregate failure stays unknown with independent retry"
         ]
@@ -235,14 +178,10 @@
     },
     {
       "route": "/shipments/:id",
-      "remaining": [
-        "Complete nested transport detail DTO validation remains open."
-      ],
+      "remaining": ["Complete nested transport detail DTO validation remains open."],
       "page": "ShipmentDetailPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/ShipmentDetailPage.tsx"
-        ],
+        "implementation": ["web/src/pages/ShipmentDetailPage.tsx"],
         "browser_suites": [
           "e2e/detailReadRecovery.spec.ts",
           "e2e/transportTiming.spec.ts",
@@ -260,9 +199,7 @@
       ],
       "page": "DealRoomPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/DealRoomPage.tsx"
-        ],
+        "implementation": ["web/src/pages/DealRoomPage.tsx"],
         "browser_suites": [
           "e2e/tradeReadRecovery.spec.ts",
           "e2e/tradeActions.spec.ts",
@@ -280,9 +217,7 @@
       ],
       "page": "ExperienceHomePage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/ExperienceHomePage.tsx"
-        ],
+        "implementation": ["web/src/pages/ExperienceHomePage.tsx"],
         "browser_suites": [
           "e2e/catalogPages.spec.ts",
           "e2e/offerPages.spec.ts",
@@ -300,13 +235,8 @@
       ],
       "page": "PlatformFeesPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/PlatformFeesPage.tsx"
-        ],
-        "browser_suites": [
-          "e2e/tradeReadRecovery.spec.ts",
-          "e2e/feeRefunds.spec.ts"
-        ],
+        "implementation": ["web/src/pages/PlatformFeesPage.tsx"],
+        "browser_suites": ["e2e/tradeReadRecovery.spec.ts", "e2e/feeRefunds.spec.ts"],
         "checked_states": [
           "Register pending no longer shows empty; invalid envelopes explicit; read retry; failed reconciliation clears earlier successful report and exposes separate error"
         ]
@@ -319,9 +249,7 @@
       ],
       "page": "PlatformFeesPage",
       "evidence": {
-        "implementation": [
-          "web/src/pages/PlatformFeesPage.tsx"
-        ],
+        "implementation": ["web/src/pages/PlatformFeesPage.tsx"],
         "browser_suites": [
           "e2e/feeCollectionStatus.spec.ts",
           "e2e/feeEnforcement.spec.ts",
@@ -329,6 +257,20 @@
         ],
         "checked_states": [
           "Statement, collection terms, refund and email panels have independent pending/error/manual refresh; failure never establishes payment or delivery"
+        ]
+      }
+    },
+    {
+      "route": "/sourcing-requests",
+      "page": "SourcingRequestsPage",
+      "remaining": [
+        "Founder acceptance of fresh saved-request, matching and edit journeys; hosted and physical-device acceptance remain separate."
+      ],
+      "evidence": {
+        "implementation": ["web/src/pages/SourcingRequestsPage.tsx"],
+        "browser_suites": ["e2e/navigationWorkspaces.spec.ts"],
+        "checked_states": [
+          "Permission check before register requests; tenant-owned scoped pagination; explicit pending/error/retry; foreign-owner response refusal; empty search distinct from failure; links into existing reviewed brief and matching flows"
         ]
       }
     }

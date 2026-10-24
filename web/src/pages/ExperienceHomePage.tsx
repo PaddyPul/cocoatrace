@@ -2,7 +2,10 @@ import { ActionCenter } from '../components/trading/ActionCenter';
 import SupplyPathChoice from '../components/supply/SupplyPathChoice';
 import FinanceReviewQueue from '../components/fees/FinanceReviewQueue';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useWorkspace } from '../navigation/useWorkspace';
+import { navigation } from '../navigation/model';
+import { useNavigationLanguage as useLanguage } from '../navigation/useNavigationLanguage';
 import { ArrowRight, CheckCircle2, TriangleAlert, Building2, FileCheck2, Handshake, PackageCheck, Search, ShieldCheck, Sparkles, Sprout } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import { contracts, farms, holdings, listings, offers, sourcing, workspace, HoldingSummary, ListingSummary, FarmSummary, OfferSummary, ContractSummary, SourcingSummary } from '../api';
@@ -14,14 +17,27 @@ type HomeData = { actionsUnavailable?:boolean; listingSummary: ListingSummary | 
 const empty: HomeData = { listingSummary: null, requestSummary: null, offerSummary: null, contractSummary: null, holdingSummary: null, farmSummary: null, actions:[] };
 
 export default function ExperienceHomePage() {
-  const { user, canDo, onboarding } = useAuthCtx();
+  const { mode } = useWorkspace();
+  if (mode === 'admin' || mode === 'records') return <ReviewHome />;
+  return <TradeHome />;
+}
+function ReviewHome() {
+  const { user, canDo } = useAuthCtx();
+  const { mode } = useWorkspace();
+  const { t } = useLanguage();
+  const menu = navigation(user,mode);
+  return <Layout currentPage="home">
+    <h2 className="text-2xl font-semibold mb-3">{t(mode === 'admin' ? 'nav.admin-home' : 'workspace.records')}</h2>
+    <p className="mb-5 text-sm text-text-muted">{t('nav.review-home-description')}</p>
+    {canDo('finance.manage') && <FinanceReviewQueue />}
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{menu.groups.flatMap(group => group.items).filter(item => item.id !== 'home').map(item => <Link key={item.id} to={item.path} className="rounded-2xl border border-border bg-surface p-5 font-semibold hover:border-brand-400">{t(item.label)}</Link>)}</div>
+  </Layout>;
+}
+function TradeHome() {
+  const { user, canDo } = useAuthCtx();
   const navigate = useNavigate();
-  const [params, setParams] = useSearchParams();
-  const canBuy = canDo('offer.create');
-  const canSell = canDo('listing.create');
-  const defaultMode: Mode = canBuy && (onboarding?.primary_goal?.startsWith('buy') || user?.orgType === 'importer') ? 'buy' : canSell ? 'sell' : 'buy';
-  const requestedMode = params.get('mode') === 'sell' ? 'sell' : params.get('mode') === 'buy' ? 'buy' : (localStorage.getItem(`ct_experience_mode:${user?.id}`) as Mode | null);
-  const mode: Mode = requestedMode === 'buy' && canBuy ? 'buy' : requestedMode === 'sell' && canSell ? 'sell' : defaultMode;
+  const { mode: workspaceMode } = useWorkspace();
+  const mode: Mode = workspaceMode === 'sell' ? 'sell' : 'buy';
   const [data, setData] = useState<HomeData>(empty);
   const [catalogError, setCatalogError] = useState(false);
   const [actionError, setActionError] = useState(false);
@@ -29,7 +45,6 @@ export default function ExperienceHomePage() {
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    if (user?.id) localStorage.setItem(`ct_experience_mode:${user.id}`, mode);
     let active=true;
     const load=()=>Promise.all([
         canDo('listing.read') ? listings.summary().catch(() => null) : Promise.resolve(null), sourcing.summary().catch(() => null),
@@ -42,9 +57,7 @@ export default function ExperienceHomePage() {
     return()=>{active=false;window.clearInterval(interval);window.removeEventListener('focus',load);};
   }, [mode, user?.id, retry]);
 
-  const switchMode = (next: Mode) => { if (user?.id) localStorage.setItem(`ct_experience_mode:${user.id}`, next); setParams({ mode: next }); };
-  return <Layout currentPage="home" actions={canBuy && canSell ? <div className="hidden rounded-xl border border-border bg-surface-darker p-1 sm:flex"><ModeButton active={mode === 'buy'} onClick={() => switchMode('buy')} icon={Search}>Buy</ModeButton><ModeButton active={mode === 'sell'} onClick={() => switchMode('sell')} icon={Sprout}>Sell</ModeButton></div> : undefined}>
-    {canDo('finance.manage') && <FinanceReviewQueue />}
+  return <Layout currentPage="home">
     {!loading && (actionError || catalogError || !data.requestSummary || !data.offerSummary || !data.contractSummary) && <button className="btn mb-4" onClick={() => { setLoading(true); setRetry(value => value + 1); }}>Retry workspace totals</button>}
     {!loading && !data.requestSummary && <p role="alert" className="mb-4">Sourcing totals could not be refreshed. Reload to retry; no zero count is assumed.</p>}
     {!loading && !data.offerSummary && <p role="alert" className="mb-4">Offer totals could not be refreshed. Reload to retry; no zero count is assumed.</p>}
@@ -100,6 +113,5 @@ function Panel({ eyebrow, title, children }: { eyebrow: string; title: string; c
 function Task({ icon: Icon, title, copy, action, onClick }: { icon: typeof Search; title: string; copy: string; action: string; onClick: () => void }) { return <button onClick={onClick} className="group flex w-full items-center gap-4 rounded-2xl border border-border bg-surface-darker p-4 text-left transition hover:border-brand-400/30"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-brand-400/10 text-brand-400"><Icon size={18} /></span><span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{title}</span><span className="mt-1 block text-xs leading-5 text-text-muted">{copy}</span></span><span className="hidden items-center gap-1 text-[10px] font-semibold text-brand-300 group-hover:flex">{action}<ArrowRight size={12} /></span></button>; }
 function Copilot({ title, text }: { title: string; text: string }) { return <div className="rounded-3xl border border-brand-400/20 bg-[linear-gradient(145deg,rgba(109,190,90,.1),rgba(255,255,255,.02))] p-5 sm:p-6"><div className="flex gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-brand-400 text-emerald-950"><Sparkles size={18} /></span><div><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-300">Grounded workspace copilot</div><h3 className="mt-1 text-lg font-bold">{title}</h3></div></div><p className="mt-5 border-l-2 border-brand-400 pl-4 text-sm leading-6 text-text-secondary">{text}</p><div className="mt-5 flex items-start gap-3 rounded-2xl bg-black/15 p-4 text-xs leading-5 text-text-muted"><ShieldCheck size={16} className="mt-0.5 shrink-0 text-brand-400" />Recommendations cite recorded facts. AI cannot approve compliance, award a trade or change the product record.</div></div>; }
 function Journey({ active, labels }: { active: number; labels: string[] }) { return <section className="mt-5 rounded-3xl border border-border bg-surface p-5 sm:p-6"><div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">Your end-to-end journey</div><div className="mt-5 grid gap-3 md:grid-cols-5">{labels.map((label, index) => <div key={label} className={`rounded-2xl border p-4 ${index <= active ? 'border-brand-400/30 bg-brand-400/5' : 'border-border bg-surface-darker'}`}><div className={`grid h-7 w-7 place-items-center rounded-full text-[10px] font-bold ${index < active ? 'bg-brand-400 text-emerald-950' : index === active ? 'border border-brand-400 text-brand-300' : 'bg-white/5 text-text-muted'}`}>{index < active ? <CheckCircle2 size={14} /> : index + 1}</div><div className="mt-3 text-xs font-semibold">{label}</div>{index === active && <div className="mt-2 flex items-center gap-1 text-[9px] text-amber-300"><TriangleAlert size={11} />Current stage</div>}</div>)}</div></section>; }
-function ModeButton({ active, onClick, icon: Icon, children }: { active: boolean; onClick: () => void; icon: typeof Search; children: React.ReactNode }) { return <button onClick={onClick} className={`inline-flex min-h-8 items-center gap-1.5 rounded-lg px-3 text-[11px] font-semibold ${active ? 'bg-white text-emerald-950' : 'text-text-muted hover:text-white'}`}><Icon size={13} />{children}</button>; }
 function compactKg(value: number) { return value >= 1000 ? `${(value / 1000).toFixed(value >= 10000 ? 1 : 0)}k` : value.toLocaleString(); }
 function dayPart() { const hour = new Date().getHours(); return hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'; }

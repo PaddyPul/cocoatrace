@@ -2,6 +2,7 @@ import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { english, french } from '../web/src/i18n/catalogs.ts';
+import { navigationEnglish, navigationFrench } from '../web/src/navigation/catalogs.ts';
 import {
   normalizeLanguage,
   preferenceKey,
@@ -15,6 +16,7 @@ import {
 
 test('both shell catalogs cover the same stable keys without empty translations', () => {
   assert.deepEqual(Object.keys(french).sort(), Object.keys(english).sort());
+  assert.deepEqual(Object.keys(navigationFrench).sort(), Object.keys(navigationEnglish).sort());
   for (const key of Object.keys(english)) {
     assert.ok(english[key].trim());
     assert.ok(french[key].trim());
@@ -72,9 +74,15 @@ test('every literal workspace translation key is registered', () => {
     '../web/src/components/layout/Layout.tsx',
     '../web/src/components/layout/Sidebar.tsx',
     '../web/src/i18n/LanguageProvider.tsx',
+    '../web/src/pages/SourcingRequestsPage.tsx',
+    '../web/src/pages/ExperienceHomePage.tsx',
   ]) {
     const source = readFileSync(new URL(file, import.meta.url), 'utf8');
     for (const match of source.matchAll(/\bt\(['"]([^'"]+)['"]/g))
-      assert.ok(Object.hasOwn(english, match[1]), `Missing catalog key: ${match[1]}`);
+      assert.ok(
+        Object.hasOwn(english, match[1]) ||
+          (source.includes('useNavigationLanguage') && Object.hasOwn(navigationEnglish, match[1])),
+        `Missing catalog key: ${match[1]}`,
+      );
   }
 });
