@@ -1,3 +1,4 @@
+import { isEnvelopeAddress } from './emailAddress';
 import type { EmailMessage, IdentityEmailCategory } from './emailSender';
 
 export interface EmailBrandOptions {
@@ -61,7 +62,7 @@ export function brandedEmail(message: EmailMessage, options: EmailBrandOptions):
     }
   }
   const support = options.supportEmail;
-  if (support && !/^[^\s@<>"'\r\n]+@[^\s@<>"'\r\n]+\.[^\s@<>"'\r\n]+$/.test(support)) {
+  if (support && !isEnvelopeAddress(support, true)) {
     throw new Error('Invalid email support address');
   }
   const purpose =

@@ -40,10 +40,10 @@ export default function ContractRecordsPage() {
             setFailed(true);
           }
         });
-    load();
+    void load();
     const focus = () => {
-      page.refresh();
-      load();
+      void page.refresh();
+      void load();
     };
     window.addEventListener('focus', focus);
     return () => {

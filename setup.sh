@@ -37,8 +37,8 @@ echo "✓ Dependencies installed"
 
 # Keep local startup deterministic without requiring users to export variables
 # in every terminal session.
-[ -f "$ROOT/.env" ] || cp "$ROOT/.env.demo.example" "$ROOT/.env"
-[ -f "$ROOT/api/.env" ] || cp "$ROOT/api/.env.example" "$ROOT/api/.env"
+[[ -f "$ROOT/.env" ]] || cp "$ROOT/.env.demo.example" "$ROOT/.env"
+[[ -f "$ROOT/api/.env" ]] || cp "$ROOT/api/.env.example" "$ROOT/api/.env"
 echo "✓ Local environment configured"
 
 echo ""
@@ -57,7 +57,7 @@ for i in $(seq 1 40); do
   fi
   printf "."
   sleep 1
-  if [ "$i" -eq 40 ]; then
+  if [[ "$i" -eq 40 ]]; then
     echo ""
     echo "❌ Postgres did not become ready. Run: docker compose logs postgres"
     exit 1

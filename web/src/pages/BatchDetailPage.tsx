@@ -506,8 +506,11 @@ export default function BatchDetailPage() {
               <div className="space-y-3">
                 <h4 className="text-xs font-semibold">Create Listing</h4>
                 <div>
-                  <label className="form-label">Quantity (kg)</label>
+                  <label htmlFor="batchdetail-quantity-kg" className="form-label">
+                    Quantity (kg)
+                  </label>
                   <input
+                    id="batchdetail-quantity-kg"
                     type="number"
                     className="form-input"
                     value={pqty}
@@ -516,7 +519,9 @@ export default function BatchDetailPage() {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Price per kg (€)</label>
+                  <label htmlFor="batchdetail-price-per-kg" className="form-label">
+                    Price per kg (€)
+                  </label>
                   <select
                     aria-label="Supply currency"
                     className="form-select mb-2"
@@ -528,6 +533,7 @@ export default function BatchDetailPage() {
                     ))}
                   </select>
                   <input
+                    id="batchdetail-price-per-kg"
                     type="number"
                     step="0.0001"
                     className="form-input"
@@ -536,24 +542,33 @@ export default function BatchDetailPage() {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Origin</label>
+                  <label htmlFor="batchdetail-origin" className="form-label">
+                    Origin
+                  </label>
                   <input
+                    id="batchdetail-origin"
                     className="form-input"
                     value={porigin}
                     onChange={(e) => setPorigin(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="form-label">Destination</label>
+                  <label htmlFor="batchdetail-destination" className="form-label">
+                    Destination
+                  </label>
                   <input
+                    id="batchdetail-destination"
                     className="form-input"
                     value={pdest}
                     onChange={(e) => setPdest(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="form-label">Incoterm</label>
+                  <label htmlFor="batchdetail-incoterm" className="form-label">
+                    Incoterm
+                  </label>
                   <select
+                    id="batchdetail-incoterm"
                     className="form-select"
                     value={pincoterm}
                     onChange={(e) => setPincoterm(e.target.value)}
@@ -617,8 +632,8 @@ export default function BatchDetailPage() {
             {showAttest && (
               <div className="space-y-3">
                 <h4 className="text-xs font-semibold">Attest Batch</h4>
-                <div>
-                  <label className="form-label">Certificate</label>
+                <fieldset className="m-0 min-w-0 border-0 p-0">
+                  <legend className="form-label">Certificate</legend>
                   {batch.farm_id && canDo('certificate.read') ? (
                     <CertificatePicker
                       key={batch.farm_id}
@@ -633,10 +648,13 @@ export default function BatchDetailPage() {
                       records.
                     </p>
                   )}
-                </div>
+                </fieldset>
                 <div>
-                  <label className="form-label">Notes (optional)</label>
+                  <label htmlFor="batchdetail-notes-optional" className="form-label">
+                    Notes (optional)
+                  </label>
                   <input
+                    id="batchdetail-notes-optional"
                     className="form-input"
                     value={attNotes}
                     onChange={(e) => setAttNotes(e.target.value)}

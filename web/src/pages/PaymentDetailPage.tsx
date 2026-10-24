@@ -256,7 +256,7 @@ export default function PaymentDetailPage() {
                             'Why are you rejecting this payment reference?',
                           );
                           if (reason)
-                            act(
+                            void act(
                               `reject-${item.id}`,
                               () => payments.rejectInstallment(item.id, reason),
                               'Payment returned to buyer',

@@ -40,4 +40,7 @@ async function seed(): Promise<void> {
   }
 }
 
-seed();
+void seed().catch((error: unknown) => {
+  console.error('Seed startup failed:', error instanceof Error ? error.message : 'Unknown error');
+  process.exitCode = 1;
+});

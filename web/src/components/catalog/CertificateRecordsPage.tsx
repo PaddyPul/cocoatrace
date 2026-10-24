@@ -348,8 +348,8 @@ export default function CertificateRecordsPage() {
               </button>
             </div>
             <div className="space-y-3 max-h-[70vh] overflow-y-auto">
-              <div>
-                <label className="form-label">Farm *</label>
+              <fieldset className="m-0 min-w-0 border-0 p-0">
+                <legend className="form-label">Farm *</legend>
                 <FarmPicker
                   value={ifarmId}
                   disabled={iLoading}
@@ -358,10 +358,13 @@ export default function CertificateRecordsPage() {
                     setIfarmId(farm?.id || '');
                   }}
                 />
-              </div>
+              </fieldset>
               <div>
-                <label className="form-label">Standard</label>
+                <label htmlFor="certificaterecords-standard" className="form-label">
+                  Standard
+                </label>
                 <select
+                  id="certificaterecords-standard"
                   className="form-select"
                   value={iStandard}
                   onChange={(e) => setIStandard(e.target.value)}
@@ -374,8 +377,11 @@ export default function CertificateRecordsPage() {
                 </select>
               </div>
               <div>
-                <label className="form-label">Crop Scope</label>
+                <label htmlFor="certificaterecords-crop-scope" className="form-label">
+                  Crop Scope
+                </label>
                 <input
+                  id="certificaterecords-crop-scope"
                   className="form-input"
                   placeholder="cocoa, coffee…"
                   value={iCropScope}
@@ -384,8 +390,11 @@ export default function CertificateRecordsPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="form-label">Valid From *</label>
+                  <label htmlFor="certificaterecords-valid-from" className="form-label">
+                    Valid From *
+                  </label>
                   <input
+                    id="certificaterecords-valid-from"
                     type="date"
                     className="form-input"
                     value={iValidFrom}
@@ -393,8 +402,11 @@ export default function CertificateRecordsPage() {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Valid To *</label>
+                  <label htmlFor="certificaterecords-valid-to" className="form-label">
+                    Valid To *
+                  </label>
                   <input
+                    id="certificaterecords-valid-to"
                     type="date"
                     className="form-input"
                     value={iValidTo}
@@ -403,8 +415,11 @@ export default function CertificateRecordsPage() {
                 </div>
               </div>
               <div>
-                <label className="form-label">Issuing Authority *</label>
+                <label htmlFor="certificaterecords-issuing-authority" className="form-label">
+                  Issuing Authority *
+                </label>
                 <input
+                  id="certificaterecords-issuing-authority"
                   className="form-input"
                   placeholder="e.g. OrganicCert GH"
                   value={iAuthority}
@@ -412,8 +427,11 @@ export default function CertificateRecordsPage() {
                 />
               </div>
               <div>
-                <label className="form-label">Accreditation Reference *</label>
+                <label htmlFor="certificaterecords-accreditation-reference" className="form-label">
+                  Accreditation Reference *
+                </label>
                 <input
+                  id="certificaterecords-accreditation-reference"
                   className="form-input"
                   placeholder="e.g. OCG-GH-2026-001"
                   value={iAccred}

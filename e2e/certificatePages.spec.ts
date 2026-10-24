@@ -155,3 +155,30 @@ test('certificate revocation requires contextual review and keeps review open af
   await expect(dialog).toBeVisible();
   expect(writes).toBe(1);
 });
+
+test('certificate issue fields have usable visible labels and label activation never submits', async ({
+  page,
+}) => {
+  await mock(page, false, false, true);
+  let writes = 0;
+  page.on('request', (request) => {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method())) writes++;
+  });
+  await page.goto('/certs');
+  await page.getByRole('button', { name: '+ Issue Certificate', exact: true }).click();
+  await expect(page.getByRole('group', { name: 'Farm *', exact: true })).toBeVisible();
+  for (const label of [
+    'Standard',
+    'Crop Scope',
+    'Valid From *',
+    'Valid To *',
+    'Issuing Authority *',
+    'Accreditation Reference *',
+  ]) {
+    await expect(page.getByLabel(label, { exact: true })).toBeVisible();
+  }
+  await page.getByText('Crop Scope', { exact: true }).click();
+  await expect(page.getByLabel('Crop Scope', { exact: true })).toBeFocused();
+  await page.getByLabel('Crop Scope', { exact: true }).fill('cocoyam');
+  expect(writes).toBe(0);
+});

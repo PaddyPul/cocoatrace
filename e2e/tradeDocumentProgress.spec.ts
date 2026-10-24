@@ -111,6 +111,9 @@ test('CIF seller can select insurance explicitly and Other does not satisfy its 
     mimeType: 'application/pdf',
     buffer: Buffer.from('%PDF-1.4 synthetic test'),
   });
+  await page
+    .getByLabel('Note (optional)', { exact: true })
+    .fill('Cargo insurance for the agreed CIF trade');
   await page.getByRole('button', { name: 'Share document', exact: true }).click();
   await expect(page.getByText('Required before payment: insurance certificate.')).toHaveCount(0);
   await expect(page.getByText('insurance.pdf', { exact: true })).toBeVisible();

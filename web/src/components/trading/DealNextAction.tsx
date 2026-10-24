@@ -37,8 +37,11 @@ export default function DealNextAction({
   const [reviewError, setReviewError] = useState('');
   const submit = async (key: string, mutation: () => Promise<unknown>, message: string) => {
     setBusy(true);
+    setReviewError('');
     try {
       await run(key, mutation, message);
+    } catch (error) {
+      setReviewError(error instanceof Error ? error.message : 'Trade action failed');
     } finally {
       setBusy(false);
     }
@@ -156,7 +159,7 @@ export default function DealNextAction({
                 onClick={() => {
                   const reason = window.prompt('Why is this payment reference being rejected?');
                   if (reason)
-                    submit(
+                    void submit(
                       'reject',
                       () => payments.rejectInstallment(installmentId, reason),
                       'Reference returned to buyer',
@@ -210,6 +213,11 @@ export default function DealNextAction({
             </p>
           )}
           {control}
+          {reviewError && !review && (
+            <p role="alert" className="mt-3 text-xs text-red-300">
+              {reviewError}
+            </p>
+          )}
         </div>
       </div>
       <ConfirmDialog

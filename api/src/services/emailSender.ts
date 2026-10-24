@@ -1,3 +1,4 @@
+import { isEnvelopeAddress } from './emailAddress';
 import crypto from 'crypto';
 import net from 'net';
 import os from 'os';
@@ -33,7 +34,7 @@ function recipients(value: EmailMessage['to']): string[] {
   const addresses = typeof value === 'string' ? [value] : [...value];
   if (addresses.length === 0) throw new Error('Email requires at least one recipient');
   for (const address of addresses) {
-    if (/\r|\n/.test(address) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) {
+    if (!isEnvelopeAddress(address)) {
       throw new Error('Email recipient is invalid');
     }
   }

@@ -1,5 +1,6 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/services/emailAddress*.ts',
   'web/src/navigation/**/*.ts',
   'web/src/pages/SourcingRequestsPage.tsx',
   'scripts/navigation.test.mjs',

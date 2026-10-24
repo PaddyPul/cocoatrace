@@ -249,7 +249,7 @@ export default function DeliveryAcceptance({ contractId, organizationId, onChang
               className="space-y-2"
               onSubmit={(event) => {
                 event.preventDefault();
-                act(
+                void act(
                   () => contracts.proposeDeliveryResolution(contractId, resolutionNote.trim()),
                   'Resolution proposed; awaiting buyer approval.',
                   () => setResolutionNote(''),
@@ -306,7 +306,7 @@ export default function DeliveryAcceptance({ contractId, organizationId, onChang
           onSubmit={(event) => {
             event.preventDefault();
             if (busy || acceptanceRequirements.length) return;
-            act(
+            void act(
               () =>
                 contracts.acceptDelivery(contractId, {
                   receivedQuantityKg: received,
@@ -406,7 +406,7 @@ export default function DeliveryAcceptance({ contractId, organizationId, onChang
             className="space-y-3 border-t border-border pt-3"
             onSubmit={(event) => {
               event.preventDefault();
-              act(
+              void act(
                 () =>
                   contracts.reportDiscrepancy(contractId, {
                     kind,
@@ -475,7 +475,7 @@ export default function DeliveryAcceptance({ contractId, organizationId, onChang
               disabled={busy}
               onChange={(event) => {
                 const file = event.target.files?.[0];
-                if (file) uploadProof(file);
+                if (file) void uploadProof(file);
               }}
             />
             {proofNames.length > 0 && (

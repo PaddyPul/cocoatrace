@@ -41,7 +41,7 @@ export function verifyDownloadLink(
   const expires =
     typeof query.expires === 'string' && /^\d{10}$/.test(query.expires)
       ? Number(query.expires)
-      : NaN;
+      : Number.NaN;
   if (
     Object.keys(query).some((key) => !['expires', 'signature'].includes(key)) ||
     !Number.isSafeInteger(expires) ||

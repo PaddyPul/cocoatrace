@@ -214,7 +214,7 @@ export default function PaymentOperations({
               className="space-y-3"
               onSubmit={(event) => {
                 event.preventDefault();
-                onAction(
+                void onAction(
                   'raise-issue',
                   () =>
                     saveIssue(() =>

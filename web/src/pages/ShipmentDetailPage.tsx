@@ -458,8 +458,11 @@ export default function ShipmentDetailPage() {
                 onChange={(value) => setDetails({ ...details, bookingReference: value })}
               />
               <div>
-                <label className="form-label">Transport mode</label>
+                <label htmlFor="shipmentdetail-transport-mode" className="form-label">
+                  Transport mode
+                </label>
                 <select
+                  id="shipmentdetail-transport-mode"
                   className="form-select"
                   value={details.transportMode}
                   onChange={(e) => setDetails({ ...details, transportMode: e.target.value })}
@@ -474,8 +477,11 @@ export default function ShipmentDetailPage() {
                 </select>
               </div>
               <div>
-                <label className="form-label">Transport document</label>
+                <label htmlFor="shipmentdetail-transport-document" className="form-label">
+                  Transport document
+                </label>
                 <select
+                  id="shipmentdetail-transport-document"
                   className="form-select"
                   value={details.transportDocumentType}
                   onChange={(e) =>
@@ -544,8 +550,11 @@ export default function ShipmentDetailPage() {
         >
           <div className="space-y-3">
             <div>
-              <label className="form-label">Milestone</label>
+              <label htmlFor="shipmentdetail-milestone" className="form-label">
+                Milestone
+              </label>
               <select
+                id="shipmentdetail-milestone"
                 className="form-select"
                 value={milestone}
                 onChange={(e) => {
@@ -569,8 +578,11 @@ export default function ShipmentDetailPage() {
               icon={<MapPin size={12} />}
             />
             <div>
-              <label className="form-label">Notes (optional)</label>
+              <label htmlFor="shipmentdetail-notes-optional" className="form-label">
+                Notes (optional)
+              </label>
               <textarea
+                id="shipmentdetail-notes-optional"
                 className="form-input"
                 rows={2}
                 value={notes}

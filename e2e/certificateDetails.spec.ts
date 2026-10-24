@@ -195,6 +195,8 @@ test('attestation selector retains an off-page choice across search and submits 
   await expect(panel.getByLabel('Select attestation certificate', { exact: true })).toHaveValue(
     'late-certificate',
   );
+  await expect(page.getByRole('group', { name: 'Certificate', exact: true })).toBeVisible();
+  await page.getByLabel('Notes (optional)', { exact: true }).fill('Reviewed certificate selection');
   await page.getByRole('button', { name: 'Confirm Attestation', exact: true }).click();
   await expect.poll(() => fixture.submitted()).toBe('late-certificate');
   expect(
