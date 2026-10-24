@@ -36,3 +36,9 @@ This is not universal UX-001/UX-002 closure, a physical-device accessibility cer
 6. As platform admin, select Platform administration if a different authorized workspace was saved. Check the pending fee queue and Fee verification's pending filter. Independently verify the external receipt using the existing fresh-passkey flow.
 7. Start an unsaved form, attempt a workspace change, choose Stay and verify the draft and original menu remain. Then leave explicitly when ready. Check Ctrl+K search and mobile drawer navigation, including Trace & recall and Help.
 8. Sign out and use a different buyer/supplier account. Confirm the previous account's workspace choice and counts do not carry over. Record remaining issues against INV-003; user acceptance is still required before declaring the investor rehearsal complete.
+
+### Full-release browser selector correction
+
+The first Windows release stopped on four assertions that still targeted the old shell: two real-account French navigation cases, the supplier aggregate count duplicated by the new sidebar badge, and the limitations link inside the new account-help disclosure. The correction uses the current French My trades search result and heading, scopes the aggregate assertion to workspace content, and explicitly opens account help before following limitations. Language/account persistence, aggregate totals, limitations content and no-write assertions remain in place. The mobile keyboard check also waits for the destination page and reopened dialog to become visible before pressing Escape, retaining the focus-return assertion. No whole-test retry or runtime behavior change is introduced.
+
+Apply the correction to the existing navigation branch, capture its new candidate before verification, and rerun the complete release gate. Evidence from the previous candidate is not sufficient.

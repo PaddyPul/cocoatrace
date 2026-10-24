@@ -63,6 +63,7 @@ test('pilot participants can discover versioned limitations without changing a t
   await expect(
     page.getByRole('heading', { name: 'Known pilot limitations', exact: true }),
   ).toBeVisible();
+  await page.locator('summary').filter({ hasText: 'Account & workspace help' }).click();
   const navigation = page.getByRole('button', { name: 'Known pilot limitations', exact: true });
   await expect(navigation).toHaveCount(1);
   await navigation.click();

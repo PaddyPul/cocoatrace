@@ -302,9 +302,11 @@ test('mobile navigation closes after choosing My trades and preserves keyboard e
   await dialog.getByRole('button', { name: 'My trades', exact: true }).click();
   await expect(page).toHaveURL(/\/contracts$/);
   await expect(dialog).toHaveCount(0);
+  await expect(page.locator('#workspace-main')).toBeVisible();
   const trigger = page.getByRole('button', { name: 'Open navigation', exact: true });
   await trigger.focus();
   await page.keyboard.press('Enter');
+  await expect(dialog).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
   await expect(trigger).toBeFocused();
@@ -361,3 +363,22 @@ test('workspace selection remains usable during the session when preference stor
   await menu(page).getByRole('button', { name: 'My trades', exact: true }).click();
   await expect(menu(page).getByRole('combobox', { name: /Workspace/ })).toHaveValue('sell');
 });
+
+for (const role of ['buyer', 'supplier'] as const) {
+  test(`${role}: French workflow search opens My trades after reload`, async ({ page }) => {
+    const { state } = await fixture(page, role);
+    await page.goto('/home');
+    await page.getByLabel('Language', { exact: true }).selectOption('fr');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
+    await page.reload();
+    await expect(page.getByLabel('Langue', { exact: true })).toHaveValue('fr');
+    await page.getByRole('button', { name: /Rechercher/ }).click();
+    await page.getByPlaceholder('Rechercher une rubrique ou un parcours…').fill('Mes transactions');
+    await page.getByRole('button', { name: /^Mes transactions\s/ }).click();
+    await expect(page).toHaveURL(/\/contracts$/);
+    await expect(
+      page.getByRole('heading', { name: 'Mes transactions', exact: true }),
+    ).toBeVisible();
+    expect(state.mutations).toBe(0);
+  });
+}
