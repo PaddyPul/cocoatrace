@@ -1,5 +1,9 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/utils/ordinal.ts',
+  'web/src/components/shared/WorkspaceDialog.tsx',
+  'api/src/services/sourcingStructurer*.ts',
+  'scripts/ordinal-order*.mjs',
   'api/src/services/emailAddress*.ts',
   'web/src/navigation/**/*.ts',
   'web/src/pages/SourcingRequestsPage.tsx',

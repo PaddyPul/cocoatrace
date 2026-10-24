@@ -1,3 +1,4 @@
+import WorkspaceDialog from '../components/shared/WorkspaceDialog';
 import PlatformRoleNotice from '../components/shared/PlatformRoleNotice';
 import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import TransportTiming from '../components/transport/TransportTiming';
@@ -672,17 +673,17 @@ function Modal({
   children: React.ReactNode;
 }) {
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal max-w-2xl" onClick={(e) => e.stopPropagation()}>
+    <WorkspaceDialog label={title} onClose={onClose}>
+      <div className="modal max-w-2xl">
         <div className="flex items-start justify-between mb-3">
           <div className="modal-title">{title}</div>
-          <button className="btn btn-sm" onClick={onClose}>
+          <button aria-label="Close dialog" type="button" className="btn btn-sm" onClick={onClose}>
             <X size={14} />
           </button>
         </div>
         {children}
       </div>
-    </div>
+    </WorkspaceDialog>
   );
 }
 function ErrorBox({ message }: { message: string }) {

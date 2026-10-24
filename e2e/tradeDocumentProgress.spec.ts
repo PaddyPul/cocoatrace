@@ -1,6 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
 
-async function fixture(page: Page, milestone = 'arrived', insurance = false) {
+async function fixture(
+  page: Page,
+  milestone = 'arrived',
+  insurance = false,
+  termsStatus = 'agreed',
+) {
   const actor = {
     id: 'seller-user',
     organizationId: 'seller',
@@ -45,7 +50,7 @@ async function fixture(page: Page, milestone = 'arrived', insurance = false) {
           currency_minor_units: 2,
           incoterm: 'CIF',
           status: 'accepted',
-          payment_terms_status: 'agreed',
+          payment_terms_status: termsStatus,
           payment_plan: 'deposit_balance',
           payment_request_id: 'payment',
           documents,
@@ -149,3 +154,29 @@ for (const [milestone, dispatched, arrived, delivered] of [
     ).toBeVisible();
   });
 }
+
+test('failed payment terms remain visible inside the native dialog and retain the draft without replay', async ({
+  page,
+}) => {
+  await fixture(page, 'arrived', false, 'not_configured');
+  let writes = 0;
+  await page.route('**/api/contracts/deal/payment-terms', (route) => {
+    writes++;
+    return route.fulfill({
+      status: 409,
+      json: { error: 'Terms changed. Review before proposing.' },
+    });
+  });
+  await page.goto('/contracts/deal?tab=payments');
+  await page.getByRole('button', { name: 'Set payment protection', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Payment Protection Plan', exact: true });
+  await dialog
+    .getByLabel('Commercial note (optional)', { exact: true })
+    .fill('Retain this proposed commercial note');
+  await dialog.getByRole('button', { name: 'Propose terms', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toContainText('Terms changed. Review before proposing.');
+  await expect(dialog.getByLabel('Commercial note (optional)', { exact: true })).toHaveValue(
+    'Retain this proposed commercial note',
+  );
+  expect(writes).toBe(1);
+});

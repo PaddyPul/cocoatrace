@@ -1,3 +1,4 @@
+import WorkspaceDialog from '../components/shared/WorkspaceDialog';
 import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Building2, Check, ClipboardCopy, ShieldCheck, X } from 'lucide-react';
@@ -337,9 +338,9 @@ function AccessReview() {
         <PageNavigation page={page} label="applications" />
       </section>
       {selected && (
-        <div
-          className="modal-overlay"
-          onClick={() =>
+        <WorkspaceDialog
+          label="Access decision"
+          onClose={() =>
             !busy &&
             discard(() => {
               setSelected(null);
@@ -347,13 +348,7 @@ function AccessReview() {
             })
           }
         >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Access decision"
-            className="modal"
-            onClick={(event) => event.stopPropagation()}
-          >
+          <div className="modal">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-[.14em] text-brand-400">
@@ -366,6 +361,7 @@ function AccessReview() {
                 </p>
               </div>
               <button
+                type="button"
                 className="btn btn-sm"
                 onClick={() =>
                   discard(() => {
@@ -409,7 +405,7 @@ function AccessReview() {
               </button>
             </div>
           </div>
-        </div>
+        </WorkspaceDialog>
       )}
     </Layout>
   );

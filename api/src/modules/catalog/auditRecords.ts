@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import { AppError, ValidationError } from '../../errors';
 import { Actor, hasExplicitPermission } from '../../services/resourcePolicy';
 import { Execute, literal, pageResult, parsePage, text, withCatalogRead } from './paging';
@@ -58,7 +59,7 @@ export async function auditRecordPage(
   const filters = auditRecordFilters(parameters);
   const input = parsePage(
     parameters,
-    ['audit-register', actor.organizationId, [...actor.permissions].sort(), filters],
+    ['audit-register', actor.organizationId, [...actor.permissions].sort(compareOrdinal), filters],
     ['entityType', 'entityId', 'action'],
     ['time'],
   );

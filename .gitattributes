@@ -609,3 +609,8 @@ e2e/navigationWorkspaces.spec.ts text eol=lf
 api/src/services/emailAddress*.ts text eol=lf
 
 web/src/components/catalog/useRegisterSummary.ts text eol=lf
+
+api/src/utils/ordinal.ts text eol=lf
+web/src/components/shared/WorkspaceDialog.tsx text eol=lf
+api/src/services/sourcingStructurer*.ts text eol=lf
+scripts/ordinal-order*.mjs text eol=lf

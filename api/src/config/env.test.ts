@@ -185,53 +185,182 @@ describe('environment configuration', () => {
   });
 });
 
- describe('operator alert opt-in configuration', () => {
-  const id='11111111-1111-4111-8111-111111111111';
-  const smtp={ EMAIL_DRIVER:'smtp',EMAIL_FROM:'alerts@example.test',SMTP_HOST:'localhost',SMTP_USER:'test-user',SMTP_PASSWORD:'test-password' };
-  it('defaults to disabled with no selected operator',()=>{
-    expect(parseConfig({APP_ENV:'development'})).toMatchObject({operationsAlertsEnabled:false,operationsAlertRecipientUserIds:[]});
+describe('operator alert opt-in configuration', () => {
+  const id = '11111111-1111-4111-8111-111111111111';
+  const smtp = {
+    EMAIL_DRIVER: 'smtp',
+    EMAIL_FROM: 'alerts@example.test',
+    SMTP_HOST: 'localhost',
+    SMTP_USER: 'test-user',
+    SMTP_PASSWORD: 'test-password',
+  };
+  it('defaults to disabled with no selected operator', () => {
+    expect(parseConfig({ APP_ENV: 'development' })).toMatchObject({
+      operationsAlertsEnabled: false,
+      operationsAlertRecipientUserIds: [],
+    });
   });
-  it('requires registered IDs and SMTP and rejects duplicate or invalid IDs',()=>{
-    expect(()=>parseConfig({APP_ENV:'development',OPERATIONS_ALERTS_ENABLED:'true'})).toThrow(/OPERATIONS_ALERT_RECIPIENT_USER_IDS/);
-    expect(()=>parseConfig({APP_ENV:'development',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:'not-an-id'})).toThrow(/OPERATIONS_ALERT_RECIPIENT_USER_IDS/);
-    expect(()=>parseConfig({APP_ENV:'development',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:`${id},${id}`})).toThrow(/unique/);
-    expect(parseConfig({APP_ENV:'development',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:id})).toMatchObject({operationsAlertsEnabled:true,operationsAlertRecipientUserIds:[id]});
+  it('requires registered IDs and SMTP and rejects duplicate or invalid IDs', () => {
+    expect(() =>
+      parseConfig({ APP_ENV: 'development', OPERATIONS_ALERTS_ENABLED: 'true' }),
+    ).toThrow(/OPERATIONS_ALERT_RECIPIENT_USER_IDS/);
+    expect(() =>
+      parseConfig({
+        APP_ENV: 'development',
+        ...smtp,
+        OPERATIONS_ALERTS_ENABLED: 'true',
+        OPERATIONS_ALERT_RECIPIENT_USER_IDS: 'not-an-id',
+      }),
+    ).toThrow(/OPERATIONS_ALERT_RECIPIENT_USER_IDS/);
+    expect(() =>
+      parseConfig({
+        APP_ENV: 'development',
+        ...smtp,
+        OPERATIONS_ALERTS_ENABLED: 'true',
+        OPERATIONS_ALERT_RECIPIENT_USER_IDS: `${id},${id}`,
+      }),
+    ).toThrow(/unique/);
+    expect(
+      parseConfig({
+        APP_ENV: 'development',
+        ...smtp,
+        OPERATIONS_ALERTS_ENABLED: 'true',
+        OPERATIONS_ALERT_RECIPIENT_USER_IDS: id,
+      }),
+    ).toMatchObject({ operationsAlertsEnabled: true, operationsAlertRecipientUserIds: [id] });
   });
-  it('keeps synthetic demos disabled and bounds SMTP command timeouts',()=>{
-    expect(()=>parseConfig({APP_ENV:'demo',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:id})).toThrow(/synthetic demos/);
-    expect(()=>parseConfig({APP_ENV:'development',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:id,SMTP_CONNECTION_TIMEOUT_MS:'11000'})).toThrow(/SMTP_CONNECTION_TIMEOUT_MS/);
+  it('keeps synthetic demos disabled and bounds SMTP command timeouts', () => {
+    expect(() =>
+      parseConfig({
+        APP_ENV: 'demo',
+        ...smtp,
+        OPERATIONS_ALERTS_ENABLED: 'true',
+        OPERATIONS_ALERT_RECIPIENT_USER_IDS: id,
+      }),
+    ).toThrow(/synthetic demos/);
+    expect(() =>
+      parseConfig({
+        APP_ENV: 'development',
+        ...smtp,
+        OPERATIONS_ALERTS_ENABLED: 'true',
+        OPERATIONS_ALERT_RECIPIENT_USER_IDS: id,
+        SMTP_CONNECTION_TIMEOUT_MS: '11000',
+      }),
+    ).toThrow(/SMTP_CONNECTION_TIMEOUT_MS/);
   });
-  it('preserves the existing demo storage namespace for an explicit local non-synthetic capture setup',()=>{
-    expect(parseConfig({APP_ENV:'demo',DEMO_MODE:'false',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:id}).environment).toBe('demo');
+  it('preserves the existing demo storage namespace for an explicit local non-synthetic capture setup', () => {
+    expect(
+      parseConfig({
+        APP_ENV: 'demo',
+        DEMO_MODE: 'false',
+        ...smtp,
+        OPERATIONS_ALERTS_ENABLED: 'true',
+        OPERATIONS_ALERT_RECIPIENT_USER_IDS: id,
+      }).environment,
+    ).toBe('demo');
   });
-  it('requires verified TLS for deployed operator alerts even without identity email enabled',()=>{
-    expect(()=>parseConfig({...deployedBase,APP_ENV:'staging',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:id,SMTP_SECURE:'false',SMTP_REQUIRE_TLS:'false'})).toThrow(/SMTP_REQUIRE_TLS/);
-    expect(()=>parseConfig({...deployedBase,APP_ENV:'staging',...smtp,OPERATIONS_ALERTS_ENABLED:'true',OPERATIONS_ALERT_RECIPIENT_USER_IDS:id,SMTP_TLS_REJECT_UNAUTHORIZED:'false'})).toThrow(/SMTP_TLS_REJECT_UNAUTHORIZED/);
+  it('requires verified TLS for deployed operator alerts even without identity email enabled', () => {
+    expect(() =>
+      parseConfig({
+        ...deployedBase,
+        APP_ENV: 'staging',
+        ...smtp,
+        OPERATIONS_ALERTS_ENABLED: 'true',
+        OPERATIONS_ALERT_RECIPIENT_USER_IDS: id,
+        SMTP_SECURE: 'false',
+        SMTP_REQUIRE_TLS: 'false',
+      }),
+    ).toThrow(/SMTP_REQUIRE_TLS/);
+    expect(() =>
+      parseConfig({
+        ...deployedBase,
+        APP_ENV: 'staging',
+        ...smtp,
+        OPERATIONS_ALERTS_ENABLED: 'true',
+        OPERATIONS_ALERT_RECIPIENT_USER_IDS: id,
+        SMTP_TLS_REJECT_UNAUTHORIZED: 'false',
+      }),
+    ).toThrow(/SMTP_TLS_REJECT_UNAUTHORIZED/);
   });
- });
+});
 
 describe('legacy fee compatibility fixture isolation', () => {
   it('enforces the new policy by default and permits legacy fixtures only in disposable test configuration', () => {
-    expect(parseConfig({APP_ENV:'development'}).testLegacyFeePolicy).toBe(false);
-    expect(parseConfig({APP_ENV:'test',DATABASE_URL:'postgresql://test:test@localhost/cocoatrace_test',TEST_LEGACY_FEE_POLICY:'true'}).testLegacyFeePolicy).toBe(true);
-    expect(() => parseConfig({APP_ENV:'development',TEST_LEGACY_FEE_POLICY:'true'})).toThrow();
-    expect(() => parseConfig({APP_ENV:'test',DATABASE_URL:'postgresql://test:test@localhost/business',TEST_LEGACY_FEE_POLICY:'true'})).toThrow();
-    expect(() => parseConfig({...deployedBase,APP_ENV:'production',TEST_LEGACY_FEE_POLICY:'true'})).toThrow();
+    expect(parseConfig({ APP_ENV: 'development' }).testLegacyFeePolicy).toBe(false);
+    expect(
+      parseConfig({
+        APP_ENV: 'test',
+        DATABASE_URL: 'postgresql://test:test@localhost/cocoatrace_test',
+        TEST_LEGACY_FEE_POLICY: 'true',
+      }).testLegacyFeePolicy,
+    ).toBe(true);
+    expect(() => parseConfig({ APP_ENV: 'development', TEST_LEGACY_FEE_POLICY: 'true' })).toThrow();
+    expect(() =>
+      parseConfig({
+        APP_ENV: 'test',
+        DATABASE_URL: 'postgresql://test:test@localhost/business',
+        TEST_LEGACY_FEE_POLICY: 'true',
+      }),
+    ).toThrow();
+    expect(() =>
+      parseConfig({ ...deployedBase, APP_ENV: 'production', TEST_LEGACY_FEE_POLICY: 'true' }),
+    ).toThrow();
   });
 });
-
 
 describe('invitation delivery encryption configuration', () => {
-  const smtp={APP_ENV:'development',IDENTITY_EMAIL_ENABLED:'true',EMAIL_DRIVER:'smtp',EMAIL_FROM:'identity@example.test',SMTP_HOST:'smtp.example.test',SMTP_USER:'fixture',SMTP_PASSWORD:'fixture'};
+  const smtp = {
+    APP_ENV: 'development',
+    IDENTITY_EMAIL_ENABLED: 'true',
+    EMAIL_DRIVER: 'smtp',
+    EMAIL_FROM: 'identity@example.test',
+    SMTP_HOST: 'smtp.example.test',
+    SMTP_USER: 'fixture',
+    SMTP_PASSWORD: 'fixture',
+  };
   it('requires a dedicated encryption key before enabling identity SMTP', () => {
-    expect(()=>parseConfig(smtp)).toThrow(/INVITATION_DELIVERY_KEY/);
-    expect(parseConfig({...smtp,INVITATION_DELIVERY_KEY:'12'.repeat(32)}).invitationDeliveryKey).toBe('12'.repeat(32));
+    expect(() => parseConfig(smtp)).toThrow(/INVITATION_DELIVERY_KEY/);
+    expect(
+      parseConfig({ ...smtp, INVITATION_DELIVERY_KEY: '12'.repeat(32) }).invitationDeliveryKey,
+    ).toBe('12'.repeat(32));
   });
-  it.each(['short','g'.repeat(64),'12'.repeat(31)])('rejects invalid key format without reporting the key: %s', key => {
-    expect(()=>parseConfig({...smtp,INVITATION_DELIVERY_KEY:key})).toThrow(/INVITATION_DELIVERY_KEY/);
-  });
+  it.each(['short', 'g'.repeat(64), '12'.repeat(31)])(
+    'rejects invalid key format without reporting the key: %s',
+    (key) => {
+      expect(() => parseConfig({ ...smtp, INVITATION_DELIVERY_KEY: key })).toThrow(
+        /INVITATION_DELIVERY_KEY/,
+      );
+    },
+  );
   it('rejects reuse of a session or evidence key', () => {
-    expect(()=>parseConfig({...smtp,INVITATION_DELIVERY_KEY:'12'.repeat(32),JWT_SECRET:'12'.repeat(32)})).toThrow(/independent/);
-    expect(()=>parseConfig({...smtp,INVITATION_DELIVERY_KEY:'12'.repeat(32),EVIDENCE_UPLOAD_SIGNING_SECRET:'12'.repeat(32)})).toThrow(/independent/);
+    expect(() =>
+      parseConfig({
+        ...smtp,
+        INVITATION_DELIVERY_KEY: '12'.repeat(32),
+        JWT_SECRET: '12'.repeat(32),
+      }),
+    ).toThrow(/independent/);
+    expect(() =>
+      parseConfig({
+        ...smtp,
+        INVITATION_DELIVERY_KEY: '12'.repeat(32),
+        EVIDENCE_UPLOAD_SIGNING_SECRET: '12'.repeat(32),
+      }),
+    ).toThrow(/independent/);
   });
 });
+
+it.each(['staging', 'production'])(
+  'rejects the known local database password in %s even when explicitly configured',
+  (environment) => {
+    for (const password of ['cocoa_dev', 'cocoa%5Fdev']) {
+      expect(() =>
+        parseConfig({
+          ...deployedBase,
+          APP_ENV: environment,
+          DATABASE_URL: `postgresql://cocoa:${password}@database.internal:5432/cocoatrace`,
+        }),
+      ).toThrow(/local development database password/);
+    }
+  },
+);

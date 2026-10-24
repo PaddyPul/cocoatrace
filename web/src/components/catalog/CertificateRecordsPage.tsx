@@ -1,3 +1,4 @@
+import WorkspaceDialog from '../shared/WorkspaceDialog';
 import { useUnsavedChanges, useDiscardChanges } from '../shared/UnsavedChanges';
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -337,13 +338,18 @@ export default function CertificateRecordsPage() {
       <PageNavigation page={page} label="certificates" />
       {/* Issue Certificate Modal */}
       {showIssue && (
-        <div className="modal-overlay" onClick={() => !iLoading && closeIssue()}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <WorkspaceDialog label="Issue Certificate" onClose={() => !iLoading && closeIssue()}>
+          <div className="modal">
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="modal-title">Issue Certificate</div>
               </div>
-              <button className="btn btn-sm" onClick={closeIssue}>
+              <button
+                aria-label="Close dialog"
+                type="button"
+                className="btn btn-sm"
+                onClick={closeIssue}
+              >
                 <X size={14} />
               </button>
             </div>
@@ -461,7 +467,7 @@ export default function CertificateRecordsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </WorkspaceDialog>
       )}
       <ConfirmDialog
         open={statusReview !== null}

@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import { AppError, ForbiddenError, ValidationError } from '../../errors';
 import { Actor } from '../../services/resourcePolicy';
 import { Execute, literal, pageResult, parsePage, text } from './paging';
@@ -28,7 +29,7 @@ export async function organizationSummary(
 ) {
   parsePage(
     parameters,
-    ['organization-summary', actor.organizationId, [...actor.permissions].sort()],
+    ['organization-summary', actor.organizationId, [...actor.permissions].sort(compareOrdinal)],
     ['type'],
   );
   return (
@@ -46,7 +47,7 @@ export async function organizationPage(
   const args = organizationArguments(actor, parameters);
   const input = parsePage(
     parameters,
-    ['organizations', ...args, [...actor.permissions].sort()],
+    ['organizations', ...args, [...actor.permissions].sort(compareOrdinal)],
     ['type'],
   );
   const rows = (
@@ -115,7 +116,12 @@ export async function memberPage(
   memberScope(actor, organizationId);
   const input = parsePage(
     parameters,
-    ['organization-members', actor.organizationId, [...actor.permissions].sort(), organizationId],
+    [
+      'organization-members',
+      actor.organizationId,
+      [...actor.permissions].sort(compareOrdinal),
+      organizationId,
+    ],
     [],
   );
   const rows = (

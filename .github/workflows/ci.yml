@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm run check:regressions
       - run: npm run check:workspace-states
       - run: npm run check:quality
@@ -103,7 +103,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: node --import tsx scripts/recall-drill.mjs --invalidate
       - run: node --import tsx scripts/pilot-load.mjs --invalidate
       - name: Test PostgreSQL, private S3 storage and ClamAV adapters
@@ -134,7 +134,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm run typecheck:browser
       - name: Install Chromium and Linux browser dependencies
         run: node node_modules/@playwright/test/cli.js install --with-deps chromium
@@ -158,7 +158,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - name: Test fresh production startup and data-preserving upgrades
         run: npm run test:migrations:docker
 
@@ -190,7 +190,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: node --test scripts/run-release-checks.test.mjs
       - name: Rehearse isolated PostgreSQL and versioned private object restore
         run: npm run test:recovery:docker
@@ -210,7 +210,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - name: Validate preview runner access boundaries
         run: node --test scripts/demo-preview.test.mjs
       - name: Start synthetic preview and check readiness and identities
@@ -240,7 +240,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm run test:evidence:stress:docker
       - uses: actions/upload-artifact@v4
         if: always()
