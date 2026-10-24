@@ -182,6 +182,7 @@ function SupportWorkspace({ admin }: { admin: boolean }) {
             </p>
           )}
           <button
+            type="submit"
             className="btn btn-primary"
             disabled={sending || !subject.trim() || !description.trim()}
           >
@@ -333,7 +334,7 @@ function SupportWorkspace({ admin }: { admin: boolean }) {
               >
                 Reload selected request from current page
               </button>
-              <button className="btn btn-primary" disabled={reviewBusy}>
+              <button type="submit" className="btn btn-primary" disabled={reviewBusy}>
                 Save review
               </button>
               <button

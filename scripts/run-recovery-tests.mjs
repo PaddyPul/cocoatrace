@@ -11,7 +11,8 @@ const project = 'cocoatrace-recovery-tests';
 const service = 'postgres-recovery-test';
 const sourceDatabase = 'cocoatrace_recovery_source';
 const restoredDatabase = 'cocoatrace_recovery_restored';
-const archive = '/tmp/cocoatrace-recovery-rehearsal.dump';
+let archive;
+let objectWorkspace;
 const compose = [
   'compose',
   '-p',
@@ -174,7 +175,17 @@ function objectPhase(phase, metadata) {
   const script = fs.readFileSync(path.join(root, 'scripts/recovery-objects.py'), 'utf8');
   requireSuccess(
     composeRun(
-      ['exec', '-T', 'moto-recovery-test', 'python', '-', phase, ...(metadata ? [metadata] : [])],
+      [
+        'exec',
+        '-T',
+        '-e',
+        `RECOVERY_WORKSPACE=${objectWorkspace}`,
+        'moto-recovery-test',
+        'python',
+        '-',
+        phase,
+        ...(metadata ? [metadata] : []),
+      ],
       { input: script },
     ),
     `Private object recovery ${phase} failed`,
@@ -211,6 +222,22 @@ try {
     composeRun(['run', '--rm', 'recovery-migrate'], { stdio: 'inherit' }),
     'Forward migrations failed in the source rehearsal database',
   );
+
+  // mktemp creates mode-0700 directories inside these disposable containers.
+  // They survive the rehearsal phases and are removed with the containers.
+  const databaseDirectory = requireSuccess(
+    postgresTool('mktemp', ['-d']),
+    'Could not create private database backup directory',
+  ).stdout.trim();
+  objectWorkspace = requireSuccess(
+    composeRun(['exec', '-T', 'moto-recovery-test', 'mktemp', '-d']),
+    'Could not create private object recovery directory',
+  ).stdout.trim();
+  for (const directory of [databaseDirectory, objectWorkspace]) {
+    if (!/^\/tmp\/tmp\.[A-Za-z0-9]+$/.test(directory))
+      throw new Error('Unexpected private recovery directory');
+  }
+  archive = `${databaseDirectory}/rehearsal.dump`;
 
   assert.equal(psql(sourceDatabase, 'SELECT current_database();', true), sourceDatabase);
   const expectedMigrations = migrationNames();

@@ -84,7 +84,7 @@ export default function PaymentDetailPage() {
     return (
       <Layout currentPage="payments">
         <section role="alert">
-          <Error message={error || 'Payment unavailable'} />
+          <PaymentReadError message={error || 'Payment unavailable'} />
           <button className="btn mt-3" onClick={() => setReadAttempt((value) => value + 1)}>
             Retry payment
           </button>
@@ -425,7 +425,7 @@ function Field({
     </div>
   );
 }
-function Error({ message }: { message: string }) {
+function PaymentReadError({ message }: { message: string }) {
   return (
     <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">
       {message}

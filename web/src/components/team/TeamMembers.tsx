@@ -336,6 +336,7 @@ export default function TeamMembers() {
             {mutationError && <p role="alert">{mutationError}</p>}
             <div className="flex gap-2">
               <button
+                type="submit"
                 className="btn text-red-300"
                 disabled={
                   busy ||

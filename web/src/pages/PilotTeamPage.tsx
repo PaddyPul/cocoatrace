@@ -197,6 +197,7 @@ export default function PilotTeamPage() {
               placeholder="colleague@company.com"
             />
             <button
+              type="submit"
               disabled={busy}
               className="mt-3 min-h-11 w-full rounded-xl bg-brand-400 px-4 text-xs font-bold text-emerald-950 disabled:opacity-50"
             >

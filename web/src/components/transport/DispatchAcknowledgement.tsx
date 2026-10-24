@@ -114,7 +114,7 @@ export default function DispatchAcknowledgement({ shipmentId }: { shipmentId: st
                 />
                 I reviewed the recorded exceptional dispatch reason.
               </label>
-              <button className="btn btn-primary" disabled={busy || !confirmed}>
+              <button type="submit" className="btn btn-primary" disabled={busy || !confirmed}>
                 Acknowledge exceptional dispatch awareness
               </button>
             </form>

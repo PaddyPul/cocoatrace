@@ -287,7 +287,7 @@ export default function RecallCenterPage() {
               onChange={(event) => setLotSearchDraft(event.target.value)}
               placeholder="Search lot code, material or exact lot ID"
             />
-            <button className="btn btn-secondary" disabled={lotLoading || traceBusy}>
+            <button type="submit" className="btn btn-secondary" disabled={lotLoading || traceBusy}>
               Search lots
             </button>
             <button

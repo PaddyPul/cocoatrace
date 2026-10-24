@@ -148,7 +148,7 @@ export default function AcceptInvitationPage() {
                   {error}
                 </div>
               )}
-              <button
+              <button type="submit"
                 disabled={busy}
                 className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-400 text-sm font-bold text-emerald-950"
               >

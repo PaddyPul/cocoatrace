@@ -268,6 +268,7 @@ export default function DeliveryAcceptance({ contractId, organizationId, onChang
                 minLength={10}
               />
               <button
+                type="submit"
                 className="btn btn-primary text-xs"
                 disabled={busy || resolutionNote.trim().length < 10}
               >
@@ -381,6 +382,7 @@ export default function DeliveryAcceptance({ contractId, organizationId, onChang
             )}
           </div>
           <button
+            type="submit"
             className="btn btn-primary text-xs"
             aria-describedby="delivery-acceptance-requirements"
             disabled={busy || acceptanceRequirements.length > 0}
@@ -484,6 +486,7 @@ export default function DeliveryAcceptance({ contractId, organizationId, onChang
               </ul>
             )}
             <button
+              type="submit"
               className="btn text-xs"
               disabled={
                 busy ||
