@@ -17,14 +17,7 @@ import { webConfig } from '../config';
 const QUICK_USERS = [
   { label: 'Buyer demo', email: 'newbuyer@cocoatrace.io' },
   { label: 'Supplier demo', email: 'newsupplier@cocoatrace.io' },
-  { label: 'Pilot manager', email: 'pilot@cocoatrace.io' },
-  { label: 'Admin', email: 'admin@cocoatrace.io' },
-  { label: 'Farmer', email: 'kwame@farm.gh' },
-  { label: 'Certifier', email: 'akosua@organiccert.gh' },
-  { label: 'Exporter', email: 'ama@accragold.gh' },
-  { label: 'Importer', email: 'pieter@dutchcacao.nl' },
-  { label: 'Logistics', email: 'kofi@marecargo.gh' },
-  { label: 'Regulator', email: 'ingrid@cocobod.gh' },
+
 ];
 
 const VALUE_POINTS = [
@@ -130,7 +123,7 @@ export default function LoginPage() {
         <div className="relative my-auto max-w-2xl py-14">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-[11px] font-semibold text-emerald-200">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-            Ghana → Netherlands corridor
+            A global sourcing workspace
           </div>
           <h1 className="max-w-xl text-5xl font-bold leading-[1.08] tracking-[-.04em]">
             Trade organic raw materials with proof built in.
@@ -331,7 +324,7 @@ export default function LoginPage() {
                 View public product profile without signing in
               </a>
               <p className="mb-3 text-xs text-white/40">
-                Choose a role to prefill the seeded demonstration account.
+                Choose a buyer or supplier demonstration account.
               </p>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {QUICK_USERS.map((user) => (
@@ -345,6 +338,7 @@ export default function LoginPage() {
                   </button>
                 ))}
               </div>
+              <details className="mt-4 text-xs text-white/60"><summary className="cursor-pointer">Platform administration</summary><p className="mt-2">For the demo operator to review workspace access and platform fee receipts.</p><button type="button" className="btn mt-2" onClick={() => quickLogin('admin@cocoatrace.io')}>Platform admin</button></details>
               <p className="mt-5 text-center text-[10px] text-white/25">
                 Demo password: Password123!
               </p>

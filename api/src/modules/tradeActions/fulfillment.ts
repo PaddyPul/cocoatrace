@@ -22,11 +22,11 @@ export function fulfillmentActions({
       kind: seller ? 'documents' : 'waiting',
       priority: seller ? 25 : 70,
       requiresAction: seller,
-      title: seller ? 'Present the trade document set' : 'Awaiting supplier trade documents',
+      title: seller ? 'Complete the trade document set' : 'Awaiting supplier trade documents',
       description:
-        'The supplier prepares validated, scan-clean invoice, packing list and transport documents. CIF/CIP also require insurance evidence. Presentation makes the document-triggered payment due.',
+        'The system submits a complete document set automatically after availability and trade checks. Open the checklist for missing files, transport-document reference or supplier bank-security acceptance. CIF/CIP also require insurance evidence.',
       actionLabel: seller ? 'Open trade documents' : 'View documents',
-      actionPath: room,
+      actionPath: `/contracts/${deal.id}?tab=documents`,
       contractId: deal.id,
     });
     return actions;

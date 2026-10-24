@@ -83,10 +83,12 @@ for (const milestone of ['handed_over', 'loaded']) {
     page,
   }) => {
     await fixture(page, milestone, true);
-    await page.goto('/contracts/deal');
+    await page.goto('/contracts/deal?tab=documents');
+    await expect(page.getByText(/Checklist complete. Awaiting the server/)).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Present documents for payment', exact: true }),
-    ).toBeEnabled();
+    ).toHaveCount(0);
+    await page.getByRole('tab', { name: 'Overview', exact: true }).click();
     await expect(
       page.locator('[aria-label="Pending: Cargo dispatched and transport document issued"]'),
     ).toBeVisible();
@@ -97,7 +99,7 @@ test('CIF seller can select insurance explicitly and Other does not satisfy its 
   page,
 }) => {
   await fixture(page);
-  await page.goto('/contracts/deal');
+  await page.goto('/contracts/deal?tab=documents');
   await expect(page.getByText('Required before payment: insurance certificate.')).toBeVisible();
   await page.getByRole('button', { name: 'Add document', exact: true }).click();
   await expect(page.getByText(/Files uploaded as “Other” do not satisfy/)).toBeVisible();

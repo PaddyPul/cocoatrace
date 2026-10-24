@@ -46,7 +46,7 @@ export function safeValidationDetails(error: ZodError) {
       .map((part) =>
         typeof part === 'number'
           ? String(part)
-          : /^[A-Za-z_][A-Za-z0-9_-]{0,79}$/.test(part)
+          : typeof part === 'string' && /^[A-Za-z_][A-Za-z0-9_-]{0,79}$/.test(part)
             ? part
             : 'field',
       )
@@ -60,9 +60,9 @@ export function safeValidationDetails(error: ZodError) {
             ? 'Value exceeds the allowed maximum'
             : issue.code === 'unrecognized_keys'
               ? 'Unexpected fields are not allowed'
-              : issue.code === 'invalid_enum_value' || issue.code === 'invalid_literal'
+              : issue.code === 'invalid_value'
                 ? 'Choose a supported value'
-                : issue.code === 'invalid_string'
+                : issue.code === 'invalid_format'
                   ? 'Value has an invalid format'
                   : 'Value is invalid',
   }));

@@ -57,7 +57,7 @@ for (const currency of ['GHS', 'JPY'])
       const { contract, shipment, paymentRequest } = await acceptance.json();
       expect(contract.currency_minor_units).toBe(currency === 'JPY' ? 0 : 2);
       expect(paymentRequest.amount_total).toBe(currency === 'JPY' ? '51.00' : '20.00');
-      await seller.goto(`/deal-room/${contract.id}`);
+      await seller.goto(`/deal-room/${contract.id}?tab=fees`);
       const fee = seller.getByRole('region', { name: 'Platform fee statement' });
       await expect(fee.getByText('Estimated fee. No fee payment is due yet.')).toBeVisible();
       await expect(
@@ -121,7 +121,7 @@ for (const currency of ['GHS', 'JPY'])
       await expect(
         seller.getByText('Review and pay the platform fee', { exact: true }),
       ).toBeVisible();
-      await seller.goto(`/deal-room/${contract.id}`);
+      await seller.goto(`/deal-room/${contract.id}?tab=fees`);
       await expect(
         fee.getByRole('status', { name: 'Fee collection status', exact: true }),
       ).toContainText('Platform fee outstanding — collection not verified');
@@ -164,11 +164,12 @@ for (const currency of ['GHS', 'JPY'])
         .fill(`BROWSER-RECEIPT-${contract.id}`);
       await admin.getByRole('button', { name: 'Verify platform receipt' }).click();
       await expect(admin.getByText('Platform receipt verified.', { exact: true })).toBeVisible();
+      await admin.getByRole('tab', { name: 'Statement', exact: true }).click();
       const downloadEvent = admin.waitForEvent('download');
       await admin.getByRole('button', { name: 'Download fee statement' }).click();
       expect((await downloadEvent).suggestedFilename()).toMatch(/^CT-FEE-.*\.json$/);
       await seller.reload();
-      await seller.getByText('Platform fee details and receipt', { exact: true }).click();
+      await seller.getByRole('tab', { name: 'Platform fee', exact: true }).click();
       await expect(fee.getByText('Platform receipt verified.', { exact: true })).toBeVisible();
       const after = await tradeSnapshot(contract.id);
       expect(after.fees[0].status).toBe('paid');

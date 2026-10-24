@@ -115,6 +115,7 @@ async function fixture(page: Page, finance = false) {
     await route.fulfill({ json });
   });
   await page.goto('/platform-fees/contract');
+  await page.getByRole('tab', { name: 'Refunds & concerns', exact: true }).click();
   return {
     state,
     actions,
@@ -269,6 +270,7 @@ test('statement email validates counts and retries without claiming inbox delive
   page,
 }) => {
   await fixture(page);
+  await page.getByRole('tab', { name: 'History & email', exact: true }).click();
   const region = page.getByRole('region', { name: 'Fee statement email', exact: true });
   await expect(region.getByRole('status')).toContainText('Queued: 1');
   await expect(

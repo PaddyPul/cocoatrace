@@ -55,7 +55,7 @@ export default function InvestorDemoPage() {
       <section className="relative overflow-hidden rounded-3xl border border-emerald-300/20 bg-[radial-gradient(circle_at_top_right,rgba(109,190,90,.18),transparent_38%),linear-gradient(135deg,#173326,#0e1c15)] p-6 shadow-2xl shadow-black/15 sm:p-9">
         <div className="relative max-w-3xl">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200/20 bg-emerald-200/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.17em] text-emerald-200">
-            <Sparkles size={13} /> Investor demo · Ghana to Netherlands
+            <Sparkles size={13} /> Investor demo · example sourcing journey
           </div>
           <h2 className="max-w-2xl text-3xl font-bold leading-tight tracking-[-.035em] text-white sm:text-5xl">One scan opens recorded product history. One trace helps investigate recorded risk.</h2>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-emerald-50/65 sm:text-base">BetterTrade links recorded lots from source evidence to product records, then calculates affected material paths from recorded movements. This simulation uses seeded genealogy; customer blending and repacking entry is not available.</p>

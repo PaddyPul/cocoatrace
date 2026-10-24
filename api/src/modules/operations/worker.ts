@@ -1,3 +1,4 @@
+import { reconcileDocumentSets } from '../payments/automaticDocuments';
 import { processInvitationEmails } from '../invitationDelivery/worker';
 import { config } from '../../config/env';
 import { query } from '../../db';
@@ -11,6 +12,7 @@ import { processRecallEmails } from '../recall/notifications';
 import { jobErrorCode, runTrackedJob, type Job } from './jobs';
 
 const jobs: Job[] = [
+  { name: 'document_presentation', run: reconcileDocumentSets },
   {
     name: 'invitation_email',
     run: async () => {
@@ -77,7 +79,7 @@ export function startOperationsWorkers(): () => Promise<void> {
     ssl: config.databaseSsl
       ? { rejectUnauthorized: config.databaseSslRejectUnauthorized }
       : undefined,
-    max: 6,
+    max: jobs.length,
     connectionTimeoutMillis: 5_000,
     idleTimeoutMillis: 30_000,
   });
@@ -128,7 +130,8 @@ export function startOperationsWorkers(): () => Promise<void> {
               timers.delete(timer);
               void tick();
             },
-            job.name === 'payment_reminders' ||
+            job.name === 'document_presentation' ||
+              job.name === 'payment_reminders' ||
               job.name === 'recall_email' ||
               job.name === 'fee_statement_email' ||
               job.name === 'invitation_email'

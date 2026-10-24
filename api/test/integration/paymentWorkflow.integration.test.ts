@@ -1,8 +1,10 @@
+import * as audit from '../../src/services/audit';
+import { automaticallyPresentDocuments } from '../../src/modules/payments/documentsAndSecurity';
 import { expectIdenticalNotFound } from './support/errorAssertions';
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import request from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import app from '../../src/app';
 import { pool, query } from '../../src/db';
 import { evidenceStorage } from '../../src/services/evidenceStorage';
@@ -383,4 +385,47 @@ it('uses the same document-presentation prerequisite after DPU unloading', async
   expect(presented.status).toBe(200);
   const buyerDetail=await get(`/contracts/${d.contractId}`,buyer);
   expect(buyerDetail.body.nextAction.operation).toBe('submit_payment');
+});
+
+
+nativeIt('automatically submits a complete CIF set once, preserves deadlines on replay and records a system audit', async () => {
+  const d = await deal('documentary_collection', false, 'CIF');
+  await documents(d);
+  await evidence(d.contractId, 'insurance_certificate');
+  expect((await progress(d, 'loaded')).status).toBe(200);
+  await query("UPDATE shipments SET transport_document_reference=NULL WHERE id=$1", [d.shipmentId]);
+  await expect(automaticallyPresentDocuments(seller.organizationId, d.paymentId)).rejects.toThrow('transport-document reference');
+  expect((await state(d)).documents_presented_at).toBeNull();
+  await query("UPDATE shipments SET transport_document_reference='AUTO-CIF-1' WHERE id=$1", [d.shipmentId]);
+  await Promise.all([
+    automaticallyPresentDocuments(seller.organizationId, d.paymentId),
+    automaticallyPresentDocuments(seller.organizationId, d.paymentId),
+  ]);
+  const first = await state(d);
+  expect(first.documents_presented_at).toBeTruthy();
+  expect(first.installments.some((i: { status: string }) => i.status === 'due')).toBe(true);
+  const deadline = first.installments.find((i: { due_trigger: string }) => i.due_trigger === 'documents_presented').due_at;
+  await automaticallyPresentDocuments(seller.organizationId, d.paymentId);
+  expect((await state(d)).installments.find((i: { due_trigger: string }) => i.due_trigger === 'documents_presented').due_at).toBe(deadline);
+  const audits = await query("SELECT actor_user_id,actor_organization_id,metadata FROM audit_events WHERE entity_id=$1 AND action='payment.documents.present'", [d.paymentId]);
+  expect(audits.rows).toHaveLength(1);
+  expect(audits.rows[0]).toMatchObject({ actor_user_id: null, actor_organization_id: seller.organizationId, metadata: { source: 'automatic_readiness' } });
+  expect((await post(`/payment-requests/${d.paymentId}/submit-documents`, outsider)).status).toBe(404);
+});
+
+
+nativeIt('rolls back automatic payment activation and presentation when its system audit fails', async () => {
+  const d = await deal('documentary_collection');
+  await documents(d);
+  expect((await progress(d, 'loaded')).status).toBe(200);
+  const failingAudit = vi.spyOn(audit, 'hashObject').mockImplementationOnce(() => { throw new Error('Audit hashing unavailable'); });
+  try {
+    await expect(automaticallyPresentDocuments(seller.organizationId, d.paymentId)).rejects.toThrow('Audit hashing unavailable');
+  } finally { failingAudit.mockRestore(); }
+  const failed = await state(d);
+  expect(failed.documents_presented_at).toBeNull();
+  expect(failed.installments.find((i: { due_trigger: string }) => i.due_trigger === 'documents_presented').status).toBe('awaiting_trigger');
+  expect((await query("SELECT id FROM audit_events WHERE entity_id=$1 AND action='payment.documents.present'", [d.paymentId])).rows).toHaveLength(0);
+  await automaticallyPresentDocuments(seller.organizationId, d.paymentId);
+  expect((await state(d)).documents_presented_at).toBeTruthy();
 });

@@ -144,7 +144,7 @@ export const english = {
   'shell.replay': 'Replay introduction',
   'shell.security': 'Account security',
   'shell.logout': 'Sign out',
-  'shell.corridor': 'Ghana → Netherlands corridor',
+  'shell.corridor': 'Global sourcing workspace',
   'shell.language': 'Language',
   'shell.scope': 'Navigation only',
   'shell.device':
@@ -300,7 +300,7 @@ export const french: Record<keyof typeof english, string> = {
   'shell.replay': 'Revoir la présentation',
   'shell.security': 'Sécurité du compte',
   'shell.logout': 'Se déconnecter',
-  'shell.corridor': 'Corridor Ghana → Pays-Bas',
+  'shell.corridor': 'Espace de sourcing international',
   'shell.language': 'Langue',
   'shell.scope': 'Navigation uniquement',
   'shell.device':

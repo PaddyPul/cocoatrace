@@ -1,3 +1,4 @@
+import { gotoWithNetworkRecovery } from './support/navigation';
 import { test, expect, type Page } from '@playwright/test';
 async function mock(
   page: Page,
@@ -142,7 +143,7 @@ test('farm certificate panel uses scoped pages and full count without embedded a
   page,
 }) => {
   const fixture = await mock(page);
-  await page.goto('/farms/farm-one');
+  await gotoWithNetworkRecovery(page, '/farms/farm-one');
   const panel = page.getByRole('region', { name: 'Farm certificate records', exact: true });
   await expect(
     panel.getByText('Certificates — 1005 accessible records', { exact: true }),
@@ -162,7 +163,7 @@ test('failed farm certificate read retries without claiming there are no certifi
   page,
 }) => {
   await mock(page, { fail: true });
-  await page.goto('/farms/farm-one');
+  await gotoWithNetworkRecovery(page, '/farms/farm-one');
   const panel = page.getByRole('region', { name: 'Farm certificate records', exact: true });
   await expect(panel.getByRole('alert')).toContainText('Farm certificates unavailable');
   await expect(panel.getByText('No certificates match', { exact: false })).toHaveCount(0);
@@ -171,7 +172,7 @@ test('failed farm certificate read retries without claiming there are no certifi
 });
 test('farm-only access never requests certificate pages or totals', async ({ page }) => {
   const fixture = await mock(page, { read: false });
-  await page.goto('/farms/farm-one');
+  await gotoWithNetworkRecovery(page, '/farms/farm-one');
   await expect(
     page.getByText('Certificate records are unavailable with your access.', { exact: true }),
   ).toBeVisible();
@@ -181,7 +182,7 @@ test('attestation selector retains an off-page choice across search and submits 
   page,
 }) => {
   const fixture = await mock(page);
-  await page.goto('/batches/batch-one');
+  await gotoWithNetworkRecovery(page, '/batches/batch-one');
   await page.getByRole('button', { name: 'Attest Batch', exact: true }).click();
   const panel = page.getByRole('region', { name: 'Attestation certificate selector', exact: true });
   await panel.getByRole('button', { name: 'Next attestation certificates', exact: true }).click();
@@ -206,7 +207,7 @@ test('malformed attestation choices are visible failures with selection disabled
   page,
 }) => {
   await mock(page, { malformed: true });
-  await page.goto('/batches/batch-one');
+  await gotoWithNetworkRecovery(page, '/batches/batch-one');
   await page.getByRole('button', { name: 'Attest Batch', exact: true }).click();
   const panel = page.getByRole('region', { name: 'Attestation certificate selector', exact: true });
   await expect(panel.getByRole('alert')).toContainText('Invalid page response');

@@ -285,19 +285,12 @@ test('delivery inspection controls precede collapsed fee details and have a dire
   ).toHaveAttribute('href', '#delivery-acceptance');
   const inspection = page.locator('#delivery-acceptance');
   await expect(inspection).toBeVisible();
-  const details = page
-    .locator('details')
-    .filter({ has: page.getByText('Platform fee details and receipt', { exact: true }) });
-  await expect(details).not.toHaveAttribute('open');
-  expect(
-    await inspection.evaluate((node) =>
-      Boolean(
-        node.compareDocumentPosition(
-          [...document.querySelectorAll('summary')].find(
-            (summary) => summary.textContent === 'Platform fee details and receipt',
-          )!.parentElement!,
-        ) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ),
-    ),
-  ).toBe(true);
+  await expect(page.getByRole('tab', { name: 'Delivery', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await page.getByRole('tab', { name: 'Platform fee', exact: true }).click();
+  await expect(inspection).toBeHidden();
+  await page.getByRole('link', { name: 'Inspect delivered goods', exact: true }).click();
+  await expect(inspection).toBeVisible();
 });

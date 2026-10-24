@@ -142,7 +142,7 @@ describe('separate platform fee action', () => {
       fee_payment_submitted: true,
     });
     expect(buildTradeActions([], [d], seller)[0]).toMatchObject({
-      title: 'Platform fee awaiting receipt verification',
+      title: 'Awaiting platform admin fee receipt verification',
       requiresAction: false,
     });
     expect(

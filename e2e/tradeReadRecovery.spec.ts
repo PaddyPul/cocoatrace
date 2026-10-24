@@ -65,7 +65,9 @@ for (const feature of [
       }
       return route.fulfill({ status: 503, json: { error: 'Supporting data unavailable' } });
     });
-    await page.goto(`/contracts/${contract}`);
+    await page.goto(
+      `/contracts/${contract}?tab=${feature.endpoint === 'delivery' ? 'delivery' : 'activity'}`,
+    );
     if (feature.endpoint === 'acceptance')
       await page.getByRole('button', { name: 'Review agreement version', exact: true }).click();
     const panel = page.getByRole('region', { name: feature.region, exact: true });

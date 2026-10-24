@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,6 +14,8 @@ import {
   Ship,
   WalletCards,
 } from 'lucide-react';
+import WorkspaceTabs, { WorkspacePanel } from '../components/trading/WorkspaceTabs';
+import DocumentReadiness from '../components/trading/DocumentReadiness';
 import DealNextAction from '../components/trading/DealNextAction';
 import FeeStatement from '../components/fees/FeeStatement';
 import AgreementAcceptance from '../components/trading/AgreementAcceptance';
@@ -56,6 +58,8 @@ const PLAN_LABELS: Record<string, string> = {
 export default function DealRoomPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [tabParams] = useSearchParams();
+  const [selectedWorkspaceTab, setSelectedWorkspaceTab] = useState<string | null>(null);
   const { user } = useAuthCtx();
   const { toast } = useToast();
   const [deal, setDeal] = useState<any>(null);
@@ -121,12 +125,33 @@ export default function DealRoomPage() {
         <div className="mt-4">
           <FeeStatement contractStatus={deal.status} contractId={deal.id} />
         </div>
-        <button className="btn mt-4" onClick={() => navigate(`/contracts/${deal.id}`)}>
+        <button
+          className="btn mt-4"
+          onClick={() => navigate(`/contracts/${deal.id}?tab=documents`)}
+        >
           View archived contract and documents
         </button>
       </Layout>
     );
 
+  const dealTabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'documents', label: 'Documents' },
+    { id: 'payments', label: 'Goods payment' },
+    { id: 'transport', label: 'Transport' },
+    { id: 'fees', label: 'Platform fee' },
+    { id: 'delivery', label: 'Delivery' },
+    { id: 'activity', label: 'Activity' },
+  ];
+  const requestedTab =
+    selectedWorkspaceTab ||
+    tabParams.get('tab') ||
+    (deal.nextAction?.id?.endsWith(':fee')
+      ? 'fees'
+      : deal.nextAction?.kind === 'delivery'
+        ? 'delivery'
+        : 'overview');
+  const activeTab = dealTabs.some((tab) => tab.id === requestedTab) ? requestedTab : 'overview';
   const total = Number(deal.payment_amount ?? Number(deal.quantity_kg) * Number(deal.price_per_kg));
   const termsReady = deal.payment_terms_status === 'agreed';
   const securityReady = deal.payment_plan !== 'bank_secured' || deal.security_status === 'verified';
@@ -183,7 +208,7 @@ export default function DealRoomPage() {
     <Layout
       currentPage="deal-room"
       actions={
-        <button className="btn" onClick={() => navigate(`/contracts/${deal.id}`)}>
+        <button className="btn" onClick={() => navigate(`/contracts/${deal.id}?tab=documents`)}>
           <Settings size={14} />
           Agreement & documents
         </button>
@@ -246,176 +271,234 @@ export default function DealRoomPage() {
             ?.payment_reference_external
         }
         run={run}
+        onShowDelivery={() => {
+          setSelectedWorkspaceTab('delivery');
+          requestAnimationFrame(() =>
+            document.getElementById('delivery-acceptance')?.scrollIntoView({ block: 'start' }),
+          );
+        }}
       />
 
-      {delivered && (
-        <div id="delivery-acceptance" className="mt-5 scroll-mt-6">
-          <DeliveryAcceptance
-            contractId={deal.id}
-            organizationId={user?.organizationId || ''}
-            onChanged={refresh}
-          />
-        </div>
-      )}
-      <details
-        className="mt-5 rounded-2xl border border-border p-4"
-        open={!delivered || deal.nextAction?.id?.endsWith(':fee')}
-      >
-        <summary className="cursor-pointer font-semibold">Platform fee details and receipt</summary>
-        <FeeStatement contractStatus={deal.status} contractId={deal.id} />
-      </details>
       <div className="mt-5">
-        <AgreementAcceptance contractId={deal.id} />
-        <DealActivity contractId={deal.id} />
-        <ContractCancellation
-          contractId={deal.id}
-          organizationId={user?.organizationId || ''}
-          onChanged={refresh}
-        />
-      </div>
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]">
-        <section className="space-y-5">
-          <div className="rounded-3xl border border-border bg-surface p-5 sm:p-6">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">
-                  Dispatch release
+        <WorkspaceTabs
+          label="Deal workspace"
+          tabs={dealTabs}
+          active={activeTab}
+          onChange={setSelectedWorkspaceTab}
+        >
+          <WorkspacePanel active={activeTab} id="overview">
+            {' '}
+            <div className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_.92fr]">
+              <section className="space-y-5">
+                <div className="rounded-3xl border border-border bg-surface p-5 sm:p-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">
+                        Dispatch release
+                      </div>
+                      <h3 className="mt-1 text-lg font-bold">
+                        What must be true before goods leave
+                      </h3>
+                    </div>
+                    <span className={`badge ${dispatchReady ? 'badge-green' : 'badge-amber'}`}>
+                      {dispatchReady ? 'Cleared' : 'Blocked'}
+                    </span>
+                  </div>
+                  <div className="mt-5 space-y-2">
+                    <Condition
+                      icon={FileText}
+                      title="Payment terms agreed"
+                      copy={PLAN_LABELS[deal.payment_plan] || pretty(deal.payment_plan)}
+                      done={termsReady}
+                    />
+                    <Condition
+                      icon={WalletCards}
+                      title="Required funds seller-verified"
+                      copy={`${fmtMoney(Number(deal.amount_confirmed || 0), deal.currency, deal.currency_minor_units)} confirmed of ${fmtMoney(Number(deal.dispatch_required_amount || 0), deal.currency, deal.currency_minor_units)} required before dispatch`}
+                      done={moneyReady}
+                    />
+                    <Condition
+                      icon={BadgeCheck}
+                      title="External bank security accepted by seller"
+                      copy={
+                        deal.payment_plan === 'bank_secured'
+                          ? `Security status: ${pretty(deal.security_status)}`
+                          : 'Not required for this payment plan'
+                      }
+                      done={securityReady}
+                    />
+                  </div>
+                  {termsReady &&
+                    Number(deal.dispatch_required_amount || 0) === 0 &&
+                    deal.payment_plan !== 'bank_secured' && (
+                      <div className="mt-4 rounded-2xl border border-blue-400/20 bg-blue-400/5 p-3 text-[11px] leading-5 text-blue-200">
+                        This plan intentionally permits dispatch before cash receipt. Payment
+                        becomes due{' '}
+                        {deal.payment_plan === 'pay_after_delivery'
+                          ? 'after delivery'
+                          : 'against the agreed trade documents'}
+                        .
+                      </div>
+                    )}
+                  {deal.dispatch_exception && (
+                    <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-400/5 p-3 text-[11px] text-amber-200">
+                      Exceptional dispatch was authorized: {deal.dispatch_exception_reason}
+                    </div>
+                  )}
                 </div>
-                <h3 className="mt-1 text-lg font-bold">What must be true before goods leave</h3>
-              </div>
-              <span className={`badge ${dispatchReady ? 'badge-green' : 'badge-amber'}`}>
-                {dispatchReady ? 'Cleared' : 'Blocked'}
-              </span>
-            </div>
-            <div className="mt-5 space-y-2">
-              <Condition
-                icon={FileText}
-                title="Payment terms agreed"
-                copy={PLAN_LABELS[deal.payment_plan] || pretty(deal.payment_plan)}
-                done={termsReady}
-              />
-              <Condition
-                icon={WalletCards}
-                title="Required funds seller-verified"
-                copy={`${fmtMoney(Number(deal.amount_confirmed || 0), deal.currency, deal.currency_minor_units)} confirmed of ${fmtMoney(Number(deal.dispatch_required_amount || 0), deal.currency, deal.currency_minor_units)} required before dispatch`}
-                done={moneyReady}
-              />
-              <Condition
-                icon={BadgeCheck}
-                title="External bank security accepted by seller"
-                copy={
-                  deal.payment_plan === 'bank_secured'
-                    ? `Security status: ${pretty(deal.security_status)}`
-                    : 'Not required for this payment plan'
-                }
-                done={securityReady}
-              />
-            </div>
-            {termsReady &&
-              Number(deal.dispatch_required_amount || 0) === 0 &&
-              deal.payment_plan !== 'bank_secured' && (
-                <div className="mt-4 rounded-2xl border border-blue-400/20 bg-blue-400/5 p-3 text-[11px] leading-5 text-blue-200">
-                  This plan intentionally permits dispatch before cash receipt. Payment becomes due{' '}
-                  {deal.payment_plan === 'pay_after_delivery'
-                    ? 'after delivery'
-                    : 'against the agreed trade documents'}
-                  .
+
+                <div className="rounded-3xl border border-border bg-surface p-5 sm:p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">
+                        Connected operations
+                      </div>
+                      <h3 className="mt-1 text-lg font-bold">Payment, documents and transport</h3>
+                    </div>
+                    <button className="btn btn-sm" onClick={exportLog}>
+                      <Download size={13} />
+                      Export log
+                    </button>
+                  </div>
+                  <div className="mt-4 grid gap-3 md:grid-cols-3">
+                    <Operation
+                      icon={WalletCards}
+                      title="Payment"
+                      value={<StatusBadge domain="payment" status={deal.payment_status} />}
+                      detail={`${fmtMoney(Number(deal.amount_confirmed || 0), deal.currency, deal.currency_minor_units)} confirmed`}
+                      action="Open schedule"
+                      onClick={() => navigate(`/payments/${deal.payment_request_id}`)}
+                    />
+                    <Operation
+                      icon={LockKeyhole}
+                      title="Controlled documents"
+                      value={controlledDocsReleased ? 'Released' : 'Protected'}
+                      detail={`${(deal.documents || []).length} shared document${(deal.documents || []).length === 1 ? '' : 's'}`}
+                      action="Manage documents"
+                      onClick={() => navigate(`/contracts/${deal.id}?tab=documents`)}
+                    />
+                    <Operation
+                      icon={Ship}
+                      title="Transport"
+                      value={<StatusBadge domain="transport" status={deal.current_milestone} />}
+                      detail={deal.transport_coordinator_name || 'Coordinator assigned'}
+                      action="Open transport"
+                      onClick={() => navigate(`/shipments/${deal.shipment_id}`)}
+                    />
+                  </div>
                 </div>
-              )}
-            {deal.dispatch_exception && (
-              <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-400/5 p-3 text-[11px] text-amber-200">
-                Exceptional dispatch was authorized: {deal.dispatch_exception_reason}
+              </section>
+
+              <section className="space-y-5">
+                <div className="rounded-3xl border border-border bg-surface p-5 sm:p-6">
+                  <div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">
+                    Commercial agreement
+                  </div>
+                  <h3 className="mt-1 text-lg font-bold">Trade agreement summary</h3>
+                  <dl className="mt-5 space-y-3 text-xs">
+                    <Term
+                      label="Quantity"
+                      value={`${Number(deal.quantity_kg).toLocaleString()} kg`}
+                    />
+                    <Term
+                      label="Unit price"
+                      value={fmtMoney(Number(deal.price_per_kg), deal.currency, 4) + '/kg'}
+                    />
+                    <Term
+                      label="Trade value"
+                      value={fmtMoney(total, deal.currency, deal.currency_minor_units)}
+                    />
+                    <Term label="Incoterm" value={deal.incoterm} />
+                    <Term
+                      label="Payment plan"
+                      value={PLAN_LABELS[deal.payment_plan] || pretty(deal.payment_plan)}
+                    />
+                    <Term
+                      label="Platform fee"
+                      value={`${fmtMoney(Number(deal.platform_fee_amount || 0), deal.currency, deal.currency_minor_units)} · ${deal.fee_payer || 'seller'}`}
+                    />
+                  </dl>
+                  <button
+                    className="btn mt-5 w-full justify-center"
+                    onClick={() => navigate(`/contracts/${deal.id}?tab=documents`)}
+                  >
+                    <FileText size={14} />
+                    Agreement & document details
+                  </button>
+                </div>
+                <div className="flex items-start gap-3 rounded-3xl border border-border bg-surface-darker p-5 text-xs leading-5 text-text-muted">
+                  <Landmark size={18} className="mt-0.5 shrink-0 text-brand-400" />
+                  <div>
+                    <div className="font-semibold text-white">
+                      Funds remain with regulated providers
+                    </div>
+                    <p className="mt-1">
+                      BetterTrade coordinates conditions, references and verification. It does not
+                      hold customer money or present itself as escrow.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </WorkspacePanel>
+          <WorkspacePanel active={activeTab} id="documents">
+            <DocumentReadiness contract={deal} onRefresh={refresh} />
+            <button
+              className="btn btn-primary"
+              onClick={() => navigate(`/contracts/${deal.id}?tab=documents`)}
+            >
+              Add, review and present trade documents
+            </button>
+          </WorkspacePanel>
+          <WorkspacePanel active={activeTab} id="payments">
+            <p>Goods payments and bank security are separate from the platform fee.</p>
+            <button
+              className="btn btn-primary"
+              onClick={() => navigate(`/payments/${deal.payment_request_id}`)}
+            >
+              Open goods payment and bank security
+            </button>
+          </WorkspacePanel>
+          <WorkspacePanel active={activeTab} id="transport">
+            <StatusBadge domain="transport" status={deal.current_milestone} />
+            <button
+              className="btn btn-primary"
+              onClick={() => navigate(`/shipments/${deal.shipment_id}`)}
+            >
+              Open transport workspace
+            </button>
+          </WorkspacePanel>
+          <WorkspacePanel active={activeTab} id="fees">
+            <FeeStatement contractStatus={deal.status} contractId={deal.id} />
+          </WorkspacePanel>
+          <WorkspacePanel active={activeTab} id="delivery">
+            {' '}
+            {delivered && (
+              <div id="delivery-acceptance" className="mt-5 scroll-mt-6">
+                <DeliveryAcceptance
+                  contractId={deal.id}
+                  organizationId={user?.organizationId || ''}
+                  onChanged={refresh}
+                />
               </div>
             )}
-          </div>
-
-          <div className="rounded-3xl border border-border bg-surface p-5 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">
-                  Connected operations
-                </div>
-                <h3 className="mt-1 text-lg font-bold">Payment, documents and transport</h3>
-              </div>
-              <button className="btn btn-sm" onClick={exportLog}>
-                <Download size={13} />
-                Export log
-              </button>
-            </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
-              <Operation
-                icon={WalletCards}
-                title="Payment"
-                value={<StatusBadge domain="payment" status={deal.payment_status} />}
-                detail={`${fmtMoney(Number(deal.amount_confirmed || 0), deal.currency, deal.currency_minor_units)} confirmed`}
-                action="Open schedule"
-                onClick={() => navigate(`/payments/${deal.payment_request_id}`)}
-              />
-              <Operation
-                icon={LockKeyhole}
-                title="Controlled documents"
-                value={controlledDocsReleased ? 'Released' : 'Protected'}
-                detail={`${(deal.documents || []).length} shared document${(deal.documents || []).length === 1 ? '' : 's'}`}
-                action="Manage documents"
-                onClick={() => navigate(`/contracts/${deal.id}`)}
-              />
-              <Operation
-                icon={Ship}
-                title="Transport"
-                value={<StatusBadge domain="transport" status={deal.current_milestone} />}
-                detail={deal.transport_coordinator_name || 'Coordinator assigned'}
-                action="Open transport"
-                onClick={() => navigate(`/shipments/${deal.shipment_id}`)}
+            {!delivered && (
+              <p>Delivery acceptance becomes available after physical delivery is recorded.</p>
+            )}
+          </WorkspacePanel>
+          <WorkspacePanel active={activeTab} id="activity">
+            {' '}
+            <div className="mt-5">
+              <AgreementAcceptance contractId={deal.id} />
+              <DealActivity contractId={deal.id} />
+              <ContractCancellation
+                contractId={deal.id}
+                organizationId={user?.organizationId || ''}
+                onChanged={refresh}
               />
             </div>
-          </div>
-        </section>
-
-        <section className="space-y-5">
-          <div className="rounded-3xl border border-border bg-surface p-5 sm:p-6">
-            <div className="text-[10px] font-bold uppercase tracking-[.16em] text-brand-400">
-              Commercial agreement
-            </div>
-            <h3 className="mt-1 text-lg font-bold">Trade agreement summary</h3>
-            <dl className="mt-5 space-y-3 text-xs">
-              <Term label="Quantity" value={`${Number(deal.quantity_kg).toLocaleString()} kg`} />
-              <Term
-                label="Unit price"
-                value={fmtMoney(Number(deal.price_per_kg), deal.currency, 4) + '/kg'}
-              />
-              <Term
-                label="Trade value"
-                value={fmtMoney(total, deal.currency, deal.currency_minor_units)}
-              />
-              <Term label="Incoterm" value={deal.incoterm} />
-              <Term
-                label="Payment plan"
-                value={PLAN_LABELS[deal.payment_plan] || pretty(deal.payment_plan)}
-              />
-              <Term
-                label="Platform fee"
-                value={`${fmtMoney(Number(deal.platform_fee_amount || 0), deal.currency, deal.currency_minor_units)} · ${deal.fee_payer || 'seller'}`}
-              />
-            </dl>
-            <button
-              className="btn mt-5 w-full justify-center"
-              onClick={() => navigate(`/contracts/${deal.id}`)}
-            >
-              <FileText size={14} />
-              Agreement & document details
-            </button>
-          </div>
-          <div className="flex items-start gap-3 rounded-3xl border border-border bg-surface-darker p-5 text-xs leading-5 text-text-muted">
-            <Landmark size={18} className="mt-0.5 shrink-0 text-brand-400" />
-            <div>
-              <div className="font-semibold text-white">Funds remain with regulated providers</div>
-              <p className="mt-1">
-                BetterTrade coordinates conditions, references and verification. It does not hold
-                customer money or present itself as escrow.
-              </p>
-            </div>
-          </div>
-        </section>
+          </WorkspacePanel>
+        </WorkspaceTabs>
       </div>
     </Layout>
   );

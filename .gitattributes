@@ -588,3 +588,15 @@ e2e/investorRehearsalFeedback.spec.ts text eol=lf
 web/src/components/fees/FeeRegister.tsx text eol=lf
 web/src/components/fees/FinanceReviewQueue.tsx text eol=lf
 web/src/components/trading/QuantityCoverage.tsx text eol=lf
+
+web/src/components/trading/DocumentReadiness.tsx text eol=lf
+web/src/components/trading/WorkspaceTabs.tsx text eol=lf
+
+api/src/modules/payments/automaticDocuments*.ts text eol=lf
+api/src/modules/payments/documentSubmission.test.ts text eol=lf
+api/src/migrations/054_automatic_document_presentation.ts text eol=lf
+
+e2e/guidedTradeWorkspaces.spec.ts text eol=lf
+
+e2e/support/navigation.ts text eol=lf
+scripts/browser-navigation.test.mjs text eol=lf

@@ -31,3 +31,8 @@ Identical retries return the recorded state. Conflicting references/security ove
 `paymentPlans.spec.ts` adds four real UI journeys to the existing full-prepayment journey. Fixtures create real accounts, inventory and deals. Payment actions, proof uploads, documents, security acceptance and transport progress use actual UI/API, with no mocked routes or database mutation shortcuts for the workflow. Assertions check exact custody, quantities, settlement and fee counts. No new long manual test is required for this wave.
 
 Still separate backlog work: overdue reminders, disputes/reversals, fee tax/invoice collection and regulated-provider verification. This release does not assert those capabilities are complete.
+
+
+## Automatic document submission
+
+The guided-workspaces release removes the separate presentation click from the customer journey. The server worker submits a complete eligible set automatically, while preserving the same agreed-plan, supplier-file, storage, bank-security, handover and transport-reference checks. The reference can be supplied beside the checklist by the assigned transport coordinator. The old submission API remains seller-authorized for compatibility. See [Guided trade workspaces](GUIDED_TRADE_WORKSPACES.md) for prerequisites, monitored recovery, system audit attribution and migration/rollback implications. Automatic submission activates only the agreed document-triggered installments; it does not verify payment, certify files, accept goods or settle the trade.

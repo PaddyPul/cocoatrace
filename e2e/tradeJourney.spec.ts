@@ -154,6 +154,7 @@ test('full prepayment trade: offer, verified payment gate, document sharing, del
     ).toBeVisible();
 
     await supplier.getByRole('button', { name: 'Configure protection' }).click();
+    await supplier.getByRole('tab', { name: 'Goods payment', exact: true }).click();
     await supplier.getByRole('button', { name: 'Set payment protection', exact: true }).click();
     await modalField(supplier, 'Plan').selectOption('pay_before_dispatch');
     await modal(supplier).getByRole('button', { name: 'Propose terms' }).click();
@@ -217,7 +218,7 @@ test('full prepayment trade: offer, verified payment gate, document sharing, del
     await modal(buyer).getByRole('button', { name: 'Save arrangement' }).click();
     await expect(modal(buyer)).toHaveCount(0);
 
-    await supplier.goto(`/contracts/${contract.id}`);
+    await supplier.goto(`/contracts/${contract.id}?tab=documents`);
     await supplier.getByRole('button', { name: 'Add document', exact: true }).click();
     await modalField(supplier, 'Document type').selectOption('commercial_invoice');
     await modalField(supplier, 'File').setInputFiles({
@@ -227,7 +228,7 @@ test('full prepayment trade: offer, verified payment gate, document sharing, del
     });
     await modal(supplier).getByRole('button', { name: 'Share document', exact: true }).click();
     await expect(supplier.getByText('trade-invoice.pdf', { exact: true })).toBeVisible();
-    await buyer.goto(`/contracts/${contract.id}`);
+    await buyer.goto(`/contracts/${contract.id}?tab=documents`);
     const downloadEvent = buyer.waitForEvent('download');
     await buyer.getByRole('button', { name: 'Download', exact: true }).click();
     expect((await downloadEvent).suggestedFilename()).toBe('trade-invoice.pdf');

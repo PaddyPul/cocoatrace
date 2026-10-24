@@ -89,7 +89,7 @@ test('damaged delivery stays committed through supplier resolution and buyer app
       return snapshot;
     };
     await held();
-    await buyer.goto(`/deal-room/${contract.id}`);
+    await buyer.goto(`/deal-room/${contract.id}?tab=delivery`);
     const buyerInspection = inspection(buyer);
     await buyerInspection.getByLabel('Discrepancy type', { exact: true }).selectOption('damage');
     await buyerInspection.getByLabel('Actual received quantity (kg)', { exact: true }).fill('4');
@@ -127,7 +127,7 @@ test('damaged delivery stays committed through supplier resolution and buyer app
     ).toBeVisible();
     await held();
 
-    await supplier.goto(`/deal-room/${contract.id}`);
+    await supplier.goto(`/deal-room/${contract.id}?tab=delivery`);
     const supplierInspection = inspection(supplier);
     await expect(
       supplierInspection.getByRole('button', { name: 'Approve delivery resolution', exact: true }),

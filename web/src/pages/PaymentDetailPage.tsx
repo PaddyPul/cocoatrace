@@ -343,16 +343,9 @@ export default function PaymentDetailPage() {
                 !p.documents_presented_at && (
                   <button
                     className="btn btn-primary w-full justify-center text-xs"
-                    disabled={Boolean(busy)}
-                    onClick={() =>
-                      act(
-                        'documents',
-                        () => payments.submitDocuments(p.id),
-                        'Documents presented for payment',
-                      )
-                    }
+                    onClick={() => navigate(`/contracts/${p.contract_id}?tab=documents`)}
                   >
-                    <FileText size={14} /> Present document set
+                    <FileText size={14} /> View automatic document submission checklist
                   </button>
                 )}
               {p.status === 'settled' && (

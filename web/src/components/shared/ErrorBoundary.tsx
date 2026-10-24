@@ -14,13 +14,14 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (!this.state.error) return this.props.children;
+    const chunkFailure = /Failed to fetch dynamically imported module|Importing a module script failed|Loading chunk .* failed/i.test(this.state.error.message);
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="bg-surface border border-red-500/30 rounded p-6 max-w-lg text-center">
           <div className="text-3xl mb-3">⚠</div>
-          <h2 className="text-sm font-semibold text-red-400 mb-2">Something went wrong</h2>
+          <h2 className="text-sm font-semibold text-red-400 mb-2">{chunkFailure ? 'This page could not finish loading' : 'Something went wrong'}</h2>
           <p className="text-xs text-text-muted mb-4 font-mono break-all">
-            {this.state.error.message}
+            {chunkFailure ? 'The application may have updated, or the connection was interrupted. Reload this page to load the current version. No pending action was submitted by this load failure.' : this.state.error.message}
           </p>
           <button
             className="btn btn-sm"
