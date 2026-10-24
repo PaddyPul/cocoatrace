@@ -1,3 +1,4 @@
+import { compareOrdinal } from './ordinal-order.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -198,8 +199,10 @@ export function validateRegister(register, actual, root = repositoryRoot) {
     throw new Error(
       'Authorization route register differs from source. Review and update it before release.',
     );
-  const sources = [...new Set(actual.map((route) => route.source))].sort();
-  if (JSON.stringify(Object.keys(register.policies).sort()) !== JSON.stringify(sources))
+  const sources = [...new Set(actual.map((route) => route.source))].sort(compareOrdinal);
+  if (
+    JSON.stringify(Object.keys(register.policies).sort(compareOrdinal)) !== JSON.stringify(sources)
+  )
     throw new Error('Every route source needs exactly one reviewed resource-policy entry');
   for (const [source, policy] of Object.entries(register.policies)) {
     if (

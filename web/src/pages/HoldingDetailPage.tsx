@@ -1,3 +1,4 @@
+import WorkspaceDialog from '../components/shared/WorkspaceDialog';
 import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -261,13 +262,18 @@ export default function HoldingDetailPage() {
       </div>
 
       {showTransfer && (
-        <div className="modal-overlay" onClick={closeTransfer}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <WorkspaceDialog label="Transfer Custody" onClose={closeTransfer}>
+          <div className="modal">
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="modal-title">Transfer Custody</div>
               </div>
-              <button className="btn btn-sm" onClick={closeTransfer}>
+              <button
+                aria-label="Close dialog"
+                type="button"
+                className="btn btn-sm"
+                onClick={closeTransfer}
+              >
                 <X size={14} />
               </button>
             </div>
@@ -315,7 +321,7 @@ export default function HoldingDetailPage() {
               </div>
             </div>
           </div>
-        </div>
+        </WorkspaceDialog>
       )}
     </Layout>
   );

@@ -1,3 +1,4 @@
+import { compareOrdinal } from './ordinal-order.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -45,7 +46,7 @@ export function controllerViolations(source) {
     ts.forEachChild(node, inspect);
   }
   inspect(file);
-  return [...violations].sort();
+  return [...violations].sort(compareOrdinal);
 }
 export function checkControllerBoundaries(root) {
   let count = 0;

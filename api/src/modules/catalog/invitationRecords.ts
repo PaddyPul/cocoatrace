@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import { AppError, ValidationError } from '../../errors';
 import { Actor } from '../../services/resourcePolicy';
 import { Execute, literal, pageResult, parsePage, text } from './paging';
@@ -36,7 +37,7 @@ export async function invitationPage(
   const filter = status(parameters);
   const input = parsePage(
     parameters,
-    ['invitations', actor.organizationId, [...actor.permissions].sort(), filter],
+    ['invitations', actor.organizationId, [...actor.permissions].sort(compareOrdinal), filter],
     ['status'],
   );
   const rows = (

@@ -1,3 +1,4 @@
+import WorkspaceDialog from '../components/shared/WorkspaceDialog';
 import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import FarmPlots from '../components/catalog/FarmPlots';
 import FarmCertificates from '../components/catalog/FarmCertificates';
@@ -234,13 +235,18 @@ export default function FarmDetailPage() {
       </div>
 
       {showPlot && (
-        <div className="modal-overlay" onClick={() => !plotLoading && closePlot()}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <WorkspaceDialog label="Add Plot" onClose={() => !plotLoading && closePlot()}>
+          <div className="modal">
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="modal-title">Add Plot</div>
               </div>
-              <button className="btn btn-sm" onClick={closePlot}>
+              <button
+                aria-label="Close dialog"
+                type="button"
+                className="btn btn-sm"
+                onClick={closePlot}
+              >
                 <X size={14} />
               </button>
             </div>
@@ -311,7 +317,7 @@ export default function FarmDetailPage() {
               </div>
             </div>
           </div>
-        </div>
+        </WorkspaceDialog>
       )}
     </Layout>
   );

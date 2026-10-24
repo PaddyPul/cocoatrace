@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import type { QueryResultRow } from 'pg';
 import { AppError, ValidationError } from '../../errors';
 import { requirePlatformAccessReviewer } from '../organizationAccess/policy';
@@ -58,7 +59,12 @@ export async function accessApplicationPage(
   const filter = status(parameters);
   const input = parsePage(
     parameters,
-    ['access-applications', actor.organizationId, [...actor.permissions].sort(), filter],
+    [
+      'access-applications',
+      actor.organizationId,
+      [...actor.permissions].sort(compareOrdinal),
+      filter,
+    ],
     ['status'],
   );
   const ids = (

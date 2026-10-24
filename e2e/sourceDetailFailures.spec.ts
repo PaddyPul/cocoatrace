@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { gotoWithNetworkRecovery } from './support/navigation';
 
 async function workspace(page: Page) {
   const user = {
@@ -56,7 +57,7 @@ for (const kind of ['farm', 'holding', 'batch'] as const) {
     await page.route('**/api/product-profiles/batch/**', (route) =>
       route.fulfill({ status: 404, json: { error: 'Not found' } }),
     );
-    await page.goto(`/${plural}/${kind}-review`);
+    await gotoWithNetworkRecovery(page, `/${plural}/${kind}-review`);
     await expect(page.getByRole('alert')).toContainText(`Invalid ${kind} response.`);
     malformed = false;
     await page.getByRole('button', { name: `Retry ${kind}`, exact: true }).click();
@@ -98,7 +99,7 @@ test('failed batch product identity stays unknown and cannot invite duplicate cr
         : { status: 404, json: { error: 'Not found' } },
     ),
   );
-  await page.goto('/batches/batch-review');
+  await gotoWithNetworkRecovery(page, '/batches/batch-review');
   await expect(
     page.getByRole('alert').filter({ hasText: 'Product identity unavailable' }),
   ).toContainText('Product identity timed out');
@@ -156,7 +157,7 @@ test('confirmed publication with failed refresh shows unknown identity without r
     published = true;
     return route.fulfill({ json: { id: 'profile-review' } });
   });
-  await page.goto('/batches/batch-review');
+  await gotoWithNetworkRecovery(page, '/batches/batch-review');
   await page.getByRole('button', { name: 'Publish & activate QR', exact: true }).click();
   await page
     .getByRole('dialog', { name: 'Review public product publication', exact: true })
@@ -217,7 +218,7 @@ test('supply refresh preserves a drafted offer, blocks stale submission and clea
     writes += 1;
     return route.fulfill({ status: 409, json: { error: 'Unexpected write' } });
   });
-  await page.goto('/listing/listing-resilience');
+  await gotoWithNetworkRecovery(page, '/listing/listing-resilience');
   const quantity = page.locator('input[type="number"]').first();
   await quantity.fill('6');
   status = 503;
@@ -253,7 +254,7 @@ test('malformed shortlist is an explicit read failure and preserves device bytes
   await page.addInitScript(() =>
     sessionStorage.setItem('ct_shortlisted_listings:detail-user', '{invalid'),
   );
-  await page.goto('/source/compare');
+  await gotoWithNetworkRecovery(page, '/source/compare');
   await expect(page.getByRole('alert')).toContainText('shortlist could not be read');
   await expect(page.getByText('Nothing to compare yet', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Retry comparison', exact: true })).toBeVisible();
@@ -282,7 +283,7 @@ test('farm batch aggregate failure remains unknown and its retry reloads totals'
         : { json: { count: 1005, recorded_quantity_kg: '1250.000' } },
     );
   });
-  await page.goto('/farms/farm-review');
+  await gotoWithNetworkRecovery(page, '/farms/farm-review');
   await expect(page.getByRole('heading', { name: 'Reviewed farm', exact: true })).toBeVisible();
   const history = page.getByRole('region', { name: 'Farm batch history', exact: true });
   await expect(history.getByRole('alert')).toContainText('Batch totals unavailable');

@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import { authenticateReviewers, lockAccessDecisions, lockReviewerAssurance } from './reviewers';
 import { inDatabaseTransaction } from '../../services/databaseTransaction';
 import { recordAudit } from '../../services/auditWriter';
@@ -20,12 +21,12 @@ export async function approveRecovery(
     // Reviewers and target share deterministic organization/user lock order.
     const orgs = [
       ...new Set([target.organization_id, ...actors.map((actor) => actor.organizationId)]),
-    ].sort();
+    ].sort(compareOrdinal);
     await client.query(
       'SELECT id FROM organizations WHERE id=ANY($1::uuid[]) ORDER BY id FOR SHARE',
       [orgs],
     );
-    const ids = [targetId, ...actors.map((actor) => actor.id)].sort();
+    const ids = [targetId, ...actors.map((actor) => actor.id)].sort(compareOrdinal);
     await client.query('SELECT id FROM users WHERE id=ANY($1::uuid[]) ORDER BY id FOR UPDATE', [
       ids,
     ]);

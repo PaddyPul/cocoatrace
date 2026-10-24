@@ -46,7 +46,7 @@ export default function ListingLifecycle({
     }
   }
   return (
-    <div onClick={(e) => e.stopPropagation()} className="space-y-2 text-xs">
+    <div className="space-y-2 text-xs">
       <p>
         {expired ? 'Expired' : listing.expires_at ? 'Expires' : 'Legacy listing: no expiry'}
         {listing.expires_at ? ` · ${new Date(listing.expires_at).toLocaleString()}` : ''}

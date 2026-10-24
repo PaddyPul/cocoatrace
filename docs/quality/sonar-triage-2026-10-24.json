@@ -1,11 +1,10 @@
 {
   "baseline": "User-provided SonarCloud export, 2026-10-24; all 211 OPEN issues returned on one page. Not a fresh scan of merged main.",
-  "baseCommit": "e2539b288bdb6de0659b95139b8757747250575a",
-  "scope": "Second correction on merged PR #151. Batch v1:31; batch v2:58. No issue is marked closed without a fresh scan.",
+  "baseCommit": "d26a278d764d0070e48a614b2e700951084e1bb1",
+  "scope": "Batch v3 adds 76 source corrections. All 211 baseline IDs have a source correction or a documented context review, but none is claimed closed without Sonar evidence.",
   "summary": {
-    "OPEN_REVIEW_REQUIRED": 97,
-    "IMPLEMENTED_PENDING_VERIFICATION": 89,
-    "CONTEXT_REVIEWED_NOT_DISMISSED": 25
+    "IMPLEMENTED_PENDING_VERIFICATION": 165,
+    "CONTEXT_REVIEWED_NOT_DISMISSED": 46
   },
   "issues": [
     {
@@ -13,16 +12,18 @@
       "rule": "typescript:S8786",
       "path": "api/src/services/sourcingStructurer.ts",
       "baselineLine": 37,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Token-based quantity/material/delivery parsing replaces the four flagged backtracking regex sites; preserve arbitrary crops, units, qualifiers and unresolved review fields.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUkGdA8JAur1g-36",
       "rule": "typescript:S8786",
       "path": "api/src/services/sourcingStructurer.ts",
       "baselineLine": 38,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Token-based quantity/material/delivery parsing replaces the four flagged backtracking regex sites; preserve arbitrary crops, units, qualifiers and unresolved review fields.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUnodA8JAur1g-5Z",
@@ -84,7 +85,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 18,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-53",
@@ -92,7 +95,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 22,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-54",
@@ -100,7 +105,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 23,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-55",
@@ -108,7 +115,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 26,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-56",
@@ -116,7 +125,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 30,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-57",
@@ -124,7 +135,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 46,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-58",
@@ -132,7 +145,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 70,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-59",
@@ -140,7 +155,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 75,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-5-",
@@ -166,7 +183,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 91,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6B",
@@ -174,7 +193,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 96,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6C",
@@ -182,7 +203,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 98,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6D",
@@ -190,7 +213,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 100,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6E",
@@ -198,7 +223,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 104,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6F",
@@ -206,7 +233,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 117,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6G",
@@ -214,7 +243,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 118,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6H",
@@ -222,7 +253,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 119,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6I",
@@ -230,7 +263,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 120,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6J",
@@ -238,7 +273,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 124,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6K",
@@ -246,7 +283,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 125,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6L",
@@ -254,7 +293,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 131,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6M",
@@ -262,7 +303,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 133,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6N",
@@ -279,7 +322,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 136,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6P",
@@ -287,7 +332,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 140,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6Q",
@@ -295,7 +342,9 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 141,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6R",
@@ -303,39 +352,49 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 149,
       "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
-      "note": "Fixed local Moto endpoint and dummy rehearsal credentials; no real AWS endpoint is configurable here. Retain for explicit Sonar disposition review."
+      "note": "Fixed Moto localhost endpoint, isolated disposable container, synthetic bucket/data and explicit dummy credentials. No configurable real S3 target. ExpectedBucketOwner/long-term real credential threat is outside this helper. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_MOTO_ONLY_FALSE_POSITIVE"
     },
     {
       "id": "AaFuYUpDdA8JAur1g-6c",
       "rule": "javascript:S4036",
       "path": "scripts/run-recovery-tests.mjs",
       "baselineLine": 313,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Fixed git/docker command names, argument arrays and trusted local/CI toolchain PATH; these runners are not reachable as HTTP process-launch APIs. Preserve intentional fake-PATH test harnesses. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_ACCEPTED_LOCAL_TOOLCHAIN"
     },
     {
       "id": "AaFuYUomdA8JAur1g-6S",
       "rule": "javascript:S4036",
       "path": "scripts/run-release-checks.mjs",
       "baselineLine": 112,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Fixed git/docker command names, argument arrays and trusted local/CI toolchain PATH; these runners are not reachable as HTTP process-launch APIs. Preserve intentional fake-PATH test harnesses. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_ACCEPTED_LOCAL_TOOLCHAIN"
     },
     {
       "id": "AaFuYUowdA8JAur1g-6W",
       "rule": "javascript:S4036",
       "path": "scripts/secret-scan.mjs",
       "baselineLine": 109,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Fixed git/docker command names, argument arrays and trusted local/CI toolchain PATH; these runners are not reachable as HTTP process-launch APIs. Preserve intentional fake-PATH test harnesses. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_ACCEPTED_LOCAL_TOOLCHAIN"
     },
     {
       "id": "AaFuYUowdA8JAur1g-6X",
       "rule": "javascript:S4036",
       "path": "scripts/secret-scan.mjs",
       "baselineLine": 162,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Fixed git/docker command names, argument arrays and trusted local/CI toolchain PATH; these runners are not reachable as HTTP process-launch APIs. Preserve intentional fake-PATH test harnesses. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_ACCEPTED_LOCAL_TOOLCHAIN"
     },
     {
       "id": "AaFuYUh4dA8JAur1g-3g",
@@ -351,8 +410,9 @@
       "rule": "javascript:S2871",
       "path": "scripts/controller-boundaries.mjs",
       "baselineLine": 48,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmmdA8JAur1g-4q",
@@ -377,8 +437,9 @@
       "rule": "typescript:S6848",
       "path": "web/src/components/catalog/CertificateRecordsPage.tsx",
       "baselineLine": 340,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUoCdA8JAur1g-5h",
@@ -430,8 +491,9 @@
       "rule": "typescript:S6848",
       "path": "web/src/pages/AccessApplicationsPage.tsx",
       "baselineLine": 340,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUnVdA8JAur1g-5O",
@@ -510,40 +572,45 @@
       "rule": "typescript:S6848",
       "path": "web/src/pages/ContractDetailPage.tsx",
       "baselineLine": 989,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmFdA8JAur1g-4V",
       "rule": "typescript:S6848",
       "path": "web/src/pages/ContractDetailPage.tsx",
       "baselineLine": 990,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUm6dA8JAur1g-46",
       "rule": "typescript:S6848",
       "path": "web/src/pages/FarmDetailPage.tsx",
       "baselineLine": 237,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUnAdA8JAur1g-49",
       "rule": "typescript:S6848",
       "path": "web/src/pages/HoldingDetailPage.tsx",
       "baselineLine": 264,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUnSdA8JAur1g-5N",
       "rule": "typescript:S6848",
       "path": "web/src/pages/MyListingsPage.tsx",
       "baselineLine": 126,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmTdA8JAur1g-4h",
@@ -577,16 +644,18 @@
       "rule": "typescript:S6848",
       "path": "web/src/pages/RecallCenterPage.tsx",
       "baselineLine": 591,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmYdA8JAur1g-4l",
       "rule": "typescript:S6848",
       "path": "web/src/pages/RecallCenterPage.tsx",
       "baselineLine": 592,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUm9dA8JAur1g-48",
@@ -638,40 +707,45 @@
       "rule": "typescript:S6848",
       "path": "web/src/pages/ShipmentDetailPage.tsx",
       "baselineLine": 663,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUnOdA8JAur1g-5K",
       "rule": "typescript:S6848",
       "path": "web/src/pages/ShipmentDetailPage.tsx",
       "baselineLine": 664,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUnFdA8JAur1g-4_",
       "rule": "typescript:S6848",
       "path": "web/src/pages/SourceBatchesPage.tsx",
       "baselineLine": 246,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmudA8JAur1g-4u",
       "rule": "typescript:S6848",
       "path": "web/src/pages/SourceFarmsPage.tsx",
       "baselineLine": 260,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmudA8JAur1g-4y",
       "rule": "typescript:S6848",
       "path": "web/src/pages/SourceFarmsPage.tsx",
       "baselineLine": 363,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmqdA8JAur1g-4s",
@@ -696,16 +770,18 @@
       "rule": "typescript:S2871",
       "path": "api/src/modules/feeEnforcement/service.ts",
       "baselineLine": 153,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUi6dA8JAur1g-3z",
       "rule": "typescript:S2871",
       "path": "api/src/modules/feeEnforcement/service.ts",
       "baselineLine": 309,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUoCdA8JAur1g-5i",
@@ -748,24 +824,29 @@
       "rule": "typescript:S2871",
       "path": "api/src/modules/documentReview/service.ts",
       "baselineLine": 243,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUopdA8JAur1g-6T",
       "rule": "javascript:S4036",
       "path": "scripts/pilot-load.mjs",
       "baselineLine": 31,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Fixed git/docker command names, argument arrays and trusted local/CI toolchain PATH; these runners are not reachable as HTTP process-launch APIs. Preserve intentional fake-PATH test harnesses. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_ACCEPTED_LOCAL_TOOLCHAIN"
     },
     {
       "id": "AaFuYUo4dA8JAur1g-6Z",
       "rule": "javascript:S4036",
       "path": "scripts/recall-drill.mjs",
       "baselineLine": 27,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Fixed git/docker command names, argument arrays and trusted local/CI toolchain PATH; these runners are not reachable as HTTP process-launch APIs. Preserve intentional fake-PATH test harnesses. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_ACCEPTED_LOCAL_TOOLCHAIN"
     },
     {
       "id": "AaFuYUn7dA8JAur1g-5f",
@@ -799,8 +880,9 @@
       "rule": "typescript:S2871",
       "path": "web/src/domains/savedFilters/storage.ts",
       "baselineLine": 56,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmydA8JAur1g-42",
@@ -852,8 +934,9 @@
       "rule": "typescript:S6848",
       "path": "web/src/components/listings/ListingLifecycle.tsx",
       "baselineLine": 49,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUn-dA8JAur1g-5g",
@@ -878,72 +961,82 @@
       "rule": "javascript:S2871",
       "path": "scripts/authorization-register.mjs",
       "baselineLine": 201,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUosdA8JAur1g-6V",
       "rule": "javascript:S2871",
       "path": "scripts/authorization-register.mjs",
       "baselineLine": 202,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUiYdA8JAur1g-3r",
       "rule": "typescript:S2871",
       "path": "api/src/modules/operations/alerts.ts",
       "baselineLine": 21,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUiYdA8JAur1g-3s",
       "rule": "typescript:S2871",
       "path": "api/src/modules/operations/alerts.ts",
       "baselineLine": 70,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUibdA8JAur1g-3t",
       "rule": "typescript:S2871",
       "path": "api/src/modules/operations/incidentSignals.ts",
       "baselineLine": 46,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUhsdA8JAur1g-3d",
       "rule": "typescript:S2871",
       "path": "api/src/modules/recall/response.ts",
       "baselineLine": 140,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUpJdA8JAur1g-6p",
       "rule": "githubactions:S6505",
       "path": ".github/workflows/ci.yml",
       "baselineLine": 243,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "CI and Bash setup install the locked dependency graph with npm ci --ignore-scripts. Clean install, API tests and builds verify the supported path without lifecycle hooks.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUjbdA8JAur1g-30",
       "rule": "typescript:S2871",
       "path": "api/src/modules/delivery/workflow.ts",
       "baselineLine": 210,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUpAdA8JAur1g-6a",
       "rule": "javascript:S4036",
       "path": "scripts/run-evidence-stress.mjs",
       "baselineLine": 490,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Fixed git/docker command names, argument arrays and trusted local/CI toolchain PATH; these runners are not reachable as HTTP process-launch APIs. Preserve intentional fake-PATH test harnesses. Reviewer disposition required.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_ACCEPTED_LOCAL_TOOLCHAIN"
     },
     {
       "id": "AaFuYUkkdA8JAur1g-3-",
@@ -968,48 +1061,54 @@
       "rule": "typescript:S2871",
       "path": "api/src/modules/catalog/accessApplicationRecords.ts",
       "baselineLine": 61,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUiLdA8JAur1g-3n",
       "rule": "typescript:S2871",
       "path": "api/src/modules/catalog/feedbackRecords.ts",
       "baselineLine": 44,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUiNdA8JAur1g-3o",
       "rule": "typescript:S2871",
       "path": "api/src/modules/catalog/invitationRecords.ts",
       "baselineLine": 39,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUiDdA8JAur1g-3j",
       "rule": "typescript:S2871",
       "path": "api/src/modules/catalog/organizationRecords.ts",
       "baselineLine": 31,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUiDdA8JAur1g-3k",
       "rule": "typescript:S2871",
       "path": "api/src/modules/catalog/organizationRecords.ts",
       "baselineLine": 49,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUiDdA8JAur1g-3l",
       "rule": "typescript:S2871",
       "path": "api/src/modules/catalog/organizationRecords.ts",
       "baselineLine": 118,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmcdA8JAur1g-4m",
@@ -1025,32 +1124,36 @@
       "rule": "typescript:S2871",
       "path": "api/src/modules/catalog/sourcingRecords.ts",
       "baselineLine": 23,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUiTdA8JAur1g-3q",
       "rule": "typescript:S2871",
       "path": "api/src/modules/catalog/auditRecords.ts",
       "baselineLine": 61,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUh-dA8JAur1g-3i",
       "rule": "typescript:S2871",
       "path": "api/src/modules/catalog/recallResponseRead.ts",
       "baselineLine": 85,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUnjdA8JAur1g-5R",
       "rule": "typescript:S6848",
       "path": "web/src/components/catalog/CertificateRecordsPage.tsx",
       "baselineLine": 341,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUnjdA8JAur1g-5S",
@@ -1174,72 +1277,81 @@
       "rule": "typescript:S6848",
       "path": "web/src/pages/SourceBatchesPage.tsx",
       "baselineLine": 247,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUnFdA8JAur1g-5B",
       "rule": "typescript:S6848",
       "path": "web/src/pages/SourceBatchesPage.tsx",
       "baselineLine": 345,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUnFdA8JAur1g-5C",
       "rule": "typescript:S6848",
       "path": "web/src/pages/SourceBatchesPage.tsx",
       "baselineLine": 346,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmudA8JAur1g-4v",
       "rule": "typescript:S6848",
       "path": "web/src/pages/SourceFarmsPage.tsx",
       "baselineLine": 261,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmudA8JAur1g-4w",
       "rule": "typescript:S6848",
       "path": "web/src/pages/SourceFarmsPage.tsx",
       "baselineLine": 328,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmudA8JAur1g-4x",
       "rule": "typescript:S6848",
       "path": "web/src/pages/SourceFarmsPage.tsx",
       "baselineLine": 329,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmudA8JAur1g-4z",
       "rule": "typescript:S6848",
       "path": "web/src/pages/SourceFarmsPage.tsx",
       "baselineLine": 364,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmudA8JAur1g-40",
       "rule": "typescript:S6848",
       "path": "web/src/pages/SourceFarmsPage.tsx",
       "baselineLine": 446,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmudA8JAur1g-41",
       "rule": "typescript:S6848",
       "path": "web/src/pages/SourceFarmsPage.tsx",
       "baselineLine": 447,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUiJdA8JAur1g-3m",
@@ -1255,16 +1367,18 @@
       "rule": "typescript:S6848",
       "path": "web/src/pages/InventoryPage.tsx",
       "baselineLine": 189,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUl8dA8JAur1g-4K",
       "rule": "typescript:S6848",
       "path": "web/src/pages/InventoryPage.tsx",
       "baselineLine": 190,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUnrdA8JAur1g-5a",
@@ -1280,32 +1394,36 @@
       "rule": "typescript:S2871",
       "path": "api/src/modules/accessControls/privilegedLifecycle.ts",
       "baselineLine": 51,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUh0dA8JAur1g-3f",
       "rule": "typescript:S2871",
       "path": "api/src/modules/accessControls/privilegedLifecycle.ts",
       "baselineLine": 58,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUindA8JAur1g-3v",
       "rule": "typescript:S2871",
       "path": "api/src/modules/mfa/recovery.ts",
       "baselineLine": 23,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUindA8JAur1g-3w",
       "rule": "typescript:S2871",
       "path": "api/src/modules/mfa/recovery.ts",
       "baselineLine": 28,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUnHdA8JAur1g-5D",
@@ -1321,24 +1439,27 @@
       "rule": "githubactions:S6505",
       "path": ".github/workflows/dependency-review.yml",
       "baselineLine": 18,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "CI and Bash setup install the locked dependency graph with npm ci --ignore-scripts. Clean install, API tests and builds verify the supported path without lifecycle hooks.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUjbdA8JAur1g-32",
       "rule": "typescript:S2871",
       "path": "api/src/modules/delivery/workflow.ts",
       "baselineLine": 245,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUjbdA8JAur1g-31",
       "rule": "typescript:S2871",
       "path": "api/src/modules/delivery/workflow.ts",
       "baselineLine": 239,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUiidA8JAur1g-3u",
@@ -1354,16 +1475,18 @@
       "rule": "githubactions:S6505",
       "path": ".github/workflows/ci.yml",
       "baselineLine": 213,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "CI and Bash setup install the locked dependency graph with npm ci --ignore-scripts. Clean install, API tests and builds verify the supported path without lifecycle hooks.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUpJdA8JAur1g-6l",
       "rule": "githubactions:S6505",
       "path": ".github/workflows/ci.yml",
       "baselineLine": 193,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "CI and Bash setup install the locked dependency graph with npm ci --ignore-scripts. Clean install, API tests and builds verify the supported path without lifecycle hooks.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUpDdA8JAur1g-6b",
@@ -1379,24 +1502,27 @@
       "rule": "githubactions:S6505",
       "path": ".github/workflows/ci.yml",
       "baselineLine": 161,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "CI and Bash setup install the locked dependency graph with npm ci --ignore-scripts. Clean install, API tests and builds verify the supported path without lifecycle hooks.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUk1dA8JAur1g-4C",
       "rule": "typescript:S2871",
       "path": "api/src/database/migrationBaseline.ts",
       "baselineLine": 36,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUpJdA8JAur1g-6h",
       "rule": "githubactions:S6505",
       "path": ".github/workflows/ci.yml",
       "baselineLine": 137,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "CI and Bash setup install the locked dependency graph with npm ci --ignore-scripts. Clean install, API tests and builds verify the supported path without lifecycle hooks.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUpJdA8JAur1g-6i",
@@ -1421,16 +1547,18 @@
       "rule": "typescript:S2871",
       "path": "api/scripts/prepare-browser-tests.ts",
       "baselineLine": 39,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUlVdA8JAur1g-4G",
       "rule": "typescript:S2871",
       "path": "api/scripts/prepare-browser-tests.ts",
       "baselineLine": 39,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmrdA8JAur1g-4t",
@@ -1446,16 +1574,18 @@
       "rule": "typescript:S2871",
       "path": "api/test/integration/globalSetup.ts",
       "baselineLine": 75,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUlOdA8JAur1g-4E",
       "rule": "typescript:S2871",
       "path": "api/test/integration/globalSetup.ts",
       "baselineLine": 76,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUkndA8JAur1g-3_",
@@ -1480,32 +1610,38 @@
       "rule": "typescript:S2871",
       "path": "api/src/services/evidenceStorage.ts",
       "baselineLine": 247,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUpJdA8JAur1g-6g",
       "rule": "githubactions:S6505",
       "path": ".github/workflows/ci.yml",
       "baselineLine": 106,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "CI and Bash setup install the locked dependency graph with npm ci --ignore-scripts. Clean install, API tests and builds verify the supported path without lifecycle hooks.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUksdA8JAur1g-4A",
       "rule": "secrets:S6698",
       "path": "api/src/config/env.ts",
       "baselineLine": 107,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Public demo/test fixtures or local development database defaults. All seeded workflows have deployment/target guards; default Compose ports now bind loopback, and staging/production explicitly reject the known local database password. Reviewer must distinguish intentional synthetic fixtures from live credentials.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_SYNTHETIC_OR_LOCAL_ONLY"
     },
     {
       "id": "AaFuYUksdA8JAur1g-4B",
       "rule": "secrets:S6698",
       "path": "api/src/config/env.ts",
       "baselineLine": 108,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Public demo/test fixtures or local development database defaults. All seeded workflows have deployment/target guards; default Compose ports now bind loopback, and staging/production explicitly reject the known local database password. Reviewer must distinguish intentional synthetic fixtures from live credentials.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_SYNTHETIC_OR_LOCAL_ONLY"
     },
     {
       "id": "AaFuYUpLdA8JAur1g-6s",
@@ -1521,16 +1657,18 @@
       "rule": "typescript:S8786",
       "path": "api/src/services/sourcingStructurer.ts",
       "baselineLine": 55,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Token-based quantity/material/delivery parsing replaces the four flagged backtracking regex sites; preserve arbitrary crops, units, qualifiers and unresolved review fields.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUkGdA8JAur1g-38",
       "rule": "typescript:S8786",
       "path": "api/src/services/sourcingStructurer.ts",
       "baselineLine": 84,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Token-based quantity/material/delivery parsing replaces the four flagged backtracking regex sites; preserve arbitrary crops, units, qualifiers and unresolved review fields.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUnXdA8JAur1g-5P",
@@ -1546,40 +1684,49 @@
       "rule": "secrets:S8215",
       "path": "db/seed.sql",
       "baselineLine": 39,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Public demo/test fixtures or local development database defaults. All seeded workflows have deployment/target guards; default Compose ports now bind loopback, and staging/production explicitly reject the known local database password. Reviewer must distinguish intentional synthetic fixtures from live credentials.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_SYNTHETIC_OR_LOCAL_ONLY"
     },
     {
       "id": "AaFuYUofdA8JAur1g-5z",
       "rule": "secrets:S8215",
       "path": "db/seed.sql",
       "baselineLine": 40,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Public demo/test fixtures or local development database defaults. All seeded workflows have deployment/target guards; default Compose ports now bind loopback, and staging/production explicitly reject the known local database password. Reviewer must distinguish intentional synthetic fixtures from live credentials.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_SYNTHETIC_OR_LOCAL_ONLY"
     },
     {
       "id": "AaFuYUofdA8JAur1g-50",
       "rule": "secrets:S8215",
       "path": "db/seed.sql",
       "baselineLine": 41,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Public demo/test fixtures or local development database defaults. All seeded workflows have deployment/target guards; default Compose ports now bind loopback, and staging/production explicitly reject the known local database password. Reviewer must distinguish intentional synthetic fixtures from live credentials.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_SYNTHETIC_OR_LOCAL_ONLY"
     },
     {
       "id": "AaFuYUpJdA8JAur1g-6f",
       "rule": "githubactions:S6505",
       "path": ".github/workflows/ci.yml",
       "baselineLine": 25,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "CI and Bash setup install the locked dependency graph with npm ci --ignore-scripts. Clean install, API tests and builds verify the supported path without lifecycle hooks.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUofdA8JAur1g-5x",
       "rule": "secrets:S8215",
       "path": "db/seed.sql",
       "baselineLine": 38,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Public demo/test fixtures or local development database defaults. All seeded workflows have deployment/target guards; default Compose ports now bind loopback, and staging/production explicitly reject the known local database password. Reviewer must distinguish intentional synthetic fixtures from live credentials.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_SYNTHETIC_OR_LOCAL_ONLY"
     },
     {
       "id": "AaFuYUnydA8JAur1g-5c",
@@ -1604,8 +1751,9 @@
       "rule": "typescript:S6848",
       "path": "web/src/pages/HoldingDetailPage.tsx",
       "baselineLine": 265,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUmKdA8JAur1g-4b",
@@ -1675,16 +1823,19 @@
       "rule": "typescript:S6848",
       "path": "web/src/pages/FarmDetailPage.tsx",
       "baselineLine": 238,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Native named modal dialogs provide focus containment, Escape/backdrop close and focus return through existing busy/discard guards. Listing cards use an explicit link; lifecycle controls do not rely on click propagation suppression.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUpFdA8JAur1g-6d",
       "rule": "secrets:S6698",
       "path": "docker-compose.yml",
       "baselineLine": 47,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Public demo/test fixtures or local development database defaults. All seeded workflows have deployment/target guards; default Compose ports now bind loopback, and staging/production explicitly reject the known local database password. Reviewer must distinguish intentional synthetic fixtures from live credentials.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_SYNTHETIC_OR_LOCAL_ONLY"
     },
     {
       "id": "AaFuYUlZdA8JAur1g-4I",
@@ -1700,8 +1851,9 @@
       "rule": "typescript:S2871",
       "path": "api/src/services/audit.ts",
       "baselineLine": 4,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review element types and compatibility. Preserve ordinal ordering used by canonical hashes/signatures; do not mechanically use localeCompare."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicit UTF-16 ordinal comparators preserve canonical ordering, hashes, cursor scopes, migration order and lock acquisition. Browser saved-filter shape uses exact key membership instead of sorting. No localeCompare.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUlWdA8JAur1g-4H",
@@ -1717,64 +1869,79 @@
       "rule": "secrets:S8215",
       "path": "db/seed.sql",
       "baselineLine": 32,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Public demo/test fixtures or local development database defaults. All seeded workflows have deployment/target guards; default Compose ports now bind loopback, and staging/production explicitly reject the known local database password. Reviewer must distinguish intentional synthetic fixtures from live credentials.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_SYNTHETIC_OR_LOCAL_ONLY"
     },
     {
       "id": "AaFuYUofdA8JAur1g-5s",
       "rule": "secrets:S8215",
       "path": "db/seed.sql",
       "baselineLine": 33,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Public demo/test fixtures or local development database defaults. All seeded workflows have deployment/target guards; default Compose ports now bind loopback, and staging/production explicitly reject the known local database password. Reviewer must distinguish intentional synthetic fixtures from live credentials.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_SYNTHETIC_OR_LOCAL_ONLY"
     },
     {
       "id": "AaFuYUofdA8JAur1g-5t",
       "rule": "secrets:S8215",
       "path": "db/seed.sql",
       "baselineLine": 34,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Public demo/test fixtures or local development database defaults. All seeded workflows have deployment/target guards; default Compose ports now bind loopback, and staging/production explicitly reject the known local database password. Reviewer must distinguish intentional synthetic fixtures from live credentials.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_SYNTHETIC_OR_LOCAL_ONLY"
     },
     {
       "id": "AaFuYUofdA8JAur1g-5u",
       "rule": "secrets:S8215",
       "path": "db/seed.sql",
       "baselineLine": 35,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Public demo/test fixtures or local development database defaults. All seeded workflows have deployment/target guards; default Compose ports now bind loopback, and staging/production explicitly reject the known local database password. Reviewer must distinguish intentional synthetic fixtures from live credentials.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_SYNTHETIC_OR_LOCAL_ONLY"
     },
     {
       "id": "AaFuYUofdA8JAur1g-5v",
       "rule": "secrets:S8215",
       "path": "db/seed.sql",
       "baselineLine": 36,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Public demo/test fixtures or local development database defaults. All seeded workflows have deployment/target guards; default Compose ports now bind loopback, and staging/production explicitly reject the known local database password. Reviewer must distinguish intentional synthetic fixtures from live credentials.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_SYNTHETIC_OR_LOCAL_ONLY"
     },
     {
       "id": "AaFuYUofdA8JAur1g-5w",
       "rule": "secrets:S8215",
       "path": "db/seed.sql",
       "baselineLine": 37,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Public demo/test fixtures or local development database defaults. All seeded workflows have deployment/target guards; default Compose ports now bind loopback, and staging/production explicitly reject the known local database password. Reviewer must distinguish intentional synthetic fixtures from live credentials.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_SYNTHETIC_OR_LOCAL_ONLY"
     },
     {
       "id": "AaFuYUpLdA8JAur1g-6r",
       "rule": "secrets:S6698",
       "path": "setup.sh",
       "baselineLine": 10,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "CONTEXT_REVIEWED_NOT_DISMISSED",
+      "note": "Public demo/test fixtures or local development database defaults. All seeded workflows have deployment/target guards; default Compose ports now bind loopback, and staging/production explicitly reject the known local database password. Reviewer must distinguish intentional synthetic fixtures from live credentials.",
+      "reviewEvidence": "docs/security/SONAR_REVIEW_DISPOSITIONS_2026-10-24.md",
+      "recommendation": "REVIEW_SYNTHETIC_OR_LOCAL_ONLY"
     },
     {
       "id": "AaFuYUpLdA8JAur1g-6q",
       "rule": "shell:S6505",
       "path": "setup.sh",
       "baselineLine": 35,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "CI and Bash setup install the locked dependency graph with npm ci --ignore-scripts. Clean install, API tests and builds verify the supported path without lifecycle hooks.",
+      "batch": "v3"
     },
     {
       "id": "AaFuYUpLdA8JAur1g-6u",

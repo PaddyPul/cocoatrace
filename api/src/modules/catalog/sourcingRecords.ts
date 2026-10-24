@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import { AppError, ValidationError } from '../../errors';
 import { Actor, hasExplicitPermission } from '../../services/resourcePolicy';
 import { Execute, flag, literal, pageResult, parsePage, text } from './paging';
@@ -20,7 +21,13 @@ export async function sourcingPage(
   const mine = flag(parameters.mine, 'mine');
   const input = parsePage(
     parameters,
-    ['sourcing-requests', actor.organizationId, [...actor.permissions].sort(), id, mine],
+    [
+      'sourcing-requests',
+      actor.organizationId,
+      [...actor.permissions].sort(compareOrdinal),
+      id,
+      mine,
+    ],
     ['id', 'mine'],
   );
   const rows = (

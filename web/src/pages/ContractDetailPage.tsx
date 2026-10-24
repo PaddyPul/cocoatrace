@@ -1,3 +1,4 @@
+import WorkspaceDialog from '../components/shared/WorkspaceDialog';
 import WorkspaceTabs, { WorkspacePanel } from '../components/trading/WorkspaceTabs';
 import DocumentReadiness from '../components/trading/DocumentReadiness';
 import ConfirmDialog from '../components/shared/ConfirmDialog';
@@ -89,6 +90,7 @@ export default function ContractDetailPage() {
   const [creditDays, setCreditDays] = useState(30);
   const [termsNote, setTermsNote] = useState('');
   const [termsLoading, setTermsLoading] = useState(false);
+  const [termsProposalError, setTermsProposalError] = useState('');
 
   const termsSnapshot = JSON.stringify([
     paymentEvidenceRequired,
@@ -129,6 +131,7 @@ export default function ContractDetailPage() {
       setCreditDays(days);
       setTermsNote(note);
       setShowTerms(false);
+      setTermsProposalError('');
     });
   const closeCompliance = () =>
     discardCompliance(() => {
@@ -276,6 +279,7 @@ export default function ContractDetailPage() {
   const saveTerms = async () => {
     if (!id) return;
     setTermsLoading(true);
+    setTermsProposalError('');
     try {
       await contracts.updatePaymentTerms(id, {
         paymentPlan,
@@ -288,8 +292,10 @@ export default function ContractDetailPage() {
       await loadContract();
       setShowTerms(false);
       toast('success', 'Payment terms proposed to the buyer');
-    } catch (e: any) {
-      toast('error', e.message);
+    } catch (error) {
+      setTermsProposalError(
+        error instanceof Error ? error.message : 'Payment terms could not be proposed.',
+      );
     } finally {
       setTermsLoading(false);
     }
@@ -949,6 +955,7 @@ export default function ContractDetailPage() {
                 onChange={(e) => setTermsNote(e.target.value)}
               />
             </div>
+            <ErrorBox message={termsProposalError} />
             <ModalButtons
               busy={termsLoading}
               onCancel={closeTerms}
@@ -1007,23 +1014,26 @@ function Modal({
   children: React.ReactNode;
 }) {
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+    <WorkspaceDialog label={title} onClose={onClose}>
+      <div className="modal">
         <div className="flex items-start justify-between mb-3">
           <div className="modal-title">{title}</div>
-          <button className="btn btn-sm" onClick={onClose}>
+          <button aria-label="Close dialog" type="button" className="btn btn-sm" onClick={onClose}>
             <X size={14} />
           </button>
         </div>
         {children}
       </div>
-    </div>
+    </WorkspaceDialog>
   );
 }
 
 function ErrorBox({ message }: { message: string }) {
   return message ? (
-    <div className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400">
+    <div
+      role="alert"
+      className="bg-red-900/10 border border-red-500/30 rounded-sm px-3 py-2 text-xs text-red-400"
+    >
       {message}
     </div>
   ) : null;

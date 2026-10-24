@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import type { PoolClient } from 'pg';
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../errors';
 import { inTradeTransaction, recordTradeAudit } from '../trading/transaction';
@@ -137,7 +138,7 @@ export async function resolveRecallResponse(
   if (reason.trim().length < 10 || !evidenceIds.length)
     throw new ValidationError('Provide a substantive resolution reason and supporting evidence');
   assertWorkflowEvidenceLimit(evidenceIds);
-  const selectedIds = [...new Set(evidenceIds)].sort();
+  const selectedIds = [...new Set(evidenceIds)].sort(compareOrdinal);
   const availability = await preflightEvidence(
     async (execute) =>
       (

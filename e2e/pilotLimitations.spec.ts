@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoWithNetworkRecovery } from './support/navigation';
 
 test('pilot participants can discover versioned limitations without changing a trade', async ({
   page,
@@ -35,7 +36,7 @@ test('pilot participants can discover versioned limitations without changing a t
       return route.fulfill({ json: { status: 'completed', pilot_mode: true } });
     return route.fulfill({ json: {} });
   });
-  await page.goto('/pilot/limitations');
+  await gotoWithNetworkRecovery(page, '/pilot/limitations');
   await expect(
     page.getByRole('heading', { name: 'Known pilot limitations', exact: true }),
   ).toBeVisible();
@@ -89,7 +90,7 @@ test('platform responsibilities are available without signing in and survive rel
     if (!['GET', 'HEAD'].includes(route.request().method())) writes.push(route.request().url());
     return route.fulfill({ status: 401, json: { error: 'Not authenticated' } });
   });
-  await page.goto('/platform-role');
+  await gotoWithNetworkRecovery(page, '/platform-role');
   const heading = page.getByRole('heading', {
     name: 'BetterTrade responsibilities and limits',
     exact: true,

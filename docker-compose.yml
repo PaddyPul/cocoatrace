@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: cocoa
       POSTGRES_PASSWORD: cocoa_dev
     ports:
-      - "15433:5432"
+      - "127.0.0.1:15433:5432"
     volumes:
       - cocoatrace_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -39,7 +39,7 @@ services:
     container_name: cocoatrace-api
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "127.0.0.1:3001:3001"
     environment:
       APP_ENV: demo
       NODE_ENV: production
@@ -83,7 +83,7 @@ services:
     container_name: cocoatrace-web
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       WEB_PORT: 3000
     healthcheck:

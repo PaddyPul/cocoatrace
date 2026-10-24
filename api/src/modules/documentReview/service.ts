@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import { createHash } from 'node:crypto';
 import type { PoolClient } from 'pg';
 import type { JwtPayload } from '../../middleware/auth';
@@ -240,7 +241,7 @@ export async function replace(
   if (id === input.replacementEvidenceId) throw new ValidationError('Choose a new upload');
   return inDatabaseTransaction(async (client) => {
     await liveUploader(client, actor);
-    const ids = [id, input.replacementEvidenceId].sort();
+    const ids = [id, input.replacementEvidenceId].sort(compareOrdinal);
     const loaded = new Map<string, Row>();
     for (const key of ids) loaded.set(key, await load(client, key));
     const old = loaded.get(id)!;

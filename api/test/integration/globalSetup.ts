@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../src/utils/ordinal';
 import fs from 'fs';
 import path from 'path';
 import knex, { Knex } from 'knex';
@@ -27,9 +28,10 @@ export async function setup(): Promise<void> {
   await database.raw('DROP SCHEMA public CASCADE; CREATE SCHEMA public');
 
   const migrationDirectory = path.resolve(__dirname, '../../src/migrations');
-  const migrationFiles = fs.readdirSync(migrationDirectory)
+  const migrationFiles = fs
+    .readdirSync(migrationDirectory)
     .filter((name) => name.endsWith('.ts'))
-    .sort();
+    .sort(compareOrdinal);
   const migrationPlan = planBaselineAndForwardMigrations(migrationFiles);
 
   const baselineSchema = fs.readFileSync(
@@ -57,23 +59,32 @@ export async function setup(): Promise<void> {
     })),
   );
 
-  const migrationModulesByPath = import.meta.glob('../../src/migrations/*.ts', { eager: true }) as Record<string, {
-    up: Knex.Migration['up'];
-    down?: Knex.Migration['down'];
-  }>;
+  const migrationModulesByPath = import.meta.glob('../../src/migrations/*.ts', {
+    eager: true,
+  }) as Record<
+    string,
+    {
+      up: Knex.Migration['up'];
+      down?: Knex.Migration['down'];
+    }
+  >;
   const migrationModules = migrationFiles.map((name) => {
     const migration = migrationModulesByPath[`../../src/migrations/${name}`];
     if (!migration) throw new Error(`Migration module was not loaded by Vitest: ${name}`);
     return { name, ...migration };
   });
-  const migrationSource: Knex.MigrationSource<{ name: string; up: Knex.Migration['up']; down?: Knex.Migration['down'] }> = {
+  const migrationSource: Knex.MigrationSource<{
+    name: string;
+    up: Knex.Migration['up'];
+    down?: Knex.Migration['down'];
+  }> = {
     getMigrations: async () => migrationModules,
     getMigrationName: (migration) => migration.name,
     getMigration: async (migration) => migration,
   };
   const [, appliedForwardMigrations] = await database.migrate.latest({ migrationSource });
-  const expectedForward = [...migrationPlan.forward].sort();
-  const appliedForward = [...appliedForwardMigrations].sort();
+  const expectedForward = [...migrationPlan.forward].sort(compareOrdinal);
+  const appliedForward = [...appliedForwardMigrations].sort(compareOrdinal);
   if (JSON.stringify(appliedForward) !== JSON.stringify(expectedForward)) {
     throw new Error(
       `Expected forward migrations [${expectedForward.join(', ')}], but Knex applied [${appliedForward.join(', ')}].`,

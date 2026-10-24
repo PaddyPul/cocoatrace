@@ -1,3 +1,4 @@
+import WorkspaceDialog from '../components/shared/WorkspaceDialog';
 import SavedFilterControls from '../components/savedFilters/SavedFilterControls';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -186,13 +187,18 @@ export default function InventoryPage() {
       {canDo('custody.transfer.request') && <TransferRecords onAccepted={refetch} />}
 
       {showCreate && (
-        <div className="modal-overlay" onClick={() => !chLoading && setShowCreate(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <WorkspaceDialog label="Create Holding" onClose={() => !chLoading && setShowCreate(false)}>
+          <div className="modal">
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="modal-title">Create Holding</div>
               </div>
-              <button className="btn btn-sm" onClick={() => setShowCreate(false)}>
+              <button
+                aria-label="Close dialog"
+                type="button"
+                className="btn btn-sm"
+                onClick={() => setShowCreate(false)}
+              >
                 <X size={14} />
               </button>
             </div>
@@ -239,7 +245,7 @@ export default function InventoryPage() {
               </div>
             </div>
           </div>
-        </div>
+        </WorkspaceDialog>
       )}
     </Layout>
   );

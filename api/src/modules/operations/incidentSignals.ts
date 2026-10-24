@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import { jobNames, type JobStatus } from './jobs';
 import { type QueueSignal, queueNames } from './backlog';
 const jobCodes = ['JOB_FAILED', 'JOB_STALE', 'JOB_NOT_OBSERVED'];
@@ -43,5 +44,5 @@ export function incidentSignals(jobs: JobStatus[], queues: QueueSignal[], now: n
       if (!safeSignalKey(key)) throw new Error('Invalid incident observation');
       signals.push(key);
     }
-  return [...new Set(signals)].sort();
+  return [...new Set(signals)].sort(compareOrdinal);
 }

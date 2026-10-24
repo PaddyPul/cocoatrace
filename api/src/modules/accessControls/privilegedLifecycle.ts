@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import { z } from 'zod';
 import { AppError } from '../../errors';
 import { inDatabaseTransaction } from '../../services/databaseTransaction';
@@ -48,14 +49,14 @@ export async function decidePrivilegedAccess(input: unknown) {
       );
     const orgIds = [
       ...new Set([identity.organization_id, ...actors.map((actor) => actor.organizationId)]),
-    ].sort();
+    ].sort(compareOrdinal);
     await client.query(
       'SELECT id FROM organizations WHERE id=ANY($1::uuid[]) ORDER BY id FOR UPDATE',
       [orgIds],
     );
     const userIds = [
       ...new Set([...(kind === 'users' ? [id] : []), ...actors.map((actor) => actor.id)]),
-    ].sort();
+    ].sort(compareOrdinal);
     await client.query('SELECT id FROM users WHERE id=ANY($1::uuid[]) ORDER BY id FOR UPDATE', [
       userIds,
     ]);

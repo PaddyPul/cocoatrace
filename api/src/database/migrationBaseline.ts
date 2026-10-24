@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../utils/ordinal';
 // The immutable schema snapshot already includes every migration through 010.
 // These names remain canonical ledger entries, including the two 002 files.
 export const SCHEMA_BASELINE_MIGRATIONS = Object.freeze([
@@ -29,11 +30,13 @@ export function planBaselineAndForwardMigrations(discoveredFiles: string[]): Mig
 
   const missingBaseline = SCHEMA_BASELINE_MIGRATIONS.filter((name) => !uniqueFiles.has(name));
   if (missingBaseline.length > 0) {
-    throw new Error(`The schema baseline references missing migrations: ${missingBaseline.join(', ')}`);
+    throw new Error(
+      `The schema baseline references missing migrations: ${missingBaseline.join(', ')}`,
+    );
   }
 
   const baselineSet = new Set<string>(SCHEMA_BASELINE_MIGRATIONS);
-  const forward = discoveredFiles.filter((name) => !baselineSet.has(name)).sort();
+  const forward = discoveredFiles.filter((name) => !baselineSet.has(name)).sort(compareOrdinal);
   const boundary = SCHEMA_BASELINE_MIGRATIONS.at(-1)!;
   const retroactive = forward.filter((name) => {
     const match = /^(\d+)_/.exec(name);

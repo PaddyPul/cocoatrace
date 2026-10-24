@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../utils/ordinal';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
@@ -244,7 +245,7 @@ class S3EvidenceStorage implements EvidenceStorage {
     };
     if (method === 'PUT' && objectKey && config.evidenceStorageSse)
       headers['x-amz-server-side-encryption'] = config.evidenceStorageSse;
-    const names = Object.keys(headers).sort();
+    const names = Object.keys(headers).sort(compareOrdinal);
     const canonicalHeaders = names.map((name) => `${name}:${headers[name].trim()}\n`).join('');
     const signedHeaders = names.join(';');
     const canonicalRequest = [
