@@ -13,6 +13,6 @@ export function installmentDueState(
   if (item.status === 'paid') return 'paid';
   if (item.status === 'payment_submitted') return 'awaiting_verification';
   if (item.status !== 'due') return 'awaiting_trigger';
-  const due = item.due_at ? new Date(item.due_at).getTime() : NaN;
+  const due = item.due_at ? new Date(item.due_at).getTime() : Number.NaN;
   return Number.isFinite(due) && now.getTime() > due ? 'overdue' : 'due';
 }

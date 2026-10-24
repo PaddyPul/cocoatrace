@@ -69,10 +69,10 @@ export default function OffersPage() {
             setSummaryError(true);
           }
         });
-    load();
+    void load();
     const focus = () => {
-      page.refresh();
-      load();
+      void page.refresh();
+      void load();
     };
     window.addEventListener('focus', focus);
     return () => {
@@ -382,13 +382,7 @@ export default function OffersPage() {
           {visible.length === 0 && (
             <EmptyState
               icon="📨"
-              title={
-                search
-                  ? 'No matching offers'
-                  : tab === 'received'
-                    ? 'No offers on this page'
-                    : 'No offers on this page'
-              }
+              title={search ? 'No matching offers' : 'No offers on this page'}
               description={
                 tab === 'received'
                   ? 'When buyers make offers on your listings, they appear here.'

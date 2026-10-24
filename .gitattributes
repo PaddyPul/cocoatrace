@@ -605,3 +605,7 @@ web/src/navigation/**/*.ts text eol=lf
 web/src/pages/SourcingRequestsPage.tsx text eol=lf
 scripts/navigation.test.mjs text eol=lf
 e2e/navigationWorkspaces.spec.ts text eol=lf
+
+api/src/services/emailAddress*.ts text eol=lf
+
+web/src/components/catalog/useRegisterSummary.ts text eol=lf

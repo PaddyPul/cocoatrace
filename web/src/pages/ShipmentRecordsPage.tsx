@@ -1,56 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useRegisterSummary } from '../components/catalog/useRegisterSummary';
 import { useNavigate } from 'react-router-dom';
 import { shipments, type ShipmentSummary } from '../api';
 import Layout from '../components/layout/Layout';
 import PageNavigation from '../components/catalog/PageNavigation';
 import { useCatalogPage } from '../components/catalog/useCatalogPage';
 import { StatusBadge, fmtDate } from '../components/shared/helpers';
+const summaryCounts = [
+  'count',
+  'active_count',
+  'delivered_count',
+  'cancelled_count',
+] as const satisfies readonly (keyof ShipmentSummary)[];
 export default function ShipmentRecordsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [direction, setDirection] = useState('all');
   const [status, setStatus] = useState('all');
   const page = useCatalogPage(shipments.page, { search, direction, status });
-  const [summary, setSummary] = useState<ShipmentSummary | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [refresh, setRefresh] = useState(0);
-  useEffect(() => {
-    let active = true;
-    const load = () =>
-      shipments
-        .summary()
-        .then((row) => {
-          if (
-            !row ||
-            !['count', 'active_count', 'delivered_count', 'cancelled_count'].every(
-              (key) =>
-                Number.isInteger(row[key as keyof ShipmentSummary]) &&
-                Number(row[key as keyof ShipmentSummary]) >= 0,
-            )
-          )
-            throw new Error('Invalid transport totals');
-          if (active) {
-            setSummary(row);
-            setFailed(false);
-          }
-        })
-        .catch(() => {
-          if (active) {
-            setSummary(null);
-            setFailed(true);
-          }
-        });
-    load();
-    const focus = () => {
-      page.refresh();
-      load();
-    };
-    window.addEventListener('focus', focus);
-    return () => {
-      active = false;
-      window.removeEventListener('focus', focus);
-    };
-  }, [refresh]);
+  const { summary, failed, retry } = useRegisterSummary(
+    shipments.summary,
+    summaryCounts,
+    page.refresh,
+  );
   return (
     <Layout currentPage="shipments">
       <p className="mb-3 text-sm">
@@ -60,7 +32,7 @@ export default function ShipmentRecordsPage() {
       {failed && (
         <p role="alert">
           Transport totals could not be refreshed.{' '}
-          <button className="btn" onClick={() => setRefresh((n) => n + 1)}>
+          <button className="btn" onClick={retry}>
             Retry transport totals
           </button>
         </p>

@@ -223,3 +223,36 @@ for (const width of [1280, 390]) {
     expect(layout.overflow).toBe('auto');
   });
 }
+
+test('invalid register totals stay unavailable and explicit retry recovers without writing', async ({
+  page,
+}) => {
+  await fixture(page);
+  let reads = 0;
+  let writes = 0;
+  page.on('request', (request) => {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method())) writes++;
+  });
+  await page.route('**/api/contracts/summary', (route) =>
+    route.fulfill({
+      json: {
+        count: ++reads === 1 ? -1 : 1005,
+        active_count: 1003,
+        settled_count: 1,
+        cancelled_count: 1,
+        latest_active_id: later,
+      },
+    }),
+  );
+  await page.goto('/contracts');
+  await expect(
+    page.getByText('Total deals: Unavailable · Active orders: Unavailable', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'First Supplier', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Retry order totals', exact: true }).click();
+  await expect(
+    page.getByText('Total deals: 1005 · Active orders: 1003', { exact: true }),
+  ).toBeVisible();
+  expect(reads).toBe(2);
+  expect(writes).toBe(0);
+});

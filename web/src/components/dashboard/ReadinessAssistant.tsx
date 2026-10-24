@@ -28,7 +28,7 @@ export default function ReadinessAssistant() {
     catch (err: any) { setError(err.message || 'Could not calculate readiness.'); }
     finally { setLoading(false); }
   };
-  useEffect(() => { load(); }, [user?.id]);
+  useEffect(() => { void load(); }, [user?.id]);
 
   const top = advice?.recommendations[0];
   return <section className="mt-5 grid gap-4 xl:grid-cols-[.72fr_1.28fr]">

@@ -297,8 +297,11 @@ export default function SourcingBriefPage() {
             requirements and flags anything it could not identify.
           </p>
           <div className="mt-6 rounded-3xl border border-border bg-surface p-5 sm:p-6">
-            <label className="form-label">Sourcing brief</label>
+            <label htmlFor="sourcingbrief-sourcing-brief" className="form-label">
+              Sourcing brief
+            </label>
             <textarea
+              id="sourcingbrief-sourcing-brief"
               aria-label="Sourcing brief"
               className="form-input min-h-36 resize-y leading-6"
               value={brief}

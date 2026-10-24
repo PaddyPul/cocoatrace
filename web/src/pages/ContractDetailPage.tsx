@@ -780,8 +780,11 @@ export default function ContractDetailPage() {
               material. Examples include EUDR, conflict-minerals due diligence or an import permit.
             </p>
             <div>
-              <label className="form-label">Scheme or requirement</label>
+              <label htmlFor="contractdetail-scheme-or-requirement" className="form-label">
+                Scheme or requirement
+              </label>
               <input
+                id="contractdetail-scheme-or-requirement"
                 className="form-input"
                 placeholder="e.g. EUDR, OECD Due Diligence, Import Permit"
                 value={complianceScheme}
@@ -789,8 +792,11 @@ export default function ContractDetailPage() {
               />
             </div>
             <div>
-              <label className="form-label">Reference</label>
+              <label htmlFor="contractdetail-reference" className="form-label">
+                Reference
+              </label>
               <input
+                id="contractdetail-reference"
                 className="form-input"
                 placeholder="Reference issued by the applicable system or authority"
                 value={complianceRef}
@@ -846,8 +852,11 @@ export default function ContractDetailPage() {
               />
             </div>
             <div>
-              <label className="form-label">Note (optional)</label>
+              <label htmlFor="contractdetail-note-optional" className="form-label">
+                Note (optional)
+              </label>
               <input
+                id="contractdetail-note-optional"
                 className="form-input"
                 value={documentNote}
                 onChange={(e) => setDocumentNote(e.target.value)}
@@ -872,8 +881,11 @@ export default function ContractDetailPage() {
               proceeds.
             </p>
             <div>
-              <label className="form-label">Plan</label>
+              <label htmlFor="contractdetail-plan" className="form-label">
+                Plan
+              </label>
               <select
+                id="contractdetail-plan"
                 className="form-select"
                 value={paymentPlan}
                 onChange={(e) => setPaymentPlan(e.target.value)}
@@ -887,8 +899,11 @@ export default function ContractDetailPage() {
             </div>
             {paymentPlan === 'deposit_balance' && (
               <div>
-                <label className="form-label">Deposit percentage</label>
+                <label htmlFor="contractdetail-deposit-percentage" className="form-label">
+                  Deposit percentage
+                </label>
                 <input
+                  id="contractdetail-deposit-percentage"
                   type="number"
                   min="5"
                   max="90"
@@ -900,8 +915,11 @@ export default function ContractDetailPage() {
             )}
             {paymentPlan === 'pay_after_delivery' && (
               <div>
-                <label className="form-label">Credit days after delivery</label>
+                <label htmlFor="contractdetail-credit-days-after-delivery" className="form-label">
+                  Credit days after delivery
+                </label>
                 <input
+                  id="contractdetail-credit-days-after-delivery"
                   type="number"
                   min="0"
                   max="365"
@@ -920,8 +938,11 @@ export default function ContractDetailPage() {
               Require payment proof for every installment
             </label>
             <div>
-              <label className="form-label">Commercial note (optional)</label>
+              <label htmlFor="contractdetail-commercial-note-optional" className="form-label">
+                Commercial note (optional)
+              </label>
               <textarea
+                id="contractdetail-commercial-note-optional"
                 className="form-input"
                 rows={3}
                 value={termsNote}

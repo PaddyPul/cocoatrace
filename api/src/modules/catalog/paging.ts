@@ -80,7 +80,7 @@ export function parsePage(
         !UUID.test(value.id) ||
         typeof value.key !== 'string' ||
         value.key.length > 32 ||
-        !/^(|\d{1,16}(\.\d{1,8})?)$/.test(value.key) ||
+        !/^(?:\d{1,16}(?:\.\d{1,8})?)?$/.test(value.key) ||
         Object.keys(value).length !== 4
       )
         throw new Error();

@@ -285,8 +285,12 @@ export default function OnboardingPage() {
               title="Start with a guided, real workflow"
               copy="Start with your organization’s actual records. Create supply or a sourcing need, or attach evidence to an existing record."
             />
-            <label className="mt-8 flex cursor-pointer items-start gap-4 rounded-3xl border border-white/10 bg-white/[.035] p-6">
+            <label
+              htmlFor="onboarding-pilot-mode"
+              className="mt-8 flex cursor-pointer items-start gap-4 rounded-3xl border border-white/10 bg-white/[.035] p-6"
+            >
               <input
+                id="onboarding-pilot-mode"
                 type="checkbox"
                 checked={pilotMode}
                 onChange={(event) => setPilotMode(event.target.checked)}

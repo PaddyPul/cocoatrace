@@ -95,10 +95,10 @@ export default function AcceptInvitationPage() {
             </p>
             <form onSubmit={submit} className="mt-7 space-y-4">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-[.12em] text-white/40">
+                <label htmlFor="acceptinvitation-email" className="text-[10px] font-bold uppercase tracking-[.12em] text-white/40">
                   Email
                 </label>
-                <input
+                <input id="acceptinvitation-email"
                   disabled
                   value={invitation.email}
                   className="mt-2 min-h-12 w-full rounded-xl border border-white/10 bg-white/[.03] px-4 text-sm text-white/45"

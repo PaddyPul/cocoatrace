@@ -70,6 +70,15 @@ describe('pre-body evidence admission lifetime', () => {
     expect(mocks.complete).not.toHaveBeenCalled();
     expect(next.mock.calls[0][0].statusCode).toBe(413);
   });
+  it('normalizes a non-Error parser failure without exposing the raw rejection', async () => {
+    mocks.parser.mockImplementationOnce((_req, _res, done) => done('raw parser details'));
+    const { req, res, next } = input();
+    await createEvidenceContentHandler()(req, res, next);
+    expect(mocks.release).toHaveBeenCalledTimes(1);
+    expect(mocks.complete).not.toHaveBeenCalled();
+    expect(next.mock.calls[0][0]).toBeInstanceOf(Error);
+    expect(next.mock.calls[0][0].message).toBe('Evidence upload body failed');
+  });
   it('retains capacity while processing continues and releases exactly once after failure', async () => {
     let reject!: (reason: Error) => void;
     mocks.complete.mockReturnValueOnce(

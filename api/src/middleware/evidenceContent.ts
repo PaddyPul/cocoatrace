@@ -37,7 +37,8 @@ export function createEvidenceContentHandler(bodyDeadlineMs = 30_000) {
           if (finished) return;
           finished = true;
           clearTimeout(timer);
-          if (error) reject(error);
+          if (error)
+            reject(error instanceof Error ? error : new Error('Evidence upload body failed'));
           else resolve();
         };
         try {

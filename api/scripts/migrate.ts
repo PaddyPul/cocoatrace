@@ -34,4 +34,7 @@ async function migrate(): Promise<void> {
   }
 }
 
-migrate();
+void migrate().catch((error: unknown) => {
+  console.error('Migration startup failed:', error instanceof Error ? error.message : 'Unknown error');
+  process.exitCode = 1;
+});

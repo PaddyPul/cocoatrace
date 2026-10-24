@@ -1,10 +1,10 @@
 {
   "baseline": "User-provided SonarCloud export, 2026-10-24; all 211 OPEN issues returned on one page. Not a fresh scan of merged main.",
-  "baseCommit": "4d5aa3bcf0217c70324f4656fe8f08646d4a304e",
-  "scope": "First security/reliability correction only. No Sonar status is changed by this ledger.",
+  "baseCommit": "e2539b288bdb6de0659b95139b8757747250575a",
+  "scope": "Second correction on merged PR #151. Batch v1:31; batch v2:58. No issue is marked closed without a fresh scan.",
   "summary": {
-    "OPEN_REVIEW_REQUIRED": 155,
-    "IMPLEMENTED_PENDING_VERIFICATION": 31,
+    "OPEN_REVIEW_REQUIRED": 97,
+    "IMPLEMENTED_PENDING_VERIFICATION": 89,
     "CONTEXT_REVIEWED_NOT_DISMISSED": 25
   },
   "issues": [
@@ -30,7 +30,8 @@
       "path": "web/src/components/trading/DocumentReadiness.tsx",
       "baselineLine": 201,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUpJdA8JAur1g-6n",
@@ -38,7 +39,8 @@
       "path": ".github/workflows/ci.yml",
       "baselineLine": 225,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Invoke the locally installed lockfile-pinned Playwright CLI directly; no on-demand npx package resolution."
+      "note": "Invoke the locally installed lockfile-pinned Playwright CLI directly; no on-demand npx package resolution. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUpJdA8JAur1g-6o",
@@ -46,7 +48,8 @@
       "path": ".github/workflows/ci.yml",
       "baselineLine": 225,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Invoke the locally installed lockfile-pinned Playwright CLI directly; no on-demand npx package resolution."
+      "note": "Invoke the locally installed lockfile-pinned Playwright CLI directly; no on-demand npx package resolution. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUmedA8JAur1g-4n",
@@ -54,15 +57,17 @@
       "path": "web/src/pages/PasskeysPage.tsx",
       "baselineLine": 166,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUj6dA8JAur1g-33",
       "rule": "typescript:S8786",
       "path": "api/src/services/emailBranding.ts",
       "baselineLine": 64,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Use split/index-based envelope checks with equivalent acceptance and byte-wise scanner NUL trimming; remove ambiguous backtracking patterns.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUohdA8JAur1g-51",
@@ -70,7 +75,8 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 16,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Recovery artifacts use fresh mode-0700 container directories; object phases reject symlinks, foreign ownership and insecure permissions."
+      "note": "Recovery artifacts use fresh mode-0700 container directories; object phases reject symlinks, foreign ownership and insecure permissions. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUohdA8JAur1g-52",
@@ -142,7 +148,8 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 78,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Recovery artifacts use fresh mode-0700 container directories; object phases reject symlinks, foreign ownership and insecure permissions."
+      "note": "Recovery artifacts use fresh mode-0700 container directories; object phases reject symlinks, foreign ownership and insecure permissions. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUohdA8JAur1g-5_",
@@ -150,7 +157,8 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 82,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Recovery artifacts use fresh mode-0700 container directories; object phases reject symlinks, foreign ownership and insecure permissions."
+      "note": "Recovery artifacts use fresh mode-0700 container directories; object phases reject symlinks, foreign ownership and insecure permissions. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6A",
@@ -262,7 +270,8 @@
       "path": "scripts/recovery-objects.py",
       "baselineLine": 134,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Recovery artifacts use fresh mode-0700 container directories; object phases reject symlinks, foreign ownership and insecure permissions."
+      "note": "Recovery artifacts use fresh mode-0700 container directories; object phases reject symlinks, foreign ownership and insecure permissions. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUohdA8JAur1g-6O",
@@ -333,8 +342,9 @@
       "rule": "typescript:S7773",
       "path": "api/src/modules/evidenceWorkflow/downloadLinks.ts",
       "baselineLine": 44,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Preserve behavior while simplifying redundant syntax or normalizing parser errors; no hash/signature ordering changes.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUo0dA8JAur1g-6Y",
@@ -349,8 +359,9 @@
       "rule": "typescript:S6853",
       "path": "web/src/pages/AcceptInvitationPage.tsx",
       "baselineLine": 98,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmmdA8JAur1g-4r",
@@ -358,7 +369,8 @@
       "path": "web/src/pages/AcceptInvitationPage.tsx",
       "baselineLine": 151,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUnjdA8JAur1g-5Q",
@@ -373,32 +385,36 @@
       "rule": "typescript:S9383",
       "path": "web/src/components/delivery/DeliveryAcceptance.tsx",
       "baselineLine": 252,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUoCdA8JAur1g-5j",
       "rule": "typescript:S9383",
       "path": "web/src/components/delivery/DeliveryAcceptance.tsx",
       "baselineLine": 308,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUoCdA8JAur1g-5l",
       "rule": "typescript:S9383",
       "path": "web/src/components/delivery/DeliveryAcceptance.tsx",
       "baselineLine": 407,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUoHdA8JAur1g-5o",
       "rule": "typescript:S9383",
       "path": "web/src/components/payments/PaymentOperations.tsx",
       "baselineLine": 217,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUoHdA8JAur1g-5p",
@@ -406,7 +422,8 @@
       "path": "web/src/components/payments/PaymentOperations.tsx",
       "baselineLine": 308,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUmidA8JAur1g-4o",
@@ -422,63 +439,71 @@
       "path": "web/src/pages/AccessControlsPage.tsx",
       "baselineLine": 294,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUmFdA8JAur1g-4N",
       "rule": "typescript:S6853",
       "path": "web/src/pages/ContractDetailPage.tsx",
       "baselineLine": 783,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmFdA8JAur1g-4O",
       "rule": "typescript:S6853",
       "path": "web/src/pages/ContractDetailPage.tsx",
       "baselineLine": 792,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmFdA8JAur1g-4P",
       "rule": "typescript:S6853",
       "path": "web/src/pages/ContractDetailPage.tsx",
       "baselineLine": 849,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmFdA8JAur1g-4Q",
       "rule": "typescript:S6853",
       "path": "web/src/pages/ContractDetailPage.tsx",
       "baselineLine": 875,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmFdA8JAur1g-4R",
       "rule": "typescript:S6853",
       "path": "web/src/pages/ContractDetailPage.tsx",
       "baselineLine": 890,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmFdA8JAur1g-4S",
       "rule": "typescript:S6853",
       "path": "web/src/pages/ContractDetailPage.tsx",
       "baselineLine": 903,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmFdA8JAur1g-4T",
       "rule": "typescript:S6853",
       "path": "web/src/pages/ContractDetailPage.tsx",
       "baselineLine": 923,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmFdA8JAur1g-4U",
@@ -525,8 +550,9 @@
       "rule": "typescript:S9383",
       "path": "web/src/pages/PaymentDetailPage.tsx",
       "baselineLine": 259,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmTdA8JAur1g-4i",
@@ -534,7 +560,8 @@
       "path": "web/src/pages/PaymentDetailPage.tsx",
       "baselineLine": 428,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Rename the payment read-error component so it does not shadow the built-in Error constructor."
+      "note": "Rename the payment read-error component so it does not shadow the built-in Error constructor. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUmYdA8JAur1g-4j",
@@ -542,7 +569,8 @@
       "path": "web/src/pages/RecallCenterPage.tsx",
       "baselineLine": 290,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUmYdA8JAur1g-4k",
@@ -566,39 +594,44 @@
       "path": "web/src/pages/RequestAccessPage.tsx",
       "baselineLine": 176,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUnOdA8JAur1g-5F",
       "rule": "typescript:S6853",
       "path": "web/src/pages/ShipmentDetailPage.tsx",
       "baselineLine": 461,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnOdA8JAur1g-5G",
       "rule": "typescript:S6853",
       "path": "web/src/pages/ShipmentDetailPage.tsx",
       "baselineLine": 477,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnOdA8JAur1g-5H",
       "rule": "typescript:S6853",
       "path": "web/src/pages/ShipmentDetailPage.tsx",
       "baselineLine": 547,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnOdA8JAur1g-5I",
       "rule": "typescript:S6853",
       "path": "web/src/pages/ShipmentDetailPage.tsx",
       "baselineLine": 572,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnOdA8JAur1g-5J",
@@ -645,16 +678,18 @@
       "rule": "typescript:S6853",
       "path": "web/src/pages/OnboardingPage.tsx",
       "baselineLine": 288,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUm3dA8JAur1g-45",
       "rule": "typescript:S6853",
       "path": "web/src/pages/SourcingBriefPage.tsx",
       "baselineLine": 300,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUi6dA8JAur1g-3y",
@@ -678,7 +713,8 @@
       "path": "web/src/components/delivery/DeliveryAcceptance.tsx",
       "baselineLine": 270,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUoCdA8JAur1g-5k",
@@ -686,15 +722,17 @@
       "path": "web/src/components/delivery/DeliveryAcceptance.tsx",
       "baselineLine": 383,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUoCdA8JAur1g-5m",
       "rule": "typescript:S9383",
       "path": "web/src/components/delivery/DeliveryAcceptance.tsx",
       "baselineLine": 476,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUoCdA8JAur1g-5n",
@@ -702,7 +740,8 @@
       "path": "web/src/components/delivery/DeliveryAcceptance.tsx",
       "baselineLine": 486,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUi2dA8JAur1g-3x",
@@ -734,7 +773,8 @@
       "path": "web/src/components/transport/DispatchAcknowledgement.tsx",
       "baselineLine": 117,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUn5dA8JAur1g-5e",
@@ -742,7 +782,8 @@
       "path": "web/src/components/transport/TransportTiming.tsx",
       "baselineLine": 134,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUnudA8JAur1g-5b",
@@ -750,7 +791,8 @@
       "path": "web/src/components/trading/AgreementAcceptance.tsx",
       "baselineLine": 156,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUoPdA8JAur1g-5q",
@@ -765,24 +807,27 @@
       "rule": "typescript:S9383",
       "path": "web/src/pages/OffersPage.tsx",
       "baselineLine": 72,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmzdA8JAur1g-43",
       "rule": "typescript:S9383",
       "path": "web/src/pages/OffersPage.tsx",
       "baselineLine": 75,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmzdA8JAur1g-44",
       "rule": "typescript:S3923",
       "path": "web/src/pages/OffersPage.tsx",
       "baselineLine": 388,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Preserve behavior while simplifying redundant syntax or normalizing parser errors; no hash/signature ordering changes.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmPdA8JAur1g-4f",
@@ -790,7 +835,8 @@
       "path": "web/src/pages/SupportPage.tsx",
       "baselineLine": 184,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUmPdA8JAur1g-4g",
@@ -798,7 +844,8 @@
       "path": "web/src/pages/SupportPage.tsx",
       "baselineLine": 336,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUn2dA8JAur1g-5d",
@@ -814,7 +861,8 @@
       "path": "web/src/components/team/TeamMembers.tsx",
       "baselineLine": 338,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUmkdA8JAur1g-4p",
@@ -822,7 +870,8 @@
       "path": "web/src/pages/AccessReviewPage.tsx",
       "baselineLine": 224,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUosdA8JAur1g-6U",
@@ -901,16 +950,18 @@
       "rule": "typescript:S8786",
       "path": "api/src/services/evidenceMalwareScanner.ts",
       "baselineLine": 70,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Use split/index-based envelope checks with equivalent acceptance and byte-wise scanner NUL trimming; remove ambiguous backtracking patterns.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUgDdA8JAur1g-3c",
       "rule": "typescript:S6671",
       "path": "api/src/middleware/evidenceContent.ts",
       "baselineLine": 40,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Preserve behavior while simplifying redundant syntax or normalizing parser errors; no hash/signature ordering changes.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUiRdA8JAur1g-3p",
@@ -966,7 +1017,8 @@
       "path": "web/src/pages/PilotTeamPage.tsx",
       "baselineLine": 199,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUh7dA8JAur1g-3h",
@@ -1005,104 +1057,117 @@
       "rule": "typescript:S6853",
       "path": "web/src/components/catalog/CertificateRecordsPage.tsx",
       "baselineLine": 352,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnjdA8JAur1g-5T",
       "rule": "typescript:S6853",
       "path": "web/src/components/catalog/CertificateRecordsPage.tsx",
       "baselineLine": 363,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnjdA8JAur1g-5U",
       "rule": "typescript:S6853",
       "path": "web/src/components/catalog/CertificateRecordsPage.tsx",
       "baselineLine": 377,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnjdA8JAur1g-5V",
       "rule": "typescript:S6853",
       "path": "web/src/components/catalog/CertificateRecordsPage.tsx",
       "baselineLine": 387,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnjdA8JAur1g-5W",
       "rule": "typescript:S6853",
       "path": "web/src/components/catalog/CertificateRecordsPage.tsx",
       "baselineLine": 396,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnjdA8JAur1g-5X",
       "rule": "typescript:S6853",
       "path": "web/src/components/catalog/CertificateRecordsPage.tsx",
       "baselineLine": 406,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnjdA8JAur1g-5Y",
       "rule": "typescript:S6853",
       "path": "web/src/components/catalog/CertificateRecordsPage.tsx",
       "baselineLine": 415,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmMdA8JAur1g-4d",
       "rule": "typescript:S9383",
       "path": "web/src/pages/PaymentRecordsPage.tsx",
       "baselineLine": 44,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmMdA8JAur1g-4e",
       "rule": "typescript:S9383",
       "path": "web/src/pages/PaymentRecordsPage.tsx",
       "baselineLine": 47,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUl-dA8JAur1g-4L",
       "rule": "typescript:S9383",
       "path": "web/src/pages/ShipmentRecordsPage.tsx",
       "baselineLine": 43,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUl-dA8JAur1g-4M",
       "rule": "typescript:S9383",
       "path": "web/src/pages/ShipmentRecordsPage.tsx",
       "baselineLine": 46,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnQdA8JAur1g-5L",
       "rule": "typescript:S9383",
       "path": "web/src/pages/ContractRecordsPage.tsx",
       "baselineLine": 43,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnQdA8JAur1g-5M",
       "rule": "typescript:S9383",
       "path": "web/src/pages/ContractRecordsPage.tsx",
       "baselineLine": 46,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnFdA8JAur1g-5A",
@@ -1181,8 +1246,9 @@
       "rule": "typescript:S6323",
       "path": "api/src/modules/catalog/paging.ts",
       "baselineLine": 83,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Preserve behavior while simplifying redundant syntax or normalizing parser errors; no hash/signature ordering changes.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUl8dA8JAur1g-4J",
@@ -1205,8 +1271,9 @@
       "rule": "typescript:S9383",
       "path": "web/src/components/trading/DealNextAction.tsx",
       "baselineLine": 159,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUh0dA8JAur1g-3e",
@@ -1246,7 +1313,8 @@
       "path": "web/src/pages/ChangePasswordPage.tsx",
       "baselineLine": 25,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUpGdA8JAur1g-6e",
@@ -1277,8 +1345,9 @@
       "rule": "typescript:S7773",
       "path": "api/src/modules/payments/dueState.ts",
       "baselineLine": 16,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Preserve behavior while simplifying redundant syntax or normalizing parser errors; no hash/signature ordering changes.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUpJdA8JAur1g-6m",
@@ -1302,7 +1371,8 @@
       "path": "scripts/run-recovery-tests.mjs",
       "baselineLine": 14,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Recovery artifacts use fresh mode-0700 container directories; object phases reject symlinks, foreign ownership and insecure permissions."
+      "note": "Recovery artifacts use fresh mode-0700 container directories; object phases reject symlinks, foreign ownership and insecure permissions. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUpJdA8JAur1g-6k",
@@ -1334,7 +1404,8 @@
       "path": ".github/workflows/ci.yml",
       "baselineLine": 140,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Invoke the locally installed lockfile-pinned Playwright CLI directly; no on-demand npx package resolution."
+      "note": "Invoke the locally installed lockfile-pinned Playwright CLI directly; no on-demand npx package resolution. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUpJdA8JAur1g-6j",
@@ -1342,7 +1413,8 @@
       "path": ".github/workflows/ci.yml",
       "baselineLine": 140,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Invoke the locally installed lockfile-pinned Playwright CLI directly; no on-demand npx package resolution."
+      "note": "Invoke the locally installed lockfile-pinned Playwright CLI directly; no on-demand npx package resolution. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUlVdA8JAur1g-4F",
@@ -1366,7 +1438,8 @@
       "path": "web/src/pages/ForgotPasswordPage.tsx",
       "baselineLine": 19,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUlOdA8JAur1g-4D",
@@ -1389,8 +1462,9 @@
       "rule": "typescript:S8786",
       "path": "api/src/services/emailSender.ts",
       "baselineLine": 36,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Use split/index-based envelope checks with equivalent acceptance and byte-wise scanner NUL trimming; remove ambiguous backtracking patterns.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnIdA8JAur1g-5E",
@@ -1398,7 +1472,8 @@
       "path": "web/src/pages/ResetPasswordPage.tsx",
       "baselineLine": 29,
       "status": "IMPLEMENTED_PENDING_VERIFICATION",
-      "note": "Explicit type=submit preserves the existing enclosing form action."
+      "note": "Explicit type=submit preserves the existing enclosing form action. First correction merged in PR #151; Sonar closure not independently confirmed.",
+      "batch": "v1"
     },
     {
       "id": "AaFuYUkEdA8JAur1g-34",
@@ -1437,8 +1512,9 @@
       "rule": "shelldre:S7688",
       "path": "setup.sh",
       "baselineLine": 40,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Preserve behavior while simplifying redundant syntax or normalizing parser errors; no hash/signature ordering changes.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUkGdA8JAur1g-37",
@@ -1461,8 +1537,9 @@
       "rule": "typescript:S9383",
       "path": "web/src/pages/ExperienceHomePage.tsx",
       "baselineLine": 39,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUofdA8JAur1g-5y",
@@ -1509,16 +1586,18 @@
       "rule": "typescript:S9383",
       "path": "web/src/components/dashboard/ReadinessAssistant.tsx",
       "baselineLine": 31,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUpLdA8JAur1g-6t",
       "rule": "shelldre:S7688",
       "path": "setup.sh",
       "baselineLine": 41,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Preserve behavior while simplifying redundant syntax or normalizing parser errors; no hash/signature ordering changes.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUnAdA8JAur1g-4-",
@@ -1533,56 +1612,63 @@
       "rule": "typescript:S6853",
       "path": "web/src/pages/BatchDetailPage.tsx",
       "baselineLine": 621,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmKdA8JAur1g-4c",
       "rule": "typescript:S6853",
       "path": "web/src/pages/BatchDetailPage.tsx",
       "baselineLine": 638,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmKdA8JAur1g-4W",
       "rule": "typescript:S6853",
       "path": "web/src/pages/BatchDetailPage.tsx",
       "baselineLine": 509,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmKdA8JAur1g-4X",
       "rule": "typescript:S6853",
       "path": "web/src/pages/BatchDetailPage.tsx",
       "baselineLine": 519,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmKdA8JAur1g-4Y",
       "rule": "typescript:S6853",
       "path": "web/src/pages/BatchDetailPage.tsx",
       "baselineLine": 539,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmKdA8JAur1g-4Z",
       "rule": "typescript:S6853",
       "path": "web/src/pages/BatchDetailPage.tsx",
       "baselineLine": 547,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUmKdA8JAur1g-4a",
       "rule": "typescript:S6853",
       "path": "web/src/pages/BatchDetailPage.tsx",
       "baselineLine": 555,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Associate visible labels with exact controls; use native fieldset/legend for composite farm/certificate selectors. Preserve existing aria-labels.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUm6dA8JAur1g-47",
@@ -1605,8 +1691,9 @@
       "rule": "typescript:S9383",
       "path": "api/scripts/migrate.ts",
       "baselineLine": 37,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUkHdA8JAur1g-39",
@@ -1621,8 +1708,9 @@
       "rule": "typescript:S9383",
       "path": "api/scripts/seed.ts",
       "baselineLine": 43,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Explicitly mark callbacks whose action/load boundary already handles errors; add Home refresh rejection handling, action failure presentation, and migration/seed entrypoint catches.",
+      "batch": "v2"
     },
     {
       "id": "AaFuYUofdA8JAur1g-5r",
@@ -1693,8 +1781,9 @@
       "rule": "shelldre:S7688",
       "path": "setup.sh",
       "baselineLine": 60,
-      "status": "OPEN_REVIEW_REQUIRED",
-      "note": "Review behavior and exploitability before choosing a fix or documented disposition."
+      "status": "IMPLEMENTED_PENDING_VERIFICATION",
+      "note": "Preserve behavior while simplifying redundant syntax or normalizing parser errors; no hash/signature ordering changes.",
+      "batch": "v2"
     }
   ],
   "missingEvidence": [
