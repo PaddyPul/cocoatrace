@@ -42,3 +42,10 @@ This is not universal UX-001/UX-002 closure, a physical-device accessibility cer
 The first Windows release stopped on four assertions that still targeted the old shell: two real-account French navigation cases, the supplier aggregate count duplicated by the new sidebar badge, and the limitations link inside the new account-help disclosure. The correction uses the current French My trades search result and heading, scopes the aggregate assertion to workspace content, and explicitly opens account help before following limitations. Language/account persistence, aggregate totals, limitations content and no-write assertions remain in place. The mobile keyboard check also waits for the destination page and reopened dialog to become visible before pressing Escape, retaining the focus-return assertion. No whole-test retry or runtime behavior change is introduced.
 
 Apply the correction to the existing navigation branch, capture its new candidate before verification, and rerun the complete release gate. Evidence from the previous candidate is not sufficient.
+
+
+### SonarCloud translation duplication correction
+
+PR #150 reported 50 duplicated new lines: 46 in navigation/catalogs.ts and four in i18n/catalogs.ts. Navigation messages now define each key once alongside both translations; typed English/French catalogs are derived from that table. This preserves the separate lazy-loaded workspace catalog and does not change language preference keys or visible copy. An exact before/after comparison verifies every key, translation and key order. No duplication exclusion or quality-gate threshold is changed. SonarCloud must rescan the pushed candidate; its resulting percentage cannot be established from a local build.
+
+The 211-issue export remains an open triage baseline. This correction does not resolve or dismiss those findings, and the eight dependency-risk details have not been supplied. In particular, deterministic sorting used for hashes/signatures must retain its existing ordering semantics during later remediation.
