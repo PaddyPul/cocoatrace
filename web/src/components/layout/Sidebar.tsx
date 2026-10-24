@@ -25,215 +25,61 @@ import {
   UserCheck,
   WalletCards,
   X,
+  Search,
+  LayoutDashboard,
 } from 'lucide-react';
 import { useAuthCtx } from '../auth/AuthProvider';
 import { usePermission } from '../../hooks/usePermission';
-import { useLanguage } from '../../i18n/LanguageProvider';
+import { useNavigationLanguage as useLanguage } from '../../navigation/useNavigationLanguage';
 import { workspace } from '../../api';
+import { navigation, activeNavigation, type NavigationItem } from '../../navigation/model';
+import { useWorkspace } from '../../navigation/useWorkspace';
 
-interface NavItem {
-  icon: LucideIcon;
-  label: string;
-  page: string;
-  path?: string;
-  orPermissions: string[];
-  emphasis?: 'safety';
-}
-interface NavGroup {
-  label: string;
-  items: NavItem[];
-}
-
-const PRIMARY_NAV: NavGroup[] = [
-  {
-    label: 'group.0',
-    items: [
-      { icon: Home, label: 'nav.home', page: 'home', orPermissions: [] },
-      {
-        icon: Store,
-        label: 'nav.marketplace',
-        page: 'marketplace',
-        orPermissions: ['listing.read', 'offer.create'],
-      },
-      {
-        icon: ShoppingBag,
-        label: 'nav.supply-new',
-        page: 'supply-new',
-        path: '/supply/new',
-        orPermissions: ['listing.create'],
-      },
-      {
-        icon: Handshake,
-        label: 'nav.offers',
-        page: 'offers',
-        orPermissions: ['offer.respond', 'offer.create'],
-      },
-      {
-        icon: ScrollText,
-        label: 'nav.contracts',
-        page: 'contracts',
-        orPermissions: ['contract.read', 'offer.respond', 'offer.create'],
-      },
-      { icon: QrCode, label: 'nav.products', page: 'products', orPermissions: ['batch.read'] },
-      {
-        icon: ShieldAlert,
-        label: 'nav.recalls',
-        page: 'recalls',
-        orPermissions: [],
-        emphasis: 'safety',
-      },
-    ],
-  },
-];
-
-const TRADE_NAV: NavGroup = {
-  label: 'group.1',
-  items: [
-    {
-      icon: Ship,
-      label: 'nav.shipments',
-      page: 'shipments',
-      orPermissions: ['shipment.read', 'shipment.update'],
-    },
-    {
-      icon: WalletCards,
-      label: 'nav.platform-fees',
-      page: 'platform-fees',
-      orPermissions: ['offer.respond', 'finance.manage'],
-    },
-    {
-      icon: WalletCards,
-      label: 'nav.payments',
-      page: 'payments',
-      orPermissions: ['payment.read', 'payment.request', 'payment.confirm'],
-    },
-  ],
+export const navigationIcons: Record<string, LucideIcon> = {
+  Home,
+  Store,
+  Search,
+  ShoppingBag,
+  Handshake,
+  ScrollText,
+  QrCode,
+  ShieldAlert,
+  Ship,
+  WalletCards,
+  Trees,
+  Boxes,
+  BadgeCheck,
+  FileCheck2,
+  PackageCheck,
+  Bell,
+  LifeBuoy,
+  FileClock,
+  Building2,
+  UserCheck,
+  LayoutDashboard,
 };
-
-const TOOL_NAV: NavGroup[] = [
-  {
-    label: 'group.2',
-    items: [
-      {
-        icon: Trees,
-        label: 'nav.farms',
-        page: 'farms',
-        orPermissions: ['farm.read', 'farm.create'],
-      },
-      {
-        icon: Boxes,
-        label: 'nav.batches',
-        page: 'batches',
-        orPermissions: ['batch.read', 'batch.create', 'batch.attest'],
-      },
-      {
-        icon: BadgeCheck,
-        label: 'nav.certs',
-        page: 'certs',
-        orPermissions: ['certificate.read', 'certificate.issue'],
-      },
-      {
-        icon: FileCheck2,
-        label: 'nav.evidence',
-        page: 'evidence',
-        orPermissions: ['evidence.read', 'evidence.upload'],
-      },
-    ],
-  },
-  {
-    label: 'group.3',
-    items: [
-      {
-        icon: ShoppingBag,
-        label: 'nav.my-listings',
-        page: 'my-listings',
-        orPermissions: ['listing.create'],
-      },
-      {
-        icon: PackageCheck,
-        label: 'nav.holdings',
-        page: 'holdings',
-        orPermissions: ['holding.read', 'holding.create', 'listing.create'],
-      },
-    ],
-  },
-  {
-    label: 'group.4',
-    items: [
-      {
-        icon: Bell,
-        label: 'nav.notifications',
-        page: 'notifications',
-        path: '/notifications',
-        orPermissions: [],
-      },
-      {
-        icon: LifeBuoy,
-        label: 'nav.support',
-        page: 'support',
-        path: '/support',
-        orPermissions: [],
-      },
-      { icon: FileClock, label: 'nav.audit', page: 'audit', orPermissions: ['audit.read'] },
-      { icon: ShieldAlert, label: 'nav.operations', page: 'operations', orPermissions: ['*'] },
-      {
-        icon: Building2,
-        label: 'nav.organizations',
-        page: 'organizations',
-        orPermissions: ['organization.admin'],
-      },
-      {
-        icon: ShieldAlert,
-        label: 'nav.access-review',
-        page: 'access-review',
-        path: '/access-review',
-        orPermissions: ['*'],
-      },
-      {
-        icon: ShieldAlert,
-        label: 'nav.access-controls',
-        page: 'access-controls',
-        path: '/access-controls',
-        orPermissions: ['*'],
-      },
-      {
-        icon: UserCheck,
-        label: 'nav.access-applications',
-        page: 'access-applications',
-        path: '/access-applications',
-        orPermissions: ['*'],
-      },
-    ],
-  },
-];
 
 export default function Sidebar({
   currentPage,
   onNavigate,
   className = '',
+  offerCount = null,
 }: {
   currentPage: string;
   onNavigate: () => void;
   className?: string;
+  offerCount?: number | null;
 }) {
   const { user, logout, onboarding, refreshOnboarding } = useAuthCtx();
   const { t } = useLanguage();
   const { canAny } = usePermission();
   const navigate = useNavigate();
-  const go = (item: Pick<NavItem, 'page' | 'path'>) => {
+  const { mode, available, switchWorkspace } = useWorkspace();
+  const menu = navigation(user, mode);
+  const go = (item: { page?: string; path?: string }) => {
     navigate(item.path || '/' + item.page);
     onNavigate();
   };
-  const setMode = (mode: 'buy' | 'sell') => {
-    localStorage.setItem('ct_experience_mode', mode);
-    navigate(`/home?mode=${mode}`);
-    onNavigate();
-  };
-  const isActive = (item: NavItem) =>
-    currentPage === item.page ||
-    currentPage + 's' === item.page ||
-    (currentPage === 'deal-room' && item.page === 'contracts');
-
   const replayWelcome = async () => {
     await workspace.updateOnboarding({
       status: 'not_started',
@@ -246,146 +92,144 @@ export default function Sidebar({
     navigate('/onboarding');
     onNavigate();
   };
-
-  const renderItem = (item: NavItem, compact = false) => {
-    const Icon = item.icon;
-    const selected = isActive(item);
+  const renderItem = (item: NavigationItem, primary = false) => {
+    const Icon = navigationIcons[item.icon] || Home;
+    const selected = !primary && activeNavigation(item.id, currentPage);
+    const badge = item.id === 'offers' && offerCount !== null && offerCount > 0;
     return (
       <button
-        key={item.page}
+        key={item.id}
+        aria-label={t(item.label)}
         aria-current={selected ? 'page' : undefined}
+        aria-describedby={
+          badge ? `offer-count-${className.includes('w-') ? 'desktop' : 'mobile'}` : undefined
+        }
         onClick={() => go(item)}
-        className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[12px] font-medium transition-all ${selected ? 'bg-white text-emerald-950 shadow-lg shadow-black/10' : item.emphasis === 'safety' ? 'text-amber-100 hover:bg-amber-300/10' : 'text-white/65 hover:bg-white/[0.07] hover:text-white'}`}
+        className={`group flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium transition ${selected || primary ? 'bg-white text-emerald-950' : item.id === 'recalls' ? 'text-amber-100 hover:bg-amber-300/10' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
       >
-        <Icon
-          size={compact ? 16 : 17}
-          className={
-            selected
-              ? 'text-brand-600'
-              : item.emphasis === 'safety'
-                ? 'text-amber-300'
-                : 'text-white/40 group-hover:text-brand-300'
-          }
-        />
+        <Icon size={17} aria-hidden="true" />
         <span className="flex-1">{t(item.label)}</span>
-        {item.emphasis === 'safety' && (
-          <span
-            className={`h-2 w-2 rounded-full ${selected ? 'bg-amber-500' : 'bg-amber-300 shadow-[0_0_10px_rgba(252,211,77,.45)]'}`}
-          />
+        {badge && (
+          <>
+            <span aria-hidden="true" className="rounded-full bg-emerald-300/20 px-2 py-0.5 text-xs">
+              {offerCount}
+            </span>
+            <span
+              className="sr-only"
+              id={`offer-count-${className.includes('w-') ? 'desktop' : 'mobile'}`}
+            >
+              {offerCount} {t(mode === 'buy' ? 'nav.awaiting-supplier' : 'nav.awaiting-you')}
+            </span>
+          </>
         )}
       </button>
     );
   };
-
   return (
-    <aside className={`${className} flex flex-col overflow-y-auto bg-[#0c1913] text-white`}>
+    <aside className={`${className} flex min-h-0 flex-col overflow-hidden bg-[#0c1913] text-white`}>
       <div className="flex h-20 shrink-0 items-center gap-3 border-b border-white/10 px-5">
         <button
           className="flex min-w-0 flex-1 items-center gap-3 text-left"
           onClick={() => go({ page: 'home' })}
         >
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-lg shadow-brand-900/40">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-500">
             <Leaf size={20} />
           </span>
-          <span className="min-w-0">
-            <span className="block text-[15px] font-bold tracking-tight">BetterTrade</span>
-            <span className="block truncate text-[10px] font-medium uppercase tracking-[0.16em] text-emerald-200/50">
-              {t('shell.verified')}
-            </span>
+          <span>
+            <span className="block text-[15px] font-bold">BetterTrade</span>
+            <span className="block text-[10px] text-emerald-200/60">{t('shell.verified')}</span>
           </span>
         </button>
         <button
-          className="rounded-lg p-2 text-white/50 hover:bg-white/10 hover:text-white lg:hidden"
+          className="rounded-lg p-2 lg:hidden"
           onClick={onNavigate}
           aria-label={t('shell.close')}
-          title={t('shell.close')}
         >
           <X size={18} />
         </button>
       </div>
-      <nav className="flex-1 space-y-5 px-3 py-5">
-        <div className="grid grid-cols-2 gap-1 rounded-2xl border border-white/10 bg-black/15 p-1">
-          <button
-            onClick={() => setMode('buy')}
-            className="rounded-xl px-3 py-2 text-[11px] font-bold text-white/65 transition hover:bg-white/10 hover:text-white"
-          >
-            {t('shell.buy')}
-          </button>
-          <button
-            onClick={() => setMode('sell')}
-            className="rounded-xl px-3 py-2 text-[11px] font-bold text-white/65 transition hover:bg-white/10 hover:text-white"
-          >
-            {t('shell.sell')}
-          </button>
+      <nav aria-label={t('nav.navigation')} className="flex min-h-0 flex-1 flex-col px-3 py-2">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-2">
+          {available.length > 1 ? (
+            <label className="block px-1 text-xs text-white/70">
+              {t('nav.workspace')}
+              <select
+                className="form-select mt-2 w-full"
+                value={mode}
+                onChange={(event) => {
+                  switchWorkspace(event.target.value as typeof mode);
+                  onNavigate();
+                }}
+              >
+                {available.map((value) => (
+                  <option key={value} value={value}>
+                    {t(`workspace.${value}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <p className="px-3 text-xs font-semibold text-emerald-200">{t(`workspace.${mode}`)}</p>
+          )}
+          {menu.create && renderItem(menu.create, true)}
+          {menu.groups.map((group) => {
+            const contents = (
+              <div className="space-y-1">{group.items.map((item) => renderItem(item))}</div>
+            );
+            return group.collapsible ? (
+              <details
+                key={group.id}
+                open={
+                  group.items.some((item) => activeNavigation(item.id, currentPage)) || undefined
+                }
+                className="rounded-xl border border-white/10 p-2"
+              >
+                <summary className="cursor-pointer px-1 py-2 text-xs font-semibold text-white/70">
+                  {t(group.label)}
+                </summary>
+                {contents}
+              </details>
+            ) : (
+              <section key={group.id} aria-label={t(group.label)}>
+                <h2 className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                  {t(group.label)}
+                </h2>
+                {contents}
+              </section>
+            );
+          })}
         </div>
-        {PRIMARY_NAV.map((group) => {
-          const items = group.items.filter(
-            (item) => !item.orPermissions.length || canAny(...item.orPermissions),
-          );
-          return items.length ? (
-            <section key={t(group.label)}>
-              <div className="mb-1.5 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-white/30">
-                {t(group.label)}
-              </div>
-              <div className="space-y-1">{items.map((item) => renderItem(item))}</div>
-            </section>
-          ) : null;
-        })}
-        {(() => {
-          const items = TRADE_NAV.items.filter((item) => canAny(...item.orPermissions));
-          return items.length ? (
-            <section>
-              <div className="mb-1.5 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-white/30">
-                {t(TRADE_NAV.label)}
-              </div>
-              <div className="space-y-1">{items.map((item) => renderItem(item))}</div>
-            </section>
-          ) : null;
-        })()}
-        <details
-          open={TOOL_NAV.some((group) => group.items.some(isActive)) || undefined}
-          className="group rounded-xl border border-white/10 bg-white/[.025] p-2"
+        <section
+          aria-label={t('nav.help-safety')}
+          className="shrink-0 border-t border-white/10 pt-2"
         >
-          <summary className="cursor-pointer list-none rounded-lg px-2 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-white/40 transition hover:bg-white/[.05] hover:text-white/70">
-            {t('shell.admin')}{' '}
-            <span className="float-right text-white/25 transition group-open:rotate-45">+</span>
-          </summary>
-          <div className="mt-3 space-y-5 border-t border-white/10 pt-3">
-            {TOOL_NAV.map((group) => {
-              const items = group.items.filter(
-                (item) => !item.orPermissions.length || canAny(...item.orPermissions),
-              );
-              return items.length ? (
-                <section key={t(group.label)}>
-                  <div className="mb-1.5 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-white/25">
-                    {t(group.label)}
-                  </div>
-                  <div className="space-y-1">{items.map((item) => renderItem(item, true))}</div>
-                </section>
-              ) : null;
-            })}
-          </div>
-        </details>
+          {menu.utility.map((item) => renderItem(item))}
+        </section>
       </nav>
-      <div className="m-3 rounded-2xl border border-white/10 bg-white/[0.05] p-3.5">
-        <button
-          onClick={replayWelcome}
-          className="mb-3 flex w-full items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-left text-[10px] font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"
-        >
-          <RefreshCw size={13} /> {t('shell.replay')}
-        </button>
-        <button
-          onClick={() => go({ page: 'pilot-limitations', path: '/pilot/limitations' })}
-          className="mb-3 min-h-11 w-full rounded-xl border border-white/10 px-3 py-2 text-left text-xs text-white/70"
-        >
-          Known pilot limitations
-        </button>
-        <button
-          onClick={() => go({ page: 'account-security', path: '/account/security' })}
-          className="mb-3 flex w-full items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-left text-[10px] font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"
-        >
-          <KeyRound size={13} /> {t('shell.security')}
-        </button>
+      <div className="m-3 shrink-0 rounded-2xl border border-white/10 bg-white/[0.05] p-3.5">
+        <details className="mb-3">
+          <summary className="cursor-pointer text-xs text-white/70">
+            {t('nav.account-help')}
+          </summary>
+          <button
+            onClick={replayWelcome}
+            className="mb-3 flex w-full items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-left text-[10px] font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"
+          >
+            <RefreshCw size={13} /> {t('shell.replay')}
+          </button>
+          <button
+            onClick={() => go({ page: 'pilot-limitations', path: '/pilot/limitations' })}
+            className="mb-3 min-h-11 w-full rounded-xl border border-white/10 px-3 py-2 text-left text-xs text-white/70"
+          >
+            Known pilot limitations
+          </button>
+          <button
+            onClick={() => go({ page: 'account-security', path: '/account/security' })}
+            className="mb-3 flex w-full items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-left text-[10px] font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"
+          >
+            <KeyRound size={13} /> {t('shell.security')}
+          </button>
+        </details>
         <div className="flex items-center gap-3">
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-300/15 text-xs font-bold text-emerald-200">
             {(user?.name || '?')

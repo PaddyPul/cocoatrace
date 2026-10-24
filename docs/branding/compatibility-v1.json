@@ -64,9 +64,15 @@
     },
     {
       "id": "workspace-preferences",
+      "path": "web/src/navigation/useWorkspace.ts",
+      "includes": ["ct_experience_mode:", "bt_workspace_mode:"],
+      "reason": "Read legacy per-account trading preferences and use the shared per-account workspace preference; no global cross-account mode key is reused."
+    },
+    {
+      "id": "setup-preference",
       "path": "web/src/pages/ExperienceHomePage.tsx",
-      "includes": ["ct_experience_mode:", "ct_guided_fresh_start"],
-      "reason": "Keep workspace role/mode selection and existing setup preference."
+      "includes": ["ct_guided_fresh_start"],
+      "reason": "Keep the existing guided fresh-start preference without resetting accounts or records."
     },
     {
       "id": "shortlist-preference",

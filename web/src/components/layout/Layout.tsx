@@ -1,28 +1,16 @@
 import { containDialogTab } from '../shared/dialogKeyboard';
 import { ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAuthCtx } from '../auth/AuthProvider';
-import Sidebar from './Sidebar';
+import Sidebar, { navigationIcons } from './Sidebar';
+import { navigation } from '../../navigation/model';
+import { useWorkspace } from '../../navigation/useWorkspace';
+import { offers } from '../../api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supportLink } from '../../domains/support/context';
-import {
-  Bell,
-  Boxes,
-  FileText,
-  GitBranch,
-  Home,
-  LayoutDashboard,
-  LifeBuoy,
-  Menu,
-  QrCode,
-  Search,
-  Ship,
-  ShoppingBag,
-  Sparkles,
-  Trees,
-  X,
-} from 'lucide-react';
+import { Bell, LifeBuoy, Menu, Search, Sparkles, X } from 'lucide-react';
 import PilotFeedback from '../shared/PilotFeedback';
-import { useLanguage, LanguageSelector } from '../../i18n/LanguageProvider';
+import { LanguageSelector } from '../../i18n/LanguageProvider';
+import { useNavigationLanguage as useLanguage } from '../../navigation/useNavigationLanguage';
 import { webConfig } from '../../config';
 
 export default function Layout({
@@ -36,6 +24,59 @@ export default function Layout({
 }) {
   const { user } = useAuthCtx();
   const { t } = useLanguage();
+  const { mode } = useWorkspace();
+  const badgeKey = `${user?.id}:${user?.organizationId}:${mode}:${user?.permissions.join(',')}`;
+  const [offerBadge, setOfferBadge] = useState<{ key: string; count: number | null }>({
+    key: '',
+    count: null,
+  });
+  const offerCount = offerBadge.key === badgeKey ? offerBadge.count : null;
+  useEffect(() => {
+    if (
+      !user ||
+      !['buy', 'sell'].includes(mode) ||
+      !user.permissions.some((p) => ['*', 'offer.create', 'offer.respond'].includes(p))
+    )
+      return;
+    let active = true;
+    let sequence = 0;
+    const load = async () => {
+      const request = ++sequence;
+      setOfferBadge({ key: badgeKey, count: null });
+      try {
+        const summary = await offers.summary();
+        const fields = [
+          summary?.received_count,
+          summary?.sent_count,
+          summary?.received_pending,
+          summary?.sent_pending,
+        ];
+        if (
+          !fields.every((value) => Number.isSafeInteger(value) && value >= 0) ||
+          summary.received_pending > summary.received_count ||
+          summary.sent_pending > summary.sent_count
+        )
+          throw new Error('Invalid offer count');
+        if (active && request === sequence)
+          setOfferBadge({
+            key: badgeKey,
+            count: mode === 'buy' ? summary.sent_pending : summary.received_pending,
+          });
+      } catch {
+        if (active && request === sequence) setOfferBadge({ key: badgeKey, count: null });
+      }
+    };
+    void load();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState !== 'hidden') void load();
+    }, 15000);
+    window.addEventListener('focus', load);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener('focus', load);
+    };
+  }, [badgeKey, mode]);
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -102,106 +143,31 @@ export default function Layout({
     return () => window.removeEventListener('keydown', listener);
   }, []);
 
-  const commandItems = useMemo(
-    () =>
-      [
-        {
-          label: t('command.home.label'),
-          hint: t('command.home.hint'),
-          path: '/home',
-          icon: Home,
-          permissions: [],
-        },
-        {
-          label: t('command.source.label'),
-          hint: t('command.source.hint'),
-          path: '/source/new',
-          icon: Search,
-          permissions: ['offer.create'],
-        },
-        {
-          label: t('command.publish.label'),
-          hint: t('command.publish.hint'),
-          path: '/supply/new',
-          icon: ShoppingBag,
-          permissions: ['listing.create'],
-        },
-        {
-          label: t('command.controlTower.label'),
-          hint: t('command.controlTower.hint'),
-          path: '/dashboard',
-          icon: LayoutDashboard,
-          permissions: [],
-        },
-        ...(webConfig.demoMode
-          ? [
-              {
-                label: t('command.demo.label'),
-                hint: t('command.demo.hint'),
-                path: '/demo',
-                icon: Sparkles,
-                permissions: [],
-              },
-            ]
-          : []),
-        {
-          label: t('command.products.label'),
-          hint: t('command.products.hint'),
-          path: '/products',
-          icon: QrCode,
-          permissions: ['batch.read'],
-        },
-        {
-          label: t('command.recalls.label'),
-          hint: t('command.recalls.hint'),
-          path: '/recalls',
-          icon: GitBranch,
-          permissions: ['batch.read', 'recall.manage'],
-        },
-        {
-          label: t('command.batches.label'),
-          hint: t('command.batches.hint'),
-          path: '/batches',
-          icon: Boxes,
-          permissions: ['batch.read', 'batch.create', 'batch.attest'],
-        },
-        {
-          label: t('command.farms.label'),
-          hint: t('command.farms.hint'),
-          path: '/farms',
-          icon: Trees,
-          permissions: ['farm.read', 'farm.create'],
-        },
-        {
-          label: t('command.contracts.label'),
-          hint: t('command.contracts.hint'),
-          path: '/contracts',
-          icon: FileText,
-          permissions: ['contract.read'],
-        },
-        {
-          label: t('command.shipments.label'),
-          hint: t('command.shipments.hint'),
-          path: '/shipments',
-          icon: Ship,
-          permissions: ['shipment.read', 'shipment.update'],
-        },
-      ]
-        .filter(
-          (item) =>
-            item.permissions.length === 0 ||
-            item.permissions.some(
-              (permission) =>
-                user?.permissions.includes('*') || user?.permissions.includes(permission),
-            ),
-        )
-        .filter(
-          (item) =>
-            !commandSearch ||
-            `${item.label} ${item.hint}`.toLowerCase().includes(commandSearch.toLowerCase()),
-        ),
-    [commandSearch, user?.permissions, t],
-  );
+  const commandItems = useMemo(() => {
+    const menu = navigation(user, mode);
+    const items = [
+      ...(menu.create ? [menu.create] : []),
+      ...menu.groups.flatMap((group) => group.items),
+      ...menu.utility,
+    ].map((item) => ({
+      label: t(item.label),
+      hint: t('nav.navigation'),
+      path: item.path,
+      icon: navigationIcons[item.icon] || Search,
+    }));
+    if (webConfig.demoMode)
+      items.push({
+        label: t('command.demo.label'),
+        hint: t('command.demo.hint'),
+        path: '/demo',
+        icon: Sparkles,
+      });
+    return items.filter(
+      (item) =>
+        !commandSearch ||
+        `${item.label} ${item.hint}`.toLowerCase().includes(commandSearch.toLowerCase()),
+    );
+  }, [commandSearch, user, mode, t]);
 
   const chooseCommand = (path: string) => {
     setCommandOpen(false);
@@ -210,7 +176,7 @@ export default function Layout({
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface-darker">
+    <div className="flex h-full min-h-0 overflow-hidden bg-surface-darker">
       <a
         href="#workspace-main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:bg-surface focus:p-3"
@@ -219,6 +185,7 @@ export default function Layout({
       </a>
       <div className="hidden lg:flex">
         <Sidebar
+          offerCount={offerCount}
           currentPage={currentPage}
           onNavigate={() => setSidebarOpen(false)}
           className="w-[272px] border-r border-white/10"
@@ -236,6 +203,7 @@ export default function Layout({
           }}
         >
           <Sidebar
+            offerCount={offerCount}
             currentPage={currentPage}
             onNavigate={() => setSidebarOpen(false)}
             className="h-full"
@@ -299,7 +267,7 @@ export default function Layout({
                 {user?.orgName}
               </div>
               <div className="truncate text-[9px] uppercase tracking-wider text-text-muted">
-                {user?.orgType}
+                {t(`workspace.${mode}`)}
               </div>
             </div>
           </div>

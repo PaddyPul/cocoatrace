@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { platformFees, type FeeStatement } from '../../api';
 import { useCatalogPage } from '../catalog/useCatalogPage';
 import PageNavigation from '../catalog/PageNavigation';
@@ -42,9 +42,12 @@ export function FeeRegisterRow({ fee: f }: { fee: FeeStatement['fee'] }) {
   );
 }
 export default function FeeRegister() {
+  const [params, setParams] = useSearchParams();
+  const requestedReview = params.get('review') === 'pending' ? 'pending' : 'all';
+  useEffect(() => setReview(requestedReview), [requestedReview]);
   const [search, setSearch] = useState(''),
     [status, setStatus] = useState('all'),
-    [review, setReview] = useState('all'),
+    [review, setReview] = useState(requestedReview),
     [from, setFrom] = useState(''),
     [to, setTo] = useState('');
   const page = useCatalogPage(platformFees.page, { search, status, review, from, to });
@@ -84,7 +87,15 @@ export default function FeeRegister() {
             aria-label="Receipt review"
             className="form-select"
             value={review}
-            onChange={(e) => setReview(e.target.value)}
+            onChange={(e) => {
+              setReview(e.target.value);
+              setParams((current) => {
+                const next = new URLSearchParams(current);
+                if (e.target.value === 'pending') next.set('review', 'pending');
+                else next.delete('review');
+                return next;
+              });
+            }}
           >
             <option value="all">All receipt states</option>
             <option value="pending">Verification pending</option>

@@ -1,5 +1,9 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'web/src/navigation/**/*.ts',
+  'web/src/pages/SourcingRequestsPage.tsx',
+  'scripts/navigation.test.mjs',
+  'e2e/navigationWorkspaces.spec.ts',
   'e2e/support/navigation.ts',
   'scripts/browser-navigation.test.mjs',
   'e2e/guidedTradeWorkspaces.spec.ts',

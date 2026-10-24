@@ -21,7 +21,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           <div className="text-3xl mb-3">⚠</div>
           <h2 className="text-sm font-semibold text-red-400 mb-2">{chunkFailure ? 'This page could not finish loading' : 'Something went wrong'}</h2>
           <p className="text-xs text-text-muted mb-4 font-mono break-all">
-            {chunkFailure ? 'The application may have updated, or the connection was interrupted. Reload this page to load the current version. No pending action was submitted by this load failure.' : this.state.error.message}
+            {chunkFailure ? 'Reload this page to recover from an application update or interrupted connection.' : this.state.error.message}
           </p>
           <button
             className="btn btn-sm"
