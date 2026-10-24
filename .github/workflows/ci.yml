@@ -137,7 +137,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck:browser
       - name: Install Chromium and Linux browser dependencies
-        run: npx playwright install --with-deps chromium
+        run: node node_modules/@playwright/test/cli.js install --with-deps chromium
       - name: Run isolated identity, trade and recall browser journeys
         run: npm run test:browser:docker
       - name: Upload sanitized browser diagnostics
@@ -222,7 +222,7 @@ jobs:
       - name: Reset only the marked synthetic rehearsal for first-run regression
         run: npm run demo:rehearsal:reset -- DELETE_SYNTHETIC_PREVIEW
       - name: Install browser for actual rehearsal passkey regression
-        run: npx playwright install --with-deps chromium
+        run: node node_modules/@playwright/test/cli.js install --with-deps chromium
       - name: Verify fresh demo accounts and localhost administrator passkey flow
         run: node scripts/check-local-rehearsal.mjs
         env:

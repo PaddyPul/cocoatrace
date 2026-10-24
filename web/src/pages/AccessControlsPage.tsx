@@ -291,7 +291,7 @@ export default function AccessControlsPage() {
               />
             </label>
             <div className="flex gap-2">
-              <button className="btn btn-primary" disabled={busy}>
+              <button type="submit" className="btn btn-primary" disabled={busy}>
                 {busy ? 'Saving…' : 'Confirm access decision'}
               </button>
               <button

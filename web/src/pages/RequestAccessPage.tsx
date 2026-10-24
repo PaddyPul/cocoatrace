@@ -174,6 +174,7 @@ export default function RequestAccessPage() {
             </div>
           )}
           <button
+            type="submit"
             disabled={busy}
             className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-400 px-5 text-sm font-bold text-emerald-950 disabled:opacity-50"
           >

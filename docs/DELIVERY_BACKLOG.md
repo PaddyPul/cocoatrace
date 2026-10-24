@@ -1080,3 +1080,8 @@ The next bundle targets three whole-row engineering outcomes: UPL-010 private ex
 Hosted infrastructure, external inbox, retention/legal policy, immutable security retention, private restore, commercial enrollment and optional Canton work remain open under their existing IDs. No new hosted-readiness or regulatory-compliance claim is introduced. Core gates remain11/28 (39.3%), provider-inclusive11/40 (27.5%).
 
 2026-10-22 acceptance: founder reports timed evidence/recall full release passed and PR #143 merged at main 0edad21. UPL-010, UPL-012 and RCL-004 are accepted: 174/362 (48.1%). Release/recovery guards candidate targets UPL-018 closure after Docker release/review: 175/362 (48.3%); SEC-013 repository settings and managed recovery remain open.
+
+
+### SonarCloud security/reliability correction — 2026-10-24
+
+Merged navigation PR #150 is accepted at main 4d5aa3b. The user-provided Sonar baseline contains 211 open issues across 24 rules; track each in quality/sonar-triage-2026-10-24.json. The first correction addresses 31 baseline findings in source (21 explicit form button types, one component name, four CI package-resolution findings and five private temporary-file findings), pending exact-candidate release and Sonar rescan. Twenty-five Moto-only findings have context recorded but are not dismissed. The remaining 155 findings require review; all 211 remain unconfirmed as closed. Existing SEC-006/QLT-002 and investor rehearsal work remain open; no completion credit or percentage increase is claimed. Eight dependency risks require separate details. Sorting for hashes/signatures, npm lifecycle requirements, labels/keyboard controls, promise handling and input regular expressions remain follow-ups.

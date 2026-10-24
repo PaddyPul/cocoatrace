@@ -153,7 +153,11 @@ export default function AgreementAcceptance({ contractId }: { contractId: string
                 />
                 I reviewed this version of the base commercial record for my organization.
               </label>
-              <button className="btn btn-primary text-xs" disabled={!confirmed || busy}>
+              <button
+                type="submit"
+                className="btn btn-primary text-xs"
+                disabled={!confirmed || busy}
+              >
                 Acknowledge reviewed version {data.version}
               </button>
             </form>

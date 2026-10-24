@@ -221,7 +221,7 @@ export default function AccessReviewPage() {
                 />{' '}
                 I reviewed the complete snapshot and retained the findings.
               </label>
-              <button className="btn btn-primary" disabled={busy || !confirmed}>
+              <button type="submit" className="btn btn-primary" disabled={busy || !confirmed}>
                 Record review receipt
               </button>
             </form>

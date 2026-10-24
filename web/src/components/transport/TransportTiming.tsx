@@ -131,7 +131,7 @@ export default function TransportTiming({ shipmentId }: { shipmentId: string }) 
                 disabled={busy}
                 onChange={(e) => setReason(e.target.value)}
               />
-              <button className="btn" disabled={busy}>
+              <button type="submit" className="btn" disabled={busy}>
                 Save reviewed timing
               </button>
             </form>

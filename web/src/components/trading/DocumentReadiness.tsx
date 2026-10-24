@@ -198,7 +198,11 @@ export default function DocumentReadiness({
                   Enter the number printed on the waybill, bill of lading or consignment note. This
                   saves only the reference and preserves your other transport details.
                 </p>
-                <button className="btn btn-primary" disabled={saving || !reference.trim()}>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={saving || !reference.trim()}
+                >
                   {saving ? 'Saving reference…' : 'Save transport reference'}
                 </button>
               </form>

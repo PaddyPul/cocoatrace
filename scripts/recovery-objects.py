@@ -1,6 +1,9 @@
 """Disposable Moto-only object recovery rehearsal; never accepts a real endpoint."""
 import hashlib
 import io
+import os
+import stat
+from pathlib import Path
 import json
 import sys
 import tarfile
@@ -13,7 +16,13 @@ KEY = 'evidence/recovery-test/document'
 DELETED = 'evidence/recovery-test/deleted'
 CURRENT = b'%PDF-1.4\nRECOVERY REHEARSAL ONLY current evidence\n%%EOF\n'
 OLD = b'%PDF-1.4\nRECOVERY REHEARSAL ONLY prior evidence\n%%EOF\n'
-ARCHIVE = '/tmp/cocoatrace-private-evidence.tar'
+WORKSPACE = Path(os.environ['RECOVERY_WORKSPACE'])
+workspace_stat = WORKSPACE.lstat()
+if (not stat.S_ISDIR(workspace_stat.st_mode) or workspace_stat.st_uid != os.geteuid()
+        or stat.S_IMODE(workspace_stat.st_mode) != 0o700):
+    raise ValueError('Recovery workspace must be an owned private directory')
+ARCHIVE = WORKSPACE / 'private-evidence.tar'
+VERSION_MAP = WORKSPACE / 'restored-version-map.json'
 s3 = boto3.client('s3', endpoint_url='http://127.0.0.1:5000', region_name='us-east-1',
                   aws_access_key_id='recovery_test', aws_secret_access_key='recovery_test')
 
@@ -75,11 +84,11 @@ def restore():
                 result = s3.put_object(Bucket=TARGET, Key=entry['key'], Body=content,
                                       ContentType=entry['contentType'], ServerSideEncryption='AES256', ACL='private')
             mapping.append({**entry, 'restoredVersion': result['VersionId']})
-    with open('/tmp/cocoatrace-restored-version-map.json', 'w') as output:
+    with open(VERSION_MAP, 'w') as output:
         json.dump(mapping, output)
 
 def verify():
-    with open('/tmp/cocoatrace-restored-version-map.json') as source:
+    with open(VERSION_MAP) as source:
         mapping = json.load(source)
     rows = inventory(TARGET)
     assert len(rows) == len(mapping), 'Restored version count differs'
@@ -131,7 +140,7 @@ elif phase == 'restore':
     bad = s3.put_object(Bucket=TARGET, Key=KEY, Body=b'corrupt')
     expect_failure()
     s3.delete_object(Bucket=TARGET, Key=KEY, VersionId=bad['VersionId'])
-    with open('/tmp/cocoatrace-restored-version-map.json') as source:
+    with open(VERSION_MAP) as source:
         old = next(e for e in json.load(source) if e['key'] == KEY and not e['latest'])
     s3.delete_object(Bucket=TARGET, Key=KEY, VersionId=old['restoredVersion'])
     expect_failure()

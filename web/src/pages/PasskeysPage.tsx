@@ -163,7 +163,7 @@ export default function PasskeysPage() {
               onChange={(event) => setPassword(event.target.value)}
             />
           </label>
-          <button
+          <button type="submit"
             className="btn btn-primary"
             disabled={busy || loading || keys === null || ipOrigin}
           >

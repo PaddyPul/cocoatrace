@@ -306,6 +306,7 @@ export default function PaymentOperations({
                 required
               />
               <button
+                type="submit"
                 className="btn text-xs"
                 disabled={
                   busy ||
