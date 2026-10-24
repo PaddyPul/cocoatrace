@@ -1,10 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useRegisterSummary } from '../components/catalog/useRegisterSummary';
 import { useNavigate } from 'react-router-dom';
 import { payments, type PaymentSummary } from '../api';
 import Layout from '../components/layout/Layout';
 import PageNavigation from '../components/catalog/PageNavigation';
 import { useCatalogPage } from '../components/catalog/useCatalogPage';
 import { StatusBadge, fmtMoney } from '../components/shared/helpers';
+const summaryCounts = [
+  'count',
+  'open_count',
+  'settled_count',
+  'cancelled_count',
+] as const satisfies readonly (keyof PaymentSummary)[];
 export default function PaymentRecordsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -12,46 +19,11 @@ export default function PaymentRecordsPage() {
   const [status, setStatus] = useState('all');
   const [currency, setCurrency] = useState('');
   const page = useCatalogPage(payments.page, { search, direction, status, currency });
-  const [summary, setSummary] = useState<PaymentSummary | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [refresh, setRefresh] = useState(0);
-  useEffect(() => {
-    let active = true;
-    const load = () =>
-      payments
-        .summary()
-        .then((row) => {
-          if (
-            !row ||
-            !['count', 'open_count', 'settled_count', 'cancelled_count'].every(
-              (key) =>
-                Number.isInteger(row[key as keyof PaymentSummary]) &&
-                Number(row[key as keyof PaymentSummary]) >= 0,
-            )
-          )
-            throw new Error('Invalid payment totals');
-          if (active) {
-            setSummary(row);
-            setFailed(false);
-          }
-        })
-        .catch(() => {
-          if (active) {
-            setSummary(null);
-            setFailed(true);
-          }
-        });
-    void load();
-    const focus = () => {
-      void page.refresh();
-      void load();
-    };
-    window.addEventListener('focus', focus);
-    return () => {
-      active = false;
-      window.removeEventListener('focus', focus);
-    };
-  }, [refresh]);
+  const { summary, failed, retry } = useRegisterSummary(
+    payments.summary,
+    summaryCounts,
+    page.refresh,
+  );
   return (
     <Layout currentPage="payments">
       <p className="mb-3 text-sm">
@@ -61,7 +33,7 @@ export default function PaymentRecordsPage() {
       {failed && (
         <p role="alert">
           Payment totals could not be refreshed.{' '}
-          <button className="btn" onClick={() => setRefresh((n) => n + 1)}>
+          <button className="btn" onClick={retry}>
             Retry payment totals
           </button>
         </p>

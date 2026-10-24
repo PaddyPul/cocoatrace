@@ -1,56 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useRegisterSummary } from '../components/catalog/useRegisterSummary';
 import { useNavigate } from 'react-router-dom';
 import { contracts, type ContractSummary } from '../api';
 import Layout from '../components/layout/Layout';
 import PageNavigation from '../components/catalog/PageNavigation';
 import { useCatalogPage } from '../components/catalog/useCatalogPage';
 import { StatusBadge, fmtMoney } from '../components/shared/helpers';
+const summaryCounts = [
+  'count',
+  'active_count',
+  'settled_count',
+  'cancelled_count',
+] as const satisfies readonly (keyof ContractSummary)[];
 export default function ContractRecordsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [direction, setDirection] = useState('all');
   const [status, setStatus] = useState('all');
   const page = useCatalogPage(contracts.page, { search, direction, status });
-  const [summary, setSummary] = useState<ContractSummary | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [refresh, setRefresh] = useState(0);
-  useEffect(() => {
-    let active = true;
-    const load = () =>
-      contracts
-        .summary()
-        .then((row) => {
-          if (
-            !row ||
-            !['count', 'active_count', 'settled_count', 'cancelled_count'].every(
-              (key) =>
-                Number.isInteger(row[key as keyof ContractSummary]) &&
-                Number(row[key as keyof ContractSummary]) >= 0,
-            )
-          )
-            throw new Error('Invalid order totals');
-          if (active) {
-            setSummary(row);
-            setFailed(false);
-          }
-        })
-        .catch(() => {
-          if (active) {
-            setSummary(null);
-            setFailed(true);
-          }
-        });
-    void load();
-    const focus = () => {
-      void page.refresh();
-      void load();
-    };
-    window.addEventListener('focus', focus);
-    return () => {
-      active = false;
-      window.removeEventListener('focus', focus);
-    };
-  }, [refresh]);
+  const { summary, failed, retry } = useRegisterSummary(
+    contracts.summary,
+    summaryCounts,
+    page.refresh,
+  );
   return (
     <Layout currentPage="contracts">
       <p className="mb-3 text-sm">
@@ -60,7 +32,7 @@ export default function ContractRecordsPage() {
       {failed && (
         <p role="alert">
           Order totals could not be refreshed.{' '}
-          <button className="btn" onClick={() => setRefresh((n) => n + 1)}>
+          <button className="btn" onClick={retry}>
             Retry order totals
           </button>
         </p>

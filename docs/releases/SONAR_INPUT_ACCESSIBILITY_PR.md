@@ -14,6 +14,7 @@ Visible labels identify the intended form fields and composite selectors. Async 
 - Associate labels with exact controls, preserve existing aria-labels, and use fieldset/legend for composite farm/certificate selectors. Price labels target the amount rather than its neighboring currency selector.
 - Mark existing internally handled async boundaries explicitly; handle Home summary rejection and migration/seed startup failure. Present unexpected action rejection without replaying the action.
 - Share index-based envelope validation while preserving the previous acceptance policy, retain stricter support-link restrictions, and remove trailing scanner NUL bytes in one backwards pass.
+- Share validated register totals and focus-refresh lifecycle across contracts, payments and transport, removing the duplicated blocks flagged on PR #152. Preserve independent filters, explicit failed/unknown totals and read-only retry.
 - Preserve all 211 baseline issue IDs and report pending verification honestly; no Sonar exclusions, status changes or threshold reductions.
 
 ## Security and data review
@@ -47,7 +48,7 @@ Visible labels identify the intended form fields and composite selectors. Async 
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: Author passed all 1,690 API unit tests in 176 files, 86 production-build Chromium cases across 18 mocked-API suites, API/web/browser typechecks, API build, web build and unchanged 90 KiB initial JavaScript budget, code quality, backlog checks and both dependency audits without exceptions. The email policy was also compared against the previous expressions over 30,941 generated strings in both modes. Bash setup passed syntax checking; it was not executed. The sourcing-entry fixture requires Docker and was not run here; it remains in the mandatory full release. Full exact-candidate Windows release, CI and SonarCloud rescan remain required. Docker/PostgreSQL and hosted staging are unavailable in the author environment.
+- Evidence/results: Author passed all 1,690 API unit tests in 176 files, 86 production-build Chromium cases across 18 mocked-API suites, API/web/browser typechecks, API build, web build and unchanged 90 KiB initial JavaScript budget, code quality, backlog checks and both dependency audits without exceptions. The PR #152 shared-register correction subsequently passed all 16 register browser cases, web/browser typechecks, code quality and production build/budget; invalid totals retry without writes while permitted rows remain available. SonarCloud must recompute duplication after push. The email policy was also compared against the previous expressions over 30,941 generated strings in both modes. Bash setup passed syntax checking; it was not executed. The sourcing-entry fixture requires Docker and was not run here; it remains in the mandatory full release. Full exact-candidate Windows release, CI and SonarCloud rescan remain required. Docker/PostgreSQL and hosted staging are unavailable in the author environment.
 
 ## Product and operations
 
