@@ -4,7 +4,7 @@ import ListingLifecycle from '../components/listings/ListingLifecycle';
 import { useCatalogPage } from '../components/catalog/useCatalogPage';
 import PageNavigation from '../components/catalog/PageNavigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { listings } from '../api';
 import type { Listing } from '../domains/marketplace/types';
 import { fmtMoney } from '../components/shared/helpers';
@@ -125,8 +125,7 @@ export default function MyListingsPage() {
               {filtered.map((l) => (
                 <div
                   key={l.id}
-                  className="bg-surface border border-border rounded overflow-hidden cursor-pointer hover:border-brand-500/30 transition-all group"
-                  onClick={() => navigate(`/listing/${l.id}`)}
+                  className="bg-surface border border-border rounded overflow-hidden hover:border-brand-500/30 transition-all group"
                 >
                   <div className="h-28 bg-surface-darker flex items-center justify-center text-3xl relative">
                     🏷
@@ -145,7 +144,9 @@ export default function MyListingsPage() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <h3 className="text-sm font-semibold text-text-primary truncate">
-                          {l.farm_name || 'Unknown Farm'}
+                          <Link to={`/listing/${l.id}`} className="underline underline-offset-4">
+                            {l.farm_name || 'Unknown Farm'}
+                          </Link>
                         </h3>
                         <p className="text-[11px] text-text-muted">
                           <MapPin size={11} className="inline" /> {l.farm_region || '—'}

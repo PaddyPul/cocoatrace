@@ -1,3 +1,4 @@
+import WorkspaceDialog from '../components/shared/WorkspaceDialog';
 import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -243,13 +244,18 @@ export default function BatchesPage() {
 
       {/* Create Batch Modal */}
       {showCreate && (
-        <div className="modal-overlay" onClick={() => !cbLoading && closeBatch()}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <WorkspaceDialog label="Create Batch" onClose={() => !cbLoading && closeBatch()}>
+          <div className="modal">
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="modal-title">Create Batch</div>
               </div>
-              <button className="btn btn-sm" onClick={closeBatch}>
+              <button
+                aria-label="Close dialog"
+                type="button"
+                className="btn btn-sm"
+                onClick={closeBatch}
+              >
                 <X size={14} />
               </button>
             </div>
@@ -338,12 +344,12 @@ export default function BatchesPage() {
               </div>
             </div>
           </div>
-        </div>
+        </WorkspaceDialog>
       )}
 
       {createdBatchId && (
-        <div className="modal-overlay" onClick={() => setCreatedBatchId(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <WorkspaceDialog label="Batch created" onClose={() => setCreatedBatchId(null)}>
+          <div className="modal">
             <div className="text-center py-6">
               <div className="text-3xl mb-3">📦</div>
               <div className="text-lg font-semibold text-brand-400 mb-1">Batch Created!</div>
@@ -366,7 +372,7 @@ export default function BatchesPage() {
               </div>
             </div>
           </div>
-        </div>
+        </WorkspaceDialog>
       )}
     </Layout>
   );

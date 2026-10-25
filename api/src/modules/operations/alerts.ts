@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import crypto from 'node:crypto';
 import type { PoolClient } from 'pg';
 import { config } from '../../config/env';
@@ -18,7 +19,9 @@ export function alertConfigurationFingerprint(options: AlertOptions): string {
     .createHash('sha256')
     .update(
       JSON.stringify({
-        recipients: [...options.recipientUserIds].map((id) => id.toLowerCase()).sort(),
+        recipients: [...options.recipientUserIds]
+          .map((id) => id.toLowerCase())
+          .sort(compareOrdinal),
         url: config.publicWebUrl,
         host: config.smtpHost,
         port: config.smtpPort,
@@ -67,7 +70,7 @@ export async function syncIncidents(
     await client.query(
       "SELECT pg_advisory_xact_lock(hashtextextended('bettertrade.operations.incident-register',0))",
     );
-    for (const key of [...new Set(keys)].sort())
+    for (const key of [...new Set(keys)].sort(compareOrdinal))
       await client.query(
         `INSERT INTO operations_incidents(signal_key) VALUES($1)
       ON CONFLICT(signal_key) WHERE state='open' DO UPDATE SET last_observed_at=NOW()`,

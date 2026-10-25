@@ -32,7 +32,7 @@ check docker
 
 echo ""
 echo "📦 Installing dependencies..."
-npm install --silent
+npm ci --ignore-scripts --silent
 echo "✓ Dependencies installed"
 
 # Keep local startup deterministic without requiring users to export variables

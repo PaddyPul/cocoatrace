@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import { AppError, ValidationError } from '../../errors';
 import { Actor } from '../../services/resourcePolicy';
 import { Execute, literal, pageResult, parsePage } from './paging';
@@ -41,7 +42,7 @@ export async function feedbackPage(
   const filter = rating(parameters.rating);
   const input = parsePage(
     parameters,
-    ['feedback', actor.organizationId, [...actor.permissions].sort(), filter],
+    ['feedback', actor.organizationId, [...actor.permissions].sort(compareOrdinal), filter],
     ['rating'],
   );
   const rows = (

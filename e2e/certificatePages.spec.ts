@@ -180,5 +180,28 @@ test('certificate issue fields have usable visible labels and label activation n
   await page.getByText('Crop Scope', { exact: true }).click();
   await expect(page.getByLabel('Crop Scope', { exact: true })).toBeFocused();
   await page.getByLabel('Crop Scope', { exact: true }).fill('cocoyam');
+  const dialog = page.getByRole('dialog', { name: 'Issue Certificate', exact: true });
+  await dialog.getByRole('button', { name: 'Issue Certificate', exact: true }).focus();
+  await page.keyboard.press('Tab');
+  await expect(dialog.getByRole('button', { name: 'Close dialog', exact: true })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(
+    dialog.getByRole('button', { name: 'Issue Certificate', exact: true }),
+  ).toBeFocused();
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press('Escape');
+  const discard = page.getByRole('dialog', { name: 'Discard unsaved changes?', exact: true });
+  await expect(discard).toBeVisible();
+  await discard.getByRole('button', { name: 'Stay and keep editing', exact: true }).click();
+  await expect(page.getByLabel('Crop Scope', { exact: true })).toHaveValue('cocoyam');
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page
+    .getByRole('dialog', { name: 'Discard unsaved changes?', exact: true })
+    .getByRole('button', { name: 'Discard changes', exact: true })
+    .click();
+  await expect(dialog).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: '+ Issue Certificate', exact: true }),
+  ).toBeFocused();
   expect(writes).toBe(0);
 });

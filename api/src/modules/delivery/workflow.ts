@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import type { PoolClient } from 'pg';
 import { ConflictError, NotFoundError, ValidationError } from '../../errors';
 import { inTradeTransaction, recordTradeAudit, TradeActor } from '../trading/transaction';
@@ -207,7 +208,7 @@ export async function reportDiscrepancy(
   id: string,
   input: { kind: string; receivedQuantityKg: number; reason: string; evidenceIds: string[] },
 ) {
-  const requestedIds = [...new Set(input.evidenceIds)].sort();
+  const requestedIds = [...new Set(input.evidenceIds)].sort(compareOrdinal);
   const availability = await preflightEvidence(
     async (execute) =>
       (
@@ -236,13 +237,13 @@ export async function reportDiscrepancy(
         [id],
       )
     ).rows[0];
-    const ids = [...new Set(input.evidenceIds)].sort();
+    const ids = [...new Set(input.evidenceIds)].sort(compareOrdinal);
     if (active) {
       if (
         active.kind === input.kind &&
         Number(active.received_quantity_kg) === input.receivedQuantityKg &&
         active.reason === input.reason &&
-        JSON.stringify([...active.evidence_ids].sort()) === JSON.stringify(ids)
+        JSON.stringify([...active.evidence_ids].sort(compareOrdinal)) === JSON.stringify(ids)
       )
         return details(client, contract);
       throw new ConflictError('Resolve the existing discrepancy first');

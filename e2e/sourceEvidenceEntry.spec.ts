@@ -58,6 +58,8 @@ test('source farm and plot do not create inventory until a real harvest is recor
   await page.locator('.modal select').selectOption(farm.id);
   await page.locator('.modal input[type=date]').fill(new Date().toISOString().slice(0, 10));
   await page.getByPlaceholder('Quantity (kg) *', { exact: true }).fill('100');
+  await expect(page.getByLabel('Batch crop', { exact: true })).toHaveValue('cocoa');
+  await expect(page.getByLabel('Batch crop', { exact: true })).toBeEnabled();
   const batchEvent = page.waitForResponse(r => r.url().endsWith('/api/batches') && r.request().method() === 'POST');
   await page.locator('.modal').getByRole('button', { name: 'Create Batch', exact: true }).click();
   const batchResponse = await batchEvent;

@@ -99,3 +99,18 @@ test('bounded names, searches, count, opaque IDs and scope whitelist', () => {
   );
   assert.throws(() => writeFilters(store, 'key', 'inventory', filters));
 });
+
+test('stored filter keys are order-independent and reject an additional property', () => {
+  const item = preset();
+  const key = storageKey('user', 'org', 'inventory');
+  for (const record of [
+    { values: item.values, name: item.name, id: item.id },
+    { name: item.name, id: item.id, values: item.values },
+  ]) {
+    const store = memory();
+    store.setItem(key, JSON.stringify([record]));
+    assert.deepEqual(readFilters(store, key, 'inventory'), [item]);
+    store.setItem(key, JSON.stringify([{ ...record, unexpected: true }]));
+    assert.throws(() => readFilters(store, key, 'inventory'));
+  }
+});

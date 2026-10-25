@@ -1,5 +1,9 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/utils/ordinal.ts',
+  'web/src/components/shared/WorkspaceDialog.tsx',
+  'api/src/services/sourcingStructurer*.ts',
+  'scripts/ordinal-order*.mjs',
   'api/src/services/emailAddress*.ts',
   'web/src/navigation/**/*.ts',
   'web/src/pages/SourcingRequestsPage.tsx',
@@ -472,6 +476,7 @@ export const formattedPaths = [
   'scripts/backlog-progress.test.mjs',
   'docs/pilot-gates.json',
   'eslint.config.mjs',
+  'web/src/i18n/**/*.json',
   'web/src/i18n/**/*.ts',
   'web/src/i18n/**/*.tsx',
   'scripts/locale.test.mjs',

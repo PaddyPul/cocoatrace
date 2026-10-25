@@ -1,3 +1,4 @@
+import WorkspaceDialog from '../components/shared/WorkspaceDialog';
 import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -257,13 +258,18 @@ export default function FarmsPage() {
       </div>
 
       {showCreate && (
-        <div className="modal-overlay" onClick={() => !cfLoading && closeFarm()}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <WorkspaceDialog label="Create Farm" onClose={() => !cfLoading && closeFarm()}>
+          <div className="modal">
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="modal-title">Create Farm</div>
               </div>
-              <button className="btn btn-sm" onClick={closeFarm}>
+              <button
+                aria-label="Close dialog"
+                type="button"
+                className="btn btn-sm"
+                onClick={closeFarm}
+              >
                 <X size={14} />
               </button>
             </div>
@@ -321,12 +327,12 @@ export default function FarmsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </WorkspaceDialog>
       )}
 
       {createdFarmId && !showPlot && (
-        <div className="modal-overlay" onClick={() => setCreatedFarmId(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <WorkspaceDialog label="Source setup progress" onClose={() => setCreatedFarmId(null)}>
+          <div className="modal">
             <div className="text-center py-6">
               <div className="text-3xl mb-3">🌱</div>
               <div className="text-lg font-semibold text-brand-400 mb-1">Farm Created!</div>
@@ -356,17 +362,22 @@ export default function FarmsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </WorkspaceDialog>
       )}
 
       {showPlot && createdFarmId && (
-        <div className="modal-overlay" onClick={() => !plotLoading && closePlot()}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <WorkspaceDialog label="Add Plot" onClose={() => !plotLoading && closePlot()}>
+          <div className="modal">
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="modal-title">Add Plot</div>
               </div>
-              <button className="btn btn-sm" onClick={() => closePlot()}>
+              <button
+                aria-label="Close dialog"
+                type="button"
+                className="btn btn-sm"
+                onClick={() => closePlot()}
+              >
                 <X size={14} />
               </button>
             </div>
@@ -439,12 +450,12 @@ export default function FarmsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </WorkspaceDialog>
       )}
 
       {completedFarmId && (
-        <div className="modal-overlay" onClick={() => setCompletedFarmId(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <WorkspaceDialog label="Source setup progress" onClose={() => setCompletedFarmId(null)}>
+          <div className="modal">
             <div className="text-center py-6">
               <div className="text-3xl mb-3">✓</div>
               <div className="text-lg font-semibold text-brand-400 mb-1">Source ready</div>
@@ -462,7 +473,7 @@ export default function FarmsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </WorkspaceDialog>
       )}
     </Layout>
   );

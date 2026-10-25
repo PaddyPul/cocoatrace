@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import { assertNoFeeRefundHold } from '../feeRefunds/boundary';
 import { enqueueFeeStatement } from '../feeStatementDelivery/service';
 import { createHash } from 'node:crypto';
@@ -150,7 +151,7 @@ export async function lockFeeOrganizations(
   client: PoolClient,
   organizationIds: string[],
 ): Promise<void> {
-  for (const id of [...new Set(organizationIds)].sort())
+  for (const id of [...new Set(organizationIds)].sort(compareOrdinal))
     await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,54109))', [id]);
 }
 async function lockPayer(client: PoolClient, contractId: string) {
@@ -306,7 +307,7 @@ export async function assertNoOverdueFees(
   client: PoolClient,
   organizationIds: string[],
 ): Promise<void> {
-  const ids = [...new Set(organizationIds)].sort();
+  const ids = [...new Set(organizationIds)].sort(compareOrdinal);
   await lockFeeOrganizations(client, ids);
   const overdue = await client.query(
     `SELECT f.id FROM platform_fee_invoices f LEFT JOIN fee_collection_terms t ON t.fee_id=f.id

@@ -171,8 +171,29 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
       EVIDENCE_SCANNER_TIMEOUT_MS: z.coerce.number().int().min(500).max(120_000).default(15_000),
       EVIDENCE_SCANNER_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
       OPERATIONS_ALERTS_ENABLED: booleanValue.default(false),
-      OPERATIONS_ALERT_RECIPIENT_USER_IDS: z.preprocess(value => value === undefined || value === '' ? [] : typeof value === 'string' ? value.split(',').map(id => id.trim()) : value, z.array(z.string().uuid()).max(5).refine(ids => new Set(ids.map(id => id.toLowerCase())).size === ids.length, 'operator IDs must be unique').transform(ids => ids.map(id => id.toLowerCase()))),
-      INVITATION_DELIVERY_KEY: z.preprocess(value => value === '' ? undefined : value, z.string().regex(/^[a-f0-9]{64}$/i).optional()),
+      OPERATIONS_ALERT_RECIPIENT_USER_IDS: z.preprocess(
+        (value) =>
+          value === undefined || value === ''
+            ? []
+            : typeof value === 'string'
+              ? value.split(',').map((id) => id.trim())
+              : value,
+        z
+          .array(z.string().uuid())
+          .max(5)
+          .refine(
+            (ids) => new Set(ids.map((id) => id.toLowerCase())).size === ids.length,
+            'operator IDs must be unique',
+          )
+          .transform((ids) => ids.map((id) => id.toLowerCase())),
+      ),
+      INVITATION_DELIVERY_KEY: z.preprocess(
+        (value) => (value === '' ? undefined : value),
+        z
+          .string()
+          .regex(/^[a-f0-9]{64}$/i)
+          .optional(),
+      ),
       IDENTITY_EMAIL_ENABLED: booleanValue.default(false),
       EMAIL_DRIVER: z.enum(['development', 'smtp']).default('development'),
       EMAIL_FROM: optionalEmail,
@@ -199,7 +220,15 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
           message: 'MFA requires HTTPS or localhost',
         });
       }
-      if (values.TEST_LEGACY_FEE_POLICY && (environment !== 'test' || !new URL(values.DATABASE_URL).pathname.includes('test'))) context.addIssue({code:z.ZodIssueCode.custom,path:['TEST_LEGACY_FEE_POLICY'],message:'legacy fee fixtures require a disposable test database and test environment'});
+      if (
+        values.TEST_LEGACY_FEE_POLICY &&
+        (environment !== 'test' || !new URL(values.DATABASE_URL).pathname.includes('test'))
+      )
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['TEST_LEGACY_FEE_POLICY'],
+          message: 'legacy fee fixtures require a disposable test database and test environment',
+        });
       const deployed = environment === 'staging' || environment === 'production';
       if (deployed && !values.MFA_ENFORCED) {
         context.addIssue({
@@ -223,6 +252,21 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
               message: 'must be explicitly configured in staging and production',
             });
           }
+        }
+      }
+      if (deployed) {
+        try {
+          const database = new URL(values.DATABASE_URL);
+          if (decodeURIComponent(database.password) === 'cocoa_dev') {
+            context.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['DATABASE_URL'],
+              message:
+                'must not use the local development database password in staging or production',
+            });
+          }
+        } catch {
+          /* existing connection validation remains authoritative for other formats */
         }
       }
       if (deployed && values.JWT_SECRET.length < 32) {
@@ -353,16 +397,53 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
         });
       }
       if (values.OPERATIONS_ALERTS_ENABLED) {
-        if (values.EMAIL_DRIVER !== 'smtp') context.addIssue({code:z.ZodIssueCode.custom,path:['EMAIL_DRIVER'],message:'must be smtp when operations alerts are enabled'});
-        if (!values.OPERATIONS_ALERT_RECIPIENT_USER_IDS.length) context.addIssue({code:z.ZodIssueCode.custom,path:['OPERATIONS_ALERT_RECIPIENT_USER_IDS'],message:'requires 1–5 registered operator user IDs'});
-        if (values.DEMO_MODE) context.addIssue({code:z.ZodIssueCode.custom,path:['OPERATIONS_ALERTS_ENABLED'],message:'must remain disabled for synthetic demos'});
-        if (values.SMTP_CONNECTION_TIMEOUT_MS > 10000) context.addIssue({code:z.ZodIssueCode.custom,path:['SMTP_CONNECTION_TIMEOUT_MS'],message:'must not exceed 10000 when operations alerts are enabled'});
+        if (values.EMAIL_DRIVER !== 'smtp')
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['EMAIL_DRIVER'],
+            message: 'must be smtp when operations alerts are enabled',
+          });
+        if (!values.OPERATIONS_ALERT_RECIPIENT_USER_IDS.length)
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['OPERATIONS_ALERT_RECIPIENT_USER_IDS'],
+            message: 'requires 1–5 registered operator user IDs',
+          });
+        if (values.DEMO_MODE)
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['OPERATIONS_ALERTS_ENABLED'],
+            message: 'must remain disabled for synthetic demos',
+          });
+        if (values.SMTP_CONNECTION_TIMEOUT_MS > 10000)
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['SMTP_CONNECTION_TIMEOUT_MS'],
+            message: 'must not exceed 10000 when operations alerts are enabled',
+          });
       }
-      if (values.INVITATION_DELIVERY_KEY && [values.JWT_SECRET, values.EVIDENCE_UPLOAD_SIGNING_SECRET].includes(values.INVITATION_DELIVERY_KEY)) {
-        context.addIssue({code:z.ZodIssueCode.custom,path:['INVITATION_DELIVERY_KEY'],message:'must be independent of session and evidence signing secrets'});
+      if (
+        values.INVITATION_DELIVERY_KEY &&
+        [values.JWT_SECRET, values.EVIDENCE_UPLOAD_SIGNING_SECRET].includes(
+          values.INVITATION_DELIVERY_KEY,
+        )
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['INVITATION_DELIVERY_KEY'],
+          message: 'must be independent of session and evidence signing secrets',
+        });
       }
-      if (values.IDENTITY_EMAIL_ENABLED && values.EMAIL_DRIVER === 'smtp' && !values.INVITATION_DELIVERY_KEY) {
-        context.addIssue({code:z.ZodIssueCode.custom,path:['INVITATION_DELIVERY_KEY'],message:'requires a dedicated random 32-byte hex key when identity SMTP is enabled'});
+      if (
+        values.IDENTITY_EMAIL_ENABLED &&
+        values.EMAIL_DRIVER === 'smtp' &&
+        !values.INVITATION_DELIVERY_KEY
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['INVITATION_DELIVERY_KEY'],
+          message: 'requires a dedicated random 32-byte hex key when identity SMTP is enabled',
+        });
       }
       if (values.EMAIL_DRIVER === 'smtp') {
         for (const name of ['EMAIL_FROM', 'SMTP_HOST', 'SMTP_USER', 'SMTP_PASSWORD'] as const) {
@@ -374,7 +455,11 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
             });
         }
       }
-      if (deployed && (values.IDENTITY_EMAIL_ENABLED || values.OPERATIONS_ALERTS_ENABLED) && values.EMAIL_DRIVER !== 'smtp') {
+      if (
+        deployed &&
+        (values.IDENTITY_EMAIL_ENABLED || values.OPERATIONS_ALERTS_ENABLED) &&
+        values.EMAIL_DRIVER !== 'smtp'
+      ) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['EMAIL_DRIVER'],
@@ -392,7 +477,11 @@ export function parseConfig(source: NodeJS.ProcessEnv): AppConfig {
           message: 'TLS is required for email delivery in staging and production',
         });
       }
-      if (deployed && (values.IDENTITY_EMAIL_ENABLED || values.OPERATIONS_ALERTS_ENABLED) && !values.SMTP_TLS_REJECT_UNAUTHORIZED) {
+      if (
+        deployed &&
+        (values.IDENTITY_EMAIL_ENABLED || values.OPERATIONS_ALERTS_ENABLED) &&
+        !values.SMTP_TLS_REJECT_UNAUTHORIZED
+      ) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['SMTP_TLS_REJECT_UNAUTHORIZED'],

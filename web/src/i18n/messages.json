@@ -1,0 +1,286 @@
+{
+  "environment.label": ["Workspace environment", "Environnement de travail"],
+  "environment.unknown": [
+    "Environment unconfirmed — confirm this workspace with the operator before entering live trade or personal data.",
+    "Environnement non confirmé — vérifiez cet espace avec l’opérateur avant de saisir des données commerciales réelles ou personnelles."
+  ],
+  "environment.development": [
+    "Development environment — test work only; do not use for live trades.",
+    "Environnement de développement — essais uniquement ; aucune transaction réelle."
+  ],
+  "environment.test": [
+    "Test environment — do not use for live trades or personal data.",
+    "Environnement de test — aucune transaction réelle ni donnée personnelle."
+  ],
+  "environment.demo": [
+    "Demo environment — do not use for live trades or personal data.",
+    "Environnement de démonstration — aucune transaction réelle ni donnée personnelle."
+  ],
+  "environment.staging": [
+    "Staging environment — pre-release testing; do not use for live trades or personal data.",
+    "Environnement de préproduction — essais avant publication ; aucune transaction réelle ni donnée personnelle."
+  ],
+  "environment.production": [
+    "Production environment — check the intended recipient and trade before submitting.",
+    "Environnement de production — vérifiez le destinataire et la transaction avant de soumettre."
+  ],
+  "title.home": ["Your sourcing workspace", "Votre espace d’approvisionnement"],
+  "title.source-new": ["Create a sourcing brief", "Créer une demande"],
+  "title.source-compare": ["Compare verified supply", "Comparer les offres disponibles"],
+  "title.supply-new": ["Publish verified supply", "Publier une offre"],
+  "title.deal-room": ["Shared deal room", "Espace partagé de transaction"],
+  "title.demo": ["Investor Demo", "Démo investisseurs"],
+  "title.products": ["Products", "Produits"],
+  "title.dashboard": ["Control Tower", "Tour de contrôle"],
+  "title.marketplace": ["Marketplace", "Place de marché"],
+  "title.listing": ["Listing Details", "Détails de l’offre"],
+  "title.farm": ["Farm Details", "Détails de l’exploitation"],
+  "title.farms": ["Farms", "Exploitations"],
+  "title.batch": ["Batch Details", "Détails du lot"],
+  "title.batches": ["Harvest Batches", "Lots récoltés"],
+  "title.holding": ["Holding Details", "Détails du stock"],
+  "title.holdings": ["Inventory Holdings", "Stocks détenus"],
+  "title.offers": ["Offers", "Propositions"],
+  "title.contracts": ["My trades", "Mes transactions"],
+  "title.shipments": ["Shipments", "Expéditions"],
+  "title.payments": ["Goods payments", "Paiements des marchandises"],
+  "title.platform-fees": ["Platform Fees", "Frais de plateforme"],
+  "title.evidence": ["Evidence Documents", "Documents justificatifs"],
+  "title.recalls": ["Traceability & Recalls", "Traçabilité et rappels"],
+  "title.audit": ["Audit Log", "Journal d’audit"],
+  "title.certs": ["Certificates", "Certificats"],
+  "title.my-listings": ["My Listings", "Mes offres"],
+  "title.organizations": ["Organizations", "Organisations"],
+  "title.pilot": ["Pilot Team", "Équipe pilote"],
+  "title.access-applications": ["Access Applications", "Demandes d’accès"],
+  "title.support": ["Support requests", "Demandes d’assistance"],
+  "title.notifications": ["Current trade notices", "Avis commerciaux actuels"],
+  "nav.notifications": ["Notifications", "Notifications"],
+  "shell.notifications": ["Open notifications", "Ouvrir les notifications"],
+  "shell.reportIssue": ["Report an issue", "Signaler un problème"],
+  "nav.support": ["Support requests", "Demandes d’assistance"],
+  "title.access-review": ["Privileged access review", "Revue des accès privilégiés"],
+  "title.access-controls": ["Account access controls", "Contrôle des accès"],
+  "title.account-security": ["Account Security", "Sécurité du compte"],
+  "description.home": [
+    "Move from a requirement to a verified trade, with one evidence trail.",
+    "Passez d’un besoin à une transaction, avec une piste de preuves commune."
+  ],
+  "description.source-new": [
+    "Describe what you need; BetterTrade turns it into a buyer-ready requirement.",
+    "Décrivez votre besoin pour structurer votre demande."
+  ],
+  "description.source-compare": [
+    "Compare commercial fit and supporting proof side by side.",
+    "Comparez les conditions commerciales et les preuves."
+  ],
+  "description.supply-new": [
+    "Turn traceable inventory into a buyer-ready offer.",
+    "Proposez un stock traçable aux acheteurs."
+  ],
+  "description.deal-room": [
+    "Keep commitments, evidence and execution visible to both sides.",
+    "Partagez engagements, preuves et suivi avec votre partenaire."
+  ],
+  "description.demo": [
+    "The scan, verification and recall story in one guided flow.",
+    "Découvrez le parcours de vérification et de rappel."
+  ],
+  "description.products": [
+    "Living product passports connected to evidence, provenance and safety.",
+    "Passeports produits liés aux preuves, à la provenance et à la sécurité."
+  ],
+  "description.dashboard": [
+    "Product readiness, evidence gaps and safety risk across your network.",
+    "Suivez la préparation des produits, les preuves manquantes et les risques."
+  ],
+  "description.marketplace": [
+    "Discover published inventory available for trade.",
+    "Découvrez les stocks publiés disponibles à la vente."
+  ],
+  "description.listing": [
+    "Review commercial terms and provenance before making a decision.",
+    "Examinez les conditions et la provenance avant de décider."
+  ],
+  "description.farms": [
+    "Manage origin identities, plots and verification readiness.",
+    "Gérez les exploitations, les parcelles et leur préparation à la vérification."
+  ],
+  "description.farm": [
+    "Review this farm’s plots, certificates and production history.",
+    "Consultez les parcelles, certificats et récoltes de cette exploitation."
+  ],
+  "description.batches": [
+    "Follow harvested material from origin through custody and sale.",
+    "Suivez les matières récoltées, leur garde et leur vente."
+  ],
+  "description.batch": [
+    "Inspect provenance, evidence, custody and the public product identity.",
+    "Examinez provenance, preuves, garde et identité publique du produit."
+  ],
+  "description.holdings": [
+    "Monitor the physical inventory currently under custody.",
+    "Suivez les stocks physiques sous votre garde."
+  ],
+  "description.holding": [
+    "Review quantity, location and custody actions for this holding.",
+    "Consultez quantité, emplacement et actions de garde."
+  ],
+  "description.offers": [
+    "Review and respond to commercial proposals.",
+    "Examinez les propositions commerciales et répondez."
+  ],
+  "description.contracts": [
+    "Track agreed commercial terms and trade progress through settlement.",
+    "Suivez les transactions convenues jusqu’à leur clôture."
+  ],
+  "description.shipments": [
+    "Monitor logistics milestones from origin to destination.",
+    "Suivez les étapes de transport jusqu’à destination."
+  ],
+  "description.payments": [
+    "Track requested, confirmed and outstanding payments.",
+    "Suivez les paiements demandés, confirmés et en attente."
+  ],
+  "description.platform-fees": [
+    "Review fee statements and verified platform collection.",
+    "Consultez les relevés de frais et les encaissements vérifiés."
+  ],
+  "description.evidence": [
+    "Manage the documents and hashes supporting product claims.",
+    "Gérez les documents et empreintes associés aux déclarations produit."
+  ],
+  "description.recalls": [
+    "Investigate lot genealogy, calculate impact and protect recipients.",
+    "Examinez la généalogie des lots et protégez les destinataires."
+  ],
+  "description.audit": [
+    "Review the immutable record of sensitive platform activity.",
+    "Consultez les activités sensibles consignées sur la plateforme."
+  ],
+  "description.certs": [
+    "Manage certification coverage, validity and status.",
+    "Gérez couverture, validité et statut des certificats."
+  ],
+  "description.my-listings": [
+    "Manage inventory currently offered to buyers.",
+    "Gérez les stocks proposés aux acheteurs."
+  ],
+  "description.organizations": [
+    "Manage supply-chain participants and platform access.",
+    "Gérez les participants et leurs accès."
+  ],
+  "description.pilot": [
+    "Invite named design partners and track pilot participation.",
+    "Invitez les partenaires pilotes et suivez leur participation."
+  ],
+  "description.access-applications": [
+    "Review organization access requests before granting workspace access.",
+    "Examinez les demandes vérifiées avant d’accorder un accès."
+  ],
+  "description.account-security": [
+    "Change your password and protect your active sessions.",
+    "Modifiez votre mot de passe et protégez vos sessions."
+  ],
+  "command.home.label": ["Home", "Accueil"],
+  "command.home.hint": [
+    "Your current decisions and next actions",
+    "Vos décisions et prochaines actions"
+  ],
+  "command.source.label": ["Find verified supply", "Trouver une offre"],
+  "command.source.hint": [
+    "Source by requirement, not by paperwork",
+    "Rechercher selon vos besoins"
+  ],
+  "command.publish.label": ["Publish supply", "Publier une offre"],
+  "command.publish.hint": [
+    "Offer an evidence-backed lot to buyers",
+    "Proposer un lot avec ses preuves"
+  ],
+  "command.controlTower.label": ["Control Tower", "Tour de contrôle"],
+  "command.controlTower.hint": ["Network health and priorities", "État du réseau et priorités"],
+  "command.demo.label": ["Investor Demo", "Démo investisseurs"],
+  "command.demo.hint": ["Scan, verify and respond story", "Parcours de vérification et de rappel"],
+  "command.products.label": ["Products", "Produits"],
+  "command.products.hint": [
+    "Product passports and safety state",
+    "Passeports produits et sécurité"
+  ],
+  "command.recalls.label": ["Trace & Recall", "Traçabilité et rappels"],
+  "command.recalls.hint": [
+    "Genealogy and incident response",
+    "Généalogie et gestion des incidents"
+  ],
+  "command.batches.label": ["Harvest Batches", "Lots récoltés"],
+  "command.batches.hint": [
+    "Source material and verification",
+    "Origine et vérification des matières"
+  ],
+  "command.farms.label": ["Farms", "Exploitations"],
+  "command.farms.hint": ["Origin and geolocation", "Origine et géolocalisation"],
+  "command.contracts.label": ["Trade agreements", "Accords commerciaux"],
+  "command.contracts.hint": [
+    "Buyer and seller agreements",
+    "Accords entre acheteurs et fournisseurs"
+  ],
+  "command.shipments.label": ["Shipments", "Expéditions"],
+  "command.shipments.hint": ["Logistics and milestones", "Transport et étapes"],
+  "shell.openNav": ["Open navigation", "Ouvrir la navigation"],
+  "shell.find": ["Find anything", "Rechercher"],
+  "shell.searchPlaceholder": [
+    "Find a product area or workflow…",
+    "Rechercher une rubrique ou un parcours…"
+  ],
+  "shell.open": ["Open →", "Ouvrir →"],
+  "shell.noMatch": ["No matching workflows", "Aucun parcours correspondant"],
+  "shell.searchHint": [
+    "Search is permission-aware · Press Esc to close",
+    "La recherche respecte vos accès · Échap pour fermer"
+  ],
+  "nav.home": ["Home", "Accueil"],
+  "nav.marketplace": ["Find verified supply", "Trouver une offre"],
+  "nav.supply-new": ["Publish supply", "Publier une offre"],
+  "nav.offers": ["Offers", "Propositions"],
+  "nav.contracts": ["Orders & deals", "Commandes et transactions"],
+  "nav.products": ["Products", "Produits"],
+  "nav.recalls": ["Trace & recall", "Traçabilité et rappels"],
+  "nav.shipments": ["Transport", "Transport"],
+  "nav.platform-fees": ["Platform fees", "Frais de plateforme"],
+  "nav.payments": ["Payments", "Paiements"],
+  "nav.farms": ["Farms", "Exploitations"],
+  "nav.batches": ["Harvest batches", "Lots récoltés"],
+  "nav.certs": ["Certificates", "Certificats"],
+  "nav.evidence": ["Evidence", "Preuves"],
+  "nav.my-listings": ["My listings", "Mes offres"],
+  "nav.holdings": ["Inventory", "Stock"],
+  "nav.audit": ["Audit log", "Journal d’audit"],
+  "nav.operations": ["Operations", "Opérations"],
+  "nav.organizations": ["Organizations", "Organisations"],
+  "nav.access-applications": ["Access applications", "Demandes d’accès"],
+  "nav.access-review": ["Privileged access review", "Revue des accès privilégiés"],
+  "nav.access-controls": ["Account access controls", "Contrôle des accès"],
+  "group.0": ["Workspace", "Espace de travail"],
+  "group.1": ["Active trade", "Transactions en cours"],
+  "group.2": ["Origin & proof", "Origine et preuves"],
+  "group.3": ["Supply records", "Registres des offres"],
+  "group.4": ["Administration", "Administration"],
+  "shell.verified": ["Evidence-aware sourcing", "Approvisionnement documenté"],
+  "shell.close": ["Close navigation", "Fermer la navigation"],
+  "shell.buy": ["Buy", "Acheter"],
+  "shell.sell": ["Sell", "Vendre"],
+  "shell.admin": ["Data & administration", "Données et administration"],
+  "shell.replay": ["Replay introduction", "Revoir la présentation"],
+  "shell.security": ["Account security", "Sécurité du compte"],
+  "shell.logout": ["Sign out", "Se déconnecter"],
+  "shell.corridor": ["Global sourcing workspace", "Espace de sourcing international"],
+  "shell.language": ["Language", "Langue"],
+  "shell.scope": ["Navigation only", "Navigation uniquement"],
+  "shell.device": [
+    "Language preference is saved on this device only. Other screens may remain in English.",
+    "La langue est enregistrée sur cet appareil uniquement. Certains écrans restent en anglais."
+  ],
+  "shell.storage": [
+    "Your browser could not save this preference. It applies until you leave this session.",
+    "Votre navigateur n’a pas pu enregistrer ce choix. Il s’applique pendant cette session."
+  ]
+}

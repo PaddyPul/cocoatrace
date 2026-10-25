@@ -53,7 +53,8 @@ export function readFilters(
     !value.every(
       (item) =>
         item &&
-        Object.keys(item).sort().join(',') === 'id,name,values' &&
+        Object.keys(item).length === 3 &&
+        Object.keys(item).every((key) => ['id', 'name', 'values'].includes(key)) &&
         typeof item.id === 'string' &&
         /^[a-zA-Z0-9-]{16,80}$/.test(item.id) &&
         safeText(item.name, 50) &&

@@ -1,3 +1,4 @@
+import { compareOrdinal } from '../../utils/ordinal';
 import { AppError, NotFoundError, ValidationError } from '../../errors';
 import type { TradeActor } from '../trading/transaction';
 import { Execute, literal, PageInput, pageResult, parsePage, withCatalogRead } from './paging';
@@ -82,7 +83,7 @@ export function responseInputs(
           actor.id,
           actor.organizationId,
           canManage,
-          actor.permissions.slice().sort(),
+          actor.permissions.slice().sort(compareOrdinal),
           name,
         ],
         [],

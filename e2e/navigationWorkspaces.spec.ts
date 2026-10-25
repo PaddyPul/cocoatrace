@@ -303,8 +303,10 @@ test('mobile navigation closes after choosing My trades and preserves keyboard e
   await expect(page).toHaveURL(/\/contracts$/);
   await expect(dialog).toHaveCount(0);
   await expect(page.locator('#workspace-main')).toBeVisible();
+  await expect(page.getByLabel('Search contracts', { exact: true })).toBeVisible();
   const trigger = page.getByRole('button', { name: 'Open navigation', exact: true });
   await trigger.focus();
+  await expect(trigger).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(dialog).toBeVisible();
   await page.keyboard.press('Escape');

@@ -1,3 +1,4 @@
+import WorkspaceDialog from '../components/shared/WorkspaceDialog';
 import { useUnsavedChanges, useDiscardChanges } from '../components/shared/UnsavedChanges';
 import { useEffect, useState } from 'react';
 import { AlertTriangle, ArrowRight, GitBranch, PackagePlus, Plus, Sprout, X } from 'lucide-react';
@@ -588,8 +589,8 @@ export default function RecallCenterPage() {
       <RecallRegister key={recallVersion} />
 
       {showCreate && (
-        <div className="modal-overlay" onClick={closeCreate}>
-          <div className="modal" onClick={(event) => event.stopPropagation()}>
+        <WorkspaceDialog label="Activate recall" onClose={closeCreate}>
+          <div className="modal">
             <div className="mb-5 flex items-start justify-between">
               <div>
                 <div className="modal-title">Activate recall</div>
@@ -598,7 +599,12 @@ export default function RecallCenterPage() {
                   Existing trades remain recorded; unsafe movement is blocked.
                 </p>
               </div>
-              <button className="btn btn-sm" onClick={closeCreate}>
+              <button
+                aria-label="Close dialog"
+                type="button"
+                className="btn btn-sm"
+                onClick={closeCreate}
+              >
                 <X size={14} />
               </button>
             </div>
@@ -702,7 +708,7 @@ export default function RecallCenterPage() {
               </div>
             </div>
           </div>
-        </div>
+        </WorkspaceDialog>
       )}
       <ConfirmDialog
         open={activationReview !== null}
