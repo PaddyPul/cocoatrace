@@ -21,6 +21,8 @@ Critical workspace dialogs have native modal/keyboard behavior while retaining b
 
 - Apply the existing bounded read-only network-change recovery to source-detail failure test navigation. Keep malformed-response assertions and mutation/no-replay checks intact.
 
+- Keep bilingual message data in a JSON catalog and retain a typed TypeScript adapter. Validate exactly two nonempty translations per key and preserve every previous key, value and ordering. This addresses the catalog structure reported as duplicated in PR #153 without scanner exclusions or threshold changes.
+
 ## Security and data review
 
 - [x] Resource authorization and unrelated-tenant behavior considered
@@ -52,7 +54,7 @@ Critical workspace dialogs have native modal/keyboard behavior while retaining b
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: Author passed 134 production-build Chromium cases across 26 mocked-API suites, 29 frontend/policy cases including two canonical-order regressions, six saved-filter/support cases, seven runner/Compose cases, six locale cases, API/web/browser typechecks, code quality, API build and production web build/budget. All 1,694 API unit cases in 176 files pass, including parser and deployed-password regressions. Authorization and branding checks and both dependency audits pass. The unchanged 90 KiB gate passes after consolidating base catalog structure; all base translation text, keys and order match the previous catalog exactly. Follow-up: five navigation-helper regressions, browser typecheck and the source-detail failure suite pass. Native identity/source-entry/database/scanner/recovery and hosted staging are not claimed as run. Clean npm ci --ignore-scripts succeeded. Full exact-candidate Windows release, required CI and SonarCloud rescan remain required; Docker/PostgreSQL and hosted staging are unavailable in the author environment.
+- Evidence/results: Author passed 134 production-build Chromium cases across 26 mocked-API suites, 29 frontend/policy cases including two canonical-order regressions, six saved-filter/support cases, seven runner/Compose cases, six locale cases, API/web/browser typechecks, code quality, API build and production web build/budget. All 1,694 API unit cases in 176 files pass, including parser and deployed-password regressions. Authorization and branding checks and both dependency audits pass. The unchanged 90 KiB gate passes after consolidating base catalog structure; all base translation text, keys and order match the previous catalog exactly. Follow-up: five navigation-helper regressions, browser typecheck and the source-detail failure suite pass. Catalog correction: all 143 bilingual entries match the previous keys, values and order; six locale tests, web/browser typechecks, formatting, catalog lint and production web build/budget pass. Sonar duplication must be confirmed by rescan. Native identity/source-entry/database/scanner/recovery and hosted staging are not claimed as run. Clean npm ci --ignore-scripts succeeded. Full exact-candidate Windows release, required CI and SonarCloud rescan remain required; Docker/PostgreSQL and hosted staging are unavailable in the author environment.
 
 ## Product and operations
 

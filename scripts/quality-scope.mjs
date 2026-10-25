@@ -476,6 +476,7 @@ export const formattedPaths = [
   'scripts/backlog-progress.test.mjs',
   'docs/pilot-gates.json',
   'eslint.config.mjs',
+  'web/src/i18n/**/*.json',
   'web/src/i18n/**/*.ts',
   'web/src/i18n/**/*.tsx',
   'scripts/locale.test.mjs',

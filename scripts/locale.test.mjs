@@ -15,6 +15,16 @@ import {
 } from '../web/src/i18n/locale.ts';
 
 test('both shell catalogs cover the same stable keys without empty translations', () => {
+  const messages = JSON.parse(
+    readFileSync(new URL('../web/src/i18n/messages.json', import.meta.url), 'utf8'),
+  );
+  assert.deepEqual(Object.keys(messages), Object.keys(english));
+  for (const [key, pair] of Object.entries(messages)) {
+    assert.equal(pair.length, 2);
+    assert.ok(pair.every((text) => typeof text === 'string' && text.trim()));
+    assert.equal(english[key], pair[0]);
+    assert.equal(french[key], pair[1]);
+  }
   assert.deepEqual(Object.keys(french).sort(), Object.keys(english).sort());
   assert.deepEqual(Object.keys(navigationFrench).sort(), Object.keys(navigationEnglish).sort());
   for (const key of Object.keys(english)) {
