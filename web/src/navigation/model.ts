@@ -73,14 +73,10 @@ export function navigation(
   const primary =
     mode === 'admin'
       ? [
-          home,
-          item(
-            'access-applications',
-            'nav.access-applications',
-            '/access-applications',
-            'UserCheck',
-            ['*'],
-          ),
+          item('home', 'nav.overview', '/home', 'Home'),
+          item('access-applications', 'nav.access-requests', '/access-applications', 'UserCheck', [
+            '*',
+          ]),
           item(
             'platform-fees',
             'nav.fee-verification',
@@ -88,20 +84,12 @@ export function navigation(
             'WalletCards',
             ['finance.manage'],
           ),
-          item('organizations', 'nav.organizations', '/organizations', 'Building2', [
-            'organization.admin',
-          ]),
-          item('access-controls', 'nav.access-controls', '/access-controls', 'ShieldAlert', ['*']),
-          item('access-review', 'nav.access-review', '/access-review', 'ShieldAlert', ['*']),
-          item('audit', 'nav.audit', '/audit', 'FileClock', ['audit.read']),
           item('operations', 'nav.operations', '/operations', 'ShieldAlert', ['*']),
-          item('dashboard', 'nav.network-overview', '/dashboard', 'LayoutDashboard', ['*']),
         ]
       : [
           home,
           ...(mode === 'buy'
             ? [
-                item('marketplace', 'nav.find-supply', '/marketplace', 'Store', ['listing.read']),
                 item(
                   'sourcing-requests',
                   'nav.sourcing-requests',
@@ -110,6 +98,7 @@ export function navigation(
                   ['listing.read', 'offer.create'],
                   true,
                 ),
+                item('marketplace', 'nav.find-supply', '/marketplace', 'Store', ['listing.read']),
               ]
             : []),
           ...(mode === 'sell'
@@ -129,20 +118,30 @@ export function navigation(
       items: primary,
     },
   ];
-  if (mode !== 'admin') {
+  if (mode === 'admin') {
+    groups.push({
+      id: 'administration',
+      label: 'nav.administration',
+      collapsible: true,
+      items: [
+        item('organizations', 'nav.organizations', '/organizations', 'Building2', [
+          'organization.admin',
+        ]),
+        item('access-controls', 'nav.access-controls', '/access-controls', 'ShieldAlert', ['*']),
+        item('access-review', 'nav.access-review', '/access-review', 'ShieldAlert', ['*']),
+        item('audit', 'nav.audit', '/audit', 'FileClock', ['audit.read']),
+        item('dashboard', 'nav.network-overview', '/dashboard', 'LayoutDashboard', ['*']),
+      ],
+    });
+  } else {
     groups.push({
       id: 'records',
       label: 'nav.records',
       collapsible: true,
-      items: records.filter(
-        (row) => mode !== 'buy' || ['evidence', 'certs', 'products'].includes(row.id),
-      ),
-    });
-    groups.push({
-      id: 'registers',
-      label: 'nav.trade-registers',
-      collapsible: true,
       items: [
+        ...records.filter(
+          (row) => mode !== 'buy' || ['evidence', 'certs', 'products'].includes(row.id),
+        ),
         item('payments', 'nav.goods-payments', '/payments', 'WalletCards', ['payment.read']),
         item('shipments', 'nav.shipments', '/shipments', 'Ship', ['shipment.read']),
         item('platform-fees', 'nav.platform-fees', '/platform-fees', 'WalletCards', [

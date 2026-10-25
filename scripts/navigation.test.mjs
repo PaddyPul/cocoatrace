@@ -78,3 +78,34 @@ test('child pages preserve the correct navigation parent and catalogs remain ali
   assert.deepEqual(Object.keys(navigationEnglish).sort(), Object.keys(navigationFrench).sort());
   assert.ok(Object.values(navigationFrench).every((value) => value.trim()));
 });
+
+test('daily destinations stay in one primary group and occasional tools share one secondary group', () => {
+  const admin = { orgType: 'regulator', permissions: ['*'] };
+  const menus = [
+    navigation(buyer, 'buy'),
+    navigation(supplier, 'sell'),
+    navigation(admin, 'admin'),
+  ];
+  assert.deepEqual(
+    menus[0].groups[0].items.map((item) => item.id),
+    ['home', 'sourcing-requests', 'marketplace', 'offers', 'contracts'],
+  );
+  assert.deepEqual(
+    menus[1].groups[0].items.map((item) => item.id),
+    ['home', 'my-listings', 'offers', 'contracts'],
+  );
+  assert.deepEqual(
+    menus[2].groups[0].items.map((item) => item.id),
+    ['home', 'access-applications', 'platform-fees', 'operations'],
+  );
+  for (const menu of menus) {
+    assert.equal(menu.groups.length, 2);
+    assert.equal(menu.groups[0].collapsible, undefined);
+    assert.equal(menu.groups[1].collapsible, true);
+    const all = ids(menu);
+    assert.equal(new Set(all).size, all.length);
+  }
+  assert.ok(menus[0].groups[1].items.some((item) => item.id === 'payments'));
+  assert.ok(menus[2].groups[1].items.some((item) => item.id === 'access-controls'));
+  assert.equal(menus[2].create, null);
+});

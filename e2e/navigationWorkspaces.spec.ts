@@ -1,3 +1,4 @@
+import { gotoWithNetworkRecovery } from './support/navigation';
 import { test, expect, type Page } from '@playwright/test';
 const buyerPermissions = [
   'listing.read',
@@ -143,14 +144,14 @@ test('buyer has direct saved requests, matching and review links without supplie
   page,
 }) => {
   const { state } = await fixture(page, 'buyer');
-  await page.goto('/home');
+  await gotoWithNetworkRecovery(page, '/home');
   await expect(menu(page).getByRole('button', { name: 'Find supply', exact: true })).toBeVisible();
   await expect(menu(page).getByRole('combobox')).toHaveCount(0);
   await expect(menu(page).getByRole('button', { name: 'Publish supply', exact: true })).toHaveCount(
     0,
   );
   await expect(
-    menu(page).getByRole('button', { name: 'Access applications', exact: true }),
+    menu(page).getByRole('button', { name: 'Access requests', exact: true }),
   ).toHaveCount(0);
   await menu(page).getByRole('button', { name: 'Sourcing requests', exact: true }).click();
   await expect(page).toHaveURL(/\/sourcing-requests$/);
@@ -168,11 +169,11 @@ test('buyer has direct saved requests, matching and review links without supplie
   expect(state.mutations).toBe(0);
 });
 
-test('supplier records are outside administration and trade-register search uses the same destinations', async ({
+test('supplier records keep supporting registers together and workflow search uses the same destinations', async ({
   page,
 }) => {
   await fixture(page, 'supplier');
-  await page.goto('/home');
+  await gotoWithNetworkRecovery(page, '/home');
   for (const name of ['Notifications', 'Trace & recall', 'Help']) {
     const bounds = await menu(page).getByRole('button', { name, exact: true }).boundingBox();
     expect(bounds).not.toBeNull();
@@ -187,10 +188,7 @@ test('supplier records are outside administration and trade-register search uses
   await expect(
     menu(page).getByRole('button', { name: 'Sourcing requests', exact: true }),
   ).toHaveCount(0);
-  await expect(
-    menu(page).getByRole('button', { name: 'Goods payments', exact: true }),
-  ).toBeHidden();
-  await menu(page).getByText('Trade registers', { exact: true }).click();
+  await expect(menu(page).getByText('Trade registers', { exact: true })).toHaveCount(0);
   await expect(
     menu(page).getByRole('button', { name: 'Goods payments', exact: true }),
   ).toBeVisible();
@@ -205,7 +203,7 @@ test('dual workspace choice persists and a different single-role account cannot 
   page,
 }) => {
   const setup = await fixture(page, 'dual');
-  await page.goto('/home');
+  await gotoWithNetworkRecovery(page, '/home');
   await menu(page)
     .getByRole('combobox', { name: /Workspace/ })
     .selectOption('sell');
@@ -227,7 +225,7 @@ test('dual workspace choice persists and a different single-role account cannot 
     );
     localStorage.setItem('bt_workspace_mode:other-account', 'sell');
   }, next);
-  await page.goto('/home');
+  await gotoWithNetworkRecovery(page, '/home');
   await expect(menu(page).getByRole('combobox')).toHaveCount(0);
   await expect(menu(page).getByRole('button', { name: 'Find supply', exact: true })).toBeVisible();
   await expect(menu(page).getByRole('button', { name: 'My supply', exact: true })).toHaveCount(0);
@@ -237,12 +235,12 @@ test('platform admin has review navigation and can explicitly enter an authorize
   page,
 }) => {
   await fixture(page, 'admin');
-  await page.goto('/home');
+  await gotoWithNetworkRecovery(page, '/home');
   await expect(
     page.getByRole('heading', { name: 'Platform review workspace', exact: true }),
   ).toBeVisible();
   await expect(
-    menu(page).getByRole('button', { name: 'Access applications', exact: true }),
+    menu(page).getByRole('button', { name: 'Access requests', exact: true }),
   ).toBeVisible();
   await expect(
     menu(page).getByRole('button', { name: 'Fee verification', exact: true }),
@@ -258,7 +256,7 @@ test('offer badges clear on a malformed refresh and recover from actual server c
   page,
 }) => {
   const { state } = await fixture(page, 'supplier');
-  await page.goto('/home');
+  await gotoWithNetworkRecovery(page, '/home');
   const offers = menu(page).getByRole('button', { name: 'Offers', exact: true });
   await expect(offers.getByText('1', { exact: true })).toBeVisible();
   state.failedCounts = true;
@@ -275,7 +273,7 @@ test('saved-request failures and wrong-tenant rows never appear as an empty or u
 }) => {
   const { state } = await fixture(page, 'buyer');
   state.foreign = true;
-  await page.goto('/sourcing-requests');
+  await gotoWithNetworkRecovery(page, '/sourcing-requests');
   await expect(
     page.getByRole('alert').filter({ hasText: 'Sourcing requests could not be loaded' }),
   ).toBeVisible();
@@ -296,7 +294,7 @@ test('mobile navigation closes after choosing My trades and preserves keyboard e
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await fixture(page, 'buyer');
-  await page.goto('/home');
+  await gotoWithNetworkRecovery(page, '/home');
   await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Open navigation', exact: true });
   await dialog.getByRole('button', { name: 'My trades', exact: true }).click();
@@ -318,7 +316,7 @@ test('cancelling unsaved-change review does not switch workspace or overwrite it
   page,
 }) => {
   await fixture(page, 'dual');
-  await page.goto('/source/new');
+  await gotoWithNetworkRecovery(page, '/source/new');
   await page
     .getByLabel('Sourcing brief', { exact: true })
     .fill('An unfinished cocoyam sourcing brief');
@@ -338,7 +336,7 @@ test('supplier direct access to buyer requests is denied before loading private 
   page,
 }) => {
   const { state } = await fixture(page, 'supplier');
-  await page.goto('/sourcing-requests');
+  await gotoWithNetworkRecovery(page, '/sourcing-requests');
   await expect(
     page.getByRole('alert').filter({ hasText: 'Sourcing requests require buyer access' }),
   ).toBeVisible();
@@ -357,7 +355,7 @@ test('workspace selection remains usable during the session when preference stor
       return original.call(this, key);
     };
   });
-  await page.goto('/home');
+  await gotoWithNetworkRecovery(page, '/home');
   await menu(page)
     .getByRole('combobox', { name: /Workspace/ })
     .selectOption('sell');
@@ -369,7 +367,7 @@ test('workspace selection remains usable during the session when preference stor
 for (const role of ['buyer', 'supplier'] as const) {
   test(`${role}: French workflow search opens My trades after reload`, async ({ page }) => {
     const { state } = await fixture(page, role);
-    await page.goto('/home');
+    await gotoWithNetworkRecovery(page, '/home');
     await page.getByLabel('Language', { exact: true }).selectOption('fr');
     await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
     await page.reload();
@@ -384,3 +382,85 @@ for (const role of ['buyer', 'supplier'] as const) {
     expect(state.mutations).toBe(0);
   });
 }
+
+for (const role of ['buyer', 'supplier', 'admin'] as const) {
+  test(`${role}: primary navigation stays visible while only supporting records scroll on desktop`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 768 });
+    const { state } = await fixture(page, role);
+    await gotoWithNetworkRecovery(page, '/home');
+    const primary = menu(page).getByTestId('workspace-primary-navigation');
+    await expect(primary).toBeVisible();
+    expect(
+      await primary.evaluate((element) => {
+        let current: HTMLElement | null = element.parentElement;
+        while (current?.closest('aside')) {
+          if (['auto', 'scroll'].includes(getComputedStyle(current).overflowY)) return true;
+          current = current.parentElement;
+        }
+        return false;
+      }),
+    ).toBe(false);
+    const secondary = menu(page).getByTestId('workspace-secondary-navigation');
+    const disclosure = secondary.locator('details');
+    await expect(disclosure).not.toHaveAttribute('open');
+    const before = await primary.boundingBox();
+    await disclosure.locator('summary').click();
+    await secondary.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
+    expect(await primary.boundingBox()).toEqual(before);
+    await expect(disclosure.locator('summary')).toBeInViewport();
+    for (const button of await primary.getByRole('button').all()) {
+      const bounds = await button.boundingBox();
+      expect(bounds).not.toBeNull();
+      expect(bounds!.y).toBeGreaterThanOrEqual(0);
+      expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(768);
+    }
+    for (const name of ['Notifications', 'Trace & recall', 'Help']) {
+      const bounds = await menu(page).getByRole('button', { name, exact: true }).boundingBox();
+      expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(768);
+    }
+    await expect(menu(page).getByText('Trade registers', { exact: true })).toHaveCount(0);
+    if (role === 'supplier')
+      await expect(menu(page).getByText('Supplier workspace', { exact: true })).toHaveCount(1);
+    expect(state.mutations).toBe(0);
+  });
+}
+
+test('active record deep links open the single Records disclosure and preserve daily links', async ({
+  page,
+}) => {
+  await fixture(page, 'supplier');
+  await gotoWithNetworkRecovery(page, '/farms');
+  const records = menu(page).getByTestId('workspace-secondary-navigation').locator('details');
+  await expect(records).toHaveAttribute('open', '');
+  await expect(
+    menu(page).getByRole('button', { name: 'Sources & plots', exact: true }),
+  ).toHaveAttribute('aria-current', 'page');
+  await expect(menu(page).getByRole('button', { name: 'My trades', exact: true })).toBeVisible();
+});
+
+test('small mobile drawer has one natural scroll and keeps account controls reachable', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 600 });
+  await fixture(page, 'supplier');
+  await gotoWithNetworkRecovery(page, '/home');
+  const trigger = page.getByRole('button', { name: 'Open navigation', exact: true });
+  await trigger.click();
+  const drawer = page.getByRole('dialog', { name: 'Open navigation', exact: true });
+  await drawer.getByText('Records', { exact: true }).click();
+  const secondary = drawer.getByTestId('workspace-secondary-navigation');
+  expect(await secondary.evaluate((element) => getComputedStyle(element).overflowY)).toBe(
+    'visible',
+  );
+  await drawer.locator('aside').evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(drawer.getByRole('button', { name: 'Sign out', exact: true })).toBeInViewport();
+  await page.keyboard.press('Escape');
+  await expect(drawer).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+});
