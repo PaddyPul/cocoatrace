@@ -480,6 +480,8 @@ export const formattedPaths = [
   'web/src/i18n/**/*.ts',
   'web/src/i18n/**/*.tsx',
   'scripts/locale.test.mjs',
+  'scripts/sonar-closeout*.mjs',
+  'e2e/onboardingPilotLabel.spec.ts',
   'scripts/check-container-security.mjs',
   'scripts/check-container-security.test.mjs',
   'api/scripts/check-runtime-image.mjs',

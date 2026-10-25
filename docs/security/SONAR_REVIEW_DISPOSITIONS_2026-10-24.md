@@ -66,3 +66,7 @@ These source files are local release, recovery, load, recall and secret-scan run
 | AaFuYUpLdA8JAur1g-6r | secrets:S6698 | setup.sh | REVIEW_SYNTHETIC_OR_LOCAL_ONLY |
 
 After resolving these decisions, export a fresh SonarCloud issue list. The 165 implemented baseline findings must also be confirmed by that scan; source counts are not closure counts. The separate eight dependency risks are still missing package/version/advisory details and are not closed by this review.
+
+## 2026-10-25 reconciliation
+
+The complete new 47-item export confirms all 46 reviewed IDs remain open. The individual decision manifest in `docs/quality/sonar-closeout-2026-10-25.json` recommends 35 false positives and 11 accepted residual local-development/toolchain risks. These external state changes have not been applied by the author. Use `docs/runbooks/SONAR_REMAINING_CLOSEOUT.md` after the source fix is merged and reviewed. Accepted risks remain tracked under SEC-006; no production readiness is granted.

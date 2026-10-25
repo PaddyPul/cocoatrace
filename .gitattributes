@@ -614,3 +614,7 @@ api/src/utils/ordinal.ts text eol=lf
 web/src/components/shared/WorkspaceDialog.tsx text eol=lf
 api/src/services/sourcingStructurer*.ts text eol=lf
 scripts/ordinal-order*.mjs text eol=lf
+
+scripts/sonar-closeout*.mjs text eol=lf
+e2e/onboardingPilotLabel.spec.ts text eol=lf
+docs/quality/sonar-closeout-2026-10-25.json text eol=lf

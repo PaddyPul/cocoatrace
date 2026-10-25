@@ -1,0 +1,437 @@
+{
+  "schemaVersion": 1,
+  "project": "PaddyPul_cocoatrace",
+  "reviewDate": "2026-10-25",
+  "baseCommit": "67b0c65344482785859907c5da68752357b5469a",
+  "snapshotTotal": 47,
+  "summary": {
+    "SOURCE_FIX": 1,
+    "FALSE_POSITIVE": 35,
+    "ACCEPTED": 11
+  },
+  "issues": [
+    {
+      "id": "AaFuYUohdA8JAur1g-52",
+      "rule": "python:S7625",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 27,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-53",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 31,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-54",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 32,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-55",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 35,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-56",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 39,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-57",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 55,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-58",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 79,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-59",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 84,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6A",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 100,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6B",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 105,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6C",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 107,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6D",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 109,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6E",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 113,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6F",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 126,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6G",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 127,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6H",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 128,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6I",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 129,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6J",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 133,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6K",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 134,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6L",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 140,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6M",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 142,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6O",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 145,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6P",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 149,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6Q",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 150,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUohdA8JAur1g-6R",
+      "rule": "python:S7608",
+      "path": "scripts/recovery-objects.py",
+      "snapshotLine": 158,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "f25206b909e322ea35e17ec725c80e08c308c34319cc45daa719ec9870decbc6",
+      "reason": "Reviewed Moto-only disposable recovery fixture: the S3 client has a fixed loopback endpoint http://127.0.0.1:5000, explicit synthetic recovery_test credentials and fixed synthetic buckets. The dedicated Moto container has no published ports and the helper accepts no real S3 endpoint. This finding does not identify a production AWS credential or real-account bucket-ownership boundary. Reopen if the endpoint, credential source or real-S3 scope changes."
+    },
+    {
+      "id": "AaFuYUpDdA8JAur1g-6c",
+      "rule": "javascript:S4036",
+      "path": "scripts/run-recovery-tests.mjs",
+      "snapshotLine": 340,
+      "disposition": "ACCEPTED",
+      "sourceSha256": "6d313138cd16119de51718516e63945480ee9d4fc8984a930493d154902e1cf6",
+      "reason": "Accepted residual trusted-local-toolchain assumption, not a code fix: this release/recovery/load/scanner runner resolves fixed Git/Docker or explicitly configured local executable names under the invoking developer/CI account. It is not exposed as an HTTP process-launch endpoint. Trusted PATH and installed binaries remain prerequisites; malicious local PATH can execute arbitrary code as that account. Fake-PATH failure/teardown tests intentionally exercise this boundary. Track under SEC-006; reopen if exposed to untrusted executable selection or a service account boundary."
+    },
+    {
+      "id": "AaFuYUomdA8JAur1g-6S",
+      "rule": "javascript:S4036",
+      "path": "scripts/run-release-checks.mjs",
+      "snapshotLine": 112,
+      "disposition": "ACCEPTED",
+      "sourceSha256": "5ac8983d6ac45acdd6e9e282616557b901ceae8918727380b209145c8e8f30da",
+      "reason": "Accepted residual trusted-local-toolchain assumption, not a code fix: this release/recovery/load/scanner runner resolves fixed Git/Docker or explicitly configured local executable names under the invoking developer/CI account. It is not exposed as an HTTP process-launch endpoint. Trusted PATH and installed binaries remain prerequisites; malicious local PATH can execute arbitrary code as that account. Fake-PATH failure/teardown tests intentionally exercise this boundary. Track under SEC-006; reopen if exposed to untrusted executable selection or a service account boundary."
+    },
+    {
+      "id": "AaFuYUowdA8JAur1g-6W",
+      "rule": "javascript:S4036",
+      "path": "scripts/secret-scan.mjs",
+      "snapshotLine": 109,
+      "disposition": "ACCEPTED",
+      "sourceSha256": "237709bb0cc557db65edb00dbb149e7a92c738ae870c6f5e543f9ccca4b90dc8",
+      "reason": "Accepted residual trusted-local-toolchain assumption, not a code fix: this release/recovery/load/scanner runner resolves fixed Git/Docker or explicitly configured local executable names under the invoking developer/CI account. It is not exposed as an HTTP process-launch endpoint. Trusted PATH and installed binaries remain prerequisites; malicious local PATH can execute arbitrary code as that account. Fake-PATH failure/teardown tests intentionally exercise this boundary. Track under SEC-006; reopen if exposed to untrusted executable selection or a service account boundary."
+    },
+    {
+      "id": "AaFuYUowdA8JAur1g-6X",
+      "rule": "javascript:S4036",
+      "path": "scripts/secret-scan.mjs",
+      "snapshotLine": 162,
+      "disposition": "ACCEPTED",
+      "sourceSha256": "237709bb0cc557db65edb00dbb149e7a92c738ae870c6f5e543f9ccca4b90dc8",
+      "reason": "Accepted residual trusted-local-toolchain assumption, not a code fix: this release/recovery/load/scanner runner resolves fixed Git/Docker or explicitly configured local executable names under the invoking developer/CI account. It is not exposed as an HTTP process-launch endpoint. Trusted PATH and installed binaries remain prerequisites; malicious local PATH can execute arbitrary code as that account. Fake-PATH failure/teardown tests intentionally exercise this boundary. Track under SEC-006; reopen if exposed to untrusted executable selection or a service account boundary."
+    },
+    {
+      "id": "AaFuYUmqdA8JAur1g-4s",
+      "rule": "typescript:S6853",
+      "path": "web/src/pages/OnboardingPage.tsx",
+      "snapshotLine": 288,
+      "disposition": "SOURCE_FIX",
+      "sourceSha256": "34f4c0e6e235d07621bc462b9d598feca1452aac644f9d929f2ea493a0f52eac",
+      "reason": "Give the onboarding pilot checkbox a directly associated visible text label and a separately referenced description. Preserve the feedback choice and save behavior."
+    },
+    {
+      "id": "AaFuYUopdA8JAur1g-6T",
+      "rule": "javascript:S4036",
+      "path": "scripts/pilot-load.mjs",
+      "snapshotLine": 31,
+      "disposition": "ACCEPTED",
+      "sourceSha256": "ba1232aed6035e22bd1ba872d86acdfaa72af4c5ca46683f044e59195214ac99",
+      "reason": "Accepted residual trusted-local-toolchain assumption, not a code fix: this release/recovery/load/scanner runner resolves fixed Git/Docker or explicitly configured local executable names under the invoking developer/CI account. It is not exposed as an HTTP process-launch endpoint. Trusted PATH and installed binaries remain prerequisites; malicious local PATH can execute arbitrary code as that account. Fake-PATH failure/teardown tests intentionally exercise this boundary. Track under SEC-006; reopen if exposed to untrusted executable selection or a service account boundary."
+    },
+    {
+      "id": "AaFuYUo4dA8JAur1g-6Z",
+      "rule": "javascript:S4036",
+      "path": "scripts/recall-drill.mjs",
+      "snapshotLine": 27,
+      "disposition": "ACCEPTED",
+      "sourceSha256": "200645a9633850ee6c494cce82b915a12771ae3617ddf9630d247765a5ea0283",
+      "reason": "Accepted residual trusted-local-toolchain assumption, not a code fix: this release/recovery/load/scanner runner resolves fixed Git/Docker or explicitly configured local executable names under the invoking developer/CI account. It is not exposed as an HTTP process-launch endpoint. Trusted PATH and installed binaries remain prerequisites; malicious local PATH can execute arbitrary code as that account. Fake-PATH failure/teardown tests intentionally exercise this boundary. Track under SEC-006; reopen if exposed to untrusted executable selection or a service account boundary."
+    },
+    {
+      "id": "AaFuYUpAdA8JAur1g-6a",
+      "rule": "javascript:S4036",
+      "path": "scripts/run-evidence-stress.mjs",
+      "snapshotLine": 490,
+      "disposition": "ACCEPTED",
+      "sourceSha256": "28b2dcb46a39bc91eb623cb77f7c594941d086e2751c6a3f96b063dc5b0a1396",
+      "reason": "Accepted residual trusted-local-toolchain assumption, not a code fix: this release/recovery/load/scanner runner resolves fixed Git/Docker or explicitly configured local executable names under the invoking developer/CI account. It is not exposed as an HTTP process-launch endpoint. Trusted PATH and installed binaries remain prerequisites; malicious local PATH can execute arbitrary code as that account. Fake-PATH failure/teardown tests intentionally exercise this boundary. Track under SEC-006; reopen if exposed to untrusted executable selection or a service account boundary."
+    },
+    {
+      "id": "AaFuYUksdA8JAur1g-4A",
+      "rule": "secrets:S6698",
+      "path": "api/src/config/env.ts",
+      "snapshotLine": 107,
+      "disposition": "ACCEPTED",
+      "sourceSha256": "797dc806ab90c27dc5b9552d8f2ca2bdd0c462fdbd06fa5b8edbe8245c08c47d",
+      "reason": "Accepted residual local-demo credential risk, not a code fix: cocoa_dev is an intentional shared development password. Legacy Compose binds published database/API/web ports to loopback, and staging/production reject this known password even if explicitly supplied or URL-encoded. Do not use this configuration for a hosted investor or live deployment; provision separate secrets before deployment. Track under SEC-006 and reopen if the environment boundary changes."
+    },
+    {
+      "id": "AaFuYUksdA8JAur1g-4B",
+      "rule": "secrets:S6698",
+      "path": "api/src/config/env.ts",
+      "snapshotLine": 108,
+      "disposition": "ACCEPTED",
+      "sourceSha256": "797dc806ab90c27dc5b9552d8f2ca2bdd0c462fdbd06fa5b8edbe8245c08c47d",
+      "reason": "Accepted residual local-demo credential risk, not a code fix: cocoa_dev is an intentional shared development password. Legacy Compose binds published database/API/web ports to loopback, and staging/production reject this known password even if explicitly supplied or URL-encoded. Do not use this configuration for a hosted investor or live deployment; provision separate secrets before deployment. Track under SEC-006 and reopen if the environment boundary changes."
+    },
+    {
+      "id": "AaFuYUofdA8JAur1g-5y",
+      "rule": "secrets:S8215",
+      "path": "db/seed.sql",
+      "snapshotLine": 39,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "540eb7e7ea7224397c1b31bcec757bea4297b93339e606c687909113a17b9674",
+      "reason": "Reviewed public synthetic db/seed.sql fixture hash repeated for demo identities; this is not a disclosed production credential. The native seed entry point rejects staging/production and demo reset/preview use separate guarded paths. No real credential revocation is asserted. This disposition applies only to this exact fixture and must be reopened if used to provision real accounts."
+    },
+    {
+      "id": "AaFuYUofdA8JAur1g-5z",
+      "rule": "secrets:S8215",
+      "path": "db/seed.sql",
+      "snapshotLine": 40,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "540eb7e7ea7224397c1b31bcec757bea4297b93339e606c687909113a17b9674",
+      "reason": "Reviewed public synthetic db/seed.sql fixture hash repeated for demo identities; this is not a disclosed production credential. The native seed entry point rejects staging/production and demo reset/preview use separate guarded paths. No real credential revocation is asserted. This disposition applies only to this exact fixture and must be reopened if used to provision real accounts."
+    },
+    {
+      "id": "AaFuYUofdA8JAur1g-50",
+      "rule": "secrets:S8215",
+      "path": "db/seed.sql",
+      "snapshotLine": 41,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "540eb7e7ea7224397c1b31bcec757bea4297b93339e606c687909113a17b9674",
+      "reason": "Reviewed public synthetic db/seed.sql fixture hash repeated for demo identities; this is not a disclosed production credential. The native seed entry point rejects staging/production and demo reset/preview use separate guarded paths. No real credential revocation is asserted. This disposition applies only to this exact fixture and must be reopened if used to provision real accounts."
+    },
+    {
+      "id": "AaFuYUofdA8JAur1g-5x",
+      "rule": "secrets:S8215",
+      "path": "db/seed.sql",
+      "snapshotLine": 38,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "540eb7e7ea7224397c1b31bcec757bea4297b93339e606c687909113a17b9674",
+      "reason": "Reviewed public synthetic db/seed.sql fixture hash repeated for demo identities; this is not a disclosed production credential. The native seed entry point rejects staging/production and demo reset/preview use separate guarded paths. No real credential revocation is asserted. This disposition applies only to this exact fixture and must be reopened if used to provision real accounts."
+    },
+    {
+      "id": "AaFuYUpFdA8JAur1g-6d",
+      "rule": "secrets:S6698",
+      "path": "docker-compose.yml",
+      "snapshotLine": 47,
+      "disposition": "ACCEPTED",
+      "sourceSha256": "f89de50b142f8c922ba1df241ff3b491b6af8ef3344965ab6228ab6cf06b0849",
+      "reason": "Accepted residual local-demo credential risk, not a code fix: cocoa_dev is an intentional shared development password. Legacy Compose binds published database/API/web ports to loopback, and staging/production reject this known password even if explicitly supplied or URL-encoded. Do not use this configuration for a hosted investor or live deployment; provision separate secrets before deployment. Track under SEC-006 and reopen if the environment boundary changes."
+    },
+    {
+      "id": "AaFuYUofdA8JAur1g-5r",
+      "rule": "secrets:S8215",
+      "path": "db/seed.sql",
+      "snapshotLine": 32,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "540eb7e7ea7224397c1b31bcec757bea4297b93339e606c687909113a17b9674",
+      "reason": "Reviewed public synthetic db/seed.sql fixture hash repeated for demo identities; this is not a disclosed production credential. The native seed entry point rejects staging/production and demo reset/preview use separate guarded paths. No real credential revocation is asserted. This disposition applies only to this exact fixture and must be reopened if used to provision real accounts."
+    },
+    {
+      "id": "AaFuYUofdA8JAur1g-5s",
+      "rule": "secrets:S8215",
+      "path": "db/seed.sql",
+      "snapshotLine": 33,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "540eb7e7ea7224397c1b31bcec757bea4297b93339e606c687909113a17b9674",
+      "reason": "Reviewed public synthetic db/seed.sql fixture hash repeated for demo identities; this is not a disclosed production credential. The native seed entry point rejects staging/production and demo reset/preview use separate guarded paths. No real credential revocation is asserted. This disposition applies only to this exact fixture and must be reopened if used to provision real accounts."
+    },
+    {
+      "id": "AaFuYUofdA8JAur1g-5t",
+      "rule": "secrets:S8215",
+      "path": "db/seed.sql",
+      "snapshotLine": 34,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "540eb7e7ea7224397c1b31bcec757bea4297b93339e606c687909113a17b9674",
+      "reason": "Reviewed public synthetic db/seed.sql fixture hash repeated for demo identities; this is not a disclosed production credential. The native seed entry point rejects staging/production and demo reset/preview use separate guarded paths. No real credential revocation is asserted. This disposition applies only to this exact fixture and must be reopened if used to provision real accounts."
+    },
+    {
+      "id": "AaFuYUofdA8JAur1g-5u",
+      "rule": "secrets:S8215",
+      "path": "db/seed.sql",
+      "snapshotLine": 35,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "540eb7e7ea7224397c1b31bcec757bea4297b93339e606c687909113a17b9674",
+      "reason": "Reviewed public synthetic db/seed.sql fixture hash repeated for demo identities; this is not a disclosed production credential. The native seed entry point rejects staging/production and demo reset/preview use separate guarded paths. No real credential revocation is asserted. This disposition applies only to this exact fixture and must be reopened if used to provision real accounts."
+    },
+    {
+      "id": "AaFuYUofdA8JAur1g-5v",
+      "rule": "secrets:S8215",
+      "path": "db/seed.sql",
+      "snapshotLine": 36,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "540eb7e7ea7224397c1b31bcec757bea4297b93339e606c687909113a17b9674",
+      "reason": "Reviewed public synthetic db/seed.sql fixture hash repeated for demo identities; this is not a disclosed production credential. The native seed entry point rejects staging/production and demo reset/preview use separate guarded paths. No real credential revocation is asserted. This disposition applies only to this exact fixture and must be reopened if used to provision real accounts."
+    },
+    {
+      "id": "AaFuYUofdA8JAur1g-5w",
+      "rule": "secrets:S8215",
+      "path": "db/seed.sql",
+      "snapshotLine": 37,
+      "disposition": "FALSE_POSITIVE",
+      "sourceSha256": "540eb7e7ea7224397c1b31bcec757bea4297b93339e606c687909113a17b9674",
+      "reason": "Reviewed public synthetic db/seed.sql fixture hash repeated for demo identities; this is not a disclosed production credential. The native seed entry point rejects staging/production and demo reset/preview use separate guarded paths. No real credential revocation is asserted. This disposition applies only to this exact fixture and must be reopened if used to provision real accounts."
+    },
+    {
+      "id": "AaFuYUpLdA8JAur1g-6r",
+      "rule": "secrets:S6698",
+      "path": "setup.sh",
+      "snapshotLine": 10,
+      "disposition": "ACCEPTED",
+      "sourceSha256": "9c2fd8f8ec8d0f7a065ca37df4122f570cbd44ecef2c113bf8721a9e843e818f",
+      "reason": "Accepted residual local-demo credential risk, not a code fix: cocoa_dev is an intentional shared development password. Legacy Compose binds published database/API/web ports to loopback, and staging/production reject this known password even if explicitly supplied or URL-encoded. Do not use this configuration for a hosted investor or live deployment; provision separate secrets before deployment. Track under SEC-006 and reopen if the environment boundary changes."
+    }
+  ]
+}
