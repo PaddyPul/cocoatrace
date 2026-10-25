@@ -285,28 +285,32 @@ export default function OnboardingPage() {
               title="Start with a guided, real workflow"
               copy="Start with your organization’s actual records. Create supply or a sourcing need, or attach evidence to an existing record."
             />
-            <label
-              htmlFor="onboarding-pilot-mode"
-              className="mt-8 flex cursor-pointer items-start gap-4 rounded-3xl border border-white/10 bg-white/[.035] p-6"
-            >
+            <div className="mt-8 flex cursor-pointer items-start gap-4 rounded-3xl border border-white/10 bg-white/[.035] p-6">
               <input
                 id="onboarding-pilot-mode"
+                aria-describedby="onboarding-pilot-description"
                 type="checkbox"
                 checked={pilotMode}
                 onChange={(event) => setPilotMode(event.target.checked)}
                 className="mt-1 h-4 w-4 accent-[#7dcc61]"
               />
               <span>
-                <span className="flex items-center gap-2 text-sm font-bold">
-                  <MessageSquareText size={17} className="text-brand-300" /> Keep pilot feedback
-                  available
-                </span>
-                <span className="mt-2 block text-xs leading-5 text-white/45">
+                <label
+                  htmlFor="onboarding-pilot-mode"
+                  className="flex cursor-pointer items-center gap-2 text-sm font-bold"
+                >
+                  <MessageSquareText aria-hidden="true" size={17} className="text-brand-300" />
+                  Keep pilot feedback available
+                </label>
+                <span
+                  id="onboarding-pilot-description"
+                  className="mt-2 block text-xs leading-5 text-white/45"
+                >
                   A small control lets you flag unclear steps. Operational evidence and feedback
                   stay separate.
                 </span>
               </span>
-            </label>
+            </div>
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
               {['Evidence-backed', 'Permission-aware', 'Replay anytime'].map((item) => (
                 <div
