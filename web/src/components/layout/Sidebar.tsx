@@ -1,3 +1,4 @@
+import '../../navigation/sidebar.css';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell,
@@ -92,7 +93,7 @@ export default function Sidebar({
     navigate('/onboarding');
     onNavigate();
   };
-  const renderItem = (item: NavigationItem, primary = false) => {
+  const renderItem = (item: NavigationItem, primary = false, utility = false) => {
     const Icon = navigationIcons[item.icon] || Home;
     const selected = !primary && activeNavigation(item.id, currentPage);
     const badge = item.id === 'offers' && offerCount !== null && offerCount > 0;
@@ -105,10 +106,10 @@ export default function Sidebar({
           badge ? `offer-count-${className.includes('w-') ? 'desktop' : 'mobile'}` : undefined
         }
         onClick={() => go(item)}
-        className={`group flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-medium transition ${selected || primary ? 'bg-white text-emerald-950' : item.id === 'recalls' ? 'text-amber-100 hover:bg-amber-300/10' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+        className={`group flex min-h-11 w-full items-center rounded-xl font-medium transition ${utility ? 'flex-col justify-center gap-1 px-1 py-2 text-center text-[10px]' : 'gap-3 px-3 py-2.5 text-left text-xs'} ${primary ? 'bg-brand-400 text-emerald-950 hover:bg-brand-300' : selected ? 'bg-white text-emerald-950' : item.id === 'recalls' ? 'text-amber-100 hover:bg-amber-300/10' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
       >
         <Icon size={17} aria-hidden="true" />
-        <span className="flex-1">{t(item.label)}</span>
+        <span className={utility ? 'leading-tight' : 'flex-1'}>{t(item.label)}</span>
         {badge && (
           <>
             <span aria-hidden="true" className="rounded-full bg-emerald-300/20 px-2 py-0.5 text-xs">
@@ -126,8 +127,10 @@ export default function Sidebar({
     );
   };
   return (
-    <aside className={`${className} flex min-h-0 flex-col overflow-hidden bg-[#0c1913] text-white`}>
-      <div className="flex h-20 shrink-0 items-center gap-3 border-b border-white/10 px-5">
+    <aside
+      className={`${className} workspace-sidebar relative flex min-h-0 flex-col overflow-hidden bg-[#0c1913] text-white`}
+    >
+      <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-5">
         <button
           className="flex min-w-0 flex-1 items-center gap-3 text-left"
           onClick={() => go({ page: 'home' })}
@@ -148,13 +151,16 @@ export default function Sidebar({
           <X size={18} />
         </button>
       </div>
-      <nav aria-label={t('nav.navigation')} className="flex min-h-0 flex-1 flex-col px-3 py-2">
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-2">
+      <nav
+        aria-label={t('nav.navigation')}
+        className="workspace-menu flex min-h-0 flex-1 flex-col px-3 py-2"
+      >
+        <div data-testid="workspace-primary-navigation" className="shrink-0 space-y-2 pb-3">
           {available.length > 1 ? (
             <label className="block px-1 text-xs text-white/70">
               {t('nav.workspace')}
               <select
-                className="form-select mt-2 w-full"
+                className="form-select mt-1 w-full"
                 value={mode}
                 onChange={(event) => {
                   switchWorkspace(event.target.value as typeof mode);
@@ -169,14 +175,26 @@ export default function Sidebar({
               </select>
             </label>
           ) : (
-            <p className="px-3 text-xs font-semibold text-emerald-200">{t(`workspace.${mode}`)}</p>
+            <p className="px-3 py-1 text-xs font-semibold text-emerald-200">
+              {t(`workspace.${mode}`)}
+            </p>
           )}
           {menu.create && renderItem(menu.create, true)}
-          {menu.groups.map((group) => {
-            const contents = (
-              <div className="space-y-1">{group.items.map((item) => renderItem(item))}</div>
-            );
-            return group.collapsible ? (
+          {menu.groups
+            .filter((group) => !group.collapsible)
+            .map((group) => (
+              <section key={group.id} aria-label={t(group.label)} className="space-y-1">
+                {group.items.map((item) => renderItem(item))}
+              </section>
+            ))}
+        </div>
+        <div
+          data-testid="workspace-secondary-navigation"
+          className="workspace-secondary min-h-0 flex-1 overflow-y-auto pb-2"
+        >
+          {menu.groups
+            .filter((group) => group.collapsible)
+            .map((group) => (
               <details
                 key={group.id}
                 open={
@@ -184,51 +202,47 @@ export default function Sidebar({
                 }
                 className="rounded-xl border border-white/10 p-2"
               >
-                <summary className="cursor-pointer px-1 py-2 text-xs font-semibold text-white/70">
+                <summary className="sticky top-0 z-10 cursor-pointer bg-[#0c1913] px-1 py-2 text-xs font-semibold text-white/70">
                   {t(group.label)}
                 </summary>
-                {contents}
+                <div className="space-y-1">{group.items.map((item) => renderItem(item))}</div>
               </details>
-            ) : (
-              <section key={group.id} aria-label={t(group.label)}>
-                <h2 className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/40">
-                  {t(group.label)}
-                </h2>
-                {contents}
-              </section>
-            );
-          })}
+            ))}
         </div>
         <section
           aria-label={t('nav.help-safety')}
           className="shrink-0 border-t border-white/10 pt-2"
         >
-          {menu.utility.map((item) => renderItem(item))}
+          <div className="grid grid-cols-3 gap-1">
+            {menu.utility.map((item) => renderItem(item, false, true))}
+          </div>
         </section>
       </nav>
-      <div className="m-3 shrink-0 rounded-2xl border border-white/10 bg-white/[0.05] p-3.5">
-        <details className="mb-3">
+      <div className="relative mx-3 mb-3 mt-auto shrink-0 rounded-xl border border-white/10 bg-white/[0.05] p-3">
+        <details className="mb-2">
           <summary className="cursor-pointer text-xs text-white/70">
             {t('nav.account-help')}
           </summary>
-          <button
-            onClick={replayWelcome}
-            className="mb-3 flex w-full items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-left text-[10px] font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"
-          >
-            <RefreshCw size={13} /> {t('shell.replay')}
-          </button>
-          <button
-            onClick={() => go({ page: 'pilot-limitations', path: '/pilot/limitations' })}
-            className="mb-3 min-h-11 w-full rounded-xl border border-white/10 px-3 py-2 text-left text-xs text-white/70"
-          >
-            Known pilot limitations
-          </button>
-          <button
-            onClick={() => go({ page: 'account-security', path: '/account/security' })}
-            className="mb-3 flex w-full items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-left text-[10px] font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"
-          >
-            <KeyRound size={13} /> {t('shell.security')}
-          </button>
+          <div className="workspace-account-options absolute inset-x-0 bottom-full z-20 mb-2 max-h-[60dvh] overflow-y-auto rounded-xl border border-white/15 bg-[#0c1913] p-3 shadow-xl">
+            <button
+              onClick={replayWelcome}
+              className="mb-3 flex w-full items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-left text-[10px] font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"
+            >
+              <RefreshCw size={13} /> {t('shell.replay')}
+            </button>
+            <button
+              onClick={() => go({ page: 'pilot-limitations', path: '/pilot/limitations' })}
+              className="mb-3 min-h-11 w-full rounded-xl border border-white/10 px-3 py-2 text-left text-xs text-white/70"
+            >
+              Known pilot limitations
+            </button>
+            <button
+              onClick={() => go({ page: 'account-security', path: '/account/security' })}
+              className="mb-3 flex w-full items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-left text-[10px] font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"
+            >
+              <KeyRound size={13} /> {t('shell.security')}
+            </button>
+          </div>
         </details>
         <div className="flex items-center gap-3">
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-300/15 text-xs font-bold text-emerald-200">
@@ -251,10 +265,6 @@ export default function Sidebar({
           >
             <LogOut size={16} />
           </button>
-        </div>
-        <div className="mt-3 flex items-center gap-2 border-t border-white/10 pt-3 text-[10px] text-emerald-200/60">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,.7)]" />
-          {t('shell.corridor')}
         </div>
       </div>
     </aside>

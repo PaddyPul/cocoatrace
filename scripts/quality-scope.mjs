@@ -6,6 +6,7 @@ export const formattedPaths = [
   'scripts/ordinal-order*.mjs',
   'api/src/services/emailAddress*.ts',
   'web/src/navigation/**/*.ts',
+  'web/src/navigation/sidebar.css',
   'web/src/pages/SourcingRequestsPage.tsx',
   'scripts/navigation.test.mjs',
   'e2e/navigationWorkspaces.spec.ts',
