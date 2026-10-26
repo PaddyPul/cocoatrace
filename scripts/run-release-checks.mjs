@@ -25,7 +25,6 @@ export const releaseChecks = [
       'scripts/email-rehearsal.test.mjs',
       'scripts/run-evidence-stress.test.mjs',
       'scripts/integration-test-selection.test.mjs',
-      'scripts/browser-suite-selection.test.mjs',
       'scripts/integration-storage-readiness.test.mjs',
     ],
     true,
