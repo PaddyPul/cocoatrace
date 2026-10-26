@@ -1,0 +1,298 @@
+{
+  "reviewed": "2026-10-26",
+  "routes": [
+    {
+      "path": "/",
+      "entry": "redirect"
+    },
+    {
+      "path": "/login",
+      "entry": "public-or-token",
+      "note": "Public access flow or deliberately issued invitation, reset, verification or product link."
+    },
+    {
+      "path": "/request-access",
+      "entry": "public-or-token",
+      "note": "Public access flow or deliberately issued invitation, reset, verification or product link."
+    },
+    {
+      "path": "/verify-access",
+      "entry": "public-or-token",
+      "note": "Public access flow or deliberately issued invitation, reset, verification or product link."
+    },
+    {
+      "path": "/verify-access/:token",
+      "entry": "public-or-token",
+      "note": "Public access flow or deliberately issued invitation, reset, verification or product link."
+    },
+    {
+      "path": "/forgot-password",
+      "entry": "public-or-token",
+      "note": "Public access flow or deliberately issued invitation, reset, verification or product link."
+    },
+    {
+      "path": "/reset-password",
+      "entry": "public-or-token",
+      "note": "Public access flow or deliberately issued invitation, reset, verification or product link."
+    },
+    {
+      "path": "/reset-password/:token",
+      "entry": "public-or-token",
+      "note": "Public access flow or deliberately issued invitation, reset, verification or product link."
+    },
+    {
+      "path": "/service-status",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/platform-role",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/p/:slug",
+      "entry": "public-or-token",
+      "note": "Public access flow or deliberately issued invitation, reset, verification or product link."
+    },
+    {
+      "path": "/accept-invite/:token",
+      "entry": "public-or-token",
+      "note": "Public access flow or deliberately issued invitation, reset, verification or product link."
+    },
+    {
+      "path": "/dashboard",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/home",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/sourcing-requests",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/source/new",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/source/compare",
+      "entry": "contextual",
+      "parent": "/marketplace"
+    },
+    {
+      "path": "/supply/new",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/inventory/new",
+      "entry": "contextual",
+      "parent": "/supply/new"
+    },
+    {
+      "path": "/deal-room/:id",
+      "entry": "contextual",
+      "parent": "/contracts"
+    },
+    {
+      "path": "/demo",
+      "entry": "demo-only",
+      "note": "Demo-mode workflow search; intentionally absent from normal access mode."
+    },
+    {
+      "path": "/products",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/onboarding",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/pilot/limitations",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/pilot",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/marketplace",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/listing/:id",
+      "entry": "contextual",
+      "parent": "/marketplace"
+    },
+    {
+      "path": "/farms",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/farms/:id",
+      "entry": "contextual",
+      "parent": "/farms"
+    },
+    {
+      "path": "/batches",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/batches/:id",
+      "entry": "contextual",
+      "parent": "/batches"
+    },
+    {
+      "path": "/holdings",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/holdings/:id",
+      "entry": "contextual",
+      "parent": "/holdings"
+    },
+    {
+      "path": "/offers",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/contracts",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/contracts/:id",
+      "entry": "contextual",
+      "parent": "/contracts"
+    },
+    {
+      "path": "/shipments",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/shipments/:id",
+      "entry": "contextual",
+      "parent": "/shipments"
+    },
+    {
+      "path": "/platform-fees",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/platform-fees/:id",
+      "entry": "contextual",
+      "parent": "/platform-fees"
+    },
+    {
+      "path": "/payments",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/payments/:id",
+      "entry": "contextual",
+      "parent": "/payments"
+    },
+    {
+      "path": "/evidence/contribute",
+      "entry": "contextual",
+      "parent": "/evidence"
+    },
+    {
+      "path": "/evidence/review",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/evidence",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/recalls",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/audit",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/certs",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/my-listings",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/organizations",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/notifications",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/support",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/access-review",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/access-controls",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/access-applications",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/operations",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "/account/passkeys",
+      "entry": "contextual",
+      "parent": "/account/security"
+    },
+    {
+      "path": "/account/security",
+      "entry": "menu",
+      "note": "Shown only when the workspace and permissions allow it."
+    },
+    {
+      "path": "*",
+      "entry": "redirect"
+    }
+  ]
+}

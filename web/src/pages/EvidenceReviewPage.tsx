@@ -20,7 +20,7 @@ export default function EvidenceReviewPage() {
   });
   if (!user?.permissions.includes('*')) return <Navigate to="/home" replace />;
   return (
-    <Layout currentPage="evidence">
+    <Layout currentPage="evidence-review">
       <section aria-label="Document review queue" className="space-y-4">
         <h2 className="text-xl font-bold">Document review queue</h2>
         <p>

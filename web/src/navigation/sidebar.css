@@ -1,20 +1,7 @@
-/* Compact viewports use one natural sidebar scroll; primary links never sit in a nested scroller. */
-@media (max-width: 1023px), (max-height: 650px) {
-  .workspace-sidebar {
-    overflow-y: auto;
-  }
-  .workspace-menu {
-    flex: none;
-    overflow: visible;
-  }
-  .workspace-secondary {
-    flex: none;
-    overflow: visible;
-  }
-  .workspace-account-options {
-    position: static;
-    max-height: none;
-    overflow: visible;
-    margin-top: 0.5rem;
-  }
+/* The sidebar is the only scroll container at every viewport size.
+   Expanded Records and account options stay in the normal document flow. */
+.workspace-menu,
+.workspace-secondary {
+  flex: none;
+  overflow: visible;
 }

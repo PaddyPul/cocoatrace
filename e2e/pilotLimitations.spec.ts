@@ -64,7 +64,12 @@ test('pilot participants can discover versioned limitations without changing a t
   await expect(
     page.getByRole('heading', { name: 'Known pilot limitations', exact: true }),
   ).toBeVisible();
-  await page.locator('summary').filter({ hasText: 'Account & workspace help' }).click();
+  // The current Account & help section auto-opens for this active page.
+  await expect(
+    page
+      .locator('details')
+      .filter({ has: page.getByRole('button', { name: 'Known pilot limitations', exact: true }) }),
+  ).toHaveAttribute('open', '');
   const navigation = page.getByRole('button', { name: 'Known pilot limitations', exact: true });
   await expect(navigation).toHaveCount(1);
   await navigation.click();

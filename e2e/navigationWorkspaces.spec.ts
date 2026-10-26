@@ -9,6 +9,7 @@ const buyerPermissions = [
   'evidence.read',
   'batch.read',
   'certificate.read',
+  'farm.read',
 ];
 const sellerPermissions = [
   'listing.read',
@@ -22,21 +23,31 @@ const sellerPermissions = [
   'batch.read',
   'evidence.read',
 ];
-async function fixture(page: Page, role: 'buyer' | 'supplier' | 'dual' | 'admin') {
+async function fixture(
+  page: Page,
+  role: 'buyer' | 'supplier' | 'dual' | 'admin',
+  organizationAdmin = false,
+) {
   let actor = {
     id: String(role),
     organization_id: `${role}-org`,
     org_type: role === 'admin' ? 'regulator' : role === 'supplier' ? 'exporter' : 'importer',
     name: 'Navigation tester',
-    roles: [role + '_admin'],
+    roles: [role + (organizationAdmin ? '_admin' : '_member')],
     permissions:
       role === 'admin'
         ? ['*']
         : role === 'dual'
           ? [...new Set([...buyerPermissions, ...sellerPermissions])]
           : role === 'buyer'
-            ? buyerPermissions
-            : sellerPermissions,
+            ? [
+                ...buyerPermissions,
+                ...(organizationAdmin ? ['member.invite', 'member.manage'] : []),
+              ]
+            : [
+                ...sellerPermissions,
+                ...(organizationAdmin ? ['member.invite', 'member.manage'] : []),
+              ],
   };
   await page.addInitScript((user) => {
     if (!localStorage.getItem('ct_user'))
@@ -384,7 +395,7 @@ for (const role of ['buyer', 'supplier'] as const) {
 }
 
 for (const role of ['buyer', 'supplier', 'admin'] as const) {
-  test(`${role}: primary navigation stays visible while only supporting records scroll on desktop`, async ({
+  test(`${role}: expanded supporting navigation uses only the whole sidebar scroll`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 768 });
@@ -392,36 +403,26 @@ for (const role of ['buyer', 'supplier', 'admin'] as const) {
     await gotoWithNetworkRecovery(page, '/home');
     const primary = menu(page).getByTestId('workspace-primary-navigation');
     await expect(primary).toBeVisible();
-    expect(
-      await primary.evaluate((element) => {
-        let current: HTMLElement | null = element.parentElement;
-        while (current?.closest('aside')) {
-          if (['auto', 'scroll'].includes(getComputedStyle(current).overflowY)) return true;
-          current = current.parentElement;
-        }
-        return false;
-      }),
-    ).toBe(false);
     const secondary = menu(page).getByTestId('workspace-secondary-navigation');
-    const disclosure = secondary.locator('details');
+    const disclosure = secondary.locator('details').first();
     await expect(disclosure).not.toHaveAttribute('open');
-    const before = await primary.boundingBox();
     await disclosure.locator('summary').click();
-    await secondary.evaluate((element) => {
-      element.scrollTop = element.scrollHeight;
-    });
-    expect(await primary.boundingBox()).toEqual(before);
-    await expect(disclosure.locator('summary')).toBeInViewport();
-    for (const button of await primary.getByRole('button').all()) {
-      const bounds = await button.boundingBox();
-      expect(bounds).not.toBeNull();
-      expect(bounds!.y).toBeGreaterThanOrEqual(0);
-      expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(768);
+    expect(await secondary.evaluate((element) => getComputedStyle(element).overflowY)).toBe(
+      'visible',
+    );
+    expect(
+      await secondary.evaluate((element) => element.scrollHeight <= element.clientHeight),
+    ).toBe(true);
+    for (const button of await disclosure.getByRole('button').all()) {
+      await button.scrollIntoViewIfNeeded();
+      await expect(button).toBeInViewport();
     }
-    for (const name of ['Notifications', 'Trace & recall', 'Help']) {
-      const bounds = await menu(page).getByRole('button', { name, exact: true }).boundingBox();
-      expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(768);
-    }
+    const sidebar = menu(page).locator('..');
+    await sidebar.getByText('Account & workspace help', { exact: true }).click();
+    const options = sidebar.locator('.workspace-account-options');
+    expect(await options.evaluate((element) => getComputedStyle(element).position)).toBe('static');
+    await sidebar.getByRole('button', { name: 'Sign out', exact: true }).scrollIntoViewIfNeeded();
+    await expect(sidebar.getByRole('button', { name: 'Sign out', exact: true })).toBeInViewport();
     await expect(menu(page).getByText('Trade registers', { exact: true })).toHaveCount(0);
     if (role === 'supplier')
       await expect(menu(page).getByText('Supplier workspace', { exact: true })).toHaveCount(1);
@@ -434,7 +435,10 @@ test('active record deep links open the single Records disclosure and preserve d
 }) => {
   await fixture(page, 'supplier');
   await gotoWithNetworkRecovery(page, '/farms');
-  const records = menu(page).getByTestId('workspace-secondary-navigation').locator('details');
+  const records = menu(page)
+    .getByTestId('workspace-secondary-navigation')
+    .locator('details')
+    .first();
   await expect(records).toHaveAttribute('open', '');
   await expect(
     menu(page).getByRole('button', { name: 'Sources & plots', exact: true }),
@@ -463,4 +467,61 @@ test('small mobile drawer has one natural scroll and keeps account controls reac
   await page.keyboard.press('Escape');
   await expect(drawer).toHaveCount(0);
   await expect(trigger).toBeFocused();
+});
+
+for (const role of ['buyer', 'supplier'] as const) {
+  for (const organizationAdmin of [false, true]) {
+    test(`${role} ${organizationAdmin ? 'admin' : 'member'}: team navigation follows actual permissions`, async ({
+      page,
+    }) => {
+      await fixture(page, role, organizationAdmin);
+      await gotoWithNetworkRecovery(page, '/home');
+      const organization = menu(page)
+        .locator('details')
+        .filter({ has: page.locator('summary', { hasText: /^Organization$/ }) });
+      if (organizationAdmin) {
+        await organization.locator('summary').click();
+        await expect(
+          organization.getByRole('button', { name: 'Team & access', exact: true }),
+        ).toBeVisible();
+        await organization.getByRole('button', { name: 'Team & access', exact: true }).click();
+        await expect(page).toHaveURL(/\/pilot$/);
+      } else {
+        await expect(
+          menu(page).getByRole('button', { name: 'Team & access', exact: true }),
+        ).toHaveCount(0);
+      }
+    });
+  }
+}
+test('admin can discover document review without switching trading workspaces', async ({
+  page,
+}) => {
+  await fixture(page, 'admin');
+  await gotoWithNetworkRecovery(page, '/home');
+  await menu(page)
+    .locator('summary', { hasText: /^Administration$/ })
+    .click();
+  await menu(page).getByRole('button', { name: 'Document review', exact: true }).click();
+  await expect(page).toHaveURL(/\/evidence\/review$/);
+});
+
+test('buyer with provenance read permissions has no supplier source or harvest register in navigation or search', async ({
+  page,
+}) => {
+  await fixture(page, 'buyer', true);
+  await gotoWithNetworkRecovery(page, '/home');
+  await menu(page).getByText('Records', { exact: true }).click();
+  for (const name of ['Sources & plots', 'Harvest batches']) {
+    await expect(menu(page).getByRole('button', { name, exact: true })).toHaveCount(0);
+  }
+  await expect(
+    menu(page).getByRole('button', { name: 'Product traceability', exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press('Control+k');
+  const search = page.getByRole('dialog', { name: 'Find anything', exact: true });
+  for (const name of ['Sources & plots', 'Harvest batches']) {
+    await search.getByRole('textbox', { name: 'Find anything', exact: true }).fill(name);
+    await expect(search.getByRole('button', { name: new RegExp(name) })).toHaveCount(0);
+  }
 });

@@ -1102,4 +1102,12 @@ SEC-006 / QLT-002 / UX-002 remain IN PROGRESS. The complete 47-item unresolved e
 
 ### Daily workspace navigation revision — 2026-10-25
 
-UX-002 / INV-003 remain IN PROGRESS pending founder acceptance. Buyer/supplier daily links are separated from one supporting Records section; platform administration has four daily destinations and one Administration disclosure. Normal desktop primary links and safety/help controls remain visible while supporting records scroll; compact viewports use one natural scroll. Existing permission and workspace/draft boundaries are retained. Author verification is recorded in docs/releases/CLEAR_WORKSPACE_NAVIGATION_PR.md; native release/CI and retained-data founder rehearsal remain required. Admin aggregate sidebar badges need scoped totals before being added; no page-length counts or zero-on-failure claims are introduced.
+UX-002 / INV-003 remain IN PROGRESS pending founder acceptance. Buyer/supplier daily links are separated from one supporting Records section; platform administration has four daily destinations and one Administration disclosure. The 2026-10-26 follow-up removes nested supporting-record scrolling at every viewport: expanded Records, Administration and account help flow inline within one naturally scrolling sidebar. Founder review remains pending. Existing permission and workspace/draft boundaries are retained. Author verification is recorded in docs/releases/CLEAR_WORKSPACE_NAVIGATION_PR.md; native release/CI and retained-data founder rehearsal remain required. Admin aggregate sidebar badges need scoped totals before being added; no page-length counts or zero-on-failure claims are introduced.
+
+### Navigation content and reachability review — 2026-10-26
+
+UX-002 / INV-003 remain IN PROGRESS. The follow-up separates Organization and Account & help from Records, restores permitted buyer source/batch destinations, exposes admin document review and operational registers, and records entry paths for every registered route. Team management remains permission-based for buyer and supplier administrators; no ordinary or legacy demo account is promoted. Founder review and full release/CI remain pending. See docs/quality/navigation-route-coverage.json and docs/releases/CLEAR_WORKSPACE_NAVIGATION_PR.md.
+
+### Buyer contextual provenance correction — 2026-10-26
+
+UX-002 remains IN PROGRESS pending founder review. Sources & plots and Harvest batches are excluded from buyer navigation and workflow search. Supplier/admin register access and buyer contextual provenance permissions/routes are preserved.
