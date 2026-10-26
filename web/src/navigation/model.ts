@@ -139,7 +139,7 @@ export function navigation(
       label: 'nav.records',
       collapsible: true,
       items: [
-        ...records,
+        ...records.filter((row) => mode !== 'buy' || !['farms', 'batches'].includes(row.id)),
         item('payments', 'nav.goods-payments', '/payments', 'WalletCards', ['payment.read']),
         item('shipments', 'nav.shipments', '/shipments', 'Ship', ['shipment.read']),
         item('platform-fees', 'nav.platform-fees', '/platform-fees', 'WalletCards', [

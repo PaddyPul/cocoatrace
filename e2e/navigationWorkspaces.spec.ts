@@ -9,6 +9,7 @@ const buyerPermissions = [
   'evidence.read',
   'batch.read',
   'certificate.read',
+  'farm.read',
 ];
 const sellerPermissions = [
   'listing.read',
@@ -503,4 +504,24 @@ test('admin can discover document review without switching trading workspaces', 
     .click();
   await menu(page).getByRole('button', { name: 'Document review', exact: true }).click();
   await expect(page).toHaveURL(/\/evidence\/review$/);
+});
+
+test('buyer with provenance read permissions has no supplier source or harvest register in navigation or search', async ({
+  page,
+}) => {
+  await fixture(page, 'buyer', true);
+  await gotoWithNetworkRecovery(page, '/home');
+  await menu(page).getByText('Records', { exact: true }).click();
+  for (const name of ['Sources & plots', 'Harvest batches']) {
+    await expect(menu(page).getByRole('button', { name, exact: true })).toHaveCount(0);
+  }
+  await expect(
+    menu(page).getByRole('button', { name: 'Product traceability', exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press('Control+k');
+  const search = page.getByRole('dialog', { name: 'Find anything', exact: true });
+  for (const name of ['Sources & plots', 'Harvest batches']) {
+    await search.getByRole('textbox', { name: 'Find anything', exact: true }).fill(name);
+    await expect(search.getByRole('button', { name: new RegExp(name) })).toHaveCount(0);
+  }
 });

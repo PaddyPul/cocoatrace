@@ -1,6 +1,6 @@
 ## Outcome
 
-Buyers and suppliers can discover permitted source records and organization team access. Platform administrators can reach document review and operational records without switching trading workspaces. Supporting navigation is organized into Records, Organization and Account & help, preserving one whole-sidebar scroll.
+Buyers inspect source provenance through listings and trades without supplier source/harvest registers in their menu. Suppliers retain their source registers, and both organization-admin roles retain team access. Platform administrators can reach document review and operational records without switching trading workspaces. Supporting navigation is organized into Records, Organization and Account & help, preserving one whole-sidebar scroll.
 
 ## Tracking
 
@@ -10,7 +10,7 @@ Buyers and suppliers can discover permitted source records and organization team
 
 ## Change summary
 
-- Show buyer source and batch records according to read permissions, rather than hiding them by workspace.
+- Keep Sources & plots and Harvest batches out of the buyer menu and workflow search, even when provenance read permissions are present. Preserve source/detail routes and permissions for contextual inspection through listings and trades.
 - Put Team & access and organization settings in Organization. Both buyer and supplier organization admins receive the same permission-based entry; ordinary members do not receive management rights.
 - Add admin Document review and a separate Records group for contracts, inventory, sources, documents, payments and transport.
 - Add Account & help entries for security, workspace setup, limitations, service status and platform responsibilities. Keep the walkthrough replay in the account card.
@@ -37,7 +37,7 @@ Buyers and suppliers can discover permitted source records and organization team
 
 - Defect severity: P2
 - Confirmed P0 register ID (if applicable): not applicable
-- Regression test and failure behavior: buyer/supplier admin and ordinary-member cases check Team & access visibility and navigation; an admin case opens Document review. Existing desktop/mobile single-scroll, keyboard, workspace switching, malformed response and unsaved-change cases remain. Model tests cover permitted buyer records and every registered route's entry classification.
+- Regression test and failure behavior: buyer/supplier admin and ordinary-member cases check Team & access visibility and navigation; an admin case opens Document review. Existing desktop/mobile single-scroll, keyboard, workspace switching, malformed response and unsaved-change cases remain. Model tests cover buyer source-register exclusion and every registered route's entry classification.
 - A P0 fix must include its regression in the same PR; do not merge a test-free P0 fix. Add the defect and exact test title to docs/quality/p0-regressions.json. Label confirmed P0 PRs `severity:P0`.
 
 ## Verification
@@ -48,7 +48,7 @@ Buyers and suppliers can discover permitted source records and organization team
 - [ ] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: 42 frontend/policy cases, six locale cases and 33 production-build mocked-API Chromium cases pass. Web/browser typechecks, code quality, web production build and the unchanged 90 KiB initial transfer budget pass. Full native release, database-backed persona journeys, CI and founder acceptance remain pending; this bundle is for local review and has not been pushed.
+- Evidence/results: This buyer-menu correction passes 10 navigation model/route cases, 23 production-build mocked-API navigation Chromium cases, web/browser typechecks, changed-file lint, production web build and the unchanged initial-transfer budget. Prior broader navigation checks are recorded in the previous commit. Full native release, database-backed journeys, CI and founder acceptance remain pending. Nothing has been pushed.
 
 ## Product and operations
 

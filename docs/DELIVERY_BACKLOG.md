@@ -1107,3 +1107,7 @@ UX-002 / INV-003 remain IN PROGRESS pending founder acceptance. Buyer/supplier d
 ### Navigation content and reachability review — 2026-10-26
 
 UX-002 / INV-003 remain IN PROGRESS. The follow-up separates Organization and Account & help from Records, restores permitted buyer source/batch destinations, exposes admin document review and operational registers, and records entry paths for every registered route. Team management remains permission-based for buyer and supplier administrators; no ordinary or legacy demo account is promoted. Founder review and full release/CI remain pending. See docs/quality/navigation-route-coverage.json and docs/releases/CLEAR_WORKSPACE_NAVIGATION_PR.md.
+
+### Buyer contextual provenance correction — 2026-10-26
+
+UX-002 remains IN PROGRESS pending founder review. Sources & plots and Harvest batches are excluded from buyer navigation and workflow search. Supplier/admin register access and buyer contextual provenance permissions/routes are preserved.

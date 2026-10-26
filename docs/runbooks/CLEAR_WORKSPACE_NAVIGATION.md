@@ -25,7 +25,7 @@ The original navigation revision had 33 production-build mocked-API Chromium cas
 
 Supporting pages use Records, Organization and Account & help disclosures. Empty groups are hidden. The whole sidebar remains the only scrolling container. Active destinations expand their group, including after a direct URL or reload.
 
-- Buyer organization admin: daily sourcing links, permitted Sources & plots and Harvest batches under Records, Team & access under Organization, and Account & help.
+- Buyer organization admin: daily sourcing links, source provenance through supply listings and trades, without Sources & plots or Harvest batches in the buyer menu, Team & access under Organization, and Account & help.
 - Supplier organization admin: existing daily supply links, permitted source/inventory/trade records, Team & access under Organization, and Account & help.
 - Ordinary buyer/supplier members: records follow actual read permissions; Team & access is hidden unless the server grants member.invite or member.manage. Viewer accounts without trading capabilities use the Records workspace and can browse supply when listing.read is granted.
 - Platform admin: four existing daily destinations; Document review under Administration; operational registers under Records; Team & access under Organization; Account & help.
@@ -35,3 +35,5 @@ The legacy seeded importer account lacks team-management permissions. This chang
 The route register in docs/quality/navigation-route-coverage.json covers 59 registered paths: 34 menu paths across permitted workspaces, 13 contextual paths, nine public/token paths, two redirects and one demo-only path. Detail pages are reached through their corresponding records/trades. Upload is reached from Documents & evidence, inventory creation from Publish supply, comparison from Find supply, and passkeys from Account & security. Demo-only setup is available through workflow search only in demo mode. Token routes intentionally require issued links. A route register is a discoverability inventory, not proof that every role may open every route or that a database-backed journey passed.
 
 Before release, review all five personas above, French labels, expanded groups on short screens and mobile, workflow search, direct record URLs and dirty-form navigation. Full release and push instructions follow founder acceptance.
+
+Buyer menu correction — 2026-10-26: source and harvest registers are supplier/administrative navigation. Buyer read permissions and contextual source detail routes remain unchanged. Workflow search uses the same filtered menu.

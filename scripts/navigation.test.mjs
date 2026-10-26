@@ -133,9 +133,17 @@ for (const [name, actor, mode] of [
     );
   });
 }
-test('permitted buyer source records and admin review records have menu paths', () => {
+test('buyer source permissions retain contextual access without supplier register menu entries', () => {
   const b = navigation({ ...buyer, permissions: [...buyer.permissions, 'farm.read'] }, 'buy');
-  assert.ok(ids(b).includes('farms') && ids(b).includes('batches'));
+  assert.ok(!ids(b).includes('farms') && !ids(b).includes('batches'));
+  assert.ok(ids(b).includes('products'));
+  const supplierAdmin = navigation(
+    { ...supplier, permissions: [...supplier.permissions, 'member.manage'] },
+    'sell',
+  );
+  assert.ok(ids(supplierAdmin).includes('farms') && ids(supplierAdmin).includes('batches'));
+  const platformBuyer = navigation({ orgType: 'regulator', permissions: ['*'] }, 'buy');
+  assert.ok(!ids(platformBuyer).includes('farms') && !ids(platformBuyer).includes('batches'));
   const a = navigation({ orgType: 'regulator', permissions: ['*'] }, 'admin');
   for (const id of ['evidence-review', 'evidence', 'contracts', 'payments', 'shipments', 'pilot'])
     assert.ok(ids(a).includes(id));
