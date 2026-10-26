@@ -384,7 +384,7 @@ for (const role of ['buyer', 'supplier'] as const) {
 }
 
 for (const role of ['buyer', 'supplier', 'admin'] as const) {
-  test(`${role}: primary navigation stays visible while only supporting records scroll on desktop`, async ({
+  test(`${role}: expanded supporting navigation uses only the whole sidebar scroll`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 768 });
@@ -392,36 +392,26 @@ for (const role of ['buyer', 'supplier', 'admin'] as const) {
     await gotoWithNetworkRecovery(page, '/home');
     const primary = menu(page).getByTestId('workspace-primary-navigation');
     await expect(primary).toBeVisible();
-    expect(
-      await primary.evaluate((element) => {
-        let current: HTMLElement | null = element.parentElement;
-        while (current?.closest('aside')) {
-          if (['auto', 'scroll'].includes(getComputedStyle(current).overflowY)) return true;
-          current = current.parentElement;
-        }
-        return false;
-      }),
-    ).toBe(false);
     const secondary = menu(page).getByTestId('workspace-secondary-navigation');
     const disclosure = secondary.locator('details');
     await expect(disclosure).not.toHaveAttribute('open');
-    const before = await primary.boundingBox();
     await disclosure.locator('summary').click();
-    await secondary.evaluate((element) => {
-      element.scrollTop = element.scrollHeight;
-    });
-    expect(await primary.boundingBox()).toEqual(before);
-    await expect(disclosure.locator('summary')).toBeInViewport();
-    for (const button of await primary.getByRole('button').all()) {
-      const bounds = await button.boundingBox();
-      expect(bounds).not.toBeNull();
-      expect(bounds!.y).toBeGreaterThanOrEqual(0);
-      expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(768);
+    expect(await secondary.evaluate((element) => getComputedStyle(element).overflowY)).toBe(
+      'visible',
+    );
+    expect(
+      await secondary.evaluate((element) => element.scrollHeight <= element.clientHeight),
+    ).toBe(true);
+    for (const button of await disclosure.getByRole('button').all()) {
+      await button.scrollIntoViewIfNeeded();
+      await expect(button).toBeInViewport();
     }
-    for (const name of ['Notifications', 'Trace & recall', 'Help']) {
-      const bounds = await menu(page).getByRole('button', { name, exact: true }).boundingBox();
-      expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(768);
-    }
+    const sidebar = menu(page).locator('..');
+    await sidebar.getByText('Account & workspace help', { exact: true }).click();
+    const options = sidebar.locator('.workspace-account-options');
+    expect(await options.evaluate((element) => getComputedStyle(element).position)).toBe('static');
+    await sidebar.getByRole('button', { name: 'Sign out', exact: true }).scrollIntoViewIfNeeded();
+    await expect(sidebar.getByRole('button', { name: 'Sign out', exact: true })).toBeInViewport();
     await expect(menu(page).getByText('Trade registers', { exact: true })).toHaveCount(0);
     if (role === 'supplier')
       await expect(menu(page).getByText('Supplier workspace', { exact: true })).toHaveCount(1);

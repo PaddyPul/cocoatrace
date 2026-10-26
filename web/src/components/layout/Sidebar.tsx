@@ -128,7 +128,7 @@ export default function Sidebar({
   };
   return (
     <aside
-      className={`${className} workspace-sidebar relative flex min-h-0 flex-col overflow-hidden bg-[#0c1913] text-white`}
+      className={`${className} workspace-sidebar relative flex min-h-0 flex-col overflow-y-auto bg-[#0c1913] text-white`}
     >
       <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-5">
         <button
@@ -153,7 +153,7 @@ export default function Sidebar({
       </div>
       <nav
         aria-label={t('nav.navigation')}
-        className="workspace-menu flex min-h-0 flex-1 flex-col px-3 py-2"
+        className="workspace-menu flex shrink-0 flex-col px-3 py-2"
       >
         <div data-testid="workspace-primary-navigation" className="shrink-0 space-y-2 pb-3">
           {available.length > 1 ? (
@@ -190,7 +190,7 @@ export default function Sidebar({
         </div>
         <div
           data-testid="workspace-secondary-navigation"
-          className="workspace-secondary min-h-0 flex-1 overflow-y-auto pb-2"
+          className="workspace-secondary shrink-0 pb-2"
         >
           {menu.groups
             .filter((group) => group.collapsible)
@@ -202,7 +202,7 @@ export default function Sidebar({
                 }
                 className="rounded-xl border border-white/10 p-2"
               >
-                <summary className="sticky top-0 z-10 cursor-pointer bg-[#0c1913] px-1 py-2 text-xs font-semibold text-white/70">
+                <summary className="cursor-pointer bg-[#0c1913] px-1 py-2 text-xs font-semibold text-white/70">
                   {t(group.label)}
                 </summary>
                 <div className="space-y-1">{group.items.map((item) => renderItem(item))}</div>
@@ -223,7 +223,7 @@ export default function Sidebar({
           <summary className="cursor-pointer text-xs text-white/70">
             {t('nav.account-help')}
           </summary>
-          <div className="workspace-account-options absolute inset-x-0 bottom-full z-20 mb-2 max-h-[60dvh] overflow-y-auto rounded-xl border border-white/15 bg-[#0c1913] p-3 shadow-xl">
+          <div className="workspace-account-options mt-2 rounded-xl border border-white/15 bg-[#0c1913] p-3 shadow-xl">
             <button
               onClick={replayWelcome}
               className="mb-3 flex w-full items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-left text-[10px] font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"

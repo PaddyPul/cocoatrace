@@ -1,6 +1,6 @@
 ## Outcome
 
-Buyers, suppliers and platform administrators can reach daily work without scrolling through the sidebar's record lists. A single supporting disclosure replaces the two supplier/buyer record groups. Compact screens retain one natural drawer/sidebar scroll so account and safety controls remain reachable.
+Expanding Records or Administration now grows the menu naturally. One scrollbar on the whole sidebar replaces the nested Records scroll area on every viewport, and account help expands inline. Buyers, suppliers and administrators can reach every link without operating a second scroll area.
 
 ## Tracking
 
@@ -10,12 +10,9 @@ Buyers, suppliers and platform administrators can reach daily work without scrol
 
 ## Change summary
 
-- Keep supplier Home, My supply, Offers and My trades in a fixed primary area, with one workspace label and a distinct Publish supply action.
-- Keep buyer Home, Sourcing requests, Find supply, Offers and My trades in that primary area, with the existing create-request action.
-- Reduce platform-admin daily navigation to Overview, Access requests, Fee verification and Operations; place occasional tools in Administration.
-- Combine supporting source/trade registers under one Records disclosure. Auto-open the section for an active record and keep its summary reachable while supporting rows scroll.
-- Keep Notifications, Trace & recall and Help in a compact visible utility row. Account controls use a disclosure; mobile and short viewports use one natural scroll instead of nested scrolling.
-- Retain workspace switching, per-account preference storage, permission gates, offer count validation, workflow-search destinations, keyboard behavior and unsaved-navigation review. Preserve English/French navigation coverage.
+- Remove separate scrolling and sticky headings from supporting navigation.
+- Use one whole-sidebar scroll on desktop and mobile; expand account help inline.
+- Keep role-specific destinations, permission checks, active-record expansion and workspace switching.
 
 ## Security and data review
 
@@ -37,7 +34,7 @@ Buyers, suppliers and platform administrators can reach daily work without scrol
 
 - Defect severity: P2
 - Confirmed P0 register ID (if applicable): not applicable
-- Regression test and failure behavior: buyer/supplier/admin primary links remain within a 1280x768 viewport while supporting records scroll independently; active record deep links open Records; a 390x600 mobile drawer uses one natural scroll and retains sign-out reachability and Escape focus return. Model tests enforce exact role-specific primary groups, one secondary group, permission filtering and no duplicate destinations.
+- Regression test and failure behavior: buyer/supplier/admin desktop cases expand supporting navigation, check that it has no scroll constraint, reach each supporting link and reach sign-out after expanding inline account help. Mobile Escape/focus and active record coverage remain in the suite.
 - A P0 fix must include its regression in the same PR; do not merge a test-free P0 fix. Add the defect and exact test title to docs/quality/p0-regressions.json. Label confirmed P0 PRs `severity:P0`.
 
 ## Verification
@@ -48,7 +45,7 @@ Buyers, suppliers and platform administrators can reach daily work without scrol
 - [ ] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: 38 frontend/policy cases, six locale cases and 33 production-build mocked-API Chromium cases across navigation, shared accessibility, brand identity, unsaved changes and pilot-limitations suites pass. Web/browser typechecks and code quality pass. Production web build passes the unchanged 90 KiB initial transfer budget. Native database-backed full release, API build/typecheck, hosted staging and founder manual rehearsal were not run by the author; the exact-candidate Windows release and CI remain gates.
+- Evidence/results: Web/browser typechecks, six navigation model cases and the web production build pass. All 17 production-build mocked-API navigation Chromium cases pass; changed TypeScript lint and the web transfer budget pass. Full release, native database journeys, CI and founder acceptance remain pending. This bundle is for local review; nothing has been pushed.
 
 ## Product and operations
 
