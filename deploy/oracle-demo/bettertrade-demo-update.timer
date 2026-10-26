@@ -1,0 +1,10 @@
+[Unit]
+Description=Check for an accepted BetterTrade demo release every 15 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitInactiveSec=15min
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

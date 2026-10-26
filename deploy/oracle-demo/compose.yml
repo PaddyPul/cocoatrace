@@ -1,0 +1,119 @@
+name: bettertrade-investor-demo
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_DB: bettertrade_demo
+      POSTGRES_USER: bettertrade
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?Run configure.py first}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U bettertrade -d bettertrade_demo']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  clamav:
+    image: clamav/clamav:1.5.4-debian13-slim
+    restart: unless-stopped
+    logging: *logging
+    volumes:
+      - signatures:/var/lib/clamav
+    healthcheck:
+      test: [CMD-SHELL, 'clamdscan --ping 1']
+      interval: 10s
+      timeout: 5s
+      retries: 90
+      start_period: 60s
+
+  api:
+    image: bettertrade-demo-api:${BT_RELEASE_SHA:?Set the candidate SHA}
+    build:
+      context: ../..
+      dockerfile: api/Dockerfile
+      args:
+        BUILD_GIT_SHA: ${BT_RELEASE_SHA}
+    restart: unless-stopped
+    logging: *logging
+    env_file:
+      - /etc/bettertrade/smtp.env
+    environment:
+      APP_ENV: demo
+      NODE_ENV: production
+      DEMO_MODE: 'false'
+      APP_VERSION: ${BT_RELEASE_SHA}
+      DATABASE_URL: postgresql://bettertrade:${DATABASE_PASSWORD}@postgres:5432/bettertrade_demo
+      DATABASE_POOL_MAX: '10'
+      JWT_SECRET: ${JWT_SECRET:?Missing session secret}
+      INVITATION_DELIVERY_KEY: ${INVITATION_DELIVERY_KEY:?Missing invitation key}
+      EVIDENCE_UPLOAD_SIGNING_SECRET: ${EVIDENCE_UPLOAD_SIGNING_SECRET:?Missing evidence secret}
+      WEB_URL: https://bettertrade-demo.duckdns.org
+      PUBLIC_WEB_URL: https://bettertrade-demo.duckdns.org
+      COOKIE_SECURE: 'true'
+      MFA_ENFORCED: 'true'
+      IDENTITY_EMAIL_ENABLED: 'true'
+      EMAIL_SUPPORT_ADDRESS: bettertrade.notifications@gmail.com
+      EVIDENCE_STORAGE_DRIVER: local
+      EVIDENCE_STORAGE_LOCAL_ROOT: /app/private-evidence
+      EVIDENCE_SCANNER_DRIVER: clamav
+      EVIDENCE_SCANNER_HOST: clamav
+      EVIDENCE_SCANNER_TIMEOUT_MS: '30000'
+      EVIDENCE_SCANNER_RETRIES: '2'
+      EVIDENCE_ORGANIZATION_QUOTA_BYTES: '268435456'
+      OPERATIONS_ALERTS_ENABLED: 'false'
+      LOG_QUERIES: 'false'
+    volumes:
+      - evidence:/app/private-evidence
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "require('http').get('http://localhost:3001/health/ready',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+
+  web:
+    image: bettertrade-demo-web:${BT_RELEASE_SHA}
+    build:
+      context: ../..
+      dockerfile: web/Dockerfile
+      args:
+        VITE_DEMO_MODE: 'false'
+        VITE_DEMO_PREVIEW: 'false'
+    restart: unless-stopped
+    logging: *logging
+    ports:
+      - '127.0.0.1:14000:3000'
+    healthcheck:
+      test: [CMD-SHELL, 'wget -qO- http://localhost:3000 >/dev/null || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  database:
+  evidence:
+  signatures:

@@ -5,7 +5,7 @@
 **Pilot launch plan:** [`BETTERTRADE_PILOT_PLAN.md`](BETTERTRADE_PILOT_PLAN.md)
 **Progress audit:** [`BACKLOG_GROOMING_2026-10-13.md`](BACKLOG_GROOMING_2026-10-13.md) (supersedes the 2026-10-06 snapshot)
 **Architecture direction:** [`ARCHITECTURE_MODERNIZATION.md`](./ARCHITECTURE_MODERNIZATION.md)
-**Last triaged:** 2026-10-21
+**Last triaged:** 2026-10-26
 **Next formal review:** Weekly, before selecting new work
 
 ## How to use this file
@@ -1111,3 +1111,7 @@ UX-002 / INV-003 remain IN PROGRESS. The follow-up separates Organization and Ac
 ### Buyer contextual provenance correction — 2026-10-26
 
 UX-002 remains IN PROGRESS pending founder review. Sources & plots and Harvest batches are excluded from buyer navigation and workflow search. Supplier/admin register access and buyer contextual provenance permissions/routes are preserved.
+
+### 2026-10-26 — Oracle hosted synthetic demo candidate
+
+INV-001, INV-003, IDN-021, OPS-008 and OPS-009 remain IN PROGRESS. The founder has provisioned the London ARM64 VM, confirmed HTTPS and authenticated the dedicated Gmail sender. This candidate adds a separate synthetic-only hosted Compose project, private first-administrator bootstrap, retained volumes, maintenance and pre-migration database/evidence snapshots, and optional pull-based deployment gated on successful exact-main CI. No shared seed account is installed. See ADR 004 and runbooks/ORACLE_INVESTOR_DEMO.md. Native full release, GitHub CI, ARM64 container startup, actual inbox delivery, founder buyer/supplier/admin rehearsal and coordinated restore remain unverified; no completion credit or production-readiness claim is added.

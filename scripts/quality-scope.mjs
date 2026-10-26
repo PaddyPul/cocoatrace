@@ -1,5 +1,8 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'api/src/services/identityLinkPolicy*.ts',
+  'api/scripts/bootstrap-hosted-admin.ts',
+  'api/test/integration/hostedAdminBootstrap.integration.test.ts',
   'api/src/utils/ordinal.ts',
   'web/src/components/shared/WorkspaceDialog.tsx',
   'api/src/services/sourcingStructurer*.ts',

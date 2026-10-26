@@ -1,0 +1,15 @@
+# ADR 004 — Oracle hosted synthetic investor demo
+
+Date: 2026-10-26. Status: proposed implementation, pending exact-candidate release, CI and hosted founder acceptance. Tracking: INV-001, IDN-021, OPS-008, OPS-009.
+
+This extends ADR 003 for a supervised synthetic investor demonstration only. It does not admit real customer/commercial records or establish persistent staging or production readiness. The founder authorized an Oracle deployment at USD 0 budget, has provisioned an A1 ARM64 VM in London and confirmed HTTPS and Gmail SMTP authentication. No new cloud resources or paid services are created by this change.
+
+Use a separate Compose project and persistent volumes. APP_ENV remains demo so the existing environment notice and test-email designation remain honest. DEMO_MODE is explicitly false at API runtime and web build: normal login and Request access are available, rehearsal shortcuts are hidden, and the guarded demo reset remains unavailable. A first-installation-only transactional CLI creates one private administrator without loading the shared demo seed. Administrator passkey assurance and secure cookies are enabled.
+
+Only Caddy is public. Web listens on host loopback; API, database and scanner have no published ports. Database traffic is internal to this VM's Docker network. Evidence remains in a private local volume with ClamAV admission. This is not the encrypted object-storage and verified database-TLS profile required for staging/production. API proxy trust stays disabled; IP rate limits therefore share the web proxy's bucket, conservatively limiting a small supervised audience. Per-account limits remain separate. Do not weaken rate limits to compensate.
+
+SMTP secrets and generated database/session/evidence/invitation keys live outside Git under root-only /etc/bettertrade. The initial administrator password travels through stdin, is hashed with bcrypt and is never retained in the environment file. Pending applicants gain no account until verification, administrator approval and invitation acceptance.
+
+Updates enter maintenance and stop application writers before snapshotting the database and evidence. Failure retains maintenance. Backups on the same VM are recovery checkpoints, not disaster recovery. Restoration must recover matching database and evidence together; no automatic migration downgrade or blind image rollback is authorized. Off-VM encrypted backup and an exercised restore remain open.
+
+Optional pull-based CD runs only after the first hosted rehearsal. It selects the current main SHA and requires the main push's complete quality-gate workflow to have succeeded for that exact SHA. Missing/failed/pending CI or API failure cannot authorize deployment. It does not open SSH to GitHub runners or install a self-hosted runner. A local pause file and systemd timer disable switch provide operator control. This simple single-VM design has a maintenance window; image base tags are not a reproducible immutable-image supply chain. Production rollout, independent staging, provider retention and verified recovery remain separate backlog work.

@@ -4,6 +4,7 @@ import { lockInvitationAuthority, lockInvitationTarget } from './authority';
 import { withCatalogRead } from '../catalog/paging';
 import { invitationPage, invitationSummary, legacyInvitations } from '../catalog/invitationRecords';
 import { config } from '../../config/env';
+import { allowIdentityLinkPreview } from '../../services/identityLinkPolicy';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 
@@ -34,7 +35,7 @@ export type Outcome =
       message: string;
     };
 
-const exposeRawLinks = config.environment === 'demo' || config.environment === 'test';
+const exposeRawLinks = allowIdentityLinkPreview(config);
 
 const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex');
 
