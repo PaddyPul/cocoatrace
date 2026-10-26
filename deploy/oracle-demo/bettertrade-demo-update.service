@@ -1,0 +1,10 @@
+[Unit]
+Description=Deploy BetterTrade demo only after successful main CI
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/bettertrade-demo-update
+TimeoutStartSec=3600
+UMask=0077
