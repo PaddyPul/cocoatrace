@@ -75,3 +75,7 @@ Pause: `sudo -n touch /etc/bettertrade/pause-auto-deploy`. Resume: `sudo -n rm /
 ## Remaining deployment work
 
 IDN-021 real inbox acceptance; INV-001/003 hosted investor rehearsal; OPS-008 scanner/outage exercise; OPS-009 coordinated restore and immutable release rollback; ENV staging/production isolation, encrypted object storage and verified database TLS; provider spending/retention monitoring and off-VM encrypted backup. No backlog item is closed by installing this configuration alone.
+
+## Focused browser failure diagnosis
+
+If the release stops in contractPages or languageFoundation, retain the branch and use `npm run test:browser:docker -- contractPages.spec.ts languageFoundation.spec.ts`. Selection accepts existing suite filenames only; no selection still runs every test. This resets only the dedicated disposable browser-test project. A focused pass does not replace a full exact-candidate release. Failed contract/language tests retain bounded redacted heading/alert JSON, best-effort masked screenshots and credential-free source locations under browser-test-results/safe. A closed or unavailable browser still leaves a JSON capture marker. Share these safe files; do not share private traces, cookies, storage or raw email links. These diagnostics do not identify a root cause by themselves and do not authorize push or deployment.

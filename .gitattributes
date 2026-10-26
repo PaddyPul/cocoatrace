@@ -626,3 +626,10 @@ api/src/services/identityLinkPolicy*.ts text eol=lf
 api/scripts/bootstrap-hosted-admin.ts text eol=lf
 api/test/integration/hostedAdminBootstrap.integration.test.ts text eol=lf
 deploy/oracle-demo/** text eol=lf
+
+# Browser failure diagnostics and focused execution
+e2e/support/failureCapture.ts text eol=lf
+e2e/support/fixtures.ts text eol=lf
+e2e/support/safeReporter.ts text eol=lf
+scripts/browser-suite-selection*.mjs text eol=lf
+scripts/run-browser-tests.mjs text eol=lf

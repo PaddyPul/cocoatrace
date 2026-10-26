@@ -1,4 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+import { captureFailure } from './support/failureCapture';
+test.afterEach(captureFailure);
 const first = '11111111-1111-1111-1111-111111111111',
   later = '22222222-2222-2222-2222-222222222222';
 async function fixture(

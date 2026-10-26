@@ -1,5 +1,10 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'e2e/support/failureCapture.ts',
+  'e2e/support/fixtures.ts',
+  'e2e/support/safeReporter.ts',
+  'scripts/browser-suite-selection*.mjs',
+  'scripts/run-browser-tests.mjs',
   'api/src/services/identityLinkPolicy*.ts',
   'api/scripts/bootstrap-hosted-admin.ts',
   'api/test/integration/hostedAdminBootstrap.integration.test.ts',

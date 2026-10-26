@@ -60,6 +60,8 @@ Provide a supervised Oracle investor demo with normal Request access and branded
 
 ## Follow-up work
 
+Browser diagnostics follow-up: founder's native release stopped on the contract unavailable-totals assertion and a supplier language-journey aborted navigation. The contract suite passed 24 author browser runs (eight tests repeated three times), so the root cause is not yet reproduced. Add masked failure JSON/screenshots, credential-free source locations and explicit focused suite selection. This instrumentation does not resolve or waive either failure; require focused evidence and a passing full release before push/deployment.
+
 INV-001/INV-003: hosted buyer/supplier/admin rehearsal and restart acceptance. IDN-021: actual verification/invitation/team/reset inbox delivery and safe retries. OPS-008: scanner/outage exercise. OPS-009: coordinated restore, off-VM encrypted backup and immutable-image rollback evidence. Staging/production storage, database TLS and separate environments remain open under the existing environment backlog. Enable the optional updater only after the first hosted rehearsal passes.
 
 ## Backlog update
