@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import {
   navigation,
@@ -79,7 +80,7 @@ test('child pages preserve the correct navigation parent and catalogs remain ali
   assert.ok(Object.values(navigationFrench).every((value) => value.trim()));
 });
 
-test('daily destinations stay in one primary group and occasional tools share one secondary group', () => {
+test('daily destinations stay in one primary group and supporting destinations are grouped', () => {
   const admin = { orgType: 'regulator', permissions: ['*'] };
   const menus = [
     navigation(buyer, 'buy'),
@@ -99,13 +100,72 @@ test('daily destinations stay in one primary group and occasional tools share on
     ['home', 'access-applications', 'platform-fees', 'operations'],
   );
   for (const menu of menus) {
-    assert.equal(menu.groups.length, 2);
+    assert.ok(menu.groups.some((group) => group.id === 'account'));
     assert.equal(menu.groups[0].collapsible, undefined);
-    assert.equal(menu.groups[1].collapsible, true);
+    assert.ok(menu.groups.slice(1).every((group) => group.collapsible));
     const all = ids(menu);
     assert.equal(new Set(all).size, all.length);
   }
   assert.ok(menus[0].groups[1].items.some((item) => item.id === 'payments'));
   assert.ok(menus[2].groups[1].items.some((item) => item.id === 'access-controls'));
   assert.equal(menus[2].create, null);
+});
+
+for (const [name, actor, mode] of [
+  ['buyer', buyer, 'buy'],
+  ['supplier', supplier, 'sell'],
+]) {
+  test(`${name}: team access belongs to organization admins and stays hidden from ordinary members`, () => {
+    const member = navigation(actor, mode);
+    assert.ok(!ids(member).includes('pilot'));
+    for (const permission of ['member.invite', 'member.manage']) {
+      const admin = navigation({ ...actor, permissions: [...actor.permissions, permission] }, mode);
+      assert.ok(
+        admin.groups
+          .find((group) => group.id === 'organization')
+          .items.some((item) => item.id === 'pilot'),
+      );
+    }
+    assert.ok(
+      member.groups
+        .find((group) => group.id === 'account')
+        .items.some((item) => item.id === 'account-security'),
+    );
+  });
+}
+test('permitted buyer source records and admin review records have menu paths', () => {
+  const b = navigation({ ...buyer, permissions: [...buyer.permissions, 'farm.read'] }, 'buy');
+  assert.ok(ids(b).includes('farms') && ids(b).includes('batches'));
+  const a = navigation({ orgType: 'regulator', permissions: ['*'] }, 'admin');
+  for (const id of ['evidence-review', 'evidence', 'contracts', 'payments', 'shipments', 'pilot'])
+    assert.ok(ids(a).includes(id));
+});
+
+test('every registered route has an explicit menu, contextual, public, demo or redirect entry', () => {
+  const source = readFileSync(new URL('../web/src/App.tsx', import.meta.url), 'utf8');
+  const routes = [...source.matchAll(/path="([^"]+)"/g)].map((match) => match[1]);
+  const coverage = JSON.parse(
+    readFileSync(
+      new URL('../docs/quality/navigation-route-coverage.json', import.meta.url),
+      'utf8',
+    ),
+  ).routes;
+  assert.deepEqual(coverage.map((row) => row.path).sort(), routes.sort());
+  const actor = { orgType: 'regulator', permissions: ['*'] };
+  const menuPaths = new Set(
+    ['admin', 'buy', 'sell'].flatMap((mode) => {
+      const menu = navigation(actor, mode);
+      return [
+        ...menu.groups.flatMap((group) => group.items),
+        ...menu.utility,
+        ...(menu.create ? [menu.create] : []),
+      ].map((item) => item.path.split('?')[0]);
+    }),
+  );
+  for (const row of coverage) {
+    if (row.entry === 'menu') assert.ok(menuPaths.has(row.path), `Missing menu entry: ${row.path}`);
+    else if (row.entry === 'contextual')
+      assert.ok(menuPaths.has(row.parent), `Missing parent entry: ${row.path}`);
+    else assert.ok(['public-or-token', 'demo-only', 'redirect'].includes(row.entry));
+  }
 });

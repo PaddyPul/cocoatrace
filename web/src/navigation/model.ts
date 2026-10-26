@@ -88,7 +88,7 @@ export function navigation(
         ]
       : [
           home,
-          ...(mode === 'buy'
+          ...(['buy', 'records'].includes(mode)
             ? [
                 item(
                   'sourcing-requests',
@@ -139,23 +139,60 @@ export function navigation(
       label: 'nav.records',
       collapsible: true,
       items: [
-        ...records.filter(
-          (row) => mode !== 'buy' || ['evidence', 'certs', 'products'].includes(row.id),
-        ),
+        ...records,
         item('payments', 'nav.goods-payments', '/payments', 'WalletCards', ['payment.read']),
         item('shipments', 'nav.shipments', '/shipments', 'Ship', ['shipment.read']),
         item('platform-fees', 'nav.platform-fees', '/platform-fees', 'WalletCards', [
           'offer.respond',
           'finance.manage',
         ]),
-        item('pilot', 'nav.team', '/pilot', 'Building2', ['member.invite', 'member.manage']),
-        item('organizations', 'nav.organizations', '/organizations', 'Building2', [
-          'organization.admin',
-        ]),
         item('audit', 'nav.audit', '/audit', 'FileClock', ['audit.read']),
       ],
     });
   }
+  if (mode === 'admin') {
+    groups[1].items.unshift(
+      item('evidence-review', 'nav.document-review', '/evidence/review', 'FileCheck2', ['*']),
+    );
+    groups.push({
+      id: 'records',
+      label: 'nav.records',
+      collapsible: true,
+      items: [
+        trades,
+        ...records,
+        item('payments', 'nav.goods-payments', '/payments', 'WalletCards', ['payment.read']),
+        item('shipments', 'nav.shipments', '/shipments', 'Ship', ['shipment.read']),
+      ],
+    });
+  }
+  groups.push({
+    id: 'organization',
+    label: 'nav.organization',
+    collapsible: true,
+    items: [
+      item('pilot', 'nav.team', '/pilot', 'Building2', ['member.invite', 'member.manage']),
+      ...(mode === 'admin'
+        ? []
+        : [
+            item('organizations', 'nav.organizations', '/organizations', 'Building2', [
+              'organization.admin',
+            ]),
+          ]),
+    ],
+  });
+  groups.push({
+    id: 'account',
+    label: 'nav.account',
+    collapsible: true,
+    items: [
+      item('account-security', 'nav.account-security', '/account/security', 'KeyRound'),
+      item('onboarding', 'nav.setup', '/onboarding', 'UserCheck'),
+      item('pilot-limitations', 'nav.limitations', '/pilot/limitations', 'ShieldAlert'),
+      item('service-status', 'nav.service-status', '/service-status', 'ShieldAlert'),
+      item('platform-role', 'nav.platform-role', '/platform-role', 'FileCheck2'),
+    ],
+  });
   const visible = (row: NavigationItem) =>
     !row.permissions.length ||
     (row.all
@@ -185,6 +222,10 @@ export function activeNavigation(id: string, currentPage: string): boolean {
     id === currentPage + 's' ||
     (id === 'contracts' && ['deal-room', 'contract'].includes(currentPage)) ||
     (id === 'batches' && currentPage === 'batch') ||
+    (id === 'farms' && currentPage === 'farm') ||
+    (id === 'holdings' && currentPage === 'holding') ||
+    (id === 'account-security' && currentPage === 'passkeys') ||
+    (id === 'evidence' && currentPage === 'evidence-contribute') ||
     (id === 'marketplace' && currentPage === 'listing') ||
     (id === 'my-listings' && currentPage === 'supply-new') ||
     (id === 'sourcing-requests' && ['source-new', 'source-compare'].includes(currentPage))

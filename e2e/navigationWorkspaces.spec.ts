@@ -22,21 +22,31 @@ const sellerPermissions = [
   'batch.read',
   'evidence.read',
 ];
-async function fixture(page: Page, role: 'buyer' | 'supplier' | 'dual' | 'admin') {
+async function fixture(
+  page: Page,
+  role: 'buyer' | 'supplier' | 'dual' | 'admin',
+  organizationAdmin = false,
+) {
   let actor = {
     id: String(role),
     organization_id: `${role}-org`,
     org_type: role === 'admin' ? 'regulator' : role === 'supplier' ? 'exporter' : 'importer',
     name: 'Navigation tester',
-    roles: [role + '_admin'],
+    roles: [role + (organizationAdmin ? '_admin' : '_member')],
     permissions:
       role === 'admin'
         ? ['*']
         : role === 'dual'
           ? [...new Set([...buyerPermissions, ...sellerPermissions])]
           : role === 'buyer'
-            ? buyerPermissions
-            : sellerPermissions,
+            ? [
+                ...buyerPermissions,
+                ...(organizationAdmin ? ['member.invite', 'member.manage'] : []),
+              ]
+            : [
+                ...sellerPermissions,
+                ...(organizationAdmin ? ['member.invite', 'member.manage'] : []),
+              ],
   };
   await page.addInitScript((user) => {
     if (!localStorage.getItem('ct_user'))
@@ -393,7 +403,7 @@ for (const role of ['buyer', 'supplier', 'admin'] as const) {
     const primary = menu(page).getByTestId('workspace-primary-navigation');
     await expect(primary).toBeVisible();
     const secondary = menu(page).getByTestId('workspace-secondary-navigation');
-    const disclosure = secondary.locator('details');
+    const disclosure = secondary.locator('details').first();
     await expect(disclosure).not.toHaveAttribute('open');
     await disclosure.locator('summary').click();
     expect(await secondary.evaluate((element) => getComputedStyle(element).overflowY)).toBe(
@@ -424,7 +434,10 @@ test('active record deep links open the single Records disclosure and preserve d
 }) => {
   await fixture(page, 'supplier');
   await gotoWithNetworkRecovery(page, '/farms');
-  const records = menu(page).getByTestId('workspace-secondary-navigation').locator('details');
+  const records = menu(page)
+    .getByTestId('workspace-secondary-navigation')
+    .locator('details')
+    .first();
   await expect(records).toHaveAttribute('open', '');
   await expect(
     menu(page).getByRole('button', { name: 'Sources & plots', exact: true }),
@@ -453,4 +466,41 @@ test('small mobile drawer has one natural scroll and keeps account controls reac
   await page.keyboard.press('Escape');
   await expect(drawer).toHaveCount(0);
   await expect(trigger).toBeFocused();
+});
+
+for (const role of ['buyer', 'supplier'] as const) {
+  for (const organizationAdmin of [false, true]) {
+    test(`${role} ${organizationAdmin ? 'admin' : 'member'}: team navigation follows actual permissions`, async ({
+      page,
+    }) => {
+      await fixture(page, role, organizationAdmin);
+      await gotoWithNetworkRecovery(page, '/home');
+      const organization = menu(page)
+        .locator('details')
+        .filter({ has: page.locator('summary', { hasText: /^Organization$/ }) });
+      if (organizationAdmin) {
+        await organization.locator('summary').click();
+        await expect(
+          organization.getByRole('button', { name: 'Team & access', exact: true }),
+        ).toBeVisible();
+        await organization.getByRole('button', { name: 'Team & access', exact: true }).click();
+        await expect(page).toHaveURL(/\/pilot$/);
+      } else {
+        await expect(
+          menu(page).getByRole('button', { name: 'Team & access', exact: true }),
+        ).toHaveCount(0);
+      }
+    });
+  }
+}
+test('admin can discover document review without switching trading workspaces', async ({
+  page,
+}) => {
+  await fixture(page, 'admin');
+  await gotoWithNetworkRecovery(page, '/home');
+  await menu(page)
+    .locator('summary', { hasText: /^Administration$/ })
+    .click();
+  await menu(page).getByRole('button', { name: 'Document review', exact: true }).click();
+  await expect(page).toHaveURL(/\/evidence\/review$/);
 });

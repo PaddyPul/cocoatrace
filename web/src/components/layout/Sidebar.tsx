@@ -1,5 +1,5 @@
 import '../../navigation/sidebar.css';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Bell,
   BadgeCheck,
@@ -58,6 +58,7 @@ export const navigationIcons: Record<string, LucideIcon> = {
   Building2,
   UserCheck,
   LayoutDashboard,
+  KeyRound,
 };
 
 export default function Sidebar({
@@ -77,6 +78,9 @@ export default function Sidebar({
   const navigate = useNavigate();
   const { mode, available, switchWorkspace } = useWorkspace();
   const menu = navigation(user, mode);
+  const { pathname } = useLocation();
+  const isActive = (item: NavigationItem) =>
+    pathname === item.path.split('?')[0] || activeNavigation(item.id, currentPage);
   const go = (item: { page?: string; path?: string }) => {
     navigate(item.path || '/' + item.page);
     onNavigate();
@@ -95,7 +99,7 @@ export default function Sidebar({
   };
   const renderItem = (item: NavigationItem, primary = false, utility = false) => {
     const Icon = navigationIcons[item.icon] || Home;
-    const selected = !primary && activeNavigation(item.id, currentPage);
+    const selected = !primary && isActive(item);
     const badge = item.id === 'offers' && offerCount !== null && offerCount > 0;
     return (
       <button
@@ -197,9 +201,7 @@ export default function Sidebar({
             .map((group) => (
               <details
                 key={group.id}
-                open={
-                  group.items.some((item) => activeNavigation(item.id, currentPage)) || undefined
-                }
+                open={group.items.some(isActive) || undefined}
                 className="rounded-xl border border-white/10 p-2"
               >
                 <summary className="cursor-pointer bg-[#0c1913] px-1 py-2 text-xs font-semibold text-white/70">
@@ -229,18 +231,6 @@ export default function Sidebar({
               className="mb-3 flex w-full items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-left text-[10px] font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"
             >
               <RefreshCw size={13} /> {t('shell.replay')}
-            </button>
-            <button
-              onClick={() => go({ page: 'pilot-limitations', path: '/pilot/limitations' })}
-              className="mb-3 min-h-11 w-full rounded-xl border border-white/10 px-3 py-2 text-left text-xs text-white/70"
-            >
-              Known pilot limitations
-            </button>
-            <button
-              onClick={() => go({ page: 'account-security', path: '/account/security' })}
-              className="mb-3 flex w-full items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-left text-[10px] font-semibold text-white/50 transition hover:bg-white/10 hover:text-white"
-            >
-              <KeyRound size={13} /> {t('shell.security')}
             </button>
           </div>
         </details>

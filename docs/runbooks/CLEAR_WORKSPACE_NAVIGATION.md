@@ -20,3 +20,18 @@ After the exact-candidate release, CI and merge, pull main and run `npm run demo
 ## Verification and rollback
 
 The original navigation revision had 33 production-build mocked-API Chromium cases. The natural-scroll follow-up is delivered for local review before release; see its PR description for current author verification. Full native release and founder manual acceptance remain external gates. No migrations, secrets, production deployments or business mutations are introduced. Rollback is a Git revert of the navigation change; no data reset or compensation is needed.
+
+## Navigation coverage follow-up — 2026-10-26
+
+Supporting pages use Records, Organization and Account & help disclosures. Empty groups are hidden. The whole sidebar remains the only scrolling container. Active destinations expand their group, including after a direct URL or reload.
+
+- Buyer organization admin: daily sourcing links, permitted Sources & plots and Harvest batches under Records, Team & access under Organization, and Account & help.
+- Supplier organization admin: existing daily supply links, permitted source/inventory/trade records, Team & access under Organization, and Account & help.
+- Ordinary buyer/supplier members: records follow actual read permissions; Team & access is hidden unless the server grants member.invite or member.manage. Viewer accounts without trading capabilities use the Records workspace and can browse supply when listing.read is granted.
+- Platform admin: four existing daily destinations; Document review under Administration; operational registers under Records; Team & access under Organization; Account & help.
+
+The legacy seeded importer account lacks team-management permissions. This change does not promote that account or ordinary members. To review buyer team management, use an approved buyer organization's administrator account. Verify /api/me permissions locally if an expected admin entry is missing; do not share credentials or tokens.
+
+The route register in docs/quality/navigation-route-coverage.json covers 59 registered paths: 34 menu paths across permitted workspaces, 13 contextual paths, nine public/token paths, two redirects and one demo-only path. Detail pages are reached through their corresponding records/trades. Upload is reached from Documents & evidence, inventory creation from Publish supply, comparison from Find supply, and passkeys from Account & security. Demo-only setup is available through workflow search only in demo mode. Token routes intentionally require issued links. A route register is a discoverability inventory, not proof that every role may open every route or that a database-backed journey passed.
+
+Before release, review all five personas above, French labels, expanded groups on short screens and mobile, workflow search, direct record URLs and dirty-form navigation. Full release and push instructions follow founder acceptance.

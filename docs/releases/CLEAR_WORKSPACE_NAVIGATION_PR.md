@@ -1,18 +1,21 @@
 ## Outcome
 
-Expanding Records or Administration now grows the menu naturally. One scrollbar on the whole sidebar replaces the nested Records scroll area on every viewport, and account help expands inline. Buyers, suppliers and administrators can reach every link without operating a second scroll area.
+Buyers and suppliers can discover permitted source records and organization team access. Platform administrators can reach document review and operational records without switching trading workspaces. Supporting navigation is organized into Records, Organization and Account & help, preserving one whole-sidebar scroll.
 
 ## Tracking
 
 - Backlog ID(s): UX-002, INV-003
-- Issue/ADR: Founder-approved buyer/supplier/admin navigation revision, 2026-10-25
+- Issue/ADR: Founder-requested navigation content and route-coverage revision, 2026-10-26
 - Target phase/environment: Local investor rehearsal; deployment preparation remains separate
 
 ## Change summary
 
-- Remove separate scrolling and sticky headings from supporting navigation.
-- Use one whole-sidebar scroll on desktop and mobile; expand account help inline.
-- Keep role-specific destinations, permission checks, active-record expansion and workspace switching.
+- Show buyer source and batch records according to read permissions, rather than hiding them by workspace.
+- Put Team & access and organization settings in Organization. Both buyer and supplier organization admins receive the same permission-based entry; ordinary members do not receive management rights.
+- Add admin Document review and a separate Records group for contracts, inventory, sources, documents, payments and transport.
+- Add Account & help entries for security, workspace setup, limitations, service status and platform responsibilities. Keep the walkthrough replay in the account card.
+- Recognize current URLs when highlighting and expanding groups; preserve contextual detail routes and workflow search.
+- Record all 59 route entry paths in docs/quality/navigation-route-coverage.json and check route coverage alongside role-specific menu boundaries.
 
 ## Security and data review
 
@@ -21,7 +24,7 @@ Expanding Records or Administration now grows the menu naturally. One scrollbar 
 - [x] Retry, idempotency and concurrency considered
 - [x] Audit/outbox behavior considered
 - [x] File, URL or external-input handling considered where applicable
-- Notes: No API requests, mutation retries, permissions or resource boundaries are added. Existing offer-count failure handling remains authoritative. Tests retain denied workspace/private request behavior and no-write navigation checks. The test suite uses the existing single network-change recovery only for local read-only page navigation; no form action is replayed.
+- Notes: No API endpoints, mutation retries, role grants or resource boundaries are changed. Existing offer-count failure handling remains authoritative. Tests retain denied workspace/private request behavior and no-write navigation checks. The test suite uses the existing single network-change recovery only for local read-only page navigation; no form action is replayed.
 
 ## Database and deployment
 
@@ -34,7 +37,7 @@ Expanding Records or Administration now grows the menu naturally. One scrollbar 
 
 - Defect severity: P2
 - Confirmed P0 register ID (if applicable): not applicable
-- Regression test and failure behavior: buyer/supplier/admin desktop cases expand supporting navigation, check that it has no scroll constraint, reach each supporting link and reach sign-out after expanding inline account help. Mobile Escape/focus and active record coverage remain in the suite.
+- Regression test and failure behavior: buyer/supplier admin and ordinary-member cases check Team & access visibility and navigation; an admin case opens Document review. Existing desktop/mobile single-scroll, keyboard, workspace switching, malformed response and unsaved-change cases remain. Model tests cover permitted buyer records and every registered route's entry classification.
 - A P0 fix must include its regression in the same PR; do not merge a test-free P0 fix. Add the defect and exact test title to docs/quality/p0-regressions.json. Label confirmed P0 PRs `severity:P0`.
 
 ## Verification
@@ -45,7 +48,7 @@ Expanding Records or Administration now grows the menu naturally. One scrollbar 
 - [ ] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: Web/browser typechecks, six navigation model cases and the web production build pass. All 17 production-build mocked-API navigation Chromium cases pass; changed TypeScript lint and the web transfer budget pass. Full release, native database journeys, CI and founder acceptance remain pending. This bundle is for local review; nothing has been pushed.
+- Evidence/results: 42 frontend/policy cases, six locale cases and 33 production-build mocked-API Chromium cases pass. Web/browser typechecks, code quality, web production build and the unchanged 90 KiB initial transfer budget pass. Full native release, database-backed persona journeys, CI and founder acceptance remain pending; this bundle is for local review and has not been pushed.
 
 ## Product and operations
 
