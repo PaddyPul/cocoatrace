@@ -38,11 +38,36 @@ def inspect(container):
     return json.loads(run(['docker', 'inspect', container]))[0]
 
 
+def same_source_image(source, probe):
+    """Compare the selected platform manifest, not backend-dependent Image IDs."""
+    original = source.get('ImageManifestDescriptor')
+    selected = probe.get('ImageManifestDescriptor')
+    if original is None and selected is None:
+        # Legacy stores expose configuration IDs and no platform descriptor.
+        return source['Image'] == probe['Image']
+    if not isinstance(original, dict) or not isinstance(selected, dict):
+        return False
+    allowed = ('application/vnd.oci.image.manifest.v1+json',
+               'application/vnd.docker.distribution.manifest.v2+json')
+    for descriptor in (original, selected):
+        digest = descriptor.get('digest')
+        platform = descriptor.get('platform')
+        if (descriptor.get('mediaType') not in allowed or not isinstance(digest, str)
+                or not re.fullmatch(r'sha256:[a-f0-9]{64}', digest)
+                or not isinstance(platform, dict)
+                or not isinstance(platform.get('os'), str) or not platform['os']
+                or not isinstance(platform.get('architecture'), str) or not platform['architecture']):
+            return False
+    return all(original.get(key) == selected.get(key) for key in ('digest', 'mediaType', 'platform'))
+
+
 def local_source_image(container):
     """Resolve a runnable local ID; prove it creates the same image configuration.
 
     Containerd can expose an index/manifest ID in image inspect while the source
-    container retains its configuration digest. A tag alone is never trusted.
+    container retains another ID. The selected platform manifest proves identity;
+    legacy stores without descriptors require equal configuration IDs. A tag
+    alone is never trusted.
     """
     token = secrets.token_hex(12)
     for reference in dict.fromkeys((container['Image'], container['Config']['Image'])):
@@ -62,7 +87,7 @@ def local_source_image(container):
                 failure='Source image probe could not be created; no live container was changed.').decode().strip()
             if not re.fullmatch(r'[a-f0-9]{64}', probe):
                 raise RecoveryError('Recovery image probe identity is invalid.')
-            if inspect(probe)['Image'] != container['Image']:
+            if not same_source_image(container, inspect(probe)):
                 raise RecoveryError('Local image reference no longer matches the source container; no substitute was accepted.')
             return image
         finally:

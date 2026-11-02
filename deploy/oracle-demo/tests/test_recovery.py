@@ -93,6 +93,51 @@ class RecoveryTests(unittest.TestCase):
                 recovery.local_source_image(source)
             self.assertEqual(command.call_count, 1)
 
+    def test_actual_oracle_config_and_index_ids_share_the_same_arm64_manifest(self):
+        descriptor = {'mediaType': 'application/vnd.oci.image.manifest.v1+json',
+            'digest': 'sha256:545207db085dedb1823e8d82b4a7cc4fe42aa4421951680f25644b0fe768e538',
+            'platform': {'architecture': 'arm64', 'os': 'linux'}}
+        source = {'Image': 'sha256:1be6154c14f5b476d8554e24df4a6ec474953292140535985d40ac7d08562ce1',
+            'ImageManifestDescriptor': descriptor, 'Config': {'Image': 'release:old'}}
+        image = 'sha256:639fddb7efb339359eef9506de05ff1a0870ac4e9c8941b2a69fe50ecea234ad'
+        probe = {'Image': image, 'ImageManifestDescriptor': descriptor,
+            'Config': {'Labels': {'bettertrade.image-probe': 'fixture'}}}
+        missing = SimpleNamespace(returncode=1, stdout=b'')
+        available = SimpleNamespace(returncode=0, stdout=json.dumps([{'Id': image}]).encode())
+        with patch.object(recovery.subprocess, 'run', side_effect=[missing, available]), \
+             patch.object(recovery.secrets, 'token_hex', return_value='fixture'), \
+             patch.object(recovery, 'inspect', return_value=probe), \
+             patch.object(recovery, 'run', side_effect=[b'c' * 64, b'']) as command:
+            self.assertEqual(recovery.local_source_image(source), image)
+            self.assertEqual(command.call_args_list[-1].args[0], ['docker', 'rm', '-v', 'c' * 64])
+
+    def test_equal_image_ids_do_not_override_a_different_platform_manifest(self):
+        descriptor = {'mediaType': 'application/vnd.oci.image.manifest.v1+json',
+            'digest': 'sha256:' + 'a' * 64, 'platform': {'os': 'linux', 'architecture': 'arm64'}}
+        source = {'Image': 'same-index', 'ImageManifestDescriptor': descriptor}
+        for changes in ({'digest': 'sha256:' + 'b' * 64},
+                        {'platform': {'os': 'linux', 'architecture': 'amd64'}},
+                        {'platform': {'os': 'linux', 'architecture': 'arm64', 'variant': 'v9'}},
+                        {'digest': 'invalid'}, {'mediaType': 'application/vnd.oci.image.index.v1+json'}):
+            with self.subTest(changes=changes):
+                probe = {'Image': 'same-index', 'ImageManifestDescriptor': {**descriptor, **changes}}
+                self.assertFalse(recovery.same_source_image(source, probe))
+
+    def test_missing_or_malformed_platform_metadata_cannot_downgrade_identity(self):
+        descriptor = {'mediaType': 'application/vnd.oci.image.manifest.v1+json',
+            'digest': 'sha256:' + 'a' * 64, 'platform': {'os': 'linux', 'architecture': 'arm64'}}
+        source = {'Image': 'same-id', 'ImageManifestDescriptor': descriptor}
+        for candidate in (None, {}, [], {**descriptor, 'platform': {}},
+                          {**descriptor, 'platform': {'os': 'linux', 'architecture': 64}}):
+            with self.subTest(candidate=candidate):
+                self.assertFalse(recovery.same_source_image(source,
+                    {'Image': 'same-id', 'ImageManifestDescriptor': candidate}))
+        self.assertFalse(recovery.same_source_image({'Image': 'same-id'}, source))
+
+    def test_legacy_image_identity_requires_equal_ids_when_both_descriptors_are_absent(self):
+        self.assertTrue(recovery.same_source_image({'Image': 'same'}, {'Image': 'same'}))
+        self.assertFalse(recovery.same_source_image({'Image': 'old'}, {'Image': 'new'}))
+
     def test_host_python_modules_parse(self):
         for source in ROOT.glob('*.py'):
             ast.parse(source.read_text())
