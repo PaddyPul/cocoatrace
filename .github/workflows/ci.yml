@@ -101,6 +101,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Restore an isolated synthetic database and evidence; test corruption and cleanup
         run: sudo -n env GITHUB_ACTIONS=true GITHUB_RUN_ID="$GITHUB_RUN_ID" python3 -B deploy/oracle-demo/ci-recovery.py
+      - name: Give the runner ownership of private recovery reports
+        if: always()
+        run: |
+          if sudo -n test -d hosted-recovery-test-results; then
+            sudo -n chown -R "$(id -u):$(id -g)" hosted-recovery-test-results
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:

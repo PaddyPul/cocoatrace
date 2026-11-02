@@ -15,6 +15,7 @@ Make the existing Oracle investor demo updateable without the temporary web heal
 - Collect administrator input before starting its bootstrap container, reject control characters explicitly, preserve valid Unicode passwords and provide value-free input/SQLSTATE diagnostics. Existing accounts and secrets are preserved.
 - Stop writers for consistent snapshots; record exact source images, schema/table/sequence state and evidence-byte fingerprints. Verify restores in isolated, labeled, networkless disposable resources, with corruption rejection and failure cleanup.
 - Add a disposable CI restore job and reconcile partial backlog/gate evidence with the founder's real demo/email observations.
+- Address PR #158 security findings: eliminate administrator CLI output paths, use fixed private CI report filenames, reject symlink output directories, move locks out of publicly writable /run/lock and replace the email backtracking regex. No Sonar exclusions or suppressions.
 - Patch the newly reported qs, Vite and minimatch advisories. The minimatch development-tool override crosses a major version because the advisory's patched release is 11.0.1; lint and the repository policy checks exercise the ESLint consumers. No advisory suppression is added.
 
 ## Security and data review
@@ -48,7 +49,7 @@ Make the existing Oracle investor demo updateable without the temporary web heal
 - [x] API build/typecheck
 - [x] Web production build
 - [ ] Staging verification
-- Evidence/results: Author: 1,704 API unit tests, workspace type checks, API/web builds, 15 quality-policy tests (including five Linux maintenance checks and five Python admission tests), eight Sonar closeout tests and backlog/risk/pilot-evidence checks passed. Clean npm ci and npm ls passed with qs 6.16.1, Vite 6.4.5 and minimatch 11.0.1; the production and complete dependency gates passed with no exceptions. Native full release, Docker database/browser suites, the CI restore fixture and actual Oracle update/non-empty-evidence restore require their own passing reports; Docker is unavailable in the author environment. No run is inferred from a script or YAML parse.
+- Evidence/results: Author: 1,704 API unit tests, workspace type checks, API/web builds, 15 quality-policy tests (including five Linux maintenance checks and ten Python admission tests), eight Sonar closeout tests and backlog/risk/pilot-evidence checks passed. Clean npm ci and npm ls passed with qs 6.16.1, Vite 6.4.5 and minimatch 11.0.1; the production and complete dependency gates passed with no exceptions. Native full release, Docker database/browser suites, the CI restore fixture and actual Oracle update/non-empty-evidence restore require their own passing reports; Docker is unavailable in the author environment. No run is inferred from a script or YAML parse.
 
 ## Product and operations
 

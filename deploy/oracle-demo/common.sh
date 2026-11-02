@@ -6,7 +6,11 @@ bt_die() { echo "$*" >&2; exit 1; }
 bt_require_root() { [[ $EUID == 0 ]] || bt_die 'Run with sudo -n bash.'; }
 bt_lock() {
   if [[ ${BT_ORACLE_LOCKED:-} != true ]]; then
-    exec 8>/run/lock/bettertrade-demo-deploy.lock
+    [[ -d /etc/bettertrade && ! -L /etc/bettertrade ]] || bt_die 'Private configuration directory required.'
+    [[ $(stat -c %u /etc/bettertrade) == 0 && $(stat -c %a /etc/bettertrade) == 700 ]] || bt_die 'Configuration directory must be root-owned mode 700.'
+    [[ ! -L /etc/bettertrade/maintenance.lock ]] || bt_die 'Refusing a symlink maintenance lock.'
+    (umask 077; touch /etc/bettertrade/maintenance.lock)
+    exec 8>/etc/bettertrade/maintenance.lock
     flock -n 8 || bt_die 'Another deployment or recovery operation is running.'
     export BT_ORACLE_LOCKED=true
   fi

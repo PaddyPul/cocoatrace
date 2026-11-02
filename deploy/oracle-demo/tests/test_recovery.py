@@ -1,9 +1,15 @@
 import importlib.util
 import ast
 import io
+import json
+import os
+import stat
+import sys
+import tempfile
 from pathlib import Path
 import tarfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,6 +24,9 @@ def load(name):
 
 recovery = load('recovery')
 admin = load('admin-input')
+# ci-recovery imports the same module by its standalone command name.
+with patch.dict(sys.modules, {'recovery': recovery}):
+    ci = load('ci-recovery')
 
 
 def archive(entries):
@@ -68,6 +77,64 @@ class RecoveryTests(unittest.TestCase):
         self.assertIn('Email', admin.validate('bad', 'unique-long-password-4827!'))
         self.assertIn('72', admin.validate('owner@example.test', 'é' * 40))
         self.assertIn('unique', admin.validate('owner@example.test', 'change-me-before-demo-4827!'))
+
+    def test_admin_rejects_path_arguments_before_reading_credentials(self):
+        for destination in ('../../escape', '/etc/passwd', 'credentials.json'):
+            with self.subTest(destination=destination), patch.object(sys, 'argv', ['admin-input.py', destination]), \
+                 patch('builtins.open') as opened, patch.object(admin.getpass, 'getpass') as prompt:
+                with self.assertRaises(SystemExit):
+                    admin.main()
+                opened.assert_not_called()
+                prompt.assert_not_called()
+
+    def test_admin_refuses_terminal_or_pipe_output_before_prompting(self):
+        for mode in (stat.S_IFIFO | 0o600, stat.S_IFCHR | 0o600, stat.S_IFREG | 0o644):
+            with self.subTest(mode=mode), patch.object(sys, 'argv', ['admin-input.py']), \
+                 patch.object(admin.os, 'fstat', return_value=SimpleNamespace(st_mode=mode, st_uid=0)), \
+                 patch.object(admin.getpass, 'getpass') as prompt:
+                with self.assertRaises(SystemExit):
+                    admin.main()
+                prompt.assert_not_called()
+
+    def test_email_validation_is_bounded_and_rejects_ambiguous_addresses(self):
+        for address in ('a@b..test', 'a@@b.test', '@b.test', 'a@b', 'a b@c.test', 'a' * 100000 + '@b.test'):
+            with self.subTest(address=address[:40]):
+                self.assertFalse(admin.valid_email(address))
+        self.assertTrue(admin.valid_email('owner+demo@example.test'))
+
+    def test_ci_report_names_cannot_escape_and_reports_remain_private(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            previous = Path.cwd()
+            previous_mask = os.umask(0o077)
+            try:
+                os.chdir(temporary)
+                backups = Path('backups')
+                reports = backups / 'rehearsals'
+                reports.mkdir(parents=True)
+                (reports / 'input.json').write_text(json.dumps({'status': 'passed', 'name': '../../escaped'}))
+                ci.publish_reports(backups, True)
+                output = Path('hosted-recovery-test-results')
+                self.assertEqual({item.name for item in output.iterdir()}, {'positive.json', 'summary.json'})
+                self.assertEqual(stat.S_IMODE(output.stat().st_mode), 0o700)
+                for item in output.iterdir():
+                    self.assertEqual(stat.S_IMODE(item.stat().st_mode), 0o600)
+                self.assertFalse(Path('escaped').exists())
+            finally:
+                os.chdir(previous)
+                os.umask(previous_mask)
+
+    def test_ci_artifact_directory_cannot_follow_a_preexisting_symlink(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            previous = Path.cwd()
+            try:
+                os.chdir(temporary)
+                Path('outside').mkdir()
+                Path('hosted-recovery-test-results').symlink_to('outside', target_is_directory=True)
+                with self.assertRaises(FileExistsError):
+                    ci.publish_reports(Path('unused'), True)
+                self.assertEqual(list(Path('outside').iterdir()), [])
+            finally:
+                os.chdir(previous)
 
 
 if __name__ == '__main__':

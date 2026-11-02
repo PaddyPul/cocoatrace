@@ -79,8 +79,8 @@ if [[ $bt_mode == first && ! -f /etc/bettertrade/admin-bootstrapped ]]; then
   echo 'Create your private administrator. Save its password in your password manager.'
   bt_bootstrap_dir="$(mktemp -d /etc/bettertrade/bootstrap-input-XXXXXXXX)"
   bt_bootstrap_input="$bt_bootstrap_dir/credentials.json"
-  # admin-input uses exclusive creation. Docker starts only after valid input.
-  python3 deploy/oracle-demo/admin-input.py "$bt_bootstrap_input"
+  # A private mktemp directory plus noclobber prevents replacement of credentials.
+  (set -o noclobber; python3 deploy/oracle-demo/admin-input.py > "$bt_bootstrap_input")
   "${bt_compose[@]}" run --rm --no-deps -T api node --import tsx api/scripts/bootstrap-hosted-admin.ts < "$bt_bootstrap_input"
   rm -f -- "$bt_bootstrap_input"
   bt_bootstrap_input=''

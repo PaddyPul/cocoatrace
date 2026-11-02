@@ -336,7 +336,12 @@ def main():
         sys.exit('Run recovery maintenance with sudo -n python3.')
     lock = None
     if args.operation == 'verify':
-        lock = open('/run/lock/bettertrade-demo-deploy.lock', 'a')
+        private = Path('/etc/bettertrade')
+        if (private.is_symlink() or not private.is_dir() or private.stat().st_uid != 0
+                or stat.S_IMODE(private.stat().st_mode) != 0o700):
+            raise RecoveryError('Configuration directory must be root-owned mode 700.')
+        descriptor = os.open('/etc/bettertrade/maintenance.lock', os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+        lock = os.fdopen(descriptor, 'w')
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     try:
         snapshot(args.directory) if args.operation == 'snapshot' else verify(args.directory)

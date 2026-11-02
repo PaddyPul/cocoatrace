@@ -13,13 +13,35 @@ import time
 import recovery
 
 
+def publish_reports(backups, fixture_passed):
+    # All artifact destinations are fixed literals, never derived from reports.
+    # Keep owner-only modes; the workflow transfers ownership to its runner.
+    output = Path('hosted-recovery-test-results')
+    output.mkdir(mode=0o700)
+    reports = backups / 'rehearsals'
+    if reports.is_dir():
+        for report in reports.glob('*.json'):
+            details = json.loads(report.read_text())
+            if details.get('failedStage') == 'database restore and logical verification':
+                details['expectedStatus'] = 'failed'
+                with open('hosted-recovery-test-results/negative.json', 'x') as destination:
+                    json.dump(details, destination, indent=2)
+            else:
+                details['expectedStatus'] = 'passed'
+                with open('hosted-recovery-test-results/positive.json', 'x') as destination:
+                    json.dump(details, destination, indent=2)
+    with open('hosted-recovery-test-results/summary.json', 'x') as destination:
+        json.dump({'status': 'passed' if fixture_passed else 'failed',
+            'negativeRestoreCaseExpected': True, 'scope': 'disposable synthetic CI fixture only'}, destination)
+
+
 def main():
     os.umask(0o077)
     if os.geteuid() != 0 or os.environ.get('GITHUB_ACTIONS') != 'true' or not os.environ.get('GITHUB_RUN_ID', '').isdigit():
         sys.exit('This fixture is restricted to an ephemeral GitHub Actions runner.')
     config = Path('/etc/bettertrade')
     backups = recovery.BACKUP_ROOT
-    if config.exists() or backups.exists():
+    if config.exists() or backups.exists() or Path('hosted-recovery-test-results').exists() or Path('hosted-recovery-test-results').is_symlink():
         sys.exit('Refusing an existing BetterTrade installation or backup directory.')
     names = [recovery.PREFIX + name + '-1' for name in ('postgres', 'api', 'web')]
     for name in names:
@@ -107,21 +129,7 @@ def main():
         fixture_passed = True
         print('CI restore passed: schema, rows, sequences and non-empty evidence bytes; corruption rejected; failure cleanup and source preservation verified.')
     finally:
-        output = Path('hosted-recovery-test-results')
-        output.mkdir(mode=0o755, exist_ok=True)
-        os.chmod(output, 0o755)
-        reports = backups / 'rehearsals'
-        if reports.is_dir():
-            for report in reports.glob('*.json'):
-                target = output / report.name
-                details = json.loads(report.read_text())
-                details['expectedStatus'] = 'failed' if details.get('failedStage') == 'database restore and logical verification' else 'passed'
-                target.write_text(json.dumps(details, indent=2) + '\n')
-                os.chmod(target, 0o644)
-        summary = output / 'summary.json'
-        summary.write_text(json.dumps({'status': 'passed' if fixture_passed else 'failed',
-            'negativeRestoreCaseExpected': True, 'scope': 'disposable synthetic CI fixture only'}) + '\n')
-        os.chmod(summary, 0o644)
+        publish_reports(backups, fixture_passed)
         for name in created:
             if recovery.inspect(name)['Config']['Labels'].get('bettertrade.ci-recovery') == token:
                 recovery.run(['docker', 'rm', '-f', name])
