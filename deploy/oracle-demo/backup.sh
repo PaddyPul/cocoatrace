@@ -19,6 +19,9 @@ chmod 700 /var/backups/bettertrade
 bt_backup="$(mktemp -d "/var/backups/bettertrade/$(date -u +%Y%m%dT%H%M%SZ)-snapshot-XXXXXXXX")"
 cp /etc/caddy/Caddyfile "$bt_backup/Caddyfile"
 cp /etc/bettertrade/demo.env /etc/bettertrade/smtp.env "$bt_backup/"
+# Prove source images and archive access before taking the demo offline.
+# The caller already holds the maintenance lock.
+python3 -B -c 'import sys; sys.path.insert(0, "deploy/oracle-demo"); import recovery; recovery.preflight()'
 bt_maintenance
 trap 'echo "Snapshot stopped; maintenance retained. Inspect $bt_backup before resuming existing containers." >&2' ERR
 "${bt_compose[@]}" stop web api

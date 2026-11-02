@@ -85,6 +85,8 @@ def main():
                 args += ['--mount', f'type=volume,src={volumes[1]},dst=/app/private-evidence']
             recovery.run([*args, '--entrypoint', 'sleep', image, '3600'])
             created.append(name)
+        # Exercise image resolution and read-only archive access before stopping writers.
+        recovery.preflight()
         recovery.run(['docker', 'stop', *names[1:]])
         source_before = recovery.database_index(names[0])
         (config / 'active-release').write_text('a' * 40 + '\n')

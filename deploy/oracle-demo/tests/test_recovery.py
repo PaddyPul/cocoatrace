@@ -43,6 +43,56 @@ def archive(entries):
 
 
 class RecoveryTests(unittest.TestCase):
+    def test_containerd_index_is_accepted_only_for_matching_source_configuration(self):
+        source = {'Image': 'sha256:' + 'a' * 64, 'Config': {'Image': 'release:old'}}
+        image = 'sha256:' + 'b' * 64
+        probe = 'c' * 64
+        token = 'fixture'
+        missing = SimpleNamespace(returncode=1, stdout=b'')
+        available = SimpleNamespace(returncode=0, stdout=json.dumps([{'Id': image}]).encode())
+        probe_details = {'Image': source['Image'], 'Config': {'Labels': {'bettertrade.image-probe': token}}}
+        with patch.object(recovery.subprocess, 'run', side_effect=[missing, available]), \
+             patch.object(recovery.secrets, 'token_hex', return_value=token), \
+             patch.object(recovery, 'inspect', return_value=probe_details), \
+             patch.object(recovery, 'run', side_effect=[probe.encode(), b'']) as command:
+            self.assertEqual(recovery.local_source_image(source), image)
+            arguments = command.call_args_list[0].args[0]
+            self.assertIn('--pull=never', arguments)
+            self.assertIn('--network=none', arguments)
+            self.assertIn(image, arguments)
+            self.assertEqual(command.call_args_list[-1].args[0], ['docker', 'rm', '-v', probe])
+
+    def test_retagged_source_is_rejected_and_only_its_probe_is_removed(self):
+        source = {'Image': 'sha256:' + 'a' * 64, 'Config': {'Image': 'release:old'}}
+        probe = 'c' * 64
+        available = SimpleNamespace(returncode=0, stdout=json.dumps([{'Id': 'sha256:' + 'b' * 64}]).encode())
+        probe_details = {'Image': 'sha256:' + 'd' * 64, 'Config': {'Labels': {'bettertrade.image-probe': 'fixture'}}}
+        with patch.object(recovery.subprocess, 'run', return_value=available), \
+             patch.object(recovery.secrets, 'token_hex', return_value='fixture'), \
+             patch.object(recovery, 'inspect', return_value=probe_details), \
+             patch.object(recovery, 'run', side_effect=[probe.encode(), b'']) as command:
+            with self.assertRaisesRegex(recovery.RecoveryError, 'no longer matches'):
+                recovery.local_source_image(source)
+            self.assertEqual(command.call_args_list[-1].args[0], ['docker', 'rm', '-v', probe])
+
+    def test_missing_source_images_never_pull_or_start_substitutes(self):
+        source = {'Image': 'sha256:' + 'a' * 64, 'Config': {'Image': 'release:old'}}
+        with patch.object(recovery.subprocess, 'run', return_value=SimpleNamespace(returncode=1)), \
+             patch.object(recovery, 'run') as command:
+            with self.assertRaisesRegex(recovery.RecoveryError, 'unavailable locally'):
+                recovery.local_source_image(source)
+            command.assert_not_called()
+
+    def test_probe_cleanup_refuses_a_different_label(self):
+        source = {'Image': 'sha256:' + 'a' * 64, 'Config': {'Image': 'release:old'}}
+        available = SimpleNamespace(returncode=0, stdout=json.dumps([{'Id': source['Image']}]).encode())
+        with patch.object(recovery.subprocess, 'run', return_value=available), \
+             patch.object(recovery, 'inspect', return_value={'Image': source['Image'], 'Config': {'Labels': {}}}), \
+             patch.object(recovery, 'run', return_value=b'c' * 64) as command:
+            with self.assertRaisesRegex(recovery.RecoveryError, 'label mismatch'):
+                recovery.local_source_image(source)
+            self.assertEqual(command.call_count, 1)
+
     def test_host_python_modules_parse(self):
         for source in ROOT.glob('*.py'):
             ast.parse(source.read_text())
