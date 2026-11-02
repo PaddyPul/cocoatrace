@@ -42,7 +42,7 @@
     "format:check": "node scripts/run-format-check.mjs",
     "format:fix": "node scripts/run-format-check.mjs --write",
     "check:scripts": "node scripts/check-script-contracts.mjs",
-    "check:quality": "npm run lint && npm run format:check && npm run check:scripts && npm run check:controller-boundaries && node --test scripts/quality-policy.test.mjs scripts/check-script-contracts.test.mjs",
+    "check:quality": "npm run lint && npm run format:check && npm run check:scripts && npm run check:controller-boundaries && node --test scripts/quality-policy.test.mjs scripts/check-script-contracts.test.mjs scripts/hosted-demo.test.mjs",
     "typecheck": "npm run typecheck --workspace=api && npm run typecheck --workspace=web && npm run typecheck:browser",
     "check:dependencies": "node scripts/check-dependencies.mjs",
     "check:containers": "node scripts/check-container-security.mjs",
@@ -84,11 +84,13 @@
     "node": "^20.19.0 || ^22.13.0 || >=24"
   },
   "overrides": {
-    "vite": "6.4.4",
+    "vite": "6.4.5",
     "proxy-addr": "2.0.8",
     "fast-copy": "4.1.2",
     "postcss-selector-parser": "7.1.6",
     "source-map-js": "1.2.2",
-    "shell-quote": "1.11.0"
+    "shell-quote": "1.11.0",
+    "qs": "6.16.1",
+    "minimatch": "11.0.1"
   }
 }

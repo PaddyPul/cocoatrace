@@ -1,5 +1,6 @@
 // Expand this list as feature modules acquire maintainers and debt is repaired.
 export const formattedPaths = [
+  'scripts/hosted-demo.test.mjs',
   'e2e/support/failureCapture.ts',
   'e2e/support/fixtures.ts',
   'e2e/support/safeReporter.ts',

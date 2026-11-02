@@ -633,3 +633,6 @@ e2e/support/fixtures.ts text eol=lf
 e2e/support/safeReporter.ts text eol=lf
 scripts/browser-suite-selection*.mjs text eol=lf
 scripts/run-browser-tests.mjs text eol=lf
+
+# Hosted maintenance regression gate
+scripts/hosted-demo.test.mjs text eol=lf

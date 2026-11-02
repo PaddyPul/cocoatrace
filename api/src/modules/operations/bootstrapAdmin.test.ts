@@ -16,7 +16,7 @@ describe('private installation administrator', () => {
   it('refuses invalid or known demo credentials before touching the database', async () => {
     const client = database();
     for (const password of ['Password123!', 'short', 'é'.repeat(40)]) {
-      await expect(bootstrapAdmin(client, { ...input, password })).rejects.toThrow('valid email');
+      await expect(bootstrapAdmin(client, { ...input, password })).rejects.toThrow('password');
     }
     expect(client.query).not.toHaveBeenCalled();
   });

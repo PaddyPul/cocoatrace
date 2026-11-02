@@ -1,6 +1,6 @@
 {
-  "reviewedAt": "2026-10-17",
-  "method": "Equal gate count, no partial credit. Provider launch also requires every core gate. This is closure evidence, not a safety probability or valuation measure.",
+  "reviewedAt": "2026-11-02",
+  "method": "Equal gate count, no partial credit. Provider launch requires every core gate. Partial reconciliation on 2026-11-02 incorporates founder-reported synthetic hosting/email evidence; other gates retain their earlier evidence. This is closure evidence, not a safety probability or valuation measure.",
   "gates": [
     {
       "id": "CORE-release",
@@ -8,7 +8,7 @@
       "status": "partial",
       "title": "Current release passes every gate on the candidate commit",
       "backlog": ["QLT-001", "SEC-014", "LNG-001"],
-      "evidence": "Founder reports transport/security boundary full release and merge accepted 2026-10-17. Evidence/payment boundary candidate requires its own full release and required CI. Hosted candidate evidence and CI archive remain unverified; gate stays partial."
+      "evidence": "Founder-provided VM logs show CI-gated merged release ab7dcfb deployed on 2026-10-26 after the temporary IPv4 web health correction. Hosted stabilization candidate needs its own exact-commit full release and CI; archived CI run references remain open."
     },
     {
       "id": "CORE-isolation",
@@ -16,7 +16,7 @@
       "status": "blocked",
       "title": "Hosted staging/production resources are isolated and private",
       "backlog": ["ENV-004", "ENV-005", "ENV-006"],
-      "evidence": "No independently provisioned hosted environment verified."
+      "evidence": "Oracle synthetic demo is founder-reported live with private database/API/scanner, root-only secrets and HTTPS. Separate staging/production resources and encrypted object-storage acceptance are not provisioned or inferred."
     },
     {
       "id": "CORE-identity",
@@ -157,10 +157,10 @@
     {
       "id": "CORE-email",
       "scope": "core",
-      "status": "blocked",
+      "status": "partial",
       "title": "Real staging inboxes receive lifecycle/trade notifications",
       "backlog": ["IDN-021", "PRD-008"],
-      "evidence": "Captured test emails work; external inbox/delivery setup not evidenced."
+      "evidence": "Founder confirms real Gmail SMTP authentication and hosted Request access on 2026-10-26; received messages go to spam. Full invitation/team/resend/reset/trade notification inbox acceptance and staging verification remain open."
     },
     {
       "id": "CORE-observability",
@@ -176,7 +176,7 @@
       "status": "partial",
       "title": "Hosted database and private file bytes restore within agreed RPO/RTO",
       "backlog": ["OPS-001", "OPS-002", "OPS-012"],
-      "evidence": "Local rehearsal exists; hosted full recovery unverified."
+      "evidence": "Existing local recovery rehearsal is accepted. Candidate adds consistent stopped-writer database/evidence snapshots, per-table/schema/sequence and evidence-byte verification in isolated containers, corruption/failure-cleanup checks and redacted reports. GitHub fixture and actual Oracle non-empty-evidence restore, off-VM encrypted backup and agreed RPO/RTO remain unverified."
     },
     {
       "id": "CORE-performance",
@@ -213,10 +213,10 @@
     {
       "id": "CORE-branding",
       "scope": "core",
-      "status": "open",
+      "status": "partial",
       "title": "BetterTrade customer identity and compatibility map are validated",
       "backlog": ["BRD-001", "BRD-002", "BRD-004"],
-      "evidence": "Planning approved by user request; runtime rename not performed."
+      "evidence": "BRD-001/002 customer-facing BetterTrade identity and compatibility map are founder accepted; hosted branded email delivery is reported. BRD-004 name/domain approval and BRD-005 inbox trust/rendering remain open."
     },
     {
       "id": "CORE-reconciliation",
