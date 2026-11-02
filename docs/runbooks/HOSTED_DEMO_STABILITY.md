@@ -102,3 +102,18 @@ check:quality runs Node Git/CI guards and, on Linux, Bash syntax and Python arch
 Keep the pause file until the update, restart and hosted recovery tests pass. If using pull-based CD, install the new root-owned updater script using the installation commands in ORACLE_INVESTOR_DEMO.md, then remove /etc/bettertrade/pause-auto-deploy to resume. The updater reads common.sh from the accepted checkout, fetches/checks out as the repository owner and deploys only the exact current main SHA with successful full quality-gate. The lock covers its checkout and deployment. Do not run a manual checkout while an updater is active.
 
 Next work remains IDN-021/BRD-005 email inbox placement and full lifecycle acceptance; INV-002/003 tester journey; OPS-002/009 off-VM encrypted backup and coordinated recovery; PER-004 hosted capacity; and staging/production isolation/TLS/object-storage controls. No paid infrastructure or provider account is silently provisioned.
+
+## Source image identity on containerd stores
+
+The 2026-11-02 update reached snapshot creation but the archive helper could not start: the API container's Image configuration digest was not a runnable image reference, while the original release tag remained cached under an image-index ID. This is not proof that the original release image was deleted. The previous demo was restarted and HTTPS readiness passed; the failed partial snapshot is preserved and must not be used for restore.
+
+Recovery now resolves a locally inspectable image ID, then creates (but never starts) a networkless, labeled probe from that pinned ID. Its container Image must equal the original source container's Image exactly. A moved tag, absent original image or mismatched configuration fails closed; no registry pull or newer-image substitution is allowed. Only the probe and its automatically created anonymous volumes are removed after checking its label. The snapshot records runnable pinned IDs and the original container configuration digests separately. Existing complete snapshots remain supported, but their image IDs must still be locally available.
+
+Deploy and backup run source-image and read-only archive preflight before enabling maintenance or stopping writers. The public preflight command also takes the shared lock and does not change the app:
+
+```bash
+cd /home/ubuntu/bettertrade
+sudo -n python3 -B deploy/oracle-demo/recovery.py preflight
+```
+
+After merging the image-identity correction and successful main CI, use the existing update block above. Do not manually edit the failed snapshot, fabricate recovery.json or delete its files. Keep automatic deployment paused until the real update and non-empty-evidence rehearsal pass. The image-resolution regressions cover index/config differences, moved tags, missing images and probe-label cleanup; the Docker CI fixture and actual Oracle acceptance are separate evidence.

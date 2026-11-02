@@ -26,15 +26,68 @@ class RecoveryError(Exception):
 
 
 def run(arguments, **options):
+    failure = options.pop('failure', 'A recovery command failed; live volumes were not restored or deleted.')
     result = subprocess.run(arguments, stderr=subprocess.DEVNULL,
                             stdout=options.pop('stdout', subprocess.PIPE), **options)
     if result.returncode:
-        raise RecoveryError('A recovery command failed; live volumes were not restored or deleted.')
+        raise RecoveryError(failure)
     return result.stdout
 
 
 def inspect(container):
     return json.loads(run(['docker', 'inspect', container]))[0]
+
+
+def local_source_image(container):
+    """Resolve a runnable local ID; prove it creates the same image configuration.
+
+    Containerd can expose an index/manifest ID in image inspect while the source
+    container retains its configuration digest. A tag alone is never trusted.
+    """
+    token = secrets.token_hex(12)
+    for reference in dict.fromkeys((container['Image'], container['Config']['Image'])):
+        result = subprocess.run(['docker', 'image', 'inspect', reference],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        if result.returncode != 0:
+            continue
+        details = json.loads(result.stdout)[0]
+        image = details['Id']
+        if not re.fullmatch(r'sha256:[a-f0-9]{64}', image):
+            raise RecoveryError('Local recovery image identity is invalid.')
+        probe = None
+        try:
+            probe = run(['docker', 'create', '--pull=never', '--network=none',
+                '--label', 'bettertrade.image-probe=' + token,
+                '--entrypoint', '/bin/sh', image, '-c', 'true'],
+                failure='Source image probe could not be created; no live container was changed.').decode().strip()
+            if not re.fullmatch(r'[a-f0-9]{64}', probe):
+                raise RecoveryError('Recovery image probe identity is invalid.')
+            if inspect(probe)['Image'] != container['Image']:
+                raise RecoveryError('Local image reference no longer matches the source container; no substitute was accepted.')
+            return image
+        finally:
+            if probe and re.fullmatch(r'[a-f0-9]{64}', probe):
+                if inspect(probe)['Config']['Labels'].get('bettertrade.image-probe') != token:
+                    raise RecoveryError('Recovery image probe cleanup label mismatch.')
+                run(['docker', 'rm', '-v', probe])
+    raise RecoveryError('The exact source recovery image is unavailable locally. Preserve running containers and cached release images.')
+
+
+def preflight():
+    api = inspect(PREFIX + 'api-1')
+    database = inspect(PREFIX + 'postgres-1')
+    image = local_source_image(api)
+    local_source_image(database)
+    mounts = [mount for mount in api['Mounts']
+        if mount['Destination'] == '/app/private-evidence' and mount['Type'] == 'volume']
+    if len(mounts) != 1:
+        raise RecoveryError('Expected one private evidence volume.')
+    run(['docker', 'run', '--rm', '--pull=never', '--network=none',
+        '--mount', f"type=volume,src={mounts[0]['Name']},dst=/evidence,readonly",
+        '--entrypoint', 'tar', image, '-C', '/evidence', '-czf', '/dev/null', '.'],
+        stdout=subprocess.DEVNULL,
+        failure='Read-only evidence archive preflight failed; live service was not stopped.')
+    print('Recovery preflight passed: exact local source images and read-only evidence archive helper. No maintenance or live restore performed.')
 
 
 def digest_file(path):
@@ -177,20 +230,23 @@ def snapshot(directory):
               if mount['Destination'] == '/app/private-evidence' and mount['Type'] == 'volume']
     if len(mounts) != 1:
         raise RecoveryError('Expected one private evidence volume.')
+    api_image = local_source_image(api)
+    postgres_image = local_source_image(database)
     with open(directory / 'database.dump', 'xb') as output:
         run(['docker', 'exec', database['Id'], 'pg_dump', '-U', 'bettertrade',
              '-d', 'bettertrade_demo', '--format=custom'], stdout=output)
     with open(directory / 'evidence.tar.gz', 'xb') as output:
         run(['docker', 'run', '--rm', '--pull=never', '--network=none',
              '--mount', f"type=volume,src={mounts[0]['Name']},dst=/evidence,readonly",
-             '--entrypoint', 'tar', api['Image'], '-C', '/evidence', '-czf', '-', '.'], stdout=output)
+             '--entrypoint', 'tar', api_image, '-C', '/evidence', '-czf', '-', '.'], stdout=output)
     with open(directory / 'evidence.tar.gz', 'rb') as source:
         evidence = evidence_index(source)
     record = {
         'schemaVersion': 1,
         'createdAt': datetime.now(timezone.utc).isoformat(),
         'release': Path('/etc/bettertrade/active-release').read_text().strip(),
-        'postgresImage': database['Image'], 'apiImage': api['Image'],
+        'postgresImage': postgres_image, 'apiImage': api_image,
+        'sourceContainerImages': {'api': api['Image'], 'postgres': database['Image']},
         'database': database_index(database['Id']), 'evidence': evidence,
         'files': {name: digest_file(directory / name)
                   for name in ('database.dump', 'evidence.tar.gz', 'demo.env', 'smtp.env', 'Caddyfile')},
@@ -329,13 +385,15 @@ def verify(directory):
 def main():
     os.umask(0o077)
     parser = argparse.ArgumentParser()
-    parser.add_argument('operation', choices=['snapshot', 'verify'])
-    parser.add_argument('directory', type=Path)
+    parser.add_argument('operation', choices=['snapshot', 'verify', 'preflight'])
+    parser.add_argument('directory', type=Path, nargs='?')
     args = parser.parse_args()
     if os.geteuid() != 0:
         sys.exit('Run recovery maintenance with sudo -n python3.')
+    if (args.operation == 'preflight') != (args.directory is None):
+        parser.error('preflight takes no directory; snapshot and verify require one.')
     lock = None
-    if args.operation == 'verify':
+    if args.operation in ('verify', 'preflight'):
         private = Path('/etc/bettertrade')
         if (private.is_symlink() or not private.is_dir() or private.stat().st_uid != 0
                 or stat.S_IMODE(private.stat().st_mode) != 0o700):
@@ -344,7 +402,12 @@ def main():
         lock = os.fdopen(descriptor, 'w')
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     try:
-        snapshot(args.directory) if args.operation == 'snapshot' else verify(args.directory)
+        if args.operation == 'preflight':
+            preflight()
+        elif args.operation == 'snapshot':
+            snapshot(args.directory)
+        else:
+            verify(args.directory)
     finally:
         if lock:
             lock.close()

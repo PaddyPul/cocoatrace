@@ -47,6 +47,11 @@ mkdir -p "$bt_backup"
 chmod 700 /var/backups/bettertrade "$bt_backup"
 cp /etc/caddy/Caddyfile "$bt_backup/Caddyfile"
 cp /etc/bettertrade/demo.env /etc/bettertrade/smtp.env "$bt_backup/"
+# Prove source images and archive access before taking the demo offline.
+# The caller already holds the maintenance lock.
+if [[ $bt_mode == update ]]; then
+  python3 -B -c 'import sys; sys.path.insert(0, "deploy/oracle-demo"); import recovery; recovery.preflight()'
+fi
 bt_maintenance
 echo 'Maintenance page enabled. A failed deployment will leave it in place.'
 bt_bootstrap_input=''
