@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "reviewedAt": "2026-10-22",
-  "authorSourceCommit": "602620e07fad58bcd3d85dd5b04e6d6d42dd4f75",
-  "acceptance": "Founder-reported local release/merge acknowledgements, including prescribed operations correction workflow reported done 2026-10-13 13:59 UTC. Independent CI URL/founder SHA and hosted acceptance are not supplied. Founder confirms the invitation-authority/Canton-inspection release passed and PR #139 merged on 2026-10-21; CT-00 inspection acceptance is reconciled separately from unimplemented Canton work. Founder reports corrected evidence lifecycle release passed and merged as main PR #141 on 2026-10-22; UPL-014 engineering acceptance is reconciled without inferring hosted retention/backup erasure. Founder confirms timed evidence/recall full release passed and PR #143 merged on 2026-10-22; UPL-010, UPL-012 and RCL-004 accepted.",
+  "reviewedAt": "2026-11-02",
+  "authorSourceCommit": "ab7dcfbf40429b17f996ff9f5805e4ded86c1387",
+  "acceptance": "Founder-reported local release/merge acknowledgements, including prescribed operations correction workflow reported done 2026-10-13 13:59 UTC. Independent CI URL/founder SHA and hosted acceptance are not supplied. Founder confirms the invitation-authority/Canton-inspection release passed and PR #139 merged on 2026-10-21; CT-00 inspection acceptance is reconciled separately from unimplemented Canton work. Founder reports corrected evidence lifecycle release passed and merged as main PR #141 on 2026-10-22; UPL-014 engineering acceptance is reconciled without inferring hosted retention/backup erasure. Founder confirms timed evidence/recall full release passed and PR #143 merged on 2026-10-22; UPL-010, UPL-012 and RCL-004 accepted. Founder reports synthetic Oracle deployment of merged ab7dcfb on 2026-10-26 with an IPv4 health override, unique administrator, HTTPS readiness and Request access; Gmail messages arrive in spam. These observations advance partial evidence only. The new stabilization candidate and actual hosted restore remain pending; no new whole-item closure is credited.",
   "changes": [
     {
       "id": "CUR-003",
@@ -441,6 +441,57 @@
         "PRD-008",
         "OPS-002"
       ]
+    },
+    {
+      "id": "ENV-005",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "deploy/oracle-demo/compose.yml",
+        "deploy/oracle-demo/deploy.sh",
+        "deploy/oracle-demo/common.sh",
+        "docs/runbooks/HOSTED_DEMO_STABILITY.md"
+      ],
+      "reason": "Founder-reported synthetic hosting and candidate stabilization provide partial implementation evidence; staging/production and exact-candidate hosted admission remain open.",
+      "remaining": [
+        "ENV-004",
+        "OPS-002",
+        "INV-001"
+      ]
+    },
+    {
+      "id": "ENV-013",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "deploy/oracle-demo/compose.yml",
+        "deploy/oracle-demo/deploy.sh",
+        "deploy/oracle-demo/common.sh",
+        "docs/runbooks/HOSTED_DEMO_STABILITY.md"
+      ],
+      "reason": "Founder-reported synthetic hosting and candidate stabilization provide partial implementation evidence; staging/production and exact-candidate hosted admission remain open.",
+      "remaining": [
+        "ENV-004",
+        "OPS-002",
+        "INV-001"
+      ]
+    },
+    {
+      "id": "ENV-017",
+      "from": "open",
+      "to": "partial",
+      "evidence": [
+        "deploy/oracle-demo/compose.yml",
+        "deploy/oracle-demo/deploy.sh",
+        "deploy/oracle-demo/common.sh",
+        "docs/runbooks/HOSTED_DEMO_STABILITY.md"
+      ],
+      "reason": "Founder-reported synthetic hosting and candidate stabilization provide partial implementation evidence; staging/production and exact-candidate hosted admission remain open.",
+      "remaining": [
+        "ENV-004",
+        "OPS-002",
+        "INV-001"
+      ]
     }
   ],
   "gateChanges": [
@@ -455,6 +506,26 @@
         "api/test/integration/recallResponse.integration.test.ts",
         "e2e/recallSafety.spec.ts"
       ]
+    },
+    {
+      "id": "CORE-email",
+      "from": "blocked",
+      "to": "partial",
+      "reason": "Founder confirms real Gmail SMTP authentication and hosted Request access on 2026-10-26; received messages go to spam. Full invitation/team/resend/reset/trade notification inbox acceptance and staging verification remain open.",
+      "evidence": [
+        "docs/runbooks/HOSTED_DEMO_STABILITY.md",
+        "docs/DELIVERY_BACKLOG.md"
+      ]
+    },
+    {
+      "id": "CORE-branding",
+      "from": "open",
+      "to": "partial",
+      "reason": "BRD-001/002 customer-facing BetterTrade identity and compatibility map are founder accepted; hosted branded email delivery is reported. BRD-004 name/domain approval and BRD-005 inbox trust/rendering remain open.",
+      "evidence": [
+        "docs/runbooks/HOSTED_DEMO_STABILITY.md",
+        "docs/DELIVERY_BACKLOG.md"
+      ]
     }
   ],
   "added": [
@@ -464,31 +535,14 @@
     }
   ],
   "before": {
+    "reviewedAt": "2026-10-17",
     "roadmap": {
-      "total": 342,
-      "complete": 78,
-      "partial": 59,
-      "open": 205,
-      "completedPercent": 22.8
-    },
-    "corePilot": {
-      "total": 28,
-      "complete": 10,
-      "partial": 12,
-      "blocked": 4,
-      "open": 2,
-      "completedPercent": 35.7
-    }
-  },
-  "after": {
-    "reviewedAt": "2026-10-13",
-    "roadmap": {
-      "total": 343,
-      "complete": 88,
-      "partial": 71,
+      "total": 363,
+      "complete": 174,
+      "partial": 61,
       "blocked": 0,
-      "open": 184,
-      "completedPercent": 25.7
+      "open": 128,
+      "completedPercent": 47.9
     },
     "corePilot": {
       "total": 28,
@@ -515,5 +569,41 @@
       "completedPercent": 27.5
     },
     "note": "Equal gate count, no partial credit. Provider launch also requires every core gate. This is closure evidence, not a safety probability or valuation measure."
+  },
+  "after": {
+    "reviewedAt": "2026-11-02",
+    "roadmap": {
+      "total": 363,
+      "complete": 174,
+      "partial": 64,
+      "blocked": 0,
+      "open": 125,
+      "completedPercent": 47.9
+    },
+    "corePilot": {
+      "total": 28,
+      "complete": 11,
+      "partial": 13,
+      "blocked": 3,
+      "open": 1,
+      "completedPercent": 39.3
+    },
+    "providerAdditionalGates": {
+      "total": 12,
+      "complete": 0,
+      "partial": 0,
+      "blocked": 0,
+      "open": 12,
+      "completedPercent": 0
+    },
+    "providerLaunchIncludingCore": {
+      "total": 40,
+      "complete": 11,
+      "partial": 13,
+      "blocked": 3,
+      "open": 13,
+      "completedPercent": 27.5
+    },
+    "note": "Equal gate count, no partial credit. Provider launch requires every core gate. Partial reconciliation on 2026-11-02 incorporates founder-reported synthetic hosting/email evidence; other gates retain their earlier evidence. This is closure evidence, not a safety probability or valuation measure."
   }
 }

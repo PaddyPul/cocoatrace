@@ -27,3 +27,5 @@ container-test-results/
 
 **/node_modules
 **/dist
+
+hosted-recovery-test-results

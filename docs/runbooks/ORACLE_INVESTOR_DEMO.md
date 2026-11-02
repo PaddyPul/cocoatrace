@@ -1,5 +1,7 @@
 # Oracle investor demo
 
+For the already deployed Oracle installation, use [Hosted demo stability and isolated recovery](HOSTED_DEMO_STABILITY.md). It supersedes the initial bootstrap/recovery procedure below; do not bootstrap an existing account again.
+
 Tracking: INV-001, INV-003, IDN-021, OPS-008, OPS-009. All remain IN PROGRESS until hosted evidence is recorded. See ADR 004. Synthetic demonstrations only; do not upload actual customer documents or use real payments.
 
 ## First deployment — Ubuntu SSH terminal
